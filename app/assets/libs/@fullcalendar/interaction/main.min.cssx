@@ -1,0 +1,1 @@
+.fc-event-dot{display:inline-block;width:10px;height:10px;border-radius:5px}.fc-list-view{border-width:1px;border-style:solid}.fc .fc-list-table{table-layout:auto}.fc-list-item.fc-has-url{cursor:pointer}.fc-list-item-time{white-space:nowrap;width:1px}.fc-list-item-title a{text-decoration:none;color:inherit}.fc-list-item-title a[href]:hover{text-decoration:underline}

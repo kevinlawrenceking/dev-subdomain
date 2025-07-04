@@ -1,0 +1,15 @@
+
+app/assets/css/app.min.css
+      [2m1:1[22m   [31m[31m×[39m  Unknown rule order/order                                    [2morder/order[22m
+      [2m1:1[22m   [31m[31m×[39m  Unknown rule order/properties-order                         [2morder/properties-order[22m
+  [2m14871:12[22m  [31m[31m×[39m  Expected keyframe name "DropDownSlide" to be kebab-case     [2mkeyframes-name-pattern[22m
+  [2m18404:12[22m  [31m[31m×[39m  Expected keyframe name "SpinnerAnimation" to be kebab-case  [2mkeyframes-name-pattern[22m
+  [2m24166:1[22m   [31m[31m×[39m  Expected id selector "#nameResults" to be kebab-case        [2mselector-id-pattern[22m
+  [2m24265:1[22m   [31m[31m×[39m  Expected id selector "#hiddenSelfTape" to be kebab-case     [2mselector-id-pattern[22m
+  [2m24269:1[22m   [31m[31m×[39m  Expected id selector "#hiddenLocation" to be kebab-case     [2mselector-id-pattern[22m
+  [2m24273:1[22m   [31m[31m×[39m  Expected id selector "#hiddenAddLocation" to be kebab-case  [2mselector-id-pattern[22m
+  [2m24277:1[22m   [31m[31m×[39m  Expected id selector "#hiddenCasting" to be kebab-case      [2mselector-id-pattern[22m
+  [2m24295:1[22m   [31m[31m×[39m  Expected id selector "#hidden_div" to be kebab-case         [2mselector-id-pattern[22m
+
+[31m×[39m 10 problems ([31m10 errors[39m, [33m0 warnings[39m)
+

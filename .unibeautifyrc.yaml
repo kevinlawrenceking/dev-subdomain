@@ -1,0 +1,18 @@
+ColdFusion:
+  beautifiers:
+    - Pretty Diff
+HTML:
+  beautifiers:
+    - Pretty Diff
+    - JS-Beautify
+JavaScript:
+  beautifiers:
+    - Prettier
+    - Pretty Diff
+    - JS-Beautify
+    - ESLint
+JSON:
+  beautifiers:
+    - Prettier
+    - Pretty Diff
+    - JS-Beautify

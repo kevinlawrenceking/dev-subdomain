@@ -1,0 +1,1 @@
+.fc-dayGrid-view .fc-body .fc-row{min-height:4em}.fc-dayGrid-view .fc-day-number,.fc-dayGrid-view .fc-week-number{padding:2px}.fc-dayGrid-view th.fc-day-number,.fc-dayGrid-view th.fc-week-number{padding:0 2px}.fc-dayGrid-view .fc-day-top .fc-week-number{min-width:1.5em;text-align:center;background-color:#f2f2f2;color:grey}

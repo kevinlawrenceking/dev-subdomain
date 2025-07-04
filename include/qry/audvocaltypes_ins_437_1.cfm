@@ -1,0 +1,2 @@
+<cfset vocalTypeService = createObject("component", "services.AuditionVocalTypeService")>
+<cfset new_vocaltypeid = vocalTypeService.INSaudvocaltypes(new_vocaltype=new_vocaltype, new_isDeleted=new_isDeleted)>

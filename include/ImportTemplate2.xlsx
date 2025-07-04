@@ -1,0 +1,46 @@
+<!--- This ColdFusion page processes data and generates an Excel file. --->
+
+<cfset excelFilePath = "path/to/excel/file.xlsx">
+<cfset data = []>
+
+<!--- Fetch data from the database. --->
+<cfquery name="getData" datasource="myDataSource">
+    SELECT * FROM myTable
+</cfquery>
+
+<cfloop query="getData">
+    <cfset rowData = {
+        "column1" = getData.column1,
+        "column2" = getData.column2,
+        "column3" = getData.column3
+    }>
+    <cfset arrayAppend(data, rowData)>
+</cfloop>
+
+<!--- Create an Excel file using the data fetched. --->
+<cfset excel = createObject("java", "org.apache.poi.xssf.usermodel.XSSFWorkbook")>
+<cfset sheet = excel.createSheet("Sheet1")>
+
+<!--- Create header row. --->
+<cfset headerRow = sheet.createRow(0)>
+<cfset headerRow.createCell(0).setCellValue("Column 1")>
+<cfset headerRow.createCell(1).setCellValue("Column 2")>
+<cfset headerRow.createCell(2).setCellValue("Column 3")>
+
+<!--- Populate the Excel sheet with data. --->
+<cfloop index="i" from="1" to="#arrayLen(data)#">
+    <cfset row = sheet.createRow(i)>
+    <cfset row.createCell(0).setCellValue(data[i].column1)>
+    <cfset row.createCell(1).setCellValue(data[i].column2)>
+    <cfset row.createCell(2).setCellValue(data[i].column3)>
+</cfloop>
+
+<!--- Write the Excel file to the server. --->
+<cfset fileOut = createObject("java", "java.io.FileOutputStream").init(excelFilePath)>
+<cfset excel.write(fileOut)>
+<cfset fileOut.close()>
+
+<!--- Return a success message. --->
+<cfoutput>
+    <p>Excel file has been created successfully at #excelFilePath#.</p>
+</cfoutput>

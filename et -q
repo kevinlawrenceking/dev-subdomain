@@ -1,0 +1,540 @@
+[33mdefd230[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mnew-branch[m[33m, [m[1;31morigin/new-branch[m[33m, [m[1;31morigin/HEAD[m[33m)[m Merge branch 'new-branch' of https://github.com/kevinlawrenceking/new-theactorsoffice into new-branch
+[33m6f1757c[m t
+[33mb366d4b[m Merge branch 'new-branch' of https://github.com/kevinlawrenceking/new-theactorsoffice into new-branch
+[33m6f33da2[m test
+[33mc64d439[m remove iif
+[33mb38171c[m test
+[33m220d79c[m test
+[33m7f2b265[m test
+[33m0b5a75d[m test
+[33mf0b7b01[m test
+[33mef84088[m test
+[33m4559a3b[m test
+[33m119dd05[m test
+[33mad283e0[m login
+[33meda9c2c[m test
+[33me48341f[m login
+[33m2e9506b[m s
+[33m5f456dd[m x
+[33m01ea49b[m l
+[33mfc31d9a[m a
+[33mdfbc1f4[m a
+[33m9e29c50[m test
+[33m65a34c1[m result global find replace
+[33mf2d87b2[m save
+[33mee2ac74[m results
+[33mcd2438e[m test
+[33m59f507f[m value company
+[33m2adc17b[m test
+[33m4349e23[m itemdate
+[33m831f926[m test
+[33md5df12d[m test
+[33maf65ad4[m datasource
+[33mb8e85ac[m test
+[33mb049064[m removing datasource
+[33m9f37c3b[m datasource removed
+[33mbdebce5[m itemdate
+[33m980baf8[m itemdate
+[33m3f087ab[m contact items
+[33mcf10e6f[m contact item update
+[33mc5977a2[m remove region id
+[33m9f5c4d4[m removed country
+[33m8fb5c25[m test
+[33med9b478[m remoteupdatec
+[33m6886e72[m types
+[33m78c5dcb[m types
+[33m0641d41[m test
+[33m3c2f138[m update contact details
+[33m80e8b53[m test
+[33m549d59b[m test
+[33m06f7a16[m remoteupdatename
+[33m712a814[m test
+[33mb2f71a5[m is=""
+[33mc967a68[m eventresults
+[33m9753b2e[m eventresults
+[33m2f6b721[m eventresults
+[33m3a2b5cc[m test
+[33md9f2f6a[m test
+[33m585338e[m eventresults
+[33m15dbe86[m test
+[33m06cc639[m eventresults
+[33me930d13[m done links
+[33m9bccfa5[m notes
+[33m827af08[m test
+[33m8cb63cd[m itembycatactive
+[33m97a65d2[m test
+[33m19bad54[m test
+[33m9f03f5f[m itemsbycatactive
+[33m9bfdab1[m test
+[33m537e27d[m itemsbycatactive fixed
+[33m88e4be0[m event results
+[33m91d233a[m test
+[33ma11f0f8[m test
+[33m6df76ae[m cleanup
+[33m890ff4c[m test
+[33m8aa88ad[m test
+[33m65858ad[m test
+[33mcd3d193[m test
+[33mddf4cef[m optimized contact info
+[33m54707b9[m refer details
+[33mbb24763[m test
+[33mbd51d41[m test
+[33md296660[m test
+[33me9a021f[m refer contact details
+[33mb467da6[m test
+[33md389495[m hide completed
+[33m8c97751[m ru fix
+[33m7525415[m ru fix
+[33me57b5d1[m contact details
+[33m91aef4b[m fetchcontactitems fix
+[33m2764a8c[m findscope
+[33mb51de4a[m findscope fixed
+[33me3e7cb6[m notsall fixed.
+[33m6ea374c[m hide completed
+[33m884e13a[m contact info fix
+[33m1e68c1e[m contact_info
+[33m18b2ee4[m test
+[33m5fc22cf[m lcoation service fixed
+[33m1851440[m added location service
+[33m326b988[m test
+[33m303a2e4[m test
+[33m6e45c19[m contact info
+[33m8a446fb[m test
+[33m247ed0b[m remove sessin var
+[33mcc3cf9a[m test
+[33made2c0c[m folder setup
+[33m78c758a[m test
+[33md00b1dd[m test
+[33m6cb8350[m test
+[33m086916e[m folder setup
+[33mb430be1[m user setup
+[33m1cd3dd1[m test
+[33mfde06b7[m test
+[33ma477f0a[m test
+[33m9fc62f9[m test
+[33mf0f980f[m test
+[33mcf901de[m test
+[33m3134325[m fix contact add
+[33m7eb8a56[m test
+[33me8c3174[m test
+[33m8a6489f[m t
+[33mcc1b85d[m t
+[33mce481a3[m test
+[33mdbe37a7[m test
+[33m994fb06[m test
+[33m05af0ae[m left
+[33mda5be8e[m leftbar
+[33m9512479[m test
+[33m14dac46[m core menu
+[33mcaa7291[m test
+[33mfab6460[m fix menu
+[33m9de4aea[m test
+[33mb90ce27[m test
+[33m17c0861[m test
+[33m05d782a[m cleaned up
+[33m75ab17d[m added include
+[33m66d072d[m added qry
+[33mf32adf6[m test
+[33mea93360[m rwar
+[33ma45fb3b[m test
+[33m1932858[m test
+[33m379ba7f[m test
+[33mba73801[m test
+[33mac8eca4[m fixed
+[33m7db331d[m services changed with ai
+[33mc4abaf1[m Merge branch 'new-branch' of https://github.com/kevinlawrenceking/new-theactorsoffice into new-branch
+[33m494156b[m 53w
+[33mb04c560[m Test
+[33m5ecee23[m tEST
+[33m04b9f2c[m test
+[33mc159c81[m test
+[33m2a8d64b[m test
+[33m8da1431[m test
+[33me3210b6[m testr
+[33mc14a429[m test
+[33mae1d7f3[m Test
+[33m4e2c5a3[m retina
+[33ma728ad5[m test
+[33m45f1188[m test
+[33md354c04[m test
+[33mdfdbbf4[m test
+[33ma762d98[m test
+[33mb11b382[m test
+[33mbea94c3[m test
+[33md78de57[m test
+[33m417693c[m test
+[33maccead2[m test
+[33m71a15c9[m test
+[33m4d1a0e3[m test
+[33m92b6aac[m test
+[33mc065c4a[m test
+[33m3cb9198[m test
+[33md12094c[m test
+[33m995ef1a[m test
+[33m7fbf3cd[m test
+[33m8717c71[m test
+[33m0a8dd0a[m test
+[33maa9e12a[m test
+[33m8df27e8[m test
+[33mf88f303[m test
+[33mcb58561[m test
+[33m271e9a1[m test
+[33m3187215[m test
+[33m885f005[m test
+[33m6e70a73[m test
+[33m0dfb2ac[m test
+[33m9d87bbc[m test
+[33mb4f4fe9[m test
+[33m971d6f7[m test
+[33m5607abb[m test
+[33m177222b[m test
+[33m6d5c8a9[m userservice update user account
+[33m924c937[m test
+[33md9a3916[m account update
+[33m097199a[m countries
+[33m2b7e81e[m countries
+[33m36a94fa[m test
+[33md6c6a7c[m test
+[33mad4860e[m test
+[33mb0cf4dc[m Bottom Links
+[33m3ffff79[m test
+[33m507d779[m test
+[33m07f5ea1[m test
+[33m1f11d5e[m test
+[33me99238a[m test
+[33mb531233[m test
+[33m45c4dcf[m test
+[33mf64abb4[m test
+[33me50be24[m test
+[33m9104c19[m test
+[33m1902ae3[m test
+[33ma589c6c[m test
+[33m67c6867[m test
+[33md159f9e[m test
+[33m7285277[m test
+[33m3f8c4ce[m mysystems
+[33maae54b2[m test
+[33m1bd03d9[m test
+[33mc4dcd64[m test
+[33m99532cb[m headshots_sel
+[33m9e60475[m test
+[33m3a3afc7[m test
+[33m3765fc8[m test
+[33mcb37cd8[m test
+[33m8ef863e[m test
+[33m649431d[m account info
+[33m5d8bbeb[m account info
+[33m5e6ce26[m createtime
+[33m6b4b15f[m mediaurl
+[33m4816320[m account info
+[33m28f8319[m test
+[33m88fdda5[m test
+[33mb21a7a9[m audition
+[33m5bd76f2[m events
+[33ma838579[m materials_sel
+[33m6c745c4[m headshots
+[33m3e78af1[m essence
+[33m6707015[m myteam
+[33m8a47ee0[m myteam
+[33meddda69[m sitetypes
+[33m1f90588[m thrivecart
+[33mb5a3c32[m cities
+[33m0562b71[m cities
+[33m072dc75[m regions
+[33m47ead33[m test
+[33m15faf94[m test
+[33m737c7b0[m qry_block_1_2
+[33m1a4aa03[m dateformats
+[33mbf17298[m dateformats.cfm
+[33m19ec95b[m finduser
+[33m2a9ded2[m finduser
+[33m672b704[m test
+[33mb14c458[m test
+[33m431aac3[m timezones fix
+[33m4679f17[m test
+[33mb750231[m beautify account info
+[33mda8acc9[m test
+[33m66cb507[m countries
+[33m4d79653[m test
+[33m3189092[m test
+[33m36a3128[m test
+[33m2fe8c78[m test
+[33me845d33[m test
+[33m48b62ef[m test
+[33mc10b02d[m test
+[33m4a3b200[m test
+[33m5920bd7[m test
+[33m7700974[m test
+[33me40e8ff[m test
+[33md20bcb3[m test
+[33m000d59c[m test
+[33m8c78b78[m test
+[33mf30e32d[m test
+[33m4778ffd[m tes
+[33m9158159[m test
+[33m5bbd4c9[m test
+[33m0118d72[m qfiltered
+[33mb6e7393[m test
+[33m392f987[m qfiltered
+[33m849e523[m 24709
+[33mab382c2[m test
+[33m1da0b46[m test
+[33m2c9ac68[m Merge branch 'new-branch' of https://github.com/kevinlawrenceking/new-theactorsoffice into new-branch
+[33m459e5f7[m test
+[33mc294478[m test
+[33mafef6e1[m test
+[33m0afb922[m test
+[33m43758e4[m test
+[33m2d6e331[m test
+[33mee875dd[m test
+[33mc1d128b[m test
+[33mf2d5551[m test
+[33ma067c80[m test
+[33m4a1828f[m test
+[33m3a2dddc[m test
+[33m103c24c[m test
+[33m6d65637[m test
+[33mc74d933[m test
+[33m7b6dabb[m test
+[33mef264c9[m test
+[33m5a0d7fc[m test
+[33m3bf5e8d[m test
+[33mefe3c1b[m test
+[33mdd579ce[m test
+[33m3165c05[m test
+[33m004d82a[m test
+[33mdd9f458[m services fix
+[33mee42acf[m test
+[33mc7e36be[m test
+[33mdac8fc0[m test
+[33mc3d76e7[m test
+[33m87dc858[m lastupdates
+[33mef7088d[m lastupdates added
+[33mf18afed[m test
+[33mf9d4162[m test
+[33mb0acbc4[m test
+[33m95766d8[m test
+[33m61e9104[m test
+[33m0ed3c6d[m test
+[33mefedf03[m test
+[33m38f7147[m test
+[33m02aef06[m test
+[33m66f50df[m test
+[33m15a32b5[m test
+[33mc407c5e[m test
+[33mdd4784e[m remote link add fix
+[33m9dc8db5[m test
+[33m2634128[m test
+[33mc1bb872[m test
+[33m8818193[m test
+[33m2f76fa5[m test
+[33m997bc02[m fixed cfc issue
+[33m73a5582[m test
+[33m31a7c00[m test
+[33maefc446[m test
+[33m24183fd[m test
+[33m0f5bad9[m test
+[33m11dc756[m test
+[33m619c4a1[m test
+[33m32c7980[m test
+[33m3b9b105[m test
+[33m0221a0e[m test
+[33mfa588de[m test
+[33m24aee06[m test
+[33mcb7252e[m test
+[33m16ac624[m tew
+[33m92bdfb1[m test
+[33m273d833[m tet
+[33m392aec4[m test
+[33m27d6950[m test
+[33mc816b0d[m test
+[33m97c526e[m test
+[33mb7261fb[m test
+[33mf7ca000[m test
+[33m3cea617[m reminders_total
+[33m26ac920[m test
+[33m79f9ed0[m test
+[33m3168129[m test
+[33m025e68d[m test
+[33m2e3b08b[m test
+[33m96e95d5[m test
+[33m1b818cf[m test
+[33mb14f82b[m test
+[33m5fa53da[m test
+[33ma839482[m test
+[33med91405[m test
+[33m98feb21[m test
+[33m96b9864[m test
+[33m394e5a2[m test
+[33me5d1e38[m test
+[33md1ed804[m test
+[33m62d3ffb[m test
+[33mb1a23de[m test
+[33m812c748[m test
+[33mc4efbf7[m test
+[33ma1d8775[m test
+[33m33e4a61[m test
+[33m5b08ab1[m test
+[33md7d2084[m test
+[33m79f8e32[m test
+[33maf1a671[m test
+[33ma32f2d8[m test
+[33m7b9cb6c[m test
+[33m8712bb9[m test
+[33m5cb3ee7[m test
+[33m746a14d[m test
+[33m3b98989[m test
+[33m95c092b[m quotes
+[33mb851bf0[m added quotesservice
+[33m8bdca07[m test
+[33mb649ee6[m test
+[33me01acf8[m test
+[33m50c0b06[m test
+[33maf25cd1[m test
+[33m459f1fd[m Test
+[33me76a32e[m test
+[33m0a70b0a[m test
+[33mbbea7fc[m test
+[33m5e16c7e[m test
+[33m3cff443[m test
+[33m7333a5e[m test
+[33mc8ea94d[m t3est
+[33m50f6acc[m test
+[33m745f127[m test
+[33mcf7e467[m test
+[33m7bd81a6[m test
+[33m098dbb3[m test
+[33m6f7e94f[m qry completed
+[33m8e9ffb8[m Test
+[33m52501f7[m test
+[33md12adb3[m Services addeed
+[33md1aaa17[m test
+[33mb731097[m test
+[33m6e0da29[m test
+[33mf301cb7[m test
+[33m6349c5c[m test
+[33m761dddd[m Merge branch 'new-branch' of https://github.com/kevinlawrenceking/new-theactorsoffice into new-branch
+[33m5c8872a[m test
+[33m0967c2b[m test
+[33m6db798e[m tags
+[33mfd91c7a[m test
+[33ma03564b[m test
+[33m94294b4[m test
+[33mb944150[m contactsservice
+[33mcf1f593[m team contacts
+[33m978f571[m test
+[33m7732d45[m test
+[33m6266e8d[m myteam
+[33mb3a780b[m Added other services
+[33me713232[m sitelinks
+[33m62a07e3[m add quotes service
+[33ma07bed5[m remove datasource
+[33m67058c0[m test
+[33m82fa265[m test
+[33m4eab8eb[m test
+[33m51bac62[m new cfc
+[33mecc4f68[m twar
+[33mebe563b[m test
+[33m35571fc[m test
+[33m4d0e598[m test
+[33ma71b60d[m test
+[33m200ce08[m test
+[33me2fdb65[m changed all comments to coldfusion comments
+[33m3f95f58[m test
+[33mbe7e36f[m test
+[33mcf35561[m test
+[33m4ff36b0[m test
+[33mecd024c[m test
+[33m28d440d[m test
+[33m89d5835[m test
+[33m2201f4d[m test
+[33mb79c43b[m test
+[33m58f3fb7[m test
+[33m15c6e89[m test
+[33mab94d4c[m test
+[33m8bb8e50[m test
+[33m4b0534f[m test
+[33m63b054a[m test
+[33m91d65ec[m test
+[33m854faee[m test
+[33m1b9b126[m test
+[33m3e3df59[m test
+[33m28771cb[m test
+[33m3c25d20[m test
+[33m8389548[m test
+[33m044dac4[m test
+[33m4b58aeb[m test
+[33me356aa0[m test
+[33m29b8abc[m test
+[33m90f0992[m test
+[33me51b1be[m test
+[33m5ef5650[m test
+[33m8d19a12[m test
+[33m9ab7eaf[m test
+[33m71748c4[m test
+[33m1df97c7[m test
+[33mfefa887[m test
+[33m7577034[m test
+[33m5d92da9[m test
+[33m32abf8e[m test
+[33mfc63187[m test
+[33mfdd3fd4[m test
+[33ma2dba9d[m test
+[33mce9cea5[m test
+[33m5b2e935[m test
+[33m2c3dcc2[m test
+[33me77d2db[m test
+[33m5aa92c5[m test
+[33m85efbad[m test
+[33m183abc6[m test
+[33mea42ab6[m test
+[33maec5d5c[m test
+[33m1b0cb30[m test
+[33m5a91f9e[m test
+[33m06cba23[m test
+[33mdfdea5d[m test
+[33mf2a49f3[m test
+[33m3d2e461[m test
+[33mdd3669b[m test
+[33m32bdf13[m test
+[33mf4cc2ae[m test
+[33mec5cc81[m test
+[33m269fbb8[m test
+[33md2584c3[m test
+[33m72dc589[m test
+[33m0a0595e[m test
+[33ma117ec1[m test
+[33mb4bd7ec[m test
+[33m735ae44[m test
+[33mc601dc7[m test
+[33m6f14af6[m test
+[33m36eeaa4[m test
+[33ma17fdc8[m test
+[33mf285a91[m test
+[33ma8b5100[m TEST
+[33mc1edc8d[m test
+[33m06e96a0[m test
+[33m7a4adf5[m test
+[33mc8b75e5[m test
+[33mf2bb686[m test
+[33m143337f[m test
+[33mebbbc0b[m test
+[33m6cddeea[m test
+[33m17aa907[m test
+[33m72844cd[m test
+[33m426ee25[m test
+[33m4fb918e[m test
+[33mc335ca9[m test
+[33m3d68c12[m test
+[33m673a2f9[m test
+[33m30d6d52[m test
+[33mad2009a[m test
+[33m557684a[m test
+[33m4809744[m test
+[33m28000b6[m test
+[33m5dae181[m test
+[33maee6a48[m fix comment
+[33m1773af2[m x
+[33m90f72f5[m test
+[33m8be1c3d[m c
+[33m94f68f4[m new

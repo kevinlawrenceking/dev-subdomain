@@ -1,0 +1,2 @@
+<cfset eventContactsXRefService = createObject("component", "services.EventContactsXRefService")>
+<cfset finde = eventContactsXRefService.SELeventcontactsxref(ContactID=ContactID, EventID=eventdetails.eventid)>
