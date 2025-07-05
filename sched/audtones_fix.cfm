@@ -1,21 +1,10 @@
   <h3>Style / Format</h3>
     
-<cfset currentURL = cgi.server_name />
-
-<cfset host = ListFirst(currentURL, ".") />
-
-<cfif #host# is "app">
-    <cfset dsn = "abo" />
-  <cfoutput>  <cfset rev = "#rand()#" /> </cfoutput>
-    <cfset suffix = "_1.5" />
-    <cfset information_schema = "actorsbusinessoffice" />
-    <cfelse>
-  <cfset dsn = "abod" />
-<cfset rev = rand() />
-        <cfset suffix = "" />
-        
-    <cfset information_schema = "new_development" />
-</cfif>
+<!--- Use datasource from Application.cfc --->
+<cfset dsn = application.dsn />
+<cfset rev = application.rev />
+<cfset suffix = application.suffix />
+<cfset information_schema = application.information_schema />
 
 <cfset rev = rand() />
 

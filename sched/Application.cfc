@@ -1,6 +1,6 @@
 <cfcomponent output="false">
 
-  <cfquery result="result" name="findit" datasource="abo">
+  <cfquery result="result" name="findit" datasource="#application.dsn#">
     SELECT verid
     FROM taoversions
     ORDER BY isactive DESC, verid DESC
@@ -9,22 +9,12 @@
 
   <cfset current_ver=findit.verid/>
 
-  <cfset host=ListFirst(cgi.server_name, ".")/>
-
   <Cfset application.dbug = "Y" />
-  
 
-    <cfif #host# is "app">
-        <cfset application.dsn="abo"/>
-    <cfset application.information_schema="actorsbusinessoffice"/>
-    <cfset application.suffix="_1.5"/>
-        <cfelse>
-            
-          <cfset application.dsn="abo"/>
-    <cfset application.information_schema="actorsbusinessoffice"/>
-    <cfset application.suffix="_1.5"/>
-                
-    </cfif>
+    <!--- Use datasource from parent Application.cfc --->
+    <cfset application.dsn = application.dsn />
+    <cfset application.information_schema = application.information_schema />
+    <cfset application.suffix = application.suffix />
     
 
     <cfset application.rev=current_ver />

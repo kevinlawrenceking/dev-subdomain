@@ -1,14 +1,5 @@
-    <cfset currentURL=cgi.server_name />
-    <cfset host=ListFirst(currentURL, "." ) />
-
-    <cfif #host# is "app">
-        <cfset dsn="ABO">
-       
-            
-        <cfelse>
-    <cfset dsn = "abod" >
-                
-    </cfif>
+    <!--- Use datasource from Application.cfc --->
+    <cfset dsn = application.dsn>
 
 <cfquery result="result" name="loginQuery" datasource="#dsn#" >
   SELECT * FROM taousers where contactid is null

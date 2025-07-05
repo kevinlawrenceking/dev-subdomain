@@ -1,18 +1,9 @@
 <cfapplication name="TAO" sessionmanagement="true">
 
-<cfset currentURL = cgi.server_name />
-<cfset host = ListFirst(currentURL, ".") />
-
-<!--- Determine the datasource and schema based on the host --->
-<cfif host is "app">
-    <cfset dsn = "abo" />
-    <cfset suffix = "_1.5" />
-    <cfset information_schema = "actorsbusinessoffice" />
-<cfelse>
-    <cfset dsn = "abod" />
-    <cfset suffix = "" />
-    <cfset information_schema = "new_development" />
-</cfif>
+<!--- Use datasource configured in Application.cfc --->
+<cfset dsn = application.dsn />
+<cfset suffix = application.suffix />
+<cfset information_schema = application.information_schema />
 
 
 <cfparam name="pwrong" default="" />

@@ -1,14 +1,7 @@
- <cfscript>
- 
-    host = ListFirst(cgi.server_name, ".");
-
-if (host == "app" || host == "uat") {
-        datasourceName = "abo";
-        dsn = "abo";
-    } else {
-        datasourceName = "abod";
-        dsn = "abod";
-    }
+<cfscript>
+    // Use datasource from parent Application.cfc
+    datasourceName = application.dsn;
+    dsn = application.dsn;
 </cfscript>
 
 <cfapplication 

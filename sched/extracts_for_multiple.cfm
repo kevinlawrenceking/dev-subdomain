@@ -1,6 +1,6 @@
 <cfparam name="mr" default="3" />
 
-<cfquery result="result" name="getFiles" datasource="abod" maxrows="#mr#">
+<cfquery result="result" name="getFiles" datasource="#application.dsn#" maxrows="#mr#">
     SELECT id, `path`, `filename`
     FROM tao_files
     WHERE filename = 'account_info.cfm'
@@ -52,7 +52,7 @@
                     <cfset qryNameSanitized = REReplace(qryName, "[^a-zA-Z0-9_]", "", "ALL")>
 
                     <!--- Generate new query filename --->
-                    <cfquery result="result" name="getNextId" datasource="abod">
+                    <cfquery result="result" name="getNextId" datasource="#application.dsn#">
                         SELECT IFNULL(MAX(id), 0) + 1 AS nextId FROM tao_files
                     </cfquery>
 
@@ -155,7 +155,7 @@
                     <cfset qryDetails = REReplace(qryDetails, "[\s]+", " ", "ALL")>
 
                     <!--- Insert into database --->
-                    <cfquery result="result" datasource="abod">
+                    <cfquery result="result" datasource="#application.dsn#">
                         INSERT INTO tao_files (
                             filename,
                             status,
@@ -192,7 +192,7 @@
         <cffile action="write" file="#newMainFilePath#" output="#fileContent#">
 
         <!--- Mark file as processed --->
-        <cfquery result="result" datasource="abod">
+        <cfquery result="result" datasource="#application.dsn#">
             UPDATE tao_files
             SET qry_extract_yn = 1
             WHERE id = <cfqueryparam value="#getFiles.id#" cfsqltype="cf_sql_integer">

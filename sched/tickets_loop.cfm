@@ -1,9 +1,9 @@
-<cfquery result="result" datasource="abod" name="z"  >
+<cfquery result="result" datasource="#application.dsn#" name="z"  >
 Select * from tickets
 </cfquery>  
 <cfloop query="z">
 
-<cfquery result="result" datasource="abo" name="update"  >   
+<cfquery result="result" datasource="#application.dsn#" name="update"  >
         update tickets
         set ticketname  = <cfqueryparam cfsqltype="cf_sql_varchar" value="#z.ticketname#" />
     ,ticketstatus  = <cfqueryparam cfsqltype="cf_sql_varchar" value="#z.ticketstatus#" />

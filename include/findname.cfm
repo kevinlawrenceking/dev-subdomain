@@ -1,5 +1,5 @@
     
-<cfquery result="result" name="getFiles" datasource="abod">
+<cfquery result="result" name="getFiles" datasource="#application.dsn#">
     SELECT `id`, `path`, `filename`
     FROM `tao_files`
     WHERE `function_id` IS NOT NULL
@@ -34,7 +34,7 @@
     <br/>
     </cfoutput>
 
-<cfquery result="result" datasource="abod">
+<cfquery result="result" datasource="#application.dsn#">
                 UPDATE tao_files
                 SET qry_name = <cfqueryparam value="#extractedQueryName#" cfsqltype="cf_sql_varchar" maxlength="255">
                 WHERE id = <cfqueryparam value="#getFiles.id#" cfsqltype="cf_sql_integer">

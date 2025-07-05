@@ -1,6 +1,8 @@
 <cfset z = 0>
      <cfset currentURL = cgi.server_name />
     <cfset host = ListFirst(currentURL, ".") />
+    <!--- Use datasource from Application.cfc --->
+    <cfset dsn = application.dsn />
 <cfoutput>
 <cfdirectory action="list" directory="D:\home\theactorsoffice.com\wwwroot\#host#-subdomain\include\" name="listRoot">
 </cfoutput>
@@ -11,7 +13,7 @@
 
 <cfif #fileext# is "cfm">
 
-<CFQUERY RESULT="RESULT" name="bro_add" datasource="abo" >
+<CFQUERY RESULT="RESULT" name="bro_add" datasource="#application.dsn#" >
 		select * from bigbrother where script_name = '/include/#name#'
           </CFQUERY>
           
