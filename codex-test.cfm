@@ -1,3 +1,3 @@
 <cfoutput>
     Codex test is working! #now()#
-</cfoutput>
+</cfoutput><!--- added here --->
