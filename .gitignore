@@ -1,2 +1,9 @@
 
 .codegpt
+/cfusion/
+/lucee/
+/temp/
+/logs/
+/.env
+*.bak
+*.tmp
