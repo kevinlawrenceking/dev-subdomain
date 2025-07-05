@@ -1,14 +1,6 @@
-<cfset currentURL = cgi.server_name />
-
-<cfset host = ListFirst(currentURL, ".") />
-
-<cfif #host# is "app">
-    <cfset dsn = "abo" />
-    <cfset rev = "1.2.0" />
-    <cfelse>
-  <cfset dsn = "abod" />
-<cfset rev = rand() />
-</cfif>
+<!--- Use datasource from Application.cfc --->
+<cfset dsn = application.dsn />
+<cfset rev = application.rev />
 
 <cfquery result="result"  name="jsons">
             SELECT col1 from contacts_ss WHERE userid = #userid# and col1 not like '%#chr(34)#%'

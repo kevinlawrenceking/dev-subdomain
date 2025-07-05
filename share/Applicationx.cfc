@@ -3,24 +3,12 @@
 
   <cffunction name="onRequestStart" returntype="void" output="false">
         <cfscript>
-            // Get the first part of the server name (subdomain)
-            host = ListFirst(cgi.server_name, ".");
-
-            // Determine the datasource based on the host
-            if (host == "app" || host == "uat") {
-                datasourceName = "abo";
-                dsn = "abo";
-            } else {
-                datasourceName = "abod";
-                dsn = "abod";
-            }
-
-            // Optionally store the datasource in application or request scope
+            // Use datasource configured in Application.cfc
             this.datasource = application.dsn;
-            application.datasourceName = datasourceName;
-            application.dsn = dsn;
-               application.baseMediaPath = "C:\home\theactorsoffice.com\media-" & this.datasource;
-    application.baseMediaUrl = "/media-" & this.datasource;
+            application.datasourceName = application.dsn;
+            application.dsn = application.dsn;
+            application.baseMediaPath = "C:\home\theactorsoffice.com\media-" & this.datasource;
+            application.baseMediaUrl = "/media-" & this.datasource;
         </cfscript>
     </cffunction>
 

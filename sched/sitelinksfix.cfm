@@ -2,7 +2,7 @@
 <cfparam name="select_userid" default="793" />
 
 <cfset n=0 />
-<cfset dsn = "abo" />
+<cfset dsn = application.dsn />
 <cfset dbug = "Y"  />
 
 <cfquery result="result" datasource="#dsn#" name="z" maxrows="5">

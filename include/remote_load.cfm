@@ -4,23 +4,8 @@
 
 <cfset current_ver = int(findit.verid) />
 
-<!--- Check the host environment to determine database settings --->
-<cfif host eq "app" or host eq "uat">
-    
-    <cfset dsn = "abo" />
-    <cfset rev = current_ver />
-<cfif host eq "app">
-  <cfset application.suffix = "_1.5" />
-<cfelse>
-  <cfset application.suffix = "" />
-</cfif>
-    <cfset information_schema = "actorsbusinessoffice" />
-    
-<cfelse>
-    
-    <cfset dsn = "abod" />
-    <cfset rev = rand() />
-    <cfset suffix = "" />
-    <cfset information_schema = "new_development" />
-    
-</cfif>
+<!--- Use datasource configured in Application.cfc --->
+<cfset dsn = application.dsn />
+<cfset rev = current_ver />
+<cfset suffix = application.suffix />
+<cfset information_schema = application.information_schema />

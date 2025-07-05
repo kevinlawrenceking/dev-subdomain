@@ -1,13 +1,13 @@
 
 
-<cfquery result="result" datasource="abod" name="x">
+<cfquery result="result" datasource="#application.dsn#" name="x">
 SELECT * FROM tickets WHERE verid = 7 AND ticketstatus = 'Implemented'
  
 </cfquery>
 
 <cfloop query="x">
     
-    <cfquery result="result" name="add" datasource="abo">
+    <cfquery result="result" name="add" datasource="#application.dsn#">
         INSERT INTO tickets (pgid,ticketName,ticketdetails,tickettype,userid,ticketactive,ticketstring,verid,ticketresponse,ticketcreateddate,ticketstatus,tickettype,environ,ticketpriority,esthours)
         Values (
         <cfqueryparam value="#x.pgid#" cfsqltype="cf_sql_integer" />

@@ -1,23 +1,12 @@
 <Cfparam name="pass1" default="" />
 
-<cfset currentURL = cgi.server_name />
-
-<cfset host = ListFirst(currentURL, ".") />
-
-<cfif #host# is "app">
-    
-    <cfset dsn = "abo" />
-    
-    <cfelse>
-  
-        <cfset dsn = "abod" />
-
-</cfif>
+<!--- Use datasource configured in Application.cfc --->
+<cfset dsn = application.dsn />
     
     
 <cfset new_passwordSalt=hash(generateSecretKey("AES"),"SHA-512") />
 
-        <cfquery name="update" datasource="abo"    >
+        <cfquery name="update" datasource="#application.dsn#"    >
     UPDATE taousers
     set passwordHash = <cfqueryparam cfsqltype="char" value="#hash(pass1 & new_passwordSalt,'SHA-512')#" />
             ,recover = ''

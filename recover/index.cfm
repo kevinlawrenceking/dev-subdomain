@@ -2,7 +2,7 @@
 <cfparam name="p" default="" />
  
 
-<cfquery result="result" name="findit" datasource="abo">
+<cfquery result="result" name="findit" datasource="#application.dsn#">
         SELECT verid 
         FROM taoversions  
         ORDER BY isactive DESC, verid DESC 
@@ -11,23 +11,8 @@
 
 <cfset current_ver = findit.verid />
 
-<cfset host = ListFirst(cgi.server_name, ".") />
-
-<cfif host eq "app" or host eq "uat">
-        <cfset application.dsn = "abo" />
-        <cfset application.information_schema = "actorsbusinessoffice" />
-        <cfif host eq "app">
-  <cfset application.suffix = "_1.5" />
-<cfelse>
-  <cfset application.suffix = "" />
-</cfif>
-        <cfset application.rev = current_ver />
-    <cfelse>
-        <cfset application.dsn = "abod" />
-        <cfset application.information_schema = "new_development" />
-        <cfset application.suffix = "" />
-        <cfset application.rev = 1 />
-    </cfif>
+<!--- Use datasource configured in Application.cfc --->
+<cfset dsn = application.dsn />
 
 <cfif #isdefined('recoverid')# >
 <cfoutput>Select * from taousers where userid = #recoverid#</cfoutput>

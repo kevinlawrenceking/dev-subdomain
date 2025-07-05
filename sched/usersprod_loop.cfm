@@ -1,12 +1,12 @@
  
 
-<cfquery result="result" name="x" datasource="abo" >
+<cfquery result="result" name="x" datasource="#application.dsn#" >
   SELECT * FROM taousers_tbl
 </cfquery>
 
 <cfloop query="x">
 
-<cfquery result="result" name="setHashedPassword" datasource="abod" >
+<cfquery result="result" name="setHashedPassword" datasource="#application.dsn#" >
     UPDATE taousers_tbl
     SET
       useremail  = <cfqueryparam cfsqltype="varchar" value="#x.useremail#">

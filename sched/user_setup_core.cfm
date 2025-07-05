@@ -1,10 +1,5 @@
-<cfset host = ListFirst(cgi.server_name, ".") />
-
-<cfif host eq "app" or host eq "uat">
-    <cfset dsn = "abo" />
-<cfelse>
-    <cfset dsn = "abod" />
-</cfif>
+<!--- Use datasource from Application.cfc --->
+<cfset dsn = application.dsn />
 
 <cfparam name="dbugz" default="N" />
 
