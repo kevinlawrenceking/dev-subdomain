@@ -32,6 +32,7 @@
       <cfif (notsActive.notstatus eq "Completed" OR notsActive.notstatus eq "Skipped") AND showInactive eq "0">
         <cfcontinue>
       </cfif>
+      <cfoutput>
       <tr id="not_#notsActive.notid#" class="#iif(notsActive.notstatus eq 'Skipped','skipped-row','')#">
         <td>#notsActive.delstart# #notsActive.actiondetails# #notsActive.delend#</td>
         <td>#this.formatDate(notsActive.notstartdate)#</td>
@@ -43,6 +44,7 @@
           </cfif>
         </td>
       </tr>
+      </cfoutput>
     </cfif>
   </cfloop>
 </cfloop>
