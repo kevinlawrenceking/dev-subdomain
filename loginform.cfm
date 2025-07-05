@@ -1,5 +1,23 @@
 <cfapplication name="TAO" sessionmanagement="true">
 
+<!--- Ensure required application variables exist --->
+<cfif NOT structKeyExists(application, "dsn")>
+    <cfset host = ListFirst(cgi.server_name, ".") />
+    <cfif host EQ "app">
+        <cfset application.dsn = "abo" />
+    <cfelse>
+        <cfset application.dsn = "abod" />
+    </cfif>
+</cfif>
+
+<cfif NOT structKeyExists(application, "information_schema")>
+    <cfset application.information_schema = "actorsbusinessoffice" />
+</cfif>
+
+<cfif NOT structKeyExists(application, "suffix")>
+    <cfset application.suffix = "_1.5" />
+</cfif>
+
 <!--- Use datasource configured in Application.cfc --->
 <cfset dsn = application.dsn />
 <cfset suffix = application.suffix />
