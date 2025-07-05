@@ -45,18 +45,20 @@
  
  
 <cfif loginQuery.recordcount eq 1>
-    <cfset userpassword2 = Hash(form.j_password & loginQuery.passwordSalt, "SHA-512")> 
+    <cfset userpassword2 = Hash(form.j_password & loginQuery.passwordSalt, "SHA-512")>
 
- 
+    <!--- Validate the provided password --->
+    <cfif loginQuery.passwordHash eq userpassword2>
         <cfset session.userid = loginQuery.userid>
         <cfset session.userLoggedIn = true>
 
-        <!--- Debug session after setting user ID --->
-        <cfdump var="#session#" label="Session After Login">
-    
-        <cflocation url="#loginQuery.status_url#?u=#loginquery.userid#" addtoken="true">
-   
-</cfif>
+        <cflocation url="#loginQuery.status_url#?u=#loginQuery.userid#" addtoken="true">
+    <cfelse>
+        <!--- Invalid password --->
+        <cflocation url="/loginform.cfm?pwrong=Y" addtoken="false">
+    </cfif>
 
- 
-<cflocation url="/loginform.cfm?pwrong=Y" addtoken="false">
+<cfelse>
+    <!--- User not found --->
+    <cflocation url="/loginform.cfm?pwrong=Y" addtoken="false">
+</cfif>
