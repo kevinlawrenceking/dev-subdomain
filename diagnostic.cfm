@@ -14,7 +14,7 @@
   // Test database connection
   dbResult = {};
   try {
-    datasource = "tao_dev"; // <-- Replace with your dev DSN
+    datasource = "abod"; // <-- Replace with your dev DSN
     q = queryExecute("SELECT TOP 1 * FROM fusystems", {}, { datasource: datasource });
     dbResult.success = true;
     dbResult.recordCount = q.recordCount;
