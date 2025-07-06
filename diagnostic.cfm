@@ -15,7 +15,7 @@
   dbResult = {};
   try {
     datasource = "abod"; 
-    q = queryExecute("SELECT TOP 1 * FROM fusystems", {}, { datasource: datasource });
+    q = queryExecute("SELECT * FROM fusystems", {}, { datasource: datasource });
     dbResult.success = true;
     dbResult.recordCount = q.recordCount;
     dbResult.sampleSystem = q[1];
