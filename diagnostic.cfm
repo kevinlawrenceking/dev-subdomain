@@ -1,18 +1,20 @@
 <cfscript>
-  // Basic Environment Info
+  // Get Java version via system call
+  javaVersion = CreateObject("java", "java.lang.System").getProperty("java.version");
+
   serverInfo = {
     "Server OS": server.os.name,
-    "CF Version": server.coldfusion.productVersion,
-    "Java Version": getSystemInfo().javaVersion,
+    "ColdFusion Version": server.coldfusion.productVersion,
+    "Java Version": javaVersion,
     "Template Path": GetTemplatePath(),
     "Web Root": ExpandPath("/"),
     "Date/Time": Now()
   };
 
-  // Try DB connection
+  // Test database connection
   dbResult = {};
   try {
-    datasource = "tao_dev"; // ← Your dev DSN here
+    datasource = "tao_dev"; // <-- Replace with your dev DSN
     q = queryExecute("SELECT TOP 1 * FROM fusystems", {}, { datasource: datasource });
     dbResult.success = true;
     dbResult.recordCount = q.recordCount;
@@ -22,7 +24,7 @@
     dbResult.error = e.message & ": " & e.detail;
   }
 
-  // Output
+  // Output diagnostics
   WriteOutput("<h2>ColdFusion Environment Diagnostic</h2><hr>");
 
   WriteOutput("<h3>Server Info</h3><ul>");
@@ -33,11 +35,11 @@
 
   WriteOutput("<h3>Database Test</h3>");
   if (dbResult.success) {
-    WriteOutput("<p><strong>Status:</strong> ✅ Connected</p>");
-    WriteOutput("<p><strong>Rows Returned:</strong> #dbResult.recordCount#</p>");
+    WriteOutput("<p>Status: Connected</p>");
+    WriteOutput("<p>Rows Returned: #dbResult.recordCount#</p>");
     WriteDump(var=dbResult.sampleSystem, label="Sample Record from fusystems", format="html");
   } else {
-    WriteOutput("<p><strong>Status:</strong> ❌ Failed to connect</p>");
-    WriteOutput("<p><strong>Error:</strong> #dbResult.error#</p>");
+    WriteOutput("<p>Status: Failed to connect</p>");
+    WriteOutput("<p>Error: #dbResult.error#</p>");
   }
 </cfscript>
