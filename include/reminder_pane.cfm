@@ -51,11 +51,12 @@ function loadReminders(showInactive) {
   }, function (html) {
     const container = $('<div>').append($.parseHTML(html));
 
-    const rowsHtml = container.find('#reminderRows').html();
-    const modalsHtml = container.find('#modalContainer').html();
+    // Instead of injecting tbody, inject just rows into existing tbody
+    const newRows = container.find('#reminderRows > tr');
+    $('#reminderRows').html(newRows);
 
-    $('#reminderRows').html(rowsHtml);
-    $('#modalContainer').html(modalsHtml);
+    // Modal HTML can be safely injected
+    $('#modalContainer').html(container.find('#modalContainer').html());
 
     bindReminderHandlers();
 
