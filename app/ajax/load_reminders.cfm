@@ -9,7 +9,12 @@
 <cfset showInactive = val(url.showInactive)>
 <cfset hideCompleted = url.HIDE_COMPLETED>
 <cfset host = ListFirst(cgi.server_name, ".")>
-<cfset dsn = iif(host EQ "app", "abo", "abod")>
+<cfif host EQ "app">
+  <cfset dsn = "abo">
+<cfelse>
+  <cfset dsn = "abod">
+</cfif>
+
 
 <!--- Determine sessionUserId and sysActiveSuid --->
 <cfif structKeyExists(session, "user_id")>
