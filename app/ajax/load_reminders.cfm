@@ -1,3 +1,7 @@
+<cfcontent type="text/html; charset=utf-8">
+<cfsetting showdebugoutput="false">
+
+
 <cfparam name="url.showInactive" default="0">
 <cfparam name="url.contactid" default="0">
 <cfparam name="url.HIDE_COMPLETED" default="0">
