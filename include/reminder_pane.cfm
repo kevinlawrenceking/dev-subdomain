@@ -13,7 +13,7 @@
 </div>
 
 <!--- Reminders Table --->
-<cfquery name="qReminders" datasource="#dsn#">
+<cfquery name="qReminders" >
   SELECT
     n.notID,
     n.notStatus,
