@@ -2,64 +2,60 @@
 <cfparam name="url.contactid" default="0">
 <cfparam name="url.HIDE_COMPLETED" default="0">
 
-<cfset currentid     = url.contactid>
-<cfset showInactive  = url.showInactive>
+<cfset currentid = url.contactid>
+<cfset showInactive = url.showInactive>
 <cfset hideCompleted = url.HIDE_COMPLETED>
+<cfset sessionUserId = session.userid>
 
-<!--- DEBUG --->
-<cfoutput>
-<div style="border:1px solid ##ccc; padding:10px; margin:10px 0;">
-  <strong>DEBUG INPUTS</strong><br>
-  currentid: #currentid#<br>
-  sessionUserId: #session.userid#<br>
-  hideCompleted: #hideCompleted#<br>
-</div>
-</cfoutput>
-
-<!--- Get active systems for this contact/user --->
+<!--- Load relevant system-user associations --->
 <cfset systemUserService = createObject("component", "services.SystemUserService")>
 <cfset sysActive = systemUserService.SELfusystemusers_24758(
     currentid = currentid,
-    sessionUserId = session.userid,
+    sessionUserId = sessionUserId,
     hideCompleted = hideCompleted
 )>
 
 <cfoutput>
-<!--- Reminder Rows: output only <tr> rows, NOT the <tbody> wrapper --->
+<!--- Debug --->
+<div style="border:1px solid ##ccc; padding:10px; margin:10px 0;">
+  <strong>DEBUG INPUTS</strong><br>
+  currentid: #currentid#<br>
+  sessionUserId: #sessionUserId#<br>
+  hideCompleted: #hideCompleted#<br>
+</div>
+
+<!--- Reminder Table Rows --->
+<tbody id="reminderRows">
 <cfloop query="sysActive">
   <cfinclude template="/include/qry/notsActive_510_1.cfm" />
   <cfloop query="notsActive">
+
+    <!--- Skip if status is "Upcoming" --->
     <cfif notsActive.notstatus eq "Upcoming">
       <cfcontinue>
     </cfif>
 
-    <!--- Filtering --->
-    <cfif (
-      (notsActive.notstatus eq "Completed" AND hideCompleted eq "1") OR
-      ((notsActive.notstatus eq "Completed" OR notsActive.notstatus eq "Skipped") AND showInactive eq "0")
-    )>
-      <!--- Skip --->
+    <!--- Hide Skipped/Completed if showInactive is off --->
+    <cfif (notsActive.notstatus eq "Skipped" OR notsActive.notstatus eq "Completed") AND showInactive eq 0>
       <cfcontinue>
     </cfif>
 
-    <!--- Render one row --->
-  <cfset rowClass = "">
-<cfif notsActive.notstatus eq "Skipped">
-  <cfset rowClass = "skipped-row">
-</cfif>
+    <!--- Hide Completed if HIDE_COMPLETED is on --->
+    <cfif hideCompleted eq 1 AND notsActive.notstatus eq "Completed">
+      <cfcontinue>
+    </cfif>
 
-<tr id="not_#notsActive.notid#" class="#rowClass#">
-
+    <tr id="not_#notsActive.notid#" class="<cfif notsActive.notstatus eq 'Skipped'>skipped-row</cfif>">
       <td>
         <a href="##" data-bs-toggle="modal" data-bs-target="##action#notsActive.notid#-modal" title="Click for details">
           <i class="fe-info font-14 mr-1"></i>
         </a>
-        #notsActive.delstart# #notsActive.actiondetails# #notsActive.delend#
+        #notsActive.actiondetails#
       </td>
-      <td>#this.formatDate(notsActive.notstartdate)#</td>
-      <td><cfif notsActive.notstatus eq 'Pending'>Pending<cfelse>#notsActive.notstatus#</cfif></td>
+      <td>#dateFormat(notsActive.notstartdate, "mm/dd/yyyy")#</td>
+      <td>#notsActive.notstatus#</td>
       <td>
-        <cfif notsActive.notstatus eq 'Pending'>
+        <cfif notsActive.notstatus eq "Pending">
           <input type="checkbox" class="completeReminder" data-id="#notsActive.notid#">
           <button class="btn btn-sm btn-link text-danger skipReminder" data-id="#notsActive.notid#">X</button>
         </cfif>
@@ -67,20 +63,24 @@
     </tr>
   </cfloop>
 </cfloop>
+</tbody>
 
 <!--- Modal Definitions --->
 <div id="modalContainer">
 <cfloop query="sysActive">
   <cfinclude template="/include/qry/notsActive_510_1.cfm" />
   <cfloop query="notsActive">
+
+    <!--- Same filter logic as above --->
     <cfif notsActive.notstatus eq "Upcoming">
       <cfcontinue>
     </cfif>
 
-    <cfif (
-      (notsActive.notstatus eq "Completed" AND hideCompleted eq "1") OR
-      ((notsActive.notstatus eq "Completed" OR notsActive.notstatus eq "Skipped") AND showInactive eq "0")
-    )>
+    <cfif (notsActive.notstatus eq "Skipped" OR notsActive.notstatus eq "Completed") AND showInactive eq 0>
+      <cfcontinue>
+    </cfif>
+
+    <cfif hideCompleted eq 1 AND notsActive.notstatus eq "Completed">
       <cfcontinue>
     </cfif>
 
@@ -98,6 +98,7 @@
         </div>
       </div>
     </div>
+
   </cfloop>
 </cfloop>
 </div>
