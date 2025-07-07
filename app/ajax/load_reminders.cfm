@@ -5,101 +5,110 @@
 <cfparam name="url.showInactive" default="0">
 <cfparam name="url.HIDE_COMPLETED" default="0">
 
-<!--- Infer DSN from host --->
-<cfset host = ListFirst(cgi.server_name, ".")>
-<cfset dsn = (host EQ "app") ? "abo" : "abod">
-
-<!--- Normalize Inputs --->
 <cfset currentid = val(url.contactid)>
 <cfset showInactive = val(url.showInactive)>
-<cfset hideCompleted = val(url.HIDE_COMPLETED)>
-<cfset sessionUserId = 0>
+<cfset hideCompleted = url.HIDE_COMPLETED>
+<cfset host = ListFirst(cgi.server_name, ".")>
+<cfset dsn = iif(host EQ "app", "abo", "abod")>
 
-<!--- Get sessionUserId from session or fallback --->
+<!--- Determine sessionUserId and sysActiveSuid --->
 <cfif structKeyExists(session, "user_id")>
   <cfset sessionUserId = session.user_id>
 <cfelse>
   <cfquery name="findUser" datasource="#dsn#">
-    SELECT userid FROM contactdetails 
-    WHERE contactid = <cfqueryparam value="#currentid#" cfsqltype="cf_sql_integer">
+    SELECT userid FROM contactdetails WHERE contactid = <cfqueryparam value="#currentid#" cfsqltype="cf_sql_integer">
   </cfquery>
   <cfif findUser.recordCount>
     <cfset sessionUserId = findUser.userid>
   <cfelse>
-    <cfoutput><h2>Unauthorized</h2><p>No user associated with contact ID #currentid#.</p></cfoutput>
+    <cfoutput><h2>Unauthorized</h2><p>No user found for contact ID #currentid#.</p></cfoutput>
     <cfabort>
   </cfif>
 </cfif>
 
-<!--- Execute main query --->
-<cftry>
-  <cfquery name="qReminders" datasource="#dsn#">
-    SELECT 
-      n.id AS reminder_id,
-      n.notStatus AS reminder_status,
-      n.notstartdate AS not_date,
-      a.name AS action_name,
-      a.description AS action_description,
-      a.title AS action_title
-    FROM notifications n
-    INNER JOIN fuactions a ON a.id = n.action_id
-    WHERE n.contact_id = <cfqueryparam value="#currentid#" cfsqltype="cf_sql_integer">
-      AND n.user_id = <cfqueryparam value="#sessionUserId#" cfsqltype="cf_sql_integer">
-      AND (
-        <cfif showInactive EQ 1>
-          n.notStatus IN ('Pending', 'Skipped', 'Completed')
-        <cfelse>
-          n.notStatus = 'Pending'
-        </cfif>
-      )
-      <cfif hideCompleted EQ 1>
-        AND n.notStatus != 'Completed'
-      </cfif>
-      AND n.notstartdate <= GETDATE()
-    ORDER BY n.notstartdate ASC
-  </cfquery>
-<cfcatch type="any">
-  <cfoutput>
-    <h2>Query Error</h2>
-    <pre>#cfcatch.message#</pre>
-    <pre>#cfcatch.detail#</pre>
-    <pre>#cfcatch.queryError#</pre>
-  </cfoutput>
-  <cfabort>
-</cfcatch>
-</cftry>
+<cfquery name="getSu" datasource="#dsn#">
+  SELECT suid
+  FROM fusystemusers
+  WHERE contactid = <cfqueryparam value="#currentid#" cfsqltype="cf_sql_integer">
+    AND userid = <cfqueryparam value="#sessionUserId#" cfsqltype="cf_sql_integer">
+    AND sustatus = 'Active'
+</cfquery>
 
-<!--- Output Table Rows --->
+<cfif getSu.recordCount>
+  <cfset sysActiveSuid = getSu.suid>
+<cfelse>
+  <cfoutput><h2>No Active System User</h2><p>No active fusystemusers record found.</p></cfoutput>
+  <cfabort>
+</cfif>
+
+<!--- MAIN QUERY --->
+<cfquery name="qReminders" datasource="#dsn#">
+  SELECT
+    n.notID,
+    n.actionID,
+    n.userID,
+    n.suID,
+    n.notStartDate,
+    n.notStatus,
+    n.ispastdue,
+
+    a.actionTitle,
+    a.actionDetails,
+    a.actionInfo,
+
+    ns.status_color
+
+  FROM funotifications n
+  INNER JOIN fusystemusers f ON f.suID = n.suID
+  INNER JOIN fuactions a ON a.actionID = n.actionID
+  INNER JOIN notstatuses ns ON ns.notstatus = n.notStatus
+
+  WHERE f.contactID = <cfqueryparam value="#currentid#" cfsqltype="cf_sql_integer">
+    AND f.suID = <cfqueryparam value="#sysActiveSuid#" cfsqltype="cf_sql_integer">
+    AND n.notStartDate IS NOT NULL
+    AND n.notStartDate <= <cfqueryparam value="#now()#" cfsqltype="cf_sql_timestamp">
+    <cfif hideCompleted EQ "1">
+      AND n.notStatus NOT IN ('Completed', 'Skipped')
+    <cfelseif showInactive EQ 0>
+      AND n.notStatus = 'Pending'
+    </cfif>
+
+  ORDER BY 
+    FIELD(n.notStatus, 'Pending', 'Completed', 'Skipped'),
+    n.notStartDate
+</cfquery>
+
+<!--- OUTPUT TABLE ROWS --->
 <cfoutput query="qReminders">
-  <tr id="not_#reminder_id#" class="#iif(reminder_status EQ 'Skipped', 'skipped-row', '')#">
+  <tr id="not_#notID#" class="#iif(notStatus EQ 'Skipped', 'skipped-row', '')#">
     <td>
-      <a href="##" data-bs-toggle="modal" data-bs-target="##action#reminder_id#-modal" title="Click for details">
+      <a href="##" data-bs-toggle="modal" data-bs-target="##action#notID#-modal" title="Click for details">
         <i class="fe-info font-14 mr-1"></i>
       </a>
-      #action_name#
+      #actionDetails#
     </td>
-    <td>#dateFormat(not_date, "mm/dd/yyyy")#</td>
-    <td>#reminder_status#</td>
+    <td>#dateformat(notStartDate, "mm/dd/yyyy")#</td>
+    <td>#notStatus#</td>
     <td>
-      <input type="checkbox" class="completeReminder" data-id="#reminder_id#">
-      <button class="btn btn-sm btn-link text-danger skipReminder" data-id="#reminder_id#">X</button>
+      <input type="checkbox" class="completeReminder" data-id="#notID#">
+      <button class="btn btn-sm btn-link text-danger skipReminder" data-id="#notID#">X</button>
     </td>
   </tr>
 </cfoutput>
 
-<!--- Modal Container --->
+<!--- OUTPUT MODALS --->
 <div id="modalContainer">
   <cfoutput query="qReminders">
-    <div id="action#reminder_id#-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+    <div id="action#notID#-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h4 class="modal-title">#action_title#</h4>
+            <h4 class="modal-title">#actionTitle#</h4>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
-            <h5>#action_name#</h5>
-            <p>#action_description#</p>
+            <h5>#actionDetails#</h5>
+            <p>#actionInfo#</p>
           </div>
         </div>
       </div>
