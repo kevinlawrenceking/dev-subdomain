@@ -6,12 +6,26 @@
 <cfset showInactive  = url.showInactive>
 <cfset hideCompleted = url.HIDE_COMPLETED>
 
-<!--- Retrieve active systems for this contact/user --->
-<cfinclude template="/include/qry/sysActive_537_1.cfm" />
+<!--- DEBUG --->
+<cfoutput>
+<div style="border:1px solid #ccc; padding:10px; margin:10px 0;">
+  <strong>DEBUG INPUTS</strong><br>
+  currentid: #currentid#<br>
+  sessionUserId: #session.userid#<br>
+  hideCompleted: #hideCompleted#<br>
+</div>
+</cfoutput>
+
+<!--- Get active systems for this contact/user --->
+<cfset systemUserService = createObject("component", "services.SystemUserService")>
+<cfset sysActive = systemUserService.SELfusystemusers_24758(
+    currentid = currentid,
+    sessionUserId = session.userid,
+    hideCompleted = hideCompleted
+)>
 
 <cfoutput>
-<!-- Reminder Rows -->
-<tbody id="reminderRows">
+<!--- Reminder Rows: output only <tr> rows, NOT the <tbody> wrapper --->
 <cfloop query="sysActive">
   <cfinclude template="/include/qry/notsActive_510_1.cfm" />
   <cfloop query="notsActive">
@@ -19,15 +33,23 @@
       <cfcontinue>
     </cfif>
 
-    <!-- Skip if not shown due to showInactive or hideCompleted -->
+    <!--- Filtering --->
     <cfif (
       (notsActive.notstatus eq "Completed" AND hideCompleted eq "1") OR
       ((notsActive.notstatus eq "Completed" OR notsActive.notstatus eq "Skipped") AND showInactive eq "0")
     )>
+      <!--- Skip --->
       <cfcontinue>
     </cfif>
 
-    <tr id="not_#notsActive.notid#" class="#iif(notsActive.notstatus eq 'Skipped','skipped-row','')#">
+    <!--- Render one row --->
+  <cfset rowClass = "">
+<cfif notsActive.notstatus eq "Skipped">
+  <cfset rowClass = "skipped-row">
+</cfif>
+
+<tr id="not_#notsActive.notid#" class="#rowClass#">
+
       <td>
         <a href="##" data-bs-toggle="modal" data-bs-target="##action#notsActive.notid#-modal" title="Click for details">
           <i class="fe-info font-14 mr-1"></i>
@@ -45,9 +67,8 @@
     </tr>
   </cfloop>
 </cfloop>
-</tbody>
 
-<!-- Modal Definitions -->
+<!--- Modal Definitions --->
 <div id="modalContainer">
 <cfloop query="sysActive">
   <cfinclude template="/include/qry/notsActive_510_1.cfm" />
@@ -56,7 +77,6 @@
       <cfcontinue>
     </cfif>
 
-    <!-- Skip if not shown due to showInactive or hideCompleted -->
     <cfif (
       (notsActive.notstatus eq "Completed" AND hideCompleted eq "1") OR
       ((notsActive.notstatus eq "Completed" OR notsActive.notstatus eq "Skipped") AND showInactive eq "0")
