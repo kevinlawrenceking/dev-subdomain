@@ -1,4 +1,8 @@
 <cfparam name="url.showInactive" default="0">
+
+<cfif isdefined('contactid')>
+<cfset currentid = contactid />
+</cfif>
 <cfset showInactive = url.showInactive>
 
 <!--- Retrieve active systems for this contact/user --->
