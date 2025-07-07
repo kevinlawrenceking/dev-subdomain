@@ -54,8 +54,8 @@
 <cfquery name="qReminders" datasource="#dsn#">
 SELECT 
   n.id AS reminder_id,
-  n.status AS reminder_status,
-  n.not_date,
+  n.notstatus AS reminder_status,
+  n.notstartdate as not_date,
   a.name AS action_name,
   a.description AS action_description,
   a.title AS action_title
