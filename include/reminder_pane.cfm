@@ -52,17 +52,19 @@ function loadReminders(showInactive) {
     const container = document.createElement('div');
     container.innerHTML = html;
 
-    // Grab just the TR elements
+    // Get all <tr> elements directly
     const trRows = container.querySelectorAll('tr');
-    $('#reminderRows').html(trRows); // jQuery handles NodeList fine here
+    const $reminderRows = $('#reminderRows');
+    $reminderRows.empty();
+    trRows.forEach(row => $reminderRows.append(row));
 
-    // Replace modal container
+    // Handle modal injection
     const modalHTML = container.querySelector('#modalContainer');
     if (modalHTML) {
       $('#modalContainer').html(modalHTML.innerHTML);
     }
 
-    bindReminderHandlers(); // rebind click handlers
+    bindReminderHandlers();
     console.log(`[AJAX] Injected ${trRows.length} reminder rows`);
   });
 }
@@ -112,6 +114,7 @@ $(document).ready(function () {
   });
 });
 </script>
+
 
 
 <cfset script_name_include = "/include/#ListLast(GetCurrentTemplatePath(), " \")#">

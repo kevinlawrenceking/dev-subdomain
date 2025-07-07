@@ -79,24 +79,24 @@
 </cfquery>
 
 <!--- ROW OUTPUT WRAPPED FOR JS SELECTOR --->
-<div id="reminderRowsContainer">
-  <cfoutput query="qReminders">
-    <tr id="not_#notID#" class="#iif(notStatus EQ 'Skipped', 'skipped-row', '')#">
-      <td>
-        <a href="##" data-bs-toggle="modal" data-bs-target="##action#notID#-modal" title="Click for details">
-          <i class="fe-info font-14 mr-1"></i>
-        </a>
-        #actionDetails#
-      </td>
-      <td>#dateformat(notStartDate, "mm/dd/yyyy")#</td>
-      <td>#notStatus#</td>
-      <td>
-        <input type="checkbox" class="completeReminder" data-id="#notID#">
-        <button class="btn btn-sm btn-link text-danger skipReminder" data-id="#notID#">X</button>
-      </td>
-    </tr>
-  </cfoutput>
-</div>
+<!--- OUTPUT TABLE ROWS ---> 
+<cfoutput query="qReminders">
+  <tr id="not_#notID#" class="#iif(notStatus EQ 'Skipped', 'skipped-row', '')#">
+    <td>
+      <a href="##" data-bs-toggle="modal" data-bs-target="##action#notID#-modal" title="Click for details">
+        <i class="fe-info font-14 mr-1"></i>
+      </a>
+      #actionDetails#
+    </td>
+    <td>#dateformat(notStartDate, "mm/dd/yyyy")#</td>
+    <td>#notStatus#</td>
+    <td>
+      <input type="checkbox" class="completeReminder" data-id="#notID#">
+      <button class="btn btn-sm btn-link text-danger skipReminder" data-id="#notID#">X</button>
+    </td>
+  </tr>
+</cfoutput>
+
 
 <!--- MODALS SEPARATE FOR DOM INJECTION --->
 <div id="modalContainer">
