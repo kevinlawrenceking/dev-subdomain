@@ -49,15 +49,17 @@ function loadReminders(showInactive) {
     contactid: contactid,
     HIDE_COMPLETED: hideCompleted
   }, function (html) {
-    const parsed = $('<div>').html(html);
+    const container = $('<div>').append($.parseHTML(html));
 
-    // FIX: just find all <tr> elements
-    $('#reminderRows').html(parsed.find('tr'));
-    $('#modalContainer').html(parsed.find('#modalContainer').html());
+    const rowsHtml = container.find('#reminderRows').html();
+    const modalsHtml = container.find('#modalContainer').html();
+
+    $('#reminderRows').html(rowsHtml);
+    $('#modalContainer').html(modalsHtml);
 
     bindReminderHandlers();
 
-    console.log('Reminders loaded:', $('#reminderRows tr').length);
+    console.log('[LOAD COMPLETE] rows:', $('#reminderRows tr').length);
   });
 }
 
@@ -106,5 +108,6 @@ $(document).ready(function () {
   });
 });
 </script>
+
 
 <cfset script_name_include = "/include/#ListLast(GetCurrentTemplatePath(), " \")#">
