@@ -1,3 +1,21 @@
+<cfif NOT structKeyExists(variables, "sysActiveSuid")>
+  <cfquery name="getSu" >
+    SELECT suid
+    FROM fusystemusers
+    WHERE contactid = <cfqueryparam value="#contactid#" cfsqltype="cf_sql_integer">
+      AND userid = <cfqueryparam value="#session.user_id#" cfsqltype="cf_sql_integer">
+      AND sustatus = 'Active'
+  </cfquery>
+
+  <cfif getSu.recordCount>
+    <cfset sysActiveSuid = getSu.suid>
+  <cfelse>
+    <cfoutput><div class="alert alert-warning">No active system user found for this contact.</div></cfoutput>
+    <cfabort>
+  </cfif>
+</cfif>
+
+
 <!--- Reminder Filters (disabled since no AJAX) --->
 <div class="form-check mb-2">
   <input class="form-check-input" type="checkbox" id="showInactive" disabled>
