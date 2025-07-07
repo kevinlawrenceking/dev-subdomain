@@ -8,7 +8,21 @@
 <cfset currentid = val(url.contactid)>
 <cfset showInactive = val(url.showInactive)>
 <cfset hideCompleted = val(url.HIDE_COMPLETED)>
-<cfset sessionUserId = session.user_id>
+<cfif structKeyExists(session, "user_id")>
+  <cfset sessionUserId = session.user_id>
+<cfelse>
+  <!-- fallback if session is not available -->
+  <cfquery name="findUser" datasource="#dsn#">
+    SELECT userid FROM contactdetails WHERE id = <cfqueryparam value="#currentid#" cfsqltype="cf_sql_integer">
+  </cfquery>
+  <cfif findUser.recordCount>
+    <cfset sessionUserId = findUser.userid>
+  <cfelse>
+    <cfoutput><h2>Unauthorized</h2><p>No user associated with contact ID #currentid#.</p></cfoutput>
+    <cfabort>
+  </cfif>
+</cfif>
+
 
 <!--- DEBUG --->
 <div style="border:1px solid #ccc; padding:10px; margin:10px 0;">
