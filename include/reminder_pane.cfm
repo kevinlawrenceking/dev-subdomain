@@ -1,4 +1,4 @@
-<!-- Reminder Filters -->
+<!--- Reminder Filters --->
 <div class="form-check mb-2">
   <input class="form-check-input" type="checkbox" id="showInactive">
   <label class="form-check-label" for="showInactive">
@@ -12,7 +12,7 @@
   </label>
 </div>
 
-<!-- Reminders Table -->
+<!--- Reminders Table --->
 <cfoutput>
 <table class="table table-bordered table-striped table-sm" id="remindersTable" data-contactid="#contactid#">
   <thead class="thead-light">
@@ -24,12 +24,12 @@
     </tr>
   </thead>
   <tbody id="reminderRows">
-    <!-- Loaded via AJAX -->
+    <!--- Loaded via AJAX --->
   </tbody>
 </table>
 </cfoutput>
 
-<!-- Modal Container -->
+<!--- Modal Container --->
 <div id="modalContainer"></div>
 
 <style>
@@ -39,7 +39,6 @@
 }
 </style>
 
-<script>
 <script>
 function loadReminders(showInactive) {
   const contactid = $('#remindersTable').data('contactid') || 0;
