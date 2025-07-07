@@ -36,7 +36,7 @@
   <cfquery name="qReminders" datasource="#dsn#">
     SELECT 
       n.id AS reminder_id,
-      n.notstatus AS reminder_status,
+      n.notStatus AS reminder_status,
       n.notstartdate AS not_date,
       a.name AS action_name,
       a.description AS action_description,
@@ -47,13 +47,13 @@
       AND n.user_id = <cfqueryparam value="#sessionUserId#" cfsqltype="cf_sql_integer">
       AND (
         <cfif showInactive EQ 1>
-          n.notstatus IN ('Pending', 'Skipped', 'Completed')
+          n.notStatus IN ('Pending', 'Skipped', 'Completed')
         <cfelse>
-          n.notstatus = 'Pending'
+          n.notStatus = 'Pending'
         </cfif>
       )
       <cfif hideCompleted EQ 1>
-        AND n.notstatus != 'Completed'
+        AND n.notStatus != 'Completed'
       </cfif>
       AND n.notstartdate <= GETDATE()
     ORDER BY n.notstartdate ASC
