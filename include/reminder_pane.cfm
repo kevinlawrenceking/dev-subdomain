@@ -1,13 +1,20 @@
-<!-- Filter Checkbox -->
-<div class="form-check mb-3">
+<!-- Filter Controls -->
+<div class="form-check mb-2">
   <input class="form-check-input" type="checkbox" id="showInactive">
   <label class="form-check-label" for="showInactive">
     Show Inactive (Skipped / Completed)
   </label>
 </div>
+<div class="form-check mb-3">
+  <input class="form-check-input" type="checkbox" id="hideCompleted">
+  <label class="form-check-label" for="hideCompleted">
+    Hide Completed Only
+  </label>
+</div>
 
 <!-- Reminders Table -->
-<table class="table table-bordered table-striped table-sm" id="remindersTable">
+<cfoutput>
+<table class="table table-bordered table-striped table-sm" id="remindersTable" data-contactid="#contactID#">
   <thead class="thead-light">
     <tr>
       <th scope="col">Action</th>
@@ -20,6 +27,7 @@
     <!-- AJAX loaded -->
   </tbody>
 </table>
+</cfoutput>
 
 <!-- Modal Container -->
 <div id="modalContainer"></div>
@@ -33,7 +41,14 @@
 
 <script>
 function loadReminders(showInactive) {
-  $.get('/app/ajax/load_reminders.cfm', { showInactive: showInactive ? 1 : 0 }, function (html) {
+  const contactid = $('#remindersTable').data('contactid') || 0;
+  const hideCompleted = $('#hideCompleted').is(':checked') ? 1 : 0;
+
+  $.get('/app/ajax/load_reminders.cfm', {
+    showInactive: showInactive ? 1 : 0,
+    contactid: contactid,
+    HIDE_COMPLETED: hideCompleted
+  }, function (html) {
     const parsed = $('<div>').html(html);
     const rows = parsed.find('#reminderRows').html();
     const modals = parsed.find('#modalContainer').html();
@@ -82,14 +97,12 @@ function bindReminderHandlers() {
 }
 
 $(document).ready(function () {
-  // Initial load
   loadReminders($('#showInactive').is(':checked'));
 
-  // Toggle filter via AJAX
-  $('#showInactive').on('change', function () {
-    loadReminders(this.checked);
+  $('#showInactive, #hideCompleted').on('change', function () {
+    loadReminders($('#showInactive').is(':checked'));
   });
 });
 </script>
 
-<cfset script_name_include = "/include/#ListLast(GetCurrentTemplatePath(), " \")#">
+<cfset script_name_include = "/include
