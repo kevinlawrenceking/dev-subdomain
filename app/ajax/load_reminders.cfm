@@ -40,7 +40,7 @@
   </cfif>
 </cfif>
 
-
+<cfoutput>
 <!--- DEBUG --->
 <div style="border:1px solid #ccc; padding:10px; margin:10px 0;">
   <strong>DEBUG INPUTS</strong><br>
@@ -48,7 +48,7 @@
   sessionUserId: #sessionUserId#<br>
   hideCompleted: #hideCompleted#<br>
 </div>
-
+</cfoutput>
 <!--- Query --->
 <cftry>
 <cfquery name="qReminders" datasource="#dsn#">
