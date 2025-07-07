@@ -1,110 +1,84 @@
-<cfcontent type="text/html; charset=utf-8">
 <cfsetting showdebugoutput="false">
+<cfcontent type="text/html; charset=utf-8">
 
- 
-
-<cfparam name="url.showInactive" default="0">
 <cfparam name="url.contactid" default="0">
+<cfparam name="url.showInactive" default="0">
 <cfparam name="url.HIDE_COMPLETED" default="0">
 
-<cfset currentid = url.contactid>
-<cfset showInactive = url.showInactive>
-<cfset hideCompleted = url.HIDE_COMPLETED>
-<cfset sessionUserId = session.userid>
+<cfset currentid = val(url.contactid)>
+<cfset showInactive = val(url.showInactive)>
+<cfset hideCompleted = val(url.HIDE_COMPLETED)>
+<cfset sessionUserId = session.user_id>
 
-<!--- Load relevant system-user associations --->
-<cfset systemUserService = createObject("component", "services.SystemUserService")>
-<cfset sysActive = systemUserService.SELfusystemusers_24758(
-    currentid = currentid,
-    sessionUserId = sessionUserId,
-    hideCompleted = hideCompleted
-)>
-
-<cfoutput>
-<!--- Debug --->
-<div style="border:1px solid ##ccc; padding:10px; margin:10px 0;">
+<!--- DEBUG --->
+<div style="border:1px solid #ccc; padding:10px; margin:10px 0;">
   <strong>DEBUG INPUTS</strong><br>
   currentid: #currentid#<br>
   sessionUserId: #sessionUserId#<br>
   hideCompleted: #hideCompleted#<br>
 </div>
 
-<!--- Reminder Table Rows --->
-<tbody id="reminderRows">
-<cfloop query="sysActive">
-  <cfinclude template="/include/qry/notsActive_510_1.cfm" />
-  <cfloop query="notsActive">
-
-    <!--- Skip if status is "Upcoming" --->
-    <cfif notsActive.notstatus eq "Upcoming">
-      <cfcontinue>
+<!--- Query --->
+<cfquery name="qReminders" datasource="#dsn#">
+SELECT 
+  n.id AS reminder_id,
+  n.status AS reminder_status,
+  n.not_date,
+  a.name AS action_name,
+  a.description AS action_description,
+  a.title AS action_title
+FROM notifications n
+JOIN actions a ON a.id = n.action_id
+WHERE n.contact_id = <cfqueryparam value="#currentid#" cfsqltype="cf_sql_integer">
+  AND n.user_id = <cfqueryparam value="#sessionUserId#" cfsqltype="cf_sql_integer">
+  AND (
+    <cfif showInactive EQ 1>
+      n.status IN ('Pending', 'Skipped', 'Completed')
+    <cfelse>
+      n.status = 'Pending'
     </cfif>
+  )
+  <cfif hideCompleted EQ 1>
+    AND n.status != 'Completed'
+  </cfif>
+  AND n.not_date <= GETDATE()
+ORDER BY n.not_date ASC
+</cfquery>
 
-    <!--- Hide Skipped/Completed if showInactive is off --->
-    <cfif (notsActive.notstatus eq "Skipped" OR notsActive.notstatus eq "Completed") AND showInactive eq 0>
-      <cfcontinue>
-    </cfif>
+<!--- Table rows only: NO <tbody> tag --->
+<cfoutput query="qReminders">
+  <tr id="not_#reminder_id#" class="#iif(reminder_status EQ 'Skipped', 'skipped-row', '')#">
+    <td>
+      <a href="##" data-bs-toggle="modal" data-bs-target="##action#reminder_id#-modal" title="Click for details">
+        <i class="fe-info font-14 mr-1"></i>
+      </a>
+      #action_name#
+    </td>
+    <td>#dateformat(not_date, "mm/dd/yyyy")#</td>
+    <td>#reminder_status#</td>
+    <td>
+      <input type="checkbox" class="completeReminder" data-id="#reminder_id#">
+      <button class="btn btn-sm btn-link text-danger skipReminder" data-id="#reminder_id#">X</button>
+    </td>
+  </tr>
+</cfoutput>
 
-    <!--- Hide Completed if HIDE_COMPLETED is on --->
-    <cfif hideCompleted eq 1 AND notsActive.notstatus eq "Completed">
-      <cfcontinue>
-    </cfif>
-
-    <tr id="not_#notsActive.notid#" class="<cfif notsActive.notstatus eq 'Skipped'>skipped-row</cfif>">
-      <td>
-        <a href="##" data-bs-toggle="modal" data-bs-target="##action#notsActive.notid#-modal" title="Click for details">
-          <i class="fe-info font-14 mr-1"></i>
-        </a>
-        #notsActive.actiondetails#
-      </td>
-      <td>#dateFormat(notsActive.notstartdate, "mm/dd/yyyy")#</td>
-      <td>#notsActive.notstatus#</td>
-      <td>
-        <cfif notsActive.notstatus eq "Pending">
-          <input type="checkbox" class="completeReminder" data-id="#notsActive.notid#">
-          <button class="btn btn-sm btn-link text-danger skipReminder" data-id="#notsActive.notid#">X</button>
-        </cfif>
-      </td>
-    </tr>
-  </cfloop>
-</cfloop>
-</tbody>
-
-<!--- Modal Definitions --->
+<!--- Modals --->
 <div id="modalContainer">
-<cfloop query="sysActive">
-  <cfinclude template="/include/qry/notsActive_510_1.cfm" />
-  <cfloop query="notsActive">
-
-    <!--- Same filter logic as above --->
-    <cfif notsActive.notstatus eq "Upcoming">
-      <cfcontinue>
-    </cfif>
-
-    <cfif (notsActive.notstatus eq "Skipped" OR notsActive.notstatus eq "Completed") AND showInactive eq 0>
-      <cfcontinue>
-    </cfif>
-
-    <cfif hideCompleted eq 1 AND notsActive.notstatus eq "Completed">
-      <cfcontinue>
-    </cfif>
-
-    <div id="action#notsActive.notid#-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+  <cfoutput query="qReminders">
+    <div id="action#reminder_id#-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h4 class="modal-title">#notsActive.actiontitle#</h4>
+            <h4 class="modal-title">#action_title#</h4>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
-            <h5>#notsActive.actiondetails#</h5>
-            <p>#notsActive.actionInfo#</p>
+            <h5>#action_name#</h5>
+            <p>#action_description#</p>
           </div>
         </div>
       </div>
     </div>
-
-  </cfloop>
-</cfloop>
+  </cfoutput>
 </div>
-</cfoutput>
