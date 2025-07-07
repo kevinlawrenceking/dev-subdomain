@@ -50,6 +50,7 @@
 </div>
 
 <!--- Query --->
+<cftry>
 <cfquery name="qReminders" datasource="#dsn#">
 SELECT 
   n.id AS reminder_id,
@@ -75,7 +76,16 @@ WHERE n.contact_id = <cfqueryparam value="#currentid#" cfsqltype="cf_sql_integer
   AND n.not_date <= GETDATE()
 ORDER BY n.not_date ASC
 </cfquery>
-
+  <cfcatch type="any">
+    <cfoutput>
+      <h2>Query Error</h2>
+      <pre>#cfcatch.message#</pre>
+      <pre>#cfcatch.detail#</pre>
+      <pre>#cfcatch.queryError#</pre>
+    </cfoutput>
+    <cfabort>
+  </cfcatch>
+</cftry>
 <!--- Table rows only: NO <tbody> tag --->
 <cfoutput query="qReminders">
   <tr id="not_#reminder_id#" class="#iif(reminder_status EQ 'Skipped', 'skipped-row', '')#">
