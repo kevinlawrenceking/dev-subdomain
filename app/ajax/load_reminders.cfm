@@ -42,7 +42,7 @@
 
 <cfoutput>
 <!--- DEBUG --->
-<div style="border:1px solid #ccc; padding:10px; margin:10px 0;">
+<div style="border:1px solid ##ccc; padding:10px; margin:10px 0;">
   <strong>DEBUG INPUTS</strong><br>
   currentid: #currentid#<br>
   sessionUserId: #sessionUserId#<br>
