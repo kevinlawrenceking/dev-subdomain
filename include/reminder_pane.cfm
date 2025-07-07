@@ -1,3 +1,31 @@
+<!--- Get DSN --->
+<cfset host = ListFirst(cgi.server_name, ".")>
+<cfset dsn = iif(host EQ "app", "abo", "abod")>
+
+<!--- Get Contact ID --->
+<cfparam name="contactid" default="0">
+
+<!--- Determine user_id --->
+<cfif structKeyExists(session, "user_id")>
+  <cfset sessionUserId = session.user_id>
+<cfelse>
+  <!-- Fallback if session is lost or not available -->
+  <cfquery name="findUser" >
+    SELECT userid FROM contactdetails WHERE contactid = <cfqueryparam value="#contactid#" cfsqltype="cf_sql_integer">
+  </cfquery>
+  <cfif findUser.recordCount>
+    <cfset sessionUserId = findUser.userid>
+  <cfelse>
+    <cfoutput><div class="alert alert-danger">No user session and unable to find user from contact ID #contactid#.</div></cfoutput>
+    <cfabort>
+  </cfif>
+</cfif>
+
+
+
+
+
+
 <cfif NOT structKeyExists(variables, "sysActiveSuid")>
   <cfquery name="getSu" >
     SELECT suid
