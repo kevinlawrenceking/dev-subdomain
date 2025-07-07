@@ -1,6 +1,11 @@
 <!--- Get DSN --->
 <cfset host = ListFirst(cgi.server_name, ".")>
-<cfset dsn = iif(host EQ "app", "abo", "abod")>
+<cfif host EQ "app">
+  <cfset dsn = "abo">
+<cfelse>
+  <cfset dsn = "abod">
+</cfif>
+
 
 <!--- Get Contact ID --->
 <cfparam name="contactid" default="0">
