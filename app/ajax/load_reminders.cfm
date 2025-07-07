@@ -1,4 +1,7 @@
+<cfparam name="url.contactid" default="0">
 <cfparam name="url.showInactive" default="0">
+<cfset currentid = url.contactid>
+<cfset userid = session.userid>
 <cfset showInactive = url.showInactive>
 
 <!--- Retrieve active systems for this contact/user --->

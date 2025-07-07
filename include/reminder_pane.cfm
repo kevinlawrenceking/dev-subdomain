@@ -32,8 +32,9 @@
 </style>
 
 <script>
+var contactID = "<cfoutput>#currentid#</cfoutput>";
 function loadReminders(showInactive) {
-  $.get('/app/ajax/load_reminders.cfm', { showInactive: showInactive ? 1 : 0 }, function (html) {
+  $.get('/app/ajax/load_reminders.cfm', { contactid: contactID, showInactive: showInactive ? 1 : 0 }, function (html) {
     const parsed = $('<div>').html(html);
     const rows = parsed.find('#reminderRows').html();
     const modals = parsed.find('#modalContainer').html();
