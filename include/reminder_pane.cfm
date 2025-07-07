@@ -40,29 +40,49 @@
 </style>
 
 <script>
+<script>
 function loadReminders(showInactive) {
   const contactid = $('#remindersTable').data('contactid') || 0;
   const hideCompleted = $('#hideCompleted').is(':checked') ? 1 : 0;
+
+  console.log('[AJAX] Requesting reminders:', {
+    showInactive,
+    contactid,
+    hideCompleted
+  });
 
   $.get('/app/ajax/load_reminders.cfm', {
     showInactive: showInactive ? 1 : 0,
     contactid: contactid,
     HIDE_COMPLETED: hideCompleted
   }, function (html) {
-    const container = $('<div>').append($.parseHTML(html));
+    console.log('[AJAX] Raw HTML response:', html);
 
-    // Instead of injecting tbody, inject just rows into existing tbody
-    const newRows = container.find('#reminderRows > tr');
-    $('#reminderRows').html(newRows);
+    const container = document.createElement('div');
+    container.innerHTML = html;
 
-    // Modal HTML can be safely injected
-    $('#modalContainer').html(container.find('#modalContainer').html());
+    const newRows = container.querySelectorAll('#reminderRows > tr');
+    const modalContent = container.querySelector('#modalContainer');
 
+    if (newRows.length > 0) {
+      $('#reminderRows').empty();
+      newRows.forEach(row => $('#reminderRows').append(row));
+      console.log(`[AJAX] Injected ${newRows.length} rows into #reminderRows`);
+    } else {
+      console.warn('[AJAX] No <tr> rows found in #reminderRows');
+    }
+
+    if (modalContent) {
+      $('#modalContainer').html(modalContent.innerHTML);
+      console.log('[AJAX] Modal container updated');
+    } else {
+      console.warn('[AJAX] Modal container NOT FOUND');
+    }
     bindReminderHandlers();
-
-    console.log('[LOAD COMPLETE] rows:', $('#reminderRows tr').length);
   });
 }
+
+
 
 function bindReminderHandlers() {
   $('.completeReminder').off('change').on('change', function () {
