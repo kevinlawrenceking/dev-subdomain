@@ -60,7 +60,7 @@ SELECT
   a.description AS action_description,
   a.title AS action_title
 FROM notifications n
-JOIN actions a ON a.id = n.action_id
+JOIN fuactions a ON a.id = n.action_id
 WHERE n.contact_id = <cfqueryparam value="#currentid#" cfsqltype="cf_sql_integer">
   AND n.user_id = <cfqueryparam value="#sessionUserId#" cfsqltype="cf_sql_integer">
   AND (
