@@ -52,20 +52,22 @@ function loadReminders(showInactive) {
     const container = document.createElement('div');
     container.innerHTML = html;
 
-    // Get all <tr> elements directly
-    const trRows = container.querySelectorAll('tr');
-    const $reminderRows = $('#reminderRows');
-    $reminderRows.empty();
-    trRows.forEach(row => $reminderRows.append(row));
+    // Extract all <tr> rows and convert to HTML
+    const trHtml = Array.from(container.querySelectorAll('tr'))
+      .map(row => row.outerHTML)
+      .join('');
 
-    // Handle modal injection
+    // Inject into table body
+    $('#reminderRows').html(trHtml);
+
+    // Inject modals if present
     const modalHTML = container.querySelector('#modalContainer');
     if (modalHTML) {
       $('#modalContainer').html(modalHTML.innerHTML);
     }
 
     bindReminderHandlers();
-    console.log(`[AJAX] Injected ${trRows.length} reminder rows`);
+    console.log(`[AJAX] Injected ${container.querySelectorAll('tr').length} reminder rows`);
   });
 }
 
@@ -114,6 +116,7 @@ $(document).ready(function () {
   });
 });
 </script>
+
 
 
 
