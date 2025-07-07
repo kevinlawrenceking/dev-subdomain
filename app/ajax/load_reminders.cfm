@@ -1,5 +1,6 @@
 <cfparam name="url.showInactive" default="0">
 <cfparam name="currentid" default="0">
+<cfparam name="HIDE_COMPLETED" default="0">
 <cfif isdefined('contactid')>
 <cfset currentid = contactid />
 </cfif>
