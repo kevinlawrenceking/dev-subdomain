@@ -5,6 +5,20 @@
 <cfparam name="url.showInactive" default="0">
 <cfparam name="url.HIDE_COMPLETED" default="0">
 
+  <cfset host=ListFirst(cgi.server_name, ".")/>
+
+  <Cfset application.dbug = "Y" />
+
+    <cfif host is "app">
+        <cfset dsn="abo"/>
+        
+    <cfelse>
+        <cfset dsn="abod"/>
+    
+    </cfif>
+
+
+
 <cfset currentid = val(url.contactid)>
 <cfset showInactive = val(url.showInactive)>
 <cfset hideCompleted = val(url.HIDE_COMPLETED)>
