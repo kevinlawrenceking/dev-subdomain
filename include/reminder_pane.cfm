@@ -44,44 +44,28 @@ function loadReminders(showInactive) {
   const contactid = $('#remindersTable').data('contactid') || 0;
   const hideCompleted = $('#hideCompleted').is(':checked') ? 1 : 0;
 
-  console.log('[AJAX] Requesting reminders:', {
-    showInactive,
-    contactid,
-    hideCompleted
-  });
-
   $.get('/app/ajax/load_reminders.cfm', {
     showInactive: showInactive ? 1 : 0,
     contactid: contactid,
     HIDE_COMPLETED: hideCompleted
   }, function (html) {
-    console.log('[AJAX] Raw HTML response:', html);
-
     const container = document.createElement('div');
     container.innerHTML = html;
 
-    const newRows = container.querySelectorAll('#reminderRows > tr');
-    const modalContent = container.querySelector('#modalContainer');
+    // Grab just the TR elements
+    const trRows = container.querySelectorAll('tr');
+    $('#reminderRows').html(trRows); // jQuery handles NodeList fine here
 
-    if (newRows.length > 0) {
-      $('#reminderRows').empty();
-      newRows.forEach(row => $('#reminderRows').append(row));
-      console.log(`[AJAX] Injected ${newRows.length} rows into #reminderRows`);
-    } else {
-      console.warn('[AJAX] No <tr> rows found in #reminderRows');
+    // Replace modal container
+    const modalHTML = container.querySelector('#modalContainer');
+    if (modalHTML) {
+      $('#modalContainer').html(modalHTML.innerHTML);
     }
 
-    if (modalContent) {
-      $('#modalContainer').html(modalContent.innerHTML);
-      console.log('[AJAX] Modal container updated');
-    } else {
-      console.warn('[AJAX] Modal container NOT FOUND');
-    }
-    bindReminderHandlers();
+    bindReminderHandlers(); // rebind click handlers
+    console.log(`[AJAX] Injected ${trRows.length} reminder rows`);
   });
 }
-
-
 
 function bindReminderHandlers() {
   $('.completeReminder').off('change').on('change', function () {
