@@ -9,12 +9,12 @@
 <cfset showInactive = val(url.showInactive)>
 <cfset hideCompleted = url.HIDE_COMPLETED>
 <cfset host = ListFirst(cgi.server_name, ".")>
+
 <cfif host EQ "app">
   <cfset dsn = "abo">
 <cfelse>
   <cfset dsn = "abod">
 </cfif>
-
 
 <!--- Determine sessionUserId and sysActiveSuid --->
 <cfif structKeyExists(session, "user_id")>
@@ -56,18 +56,14 @@
     n.notStartDate,
     n.notStatus,
     n.ispastdue,
-
     a.actionTitle,
     a.actionDetails,
     a.actionInfo,
-
     ns.status_color
-
   FROM funotifications n
   INNER JOIN fusystemusers f ON f.suID = n.suID
   INNER JOIN fuactions a ON a.actionID = n.actionID
   INNER JOIN notstatuses ns ON ns.notstatus = n.notStatus
-
   WHERE f.contactID = <cfqueryparam value="#currentid#" cfsqltype="cf_sql_integer">
     AND f.suID = <cfqueryparam value="#sysActiveSuid#" cfsqltype="cf_sql_integer">
     AND n.notStartDate IS NOT NULL
@@ -77,31 +73,32 @@
     <cfelseif showInactive EQ 0>
       AND n.notStatus = 'Pending'
     </cfif>
-
   ORDER BY 
     FIELD(n.notStatus, 'Pending', 'Completed', 'Skipped'),
     n.notStartDate
 </cfquery>
 
-<!--- OUTPUT TABLE ROWS --->
-<cfoutput query="qReminders">
-  <tr id="not_#notID#" class="#iif(notStatus EQ 'Skipped', 'skipped-row', '')#">
-    <td>
-      <a href="##" data-bs-toggle="modal" data-bs-target="##action#notID#-modal" title="Click for details">
-        <i class="fe-info font-14 mr-1"></i>
-      </a>
-      #actionDetails#
-    </td>
-    <td>#dateformat(notStartDate, "mm/dd/yyyy")#</td>
-    <td>#notStatus#</td>
-    <td>
-      <input type="checkbox" class="completeReminder" data-id="#notID#">
-      <button class="btn btn-sm btn-link text-danger skipReminder" data-id="#notID#">X</button>
-    </td>
-  </tr>
-</cfoutput>
+<!--- ROW OUTPUT WRAPPED FOR JS SELECTOR --->
+<div id="reminderRowsContainer">
+  <cfoutput query="qReminders">
+    <tr id="not_#notID#" class="#iif(notStatus EQ 'Skipped', 'skipped-row', '')#">
+      <td>
+        <a href="##" data-bs-toggle="modal" data-bs-target="##action#notID#-modal" title="Click for details">
+          <i class="fe-info font-14 mr-1"></i>
+        </a>
+        #actionDetails#
+      </td>
+      <td>#dateformat(notStartDate, "mm/dd/yyyy")#</td>
+      <td>#notStatus#</td>
+      <td>
+        <input type="checkbox" class="completeReminder" data-id="#notID#">
+        <button class="btn btn-sm btn-link text-danger skipReminder" data-id="#notID#">X</button>
+      </td>
+    </tr>
+  </cfoutput>
+</div>
 
-<!--- OUTPUT MODALS --->
+<!--- MODALS SEPARATE FOR DOM INJECTION --->
 <div id="modalContainer">
   <cfoutput query="qReminders">
     <div id="action#notID#-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
