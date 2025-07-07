@@ -65,13 +65,13 @@ WHERE n.contact_id = <cfqueryparam value="#currentid#" cfsqltype="cf_sql_integer
   AND n.user_id = <cfqueryparam value="#sessionUserId#" cfsqltype="cf_sql_integer">
   AND (
     <cfif showInactive EQ 1>
-      n.status IN ('Pending', 'Skipped', 'Completed')
+      n.notstatus IN ('Pending', 'Skipped', 'Completed')
     <cfelse>
-      n.status = 'Pending'
+      n.notstatus = 'Pending'
     </cfif>
   )
   <cfif hideCompleted EQ 1>
-    AND n.status != 'Completed'
+    AND n.notstatus != 'Completed'
   </cfif>
   AND n.not_date <= GETDATE()
 ORDER BY n.not_date ASC
