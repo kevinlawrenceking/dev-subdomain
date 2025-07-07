@@ -50,11 +50,10 @@ function loadReminders(showInactive) {
     HIDE_COMPLETED: hideCompleted
   }, function (html) {
     const parsed = $('<div>').html(html);
-    const rowsHtml = parsed.find('#reminderRows').html();
-    const modalsHtml = parsed.find('#modalContainer').html();
 
-    $('#reminderRows').html(rowsHtml);
-    $('#modalContainer').html(modalsHtml);
+    // FIX: just find all <tr> elements
+    $('#reminderRows').html(parsed.find('tr'));
+    $('#modalContainer').html(parsed.find('#modalContainer').html());
 
     bindReminderHandlers();
 
