@@ -1,179 +1,128 @@
-<!--- Get DSN --->
-<cfset host = ListFirst(cgi.server_name, ".")>
-<cfif host EQ "app">
-  <cfset dsn = "abo">
-<cfelse>
-  <cfset dsn = "abod">
+<cfset dbug="N" />
+<cfparam name="form.filter_completed" default="0">
+<cfparam name="form.filter_skipped" default="0">
+<cfparam name="form.filter_upcoming" default="1">
+<cfparam name="form.filter_pending" default="1">
+<!--- Set default parameters --->
+<cfparam name="zquery" default="">
+<cfset unchecked_style="mdi mdi-checkbox-blank-outline font-24 mr-1">
+<cfset checked_style="mdi mdi-checkbox-marked-outline font-24 mr-1">
+<cfparam name="hide_completed_check" default="">
+<cfparam name="hide_completed" default="N">
+
+<!--- Check if completed items should be hidden --->
+<cfif #hide_completed# EQ "Y">
+  <cfset hide_completed_check = "checked">
 </cfif>
 
+<cfoutput>
+  <div class="d-flex justify-content-between">
+    <div class="float-left">
+      <!--- Filter checkboxes --->
+      <label><input type="checkbox" class="status-filter" value="completed" checked> Completed</label>
+      <label><input type="checkbox" class="status-filter" value="skipped" checked> Skipped</label>
+      <label><input type="checkbox" class="status-filter" value="upcoming" checked> Upcoming</label>
+      <label><input type="checkbox" class="status-filter" value="pending" checked> Pending</label>
+    </div>
+  </div>
+</cfoutput>
 
-<!--- Get Contact ID --->
-<cfparam name="contactid" default="0">
+<div id="tab-relationship-view" style="flex: 1 1 auto;">
+  <!--- Loop through active systems --->
+  <cfloop query="sysActive">
 
-<!--- Determine user_id --->
-<cfif structKeyExists(session, "user_id")>
-  <cfset sessionUserId = session.user_id>
-<cfelse>
-  <!-- Fallback if session is lost or not available -->
-  <cfquery name="findUser" >
-    SELECT userid FROM contactdetails WHERE contactid = <cfqueryparam value="#contactid#" cfsqltype="cf_sql_integer">
-  </cfquery>
-  <cfif findUser.recordCount>
-    <cfset sessionUserId = findUser.userid>
-  <cfelse>
-    <cfoutput><div class="alert alert-danger">No user session and unable to find user from contact ID #contactid#.</div></cfoutput>
-    <cfabort>
-  </cfif>
-</cfif>
+    <cfif #LCase(sysActive.sustatus)# EQ "active">
+      <cfset showstatus = "pending">
+    <cfelse>
+      <cfset showstatus = "#LCase(sysActive.sustatus)#">
+    </cfif>
 
+    <cfinclude template="/include/qry/notsactive_510_1.cfm">
 
-
-
-
-
-<cfif NOT structKeyExists(variables, "sysActiveSuid")>
-  <cfquery name="getSu" >
-    SELECT suid
-    FROM fusystemusers
-    WHERE contactid = <cfqueryparam value="#contactid#" cfsqltype="cf_sql_integer">
-      AND userid = <cfqueryparam value="#session.user_id#" cfsqltype="cf_sql_integer">
-      AND sustatus = 'Active'
-  </cfquery>
-
-  <cfif getSu.recordCount>
-    <cfset sysActiveSuid = getSu.suid>
-  <cfelse>
-    <cfoutput><div class="alert alert-warning">No active system user found for this contact.</div></cfoutput>
-    <cfabort>
-  </cfif>
-</cfif>
-
-
-<!--- Reminder Filters (disabled since no AJAX) --->
-<div class="form-check mb-2">
-  <input class="form-check-input" type="checkbox" id="showInactive" disabled>
-  <label class="form-check-label" for="showInactive">
-    Show Inactive (Skipped / Completed)
-  </label>
-</div>
-<div class="form-check mb-3">
-  <input class="form-check-input" type="checkbox" id="hideCompleted" disabled>
-  <label class="form-check-label" for="hideCompleted">
-    Hide Completed Only
-  </label>
-</div>
-
-<!--- Reminders Table --->
-<cfquery name="qReminders" >
-  SELECT
-    n.notID,
-    n.notStatus,
-    n.notStartDate,
-    a.actionTitle,
-    a.actionDetails,
-    a.actionInfo
-  FROM funotifications n
-  INNER JOIN fusystemusers f ON f.suID = n.suID
-  INNER JOIN fuactions a ON a.actionID = n.actionID
-  INNER JOIN notstatuses ns ON ns.notstatus = n.notStatus
-  WHERE f.contactID = <cfqueryparam value="#contactid#" cfsqltype="cf_sql_integer">
-    AND f.suID = <cfqueryparam value="#sysActiveSuid#" cfsqltype="cf_sql_integer">
-    AND n.notStartDate IS NOT NULL
-    AND n.notStartDate <= <cfqueryparam value="#now()#" cfsqltype="cf_sql_timestamp">
-    AND n.notStatus = 'Pending'
-  ORDER BY 
-    FIELD(n.notStatus, 'Pending', 'Completed', 'Skipped'),
-    n.notStartDate
-</cfquery>
-
-<table class="table table-bordered table-striped table-sm" id="remindersTable" data-contactid="#contactid#">
-  <thead class="thead-light">
-    <tr>
-      <th scope="col">Action</th>
-      <th scope="col">Due</th>
-      <th scope="col">Status</th>
-      <th scope="col">Controls</th>
-    </tr>
-  </thead>
-  <tbody id="reminderRows">
-    <cfoutput query="qReminders">
-      <tr id="not_#notID#" class="#iif(notStatus EQ 'Skipped', 'skipped-row', '')#">
-        <td>
-          <a href="##" data-bs-toggle="modal" data-bs-target="##action#notID#-modal" title="Click for details">
-            <i class="fe-info font-14 mr-1"></i>
-          </a>
-          #actionDetails#
-        </td>
-        <td>#dateformat(notStartDate, "mm/dd/yyyy")#</td>
-        <td>#notStatus#</td>
-        <td>
-          <input type="checkbox" class="completeReminder" data-id="#notID#">
-          <button class="btn btn-sm btn-link text-danger skipReminder" data-id="#notID#">X</button>
-        </td>
-      </tr>
-    </cfoutput>
-  </tbody>
-</table>
-
-<!--- Modals --->
-<div id="modalContainer">
-  <cfoutput query="qReminders">
-    <div id="action#notID#-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h4 class="modal-title">#actionTitle#</h4>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <h5>#actionDetails#</h5>
-            <p>#actionInfo#</p>
-          </div>
+    <cfoutput>
+      <div class="row">
+        <div class="col-md-12">
+          <h4>
+            #sysActive.systemName#
+            <a href="" title="click for details" data-bs-toggle="modal" data-bs-target="##action#sysActive.suid#-modal">
+              <i class="fe-info font-14 mr-1"></i>
+            </a>
+            <cfif #sysActive.sustatus# EQ "Completed">
+              <span class="badge bg-warning rounded-pill">Completed</span>
+            </cfif>
+            <a title="Delete System" href="DeleteModal.cfm?rpgid=40&recid=#sysActive.suid#&t4=1" data-bs-toggle="modal" data-bs-target="##remoteDeleteForm#sysActive.suid#">
+              <i class="fe-trash-2"></i>
+            </a>
+          </h4>
         </div>
       </div>
-    </div>
-  </cfoutput>
+    </cfoutput>
+
+    <!--- No active items --->
+    <cfif #notsActive.recordcount# EQ 0>
+      <p>No action items to show!</p>
+    </cfif>
+
+    <!--- Loop through active notifications --->
+    <cfif #notsActive.recordcount# NEQ 0>
+      <div class="row">
+        <cfloop query="notsActive">
+          <cfoutput>
+            <div class="col-md-12 reminder #LCase(notsActive.notstatus)#" style="padding-bottom:10px; margin-left:30px;">
+              <cfif notsActive.notstatus EQ "Pending" OR notsActive.notstatus EQ "Upcoming">
+                <a href="/include/complete_not.cfm?notid=#notsActive.notid#&notstatus=Completed&hide_completed=#hide_completed#">
+              </cfif>
+
+              <i class="mdi mdi-checkbox-#notsActive.checktype#-outline font-24 mr-1" style="vertical-align: middle; color:###notsActive.status_color#"></i>
+
+              <cfif notsActive.notstatus EQ "Pending" OR notsActive.notstatus EQ "Upcoming">
+                </a>
+              </cfif>
+
+              #notsActive.delstart# #notsActive.actiondetails# #notsActive.delend#
+
+              <cfif len(notsActive.notEndDate)>
+                (#notsActive.notstatus# #this.formatDate(notsActive.notEndDate)#)
+              <cfelse>
+                (Due Date #this.formatDate(notsActive.notstartdate)#)
+              </cfif>
+
+              <cfif notsActive.ispastdue EQ 1>
+                <span class="badge badge-soft-danger">Past Due</span>
+              </cfif>
+
+              <a href="" title="Click for details" data-bs-toggle="modal" data-bs-target="##action#notsActive.actionid#-modal">
+                <i class="fe-info font-14 mr-1"></i>
+              </a>
+
+              <cfif notsActive.notstatus EQ "Pending" OR notsActive.notstatus EQ "Upcoming">
+                <a href="/include/complete_not.cfm?notid=#notsActive.notid#&notstatus=Skipped&hide_completed=#hide_completed#" title="Skip reminder">
+                  <span class="badge badge-blue" style="margin-left:10px">x Skip</span>
+                </a>
+              </cfif>
+            </div>
+          </cfoutput>
+        </cfloop>
+      </div>
+    </cfif>
+  </cfloop>
 </div>
 
-<style>
-.skipped-row td {
-  text-decoration: line-through;
-  color: #888;
-}
-</style>
-
 <script>
-  // Optional: still enable button functionality without AJAX
-  function bindReminderHandlers() {
-    $('.completeReminder').off('change').on('change', function () {
-      const notID = $(this).data('id');
-      if (confirm("Mark this reminder as complete?")) {
-        $.post('/app/ajax/update_notification_status.cfm', {
-          notificationID: notID,
-          status: 'Completed'
-        }, function () {
-          $('#not_' + notID + ' td:eq(2)').text('Completed');
-        });
-      } else {
-        $(this).prop('checked', false);
-      }
-    });
-
-    $('.skipReminder').off('click').on('click', function () {
-      const notID = $(this).data('id');
-      if (confirm("Skip this reminder?")) {
-        $.post('/app/ajax/update_notification_status.cfm', {
-          notificationID: notID,
-          status: 'Skipped'
-        }, function () {
-          $('#not_' + notID + ' td:eq(2)').text('Skipped');
-          $('#not_' + notID).addClass('skipped-row');
-        });
-      }
-    });
-  }
-
-  $(document).ready(function () {
-    bindReminderHandlers();
+document.addEventListener("DOMContentLoaded", function () {
+  document.querySelectorAll(".status-filter").forEach(cb => {
+    cb.addEventListener("change", filterReminders);
   });
+  filterReminders();
+});
+
+function filterReminders() {
+  const activeStatuses = Array.from(document.querySelectorAll(".status-filter:checked")).map(cb => cb.value);
+  document.querySelectorAll(".reminder").forEach(reminder => {
+    const classes = reminder.className.split(" ");
+    reminder.style.display = classes.some(c => activeStatuses.includes(c)) ? '' : 'none';
+  });
+}
 </script>
+
+<cfset script_name_include="/include/#ListLast(GetCurrentTemplatePath(), " \ ")#">
