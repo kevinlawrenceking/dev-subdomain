@@ -50,15 +50,21 @@ function loadReminders(showInactive) {
     HIDE_COMPLETED: hideCompleted
   }, function (html) {
     const parsed = $('<div>').html(html);
-    $('#reminderRows').html(parsed.find('#reminderRows').html());
-    $('#modalContainer').html(parsed.find('#modalContainer').html());
+    const rowsHtml = parsed.find('#reminderRows').html();
+    const modalsHtml = parsed.find('#modalContainer').html();
+
+    $('#reminderRows').html(rowsHtml);
+    $('#modalContainer').html(modalsHtml);
+
     bindReminderHandlers();
+
+    console.log('Reminders loaded:', $('#reminderRows tr').length);
   });
 }
 
 function bindReminderHandlers() {
   $('.completeReminder').off('change').on('change', function () {
-    let notID = $(this).data('id');
+    const notID = $(this).data('id');
     if (confirm("Mark this reminder as complete?")) {
       $.post('/app/ajax/update_notification_status.cfm', {
         notificationID: notID,
@@ -76,7 +82,7 @@ function bindReminderHandlers() {
   });
 
   $('.skipReminder').off('click').on('click', function () {
-    let notID = $(this).data('id');
+    const notID = $(this).data('id');
     if (confirm("Skip this reminder?")) {
       $.post('/app/ajax/update_notification_status.cfm', {
         notificationID: notID,
