@@ -1,4 +1,4 @@
-<!-- Filter Controls -->
+<!-- Reminder Filters -->
 <div class="form-check mb-2">
   <input class="form-check-input" type="checkbox" id="showInactive">
   <label class="form-check-label" for="showInactive">
@@ -14,7 +14,7 @@
 
 <!-- Reminders Table -->
 <cfoutput>
-<table class="table table-bordered table-striped table-sm" id="remindersTable" data-contactid="#contactID#">
+<table class="table table-bordered table-striped table-sm" id="remindersTable" data-contactid="#contactid#">
   <thead class="thead-light">
     <tr>
       <th scope="col">Action</th>
@@ -24,7 +24,7 @@
     </tr>
   </thead>
   <tbody id="reminderRows">
-    <!-- AJAX loaded -->
+    <!-- Loaded via AJAX -->
   </tbody>
 </table>
 </cfoutput>
@@ -50,11 +50,8 @@ function loadReminders(showInactive) {
     HIDE_COMPLETED: hideCompleted
   }, function (html) {
     const parsed = $('<div>').html(html);
-    const rows = parsed.find('#reminderRows').html();
-    const modals = parsed.find('#modalContainer').html();
-
-    $('#reminderRows').html(rows);
-    $('#modalContainer').html(modals);
+    $('#reminderRows').html(parsed.find('#reminderRows').html());
+    $('#modalContainer').html(parsed.find('#modalContainer').html());
     bindReminderHandlers();
   });
 }
@@ -105,4 +102,4 @@ $(document).ready(function () {
 });
 </script>
 
-<cfset script_name_include = "/include
+<cfset script_name_include = "/include/#ListLast(GetCurrentTemplatePath(), " \")#">
