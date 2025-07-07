@@ -25,10 +25,13 @@
 <cfif structKeyExists(session, "user_id")>
   <cfset sessionUserId = session.user_id>
 <cfelse>
-  <!-- fallback if session is not available -->
-  <cfquery name="findUser" datasource="#dsn#">
-    SELECT userid FROM contactdetails WHERE id = <cfqueryparam value="#currentid#" cfsqltype="cf_sql_integer">
-  </cfquery>
+  <!--- fallback if session is not available --->
+<cfquery name="findUser" datasource="#dsn#">
+  SELECT userid 
+  FROM contactdetails 
+  WHERE contactid = <cfqueryparam value="#currentid#" cfsqltype="cf_sql_integer">
+</cfquery>
+
   <cfif findUser.recordCount>
     <cfset sessionUserId = findUser.userid>
   <cfelse>
