@@ -71,7 +71,7 @@
       const id = $(this).data('id');
       const new_status = $(this).hasClass('mark-complete') ? "Completed" : "Skipped";
 
-      $.post("update_reminder_status.cfm", { reminder_id: id, new_status: new_status }, function () {
+      $.post("\include\update_reminder_status.cfm", { reminder_id: id, new_status: new_status }, function () {
         loadReminders();
       });
     });

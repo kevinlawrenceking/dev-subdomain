@@ -7,13 +7,9 @@
 
   <cfset userID = session.user_id>
   <cfset validStatus = "Completed,Skipped">
-
-  <!-- Validate status -->
   <cfif NOT listFindNoCase(validStatus, form.new_status)>
     <cfthrow message="Invalid status.">
   </cfif>
-
-  <!-- Update -->
   <cfquery datasource="abod" name="updateReminder">
     UPDATE funotifications
     SET
