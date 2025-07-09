@@ -1,40 +1,32 @@
 <cfcontent type="application/json">
 <cfsetting showdebugoutput="false">
 
-<cfparam name="url.showInactive" default="0">
+<cftry>
+  <cfparam name="form.reminder_id" type="numeric">
+  <cfparam name="form.new_status" type="string">
 
-<cfset showInactive = url.showInactive>
-<cfset userID = session.user_id>
+  <cfset userID = session.user_id>
+  <cfset validStatus = "Completed,Skipped">
 
-<cfquery name="getReminders" datasource="abod">
-  SELECT
-    id,
-    reminder_text,
-    notstatus,
-    CONVERT(varchar, notstartdate, 101) AS due_date,
-    CONVERT(varchar, last_updated, 100) AS last_updated
-  FROM funotifications
-  WHERE
-    user_id = <cfqueryparam value="#userID#" cfsqltype="cf_sql_integer">
-    AND notstartdate IS NOT NULL
-    AND notstartdate <= GETDATE()
-    <cfif showInactive EQ 1>
-      AND notstatus IN ('Pending', 'Completed', 'Skipped')
-    <cfelse>
-      AND notstatus = 'Pending'
-    </cfif>
-  ORDER BY notstartdate ASC
-</cfquery>
+  <!-- Validate status -->
+  <cfif NOT listFindNoCase(validStatus, form.new_status)>
+    <cfthrow message="Invalid status.">
+  </cfif>
 
-<cfset results = []>
-<cfloop query="getReminders">
-  <cfset arrayAppend(results, {
-    "id": id,
-    "reminder_text": reminder_text,
-    "status": notstatus,
-    "due_date": due_date,
-    "last_updated": last_updated
-  })>
-</cfloop>
+  <!-- Update -->
+  <cfquery datasource="your_datasource" name="updateReminder">
+    UPDATE funotifications
+    SET
+      notstatus = <cfqueryparam value="#form.new_status#" cfsqltype="cf_sql_varchar">,
+      last_updated = GETDATE()
+    WHERE
+      id = <cfqueryparam value="#form.reminder_id#" cfsqltype="cf_sql_integer">
+      AND user_id = <cfqueryparam value="#userID#" cfsqltype="cf_sql_integer">
+  </cfquery>
 
-<cfoutput>#serializeJSON(results)#</cfoutput>
+  <cfoutput>#serializeJSON({ "success": true })#</cfoutput>
+
+  <cfcatch>
+    <cfoutput>#serializeJSON({ "success": false, "error": "#cfcatch.message#" })#</cfoutput>
+  </cfcatch>
+</cftry>
