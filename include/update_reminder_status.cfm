@@ -5,7 +5,7 @@
   <cfparam name="form.reminder_id" type="numeric">
   <cfparam name="form.new_status" type="string">
 
-  <cfset userID = session.user_id>
+
   <cfset validStatus = "Completed,Skipped">
   <cfif NOT listFindNoCase(validStatus, form.new_status)>
     <cfthrow message="Invalid status.">
