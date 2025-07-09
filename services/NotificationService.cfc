@@ -45,6 +45,7 @@
 <cfquery name="qReminders" datasource="#dsn#">
   SELECT
     n.notID,
+    s.systemType,
     n.actionID,
     n.userID,
     n.suID,
@@ -62,16 +63,18 @@
   INNER JOIN fusystemusers f ON f.suID = n.suID
   INNER JOIN fuactions a ON a.actionID = n.actionID
   INNER JOIN notstatuses ns ON ns.notstatus = n.notStatus
+  INNER JOIN fusystems s ON s.id = f.systemid 
 
   WHERE f.contactID = <cfqueryparam value="#currentid#" cfsqltype="cf_sql_integer">
-    AND f.suID = <cfqueryparam value="#sysActiveSuid#" cfsqltype="cf_sql_integer">
+
     AND n.notStartDate IS NOT NULL
     AND n.notStartDate <= <cfqueryparam value="#now()#" cfsqltype="cf_sql_timestamp">
-    <cfif hideCompleted EQ "1">
-      AND n.notStatus NOT IN ('Completed', 'Skipped')
-    <cfelseif showInactive EQ 0>
-      AND n.notStatus = 'Pending'
-    </cfif>
+    AND n.notStatus = 'Pending'
+
+    {if checkbox is unchecked}
+      AND n.notStatus IN ('Completed', 'Skipped')
+ 
+    < /if>
 
   ORDER BY 
     FIELD(n.notStatus, 'Pending', 'Completed', 'Skipped'),

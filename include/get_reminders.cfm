@@ -1,39 +1,67 @@
 <cfcontent type="application/json">
 <cfsetting showdebugoutput="false">
 
-<cfparam name="url.showInactive" default="0">
+<cfparam name="url.currentid" type="numeric">
+<cfparam name="url.showInactive" default="0" type="numeric">
 
+<cfset contactID = url.currentid>
 <cfset showInactive = url.showInactive>
-<cfset userID = session.user_id>
 
-<cfquery name="getReminders" datasource="your_datasource">
+<cfquery name="getReminders" >
   SELECT
-    id,
-    reminder_text,
-    notstatus,
-    CONVERT(varchar, notstartdate, 101) AS due_date,
-    CONVERT(varchar, last_updated, 100) AS last_updated
-  FROM funotifications
-  WHERE
-    user_id = <cfqueryparam value="#userID#" cfsqltype="cf_sql_integer">
-    AND notstartdate IS NOT NULL
-    AND notstartdate <= GETDATE()
+    n.notID,
+    s.systemType,
+    n.actionID,
+    n.userID,
+    n.suID,
+    n.notStartDate,
+    n.notStatus,
+    n.ispastdue,
+
+    a.actionTitle,
+    a.actionDetails,
+    a.actionInfo,
+
+    ns.status_color
+
+  FROM funotifications n
+  INNER JOIN fusystemusers f ON f.suID = n.suID
+  INNER JOIN fuactions a ON a.actionID = n.actionID
+  INNER JOIN notstatuses ns ON ns.notstatus = n.notStatus
+  INNER JOIN fusystems s ON s.id = f.systemid 
+
+  WHERE f.contactID = <cfqueryparam value="#contactID#" cfsqltype="cf_sql_integer">
+    AND n.notStartDate IS NOT NULL
+    AND n.notStartDate <= <cfqueryparam value="#now()#" cfsqltype="cf_sql_timestamp">
     <cfif showInactive EQ 1>
-      AND notstatus IN ('Pending', 'Completed', 'Skipped')
+      AND n.notStatus IN ('Pending', 'Completed', 'Skipped')
     <cfelse>
-      AND notstatus = 'Pending'
+      AND n.notStatus = 'Pending'
     </cfif>
-  ORDER BY notstartdate ASC
+
+  ORDER BY 
+    CASE 
+      WHEN n.notStatus = 'Pending' THEN 1
+      WHEN n.notStatus = 'Completed' THEN 2
+      WHEN n.notStatus = 'Skipped' THEN 3
+      ELSE 4
+    END,
+    n.notStartDate
 </cfquery>
 
 <cfset results = []>
 <cfloop query="getReminders">
   <cfset arrayAppend(results, {
-    "id": id,
-    "reminder_text": reminder_text,
-    "status": notstatus,
-    "due_date": due_date,
-    "last_updated": last_updated
+    "id": notID,
+    "reminder_text": actionTitle,
+    "due_date": dateFormat(notStartDate, "mm/dd/yyyy"),
+    "status": notStatus,
+    "last_updated": "", <!--- You can fetch this from a different field if needed --->
+    "system_type": systemType,
+    "status_color": status_color,
+    "ispastdue": ispastdue,
+    "details": actionDetails,
+    "info": actionInfo
   })>
 </cfloop>
 
