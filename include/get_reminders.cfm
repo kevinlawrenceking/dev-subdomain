@@ -36,7 +36,7 @@
   INNER JOIN fusystemusers f ON f.suID = n.suID
   INNER JOIN fuactions a ON a.actionID = n.actionID
   INNER JOIN notstatuses ns ON ns.notstatus = n.notStatus
-  INNER JOIN fusystems s ON s.id = f.systemid 
+  INNER JOIN fusystems s ON s.systemID = f.systemid
 
   WHERE f.contactID = <cfqueryparam value="#contactID#" cfsqltype="cf_sql_integer">
     AND n.notStartDate IS NOT NULL
