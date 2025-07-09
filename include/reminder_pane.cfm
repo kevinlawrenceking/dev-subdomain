@@ -34,7 +34,7 @@
     $('#remindersTable').DataTable({
       destroy: true,
       ajax: {
-        url: "get_reminders.cfm",
+        url: "/include/get_reminders.cfm",
         data: { showInactive: showInactive },
         dataSrc: ""
       },
