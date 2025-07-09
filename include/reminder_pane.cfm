@@ -86,21 +86,3 @@
     });
   });
 </script>
-<script>
-  $(document).ready(function () {
-    loadReminders();
-
-    $("#showInactive").change(function () {
-      loadReminders();
-    });
-
-    $('#remindersTable').on('click', '.mark-complete, .mark-skip', function () {
-      const id = $(this).data('id');
-      const new_status = $(this).hasClass('mark-complete') ? "Completed" : "Skipped";
-
-      $.post("/include/update_reminder_status.cfm", { reminder_id: id, new_status: new_status }, function () {
-        loadReminders();
-      });
-    });
-  });
-</script>
