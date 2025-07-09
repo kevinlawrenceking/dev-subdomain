@@ -4,7 +4,7 @@
 
 <cfparam name="url.contactid" default="0">
  
-  <cfset  currentContactID = #currentid# />
+  <cfset  currentContactID = #contactid# />
 
 <cfset showInactive = url.showInactive>
 
