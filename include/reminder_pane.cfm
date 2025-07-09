@@ -3,9 +3,8 @@
 <cfparam name="url.showInactive" default="0">
 
 <cfparam name="url.contactid" default="0">
-<script>
-  const currentContactID = #url.contactid#;
-</script>
+ 
+  <cfset  currentContactID = #contactid# />
 
 <cfset showInactive = url.showInactive>
 
