@@ -14,7 +14,7 @@
   </cfif>
 
   <!-- Update -->
-  <cfquery datasource="your_datasource" name="updateReminder">
+  <cfquery datasource="abod" name="updateReminder">
     UPDATE funotifications
     SET
       notstatus = <cfqueryparam value="#form.new_status#" cfsqltype="cf_sql_varchar">,
