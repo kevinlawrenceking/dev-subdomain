@@ -4,7 +4,7 @@
 
 <cfparam name="url.contactid" default="0">
  
-  <cfset  currentContactID = #contactid# />
+
 
 <cfset showInactive = url.showInactive>
 
@@ -42,7 +42,7 @@
         url: "/include/get_reminders.cfm",
         data: {
           showInactive: showInactive,
-          currentid: currentContactID
+          currentid: <cfoutput>#contactid#</cfoutput>
         },
         dataSrc: ""
       },
