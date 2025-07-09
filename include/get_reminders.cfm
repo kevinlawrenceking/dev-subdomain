@@ -1,20 +1,17 @@
 <cfcontent type="application/json">
 <cfsetting showdebugoutput="false">
 
-<!-- Safe parameter defaults -->
 <cfparam name="url.currentid" default="0" type="numeric">
 <cfparam name="url.showInactive" default="0" type="numeric">
 
 <cfset contactID = url.currentid>
 <cfset showInactive = url.showInactive>
 
-<!-- Exit early if contactID is missing -->
 <cfif contactID EQ 0>
   <cfoutput>#serializeJSON({ "error": "Missing required parameter: currentid" })#</cfoutput>
   <cfexit>
 </cfif>
 
-<!-- Main query -->
 <cfquery name="getReminders" datasource="abod">
   SELECT
     n.notID,
@@ -57,7 +54,6 @@
     n.notStartDate
 </cfquery>
 
-<!-- Format and return JSON -->
 <cfset results = []>
 <cfloop query="getReminders">
   <cfset arrayAppend(results, {
