@@ -15,7 +15,7 @@
 </cfif>
 
 <!-- Main query -->
-<cfquery name="getReminders" datasource="your_datasource">
+<cfquery name="getReminders" datasource="abod">
   SELECT
     n.notID,
     s.systemType,
