@@ -17,7 +17,6 @@
       last_updated = GETDATE()
     WHERE
       id = <cfqueryparam value="#form.reminder_id#" cfsqltype="cf_sql_integer">
-
   </cfquery>
 
   <cfoutput>#serializeJSON({ "success": true })#</cfoutput>
@@ -25,4 +24,5 @@
   <cfcatch>
     <cfoutput>#serializeJSON({ "success": false, "error": "#cfcatch.message#" })#</cfoutput>
   </cfcatch>
+  
 </cftry>
