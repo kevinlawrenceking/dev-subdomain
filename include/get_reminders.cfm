@@ -1,13 +1,21 @@
 <cfcontent type="application/json">
 <cfsetting showdebugoutput="false">
 
-<cfparam name="url.currentid" type="numeric">
+<!-- Safe parameter defaults -->
+<cfparam name="url.currentid" default="0" type="numeric">
 <cfparam name="url.showInactive" default="0" type="numeric">
 
 <cfset contactID = url.currentid>
 <cfset showInactive = url.showInactive>
 
-<cfquery name="getReminders" >
+<!-- Exit early if contactID is missing -->
+<cfif contactID EQ 0>
+  <cfoutput>#serializeJSON({ "error": "Missing required parameter: currentid" })#</cfoutput>
+  <cfexit>
+</cfif>
+
+<!-- Main query -->
+<cfquery name="getReminders" datasource="your_datasource">
   SELECT
     n.notID,
     s.systemType,
@@ -49,6 +57,7 @@
     n.notStartDate
 </cfquery>
 
+<!-- Format and return JSON -->
 <cfset results = []>
 <cfloop query="getReminders">
   <cfset arrayAppend(results, {
@@ -56,12 +65,11 @@
     "reminder_text": actionTitle,
     "due_date": dateFormat(notStartDate, "mm/dd/yyyy"),
     "status": notStatus,
-    "last_updated": "", <!--- You can fetch this from a different field if needed --->
-    "system_type": systemType,
     "status_color": status_color,
     "ispastdue": ispastdue,
-    "details": actionDetails,
-    "info": actionInfo
+    "system_type": systemType,
+    "action_info": actionInfo,
+    "action_details": actionDetails
   })>
 </cfloop>
 
