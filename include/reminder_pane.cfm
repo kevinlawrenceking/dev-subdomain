@@ -161,15 +161,15 @@
       confirmModal.show();
     });
 
-    $('#confirmReminderButton').click(function () {
-      $.post("/include/update_reminder_status.cfm", {
-        reminder_id: selectedReminder.id,
-        new_status: selectedReminder.status
-      }, function () {
-        loadReminders();
-        bootstrap.Modal.getInstance(document.getElementById('confirmReminderModal')).hide();
-      });
-    });
+$('#confirmReminderButton').click(function () {
+  $.post("/include/complete_not_ajax.cfm", {
+    notid: selectedReminder.id,
+    notstatus: selectedReminder.status
+  }, function () {
+    loadReminders();
+    bootstrap.Modal.getInstance(document.getElementById('confirmReminderModal')).hide();
+  });
+});
   });
 </script>
 
