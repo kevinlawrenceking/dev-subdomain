@@ -154,7 +154,7 @@
       };
 
       $("#confirmReminderText").text(
-        `Are you sure you want to mark this reminder as "${selectedReminder.status}"?\n\n"${selectedReminder.text}"`
+        `Are you sure you want to mark "${selectedReminder.text} reminder" as ${selectedReminder.status}?\n\n`
       );
 
       const confirmModal = new bootstrap.Modal(document.getElementById('confirmReminderModal'));
