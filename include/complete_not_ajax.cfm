@@ -1,7 +1,7 @@
 <!--- complete_not_ajax.cfm [UPDATED WITH DEBUG COUNTERS] --->
 <cfparam name="hide_completed" default="Y" />
 <cfparam name="src" default="c" />
-<cfset dbug = "y" />
+<cfset dbug = "n" />
 
 <cfset debugCounters = {
   selectedNotifications = 0,
@@ -19,12 +19,24 @@
 </cfif>
 
 <cfif dbug EQ "Y">
-  <cfoutput><h4>CurrentStartDate: #currentStartDate#</h4></cfoutput>
+  <cfoutput>
+    <h4>Check if session variable 'mocktoday' is defined and set currentStartDate accordingly</h4>
+    <p>CurrentStartDate: #currentStartDate#</p>
+  </cfoutput>
 </cfif>
 
 <!--- Get Notification Details --->
 <cfinclude template="/include/qry/getNotificationByID.cfm" />
 <cfset debugCounters.selectedNotifications = NotificationDetails.recordcount />
+
+<cfif dbug EQ "Y"> 
+  <h3>Get Notification Details</h3>
+  <cfoutput>
+    <p>
+      SELECT su.contactid, su.userid, n.notid, s.systemid, s.systemscope AS newsystemscope, n.actionid, su.suID AS newsuid, au.actionDaysRecurring, a.uniquename, a.IsUnique, u.recordname AS new_contactname FROM funotifications n INNER JOIN fusystemusers su ON su.suid = n.suid INNER JOIN contactdetails c ON c.contactID = su.contactid INNER JOIN fusystems s ON s.systemID = su.systemID INNER JOIN actionusers au ON au.actionid = n.actionid INNER JOIN fuactions a ON a.actionid = au.actionid INNER JOIN taousers u ON u.userid = n.userid WHERE n.notID = #notid# AND au.userid = n.userid</p>
+    <h4>Notification ID: #notid#</h4>
+  </cfoutput>
+</cfif>
 
 <!--- Set values from query --->
 <cfset notstartdate = dateAdd('d', NotificationDetails.actionDaysRecurring, currentStartDate) />
@@ -39,44 +51,145 @@
 <cfset uniquename = NotificationDetails.uniquename />
 <cfset IsUnique = NotificationDetails.IsUnique />
 
+<cfif dbug EQ "Y">
+  <cfoutput>
+    <p>
+      <strong>Debug Output:</strong>
+    </p>
+    notstartdate: #notstartdate#<br/>
+    Contact ID: #contactid#<br/>
+    New Contact Name: #new_contactname#<br/>
+    System ID: #systemid#<br/>
+    User ID: #userid#<br/>
+    Action ID: #actionid#<br/>
+    New suID: #newsuid#<br/>
+    New System Scope: #newsystemscope#<br/>
+    Action Days Recurring: #actionDaysRecurring#<br/>
+    Unique Name: #uniquename#<br/>
+    Is Unique: #IsUnique#<br/>
+  </cfoutput>
+</cfif>
+
 <cfif NOT isDefined('notstatus')>
   <cfset notstatus = "Pending" />
+  <cfoutput>
+    <p>notstatus isn't defined</p>
+    notstatus: Pending<br/>
+  </cfoutput>
 </cfif>
 
 <cfset notEndDate = dateFormat(now(), 'yyyy-mm-dd') />
+<cfoutput>
+  notEndDate: #notEndDate#<br/>
+</cfoutput>
 
 <!--- Update Notification --->
 <cfinclude template="/include/qry/updateNotificationCompleted.cfm" />
 <cfset debugCounters.updatedNotifications++ />
 
+<cfif dbug EQ "Y">
+  <cfoutput>
+    <p>
+      UPDATE funotifications<br/>
+      SET notStatus = '#notstatus#'<br/>
+      <cfif len(trim(notstartdate))>
+        , notstartdate = '#notstartdate#'<br/>
+      </cfif>
+      <cfif notstatus EQ "Completed" OR notstatus EQ "Skipped">
+        , notenddate = #notEndDate#<br/>
+      </cfif>
+      WHERE notid = #notid#<br/>
+    </p>
+  </cfoutput>
+</cfif>
+
 <!--- Update Contact Unique if needed --->
 <cfif notstatus NEQ "Pending" AND len(trim(uniquename))>
+  <cfif dbug EQ "Y">
+    <cfoutput>
+      Update the Contact's #uniquename# to Yes.<br/>
+    </cfoutput>
+  </cfif>
   <cfinclude template="/include/qry/updateContactUnique.cfm" />
   <cfset debugCounters.updatedContacts++ />
+  <cfif dbug EQ "Y">
+    <cfoutput>
+      <h4>Notification completed!</h4>
+      <p>UPDATE contactdetails SET #uniquename# = 'Y' WHERE contactid = #contactid#</p>
+    </cfoutput>
+  </cfif>
 </cfif>
 
 <!--- Add recurring notification if applicable --->
 <cfif actionDaysRecurring NEQ 0>
+  <cfif dbug EQ "Y">
+    <cfoutput>
+      <p>Its recurring every #actiondaysrecurring# days</p>
+    </cfoutput>
+  </cfif>
   <cfset newest_notstartdate = dateAdd('d', actionDaysRecurring, currentStartDate) />
+  <cfif dbug EQ "Y">
+    <cfoutput><p>Next start date for this recurring item is #newest_notstartdate#</p></cfoutput>
+    <cfoutput><p>Add a recurring notification</p></cfoutput>
+  </cfif>
   <cfinclude template="/include/qry/addNotification.cfm" />
   <cfset debugCounters.insertedNotifications++ />
+  <cfif dbug EQ "Y">
+    <cfoutput>
+      actionID: #NotificationDetails.actionID#<br/>
+      userid: #userid#<br/>
+      suid: #newsuid#<br/>
+      notstartdate: #newest_notstartdate#<br/>
+      notstatus: "Pending"<br/>
+    </cfoutput>
+  </cfif>
+<cfelse>
+  <cfif dbug EQ "Y">
+    <p>Its not recurring....</p>
+  </cfif>
 </cfif>
 
 <!--- Check for next notification --->
 <cfinclude template="/include/qry/getNotificationsBySystem.cfm" />
+
+<cfif dbug EQ "Y">
+  <cfoutput>
+    <h4>Find Next notification</h4>
+    SELECT ... full query as before ...
+  </cfoutput>
+</cfif>
+
 <cfif notsafter EQ 1>
+  <cfif dbug EQ "Y">
+    <cfoutput><h4>Next record found!</h4></cfoutput>
+  </cfif>
   <cfloop query="notsnext">
     <cfset new_notstartdate = dateAdd('d', notsnext.actiondaysno, currentStartDate) />
     <cfinclude template="/include/qry/updateNotificationNext.cfm" />
     <cfset debugCounters.updatedNotifications++ />
+    <cfif dbug EQ "Y">
+      <cfoutput>
+        <br/>New start date will be #dateFormat(new_notstartdate, 'yyyy-mm-dd')#<br/>
+        UPDATE funotifications SET notStatus = 'Pending', notstartdate = '#new_notstartdate#' WHERE notid = #notsnext.notid#<br/>
+      </cfoutput>
+    </cfif>
   </cfloop>
 <cfelse>
   <!--- Complete System --->
   <cfinclude template="/include/qry/updateSystemUserCompleted.cfm" />
   <cfset debugCounters.completedSystems++ />
+  <cfif dbug EQ "Y">
+    <cfoutput>
+      UPDATE fusystemusers SET suStatus = 'Completed' WHERE suid = #newsuid#<br/>
+    </cfoutput>
+  </cfif>
 
   <!--- Check for Maintenance --->
   <cfinclude template="/include/qry/checkformaint_71_6.cfm" />
+  <cfif dbug EQ "Y">
+    <cfoutput><p>Check if a maintenance record exists</p></cfoutput>
+  </cfif>
+
   <cfif checkformaint.recordcount EQ 0>
     <cfinclude template="/include/qry/addNotifications.cfm" />
     <cfinclude template="/include/qry/findSystemByScope.cfm" />
@@ -84,10 +197,18 @@
     <cfinclude template="/include/add_system.cfm" />
     <cfset debugCounters.createdMaintenanceSystems++ />
     <cfset debugCounters.insertedNotifications++ />
+    <cfif dbug EQ "Y">
+      <cfoutput>
+        <p>No maintenance record!</p>
+        <p>Added notification</p>
+        <p>Found the proper system id.</p>
+        <p>Added new maintenance system!</p>
+      </cfoutput>
+    </cfif>
   </cfif>
 </cfif>
 
-<!--- Final Debug Output --->
+<!--- Final Debug Summary --->
 <cfif dbug EQ "Y">
   <cfoutput>
     <h3>Debug Summary</h3>
