@@ -1,5 +1,5 @@
 <!--- This ColdFusion page processes notifications and updates system information based on user input and session data. --->
-
+<cfparam name="hide_completed" default="Y"/>
 <cfparam name="src" default="c"/>
 <cfset dbug="N"/>
 

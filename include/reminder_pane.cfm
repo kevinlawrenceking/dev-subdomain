@@ -33,6 +33,8 @@
 </div>
 
 <script>
+  let selectedReminder = {};
+
   function loadReminders() {
     const showInactive = $("#showInactive").is(":checked") ? 1 : 0;
 
@@ -55,10 +57,10 @@
           render: function (data, type, row) {
             if (row.status === "Pending") {
               return `
-                <button class="btn btn-success btn-sm mark-complete" data-id="${data}" title="Mark Complete">
+                <button class="btn btn-success btn-sm mark-complete" data-id="${data}" data-status="Completed" data-text="${row.reminder_text}" title="Mark Complete">
                   <i class="fas fa-check"></i>
                 </button>
-                <button class="btn btn-secondary btn-sm mark-skip" data-id="${data}" title="Skip">
+                <button class="btn btn-secondary btn-sm mark-skip" data-id="${data}" data-status="Skipped" data-text="${row.reminder_text}" title="Skip">
                   <i class="fas fa-circle-minus"></i>
                 </button>
               `;
@@ -100,7 +102,6 @@
   function injectReminderModals(data) {
     let html = '';
     data.forEach(row => {
-      // Reminder Modal
       html += `
         <div id="action${row.id}-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
           <div class="modal-dialog">
@@ -116,10 +117,7 @@
             </div>
           </div>
         </div>
-      `;
 
-      // System Modal
-      html += `
         <div id="system${row.suid}-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
           <div class="modal-dialog">
             <div class="modal-content">
@@ -149,13 +147,47 @@
     });
 
     $('#remindersTable').on('click', '.mark-complete, .mark-skip', function () {
-      const id = $(this).data('id');
-      const new_status = $(this).hasClass('mark-complete') ? "Completed" : "Skipped";
+      selectedReminder = {
+        id: $(this).data('id'),
+        status: $(this).data('status'),
+        text: $(this).data('text')
+      };
 
-      $.post("/include/update_reminder_status.cfm", { reminder_id: id, new_status: new_status }, function () {
+      $("#confirmReminderText").text(
+        `Are you sure you want to mark this reminder as "${selectedReminder.status}"?\n\n"${selectedReminder.text}"`
+      );
+
+      const confirmModal = new bootstrap.Modal(document.getElementById('confirmReminderModal'));
+      confirmModal.show();
+    });
+
+    $('#confirmReminderButton').click(function () {
+      $.post("/include/update_reminder_status.cfm", {
+        reminder_id: selectedReminder.id,
+        new_status: selectedReminder.status
+      }, function () {
         loadReminders();
+        bootstrap.Modal.getInstance(document.getElementById('confirmReminderModal')).hide();
       });
     });
   });
 </script>
+
 <div id="modalContainer"></div>
+<div class="modal fade" id="confirmReminderModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Confirm Action</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p id="confirmReminderText">Are you sure you want to complete this reminder?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" id="confirmReminderButton" class="btn btn-primary">Yes, do it</button>
+      </div>
+    </div>
+  </div>
+</div>
