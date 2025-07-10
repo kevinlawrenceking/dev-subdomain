@@ -66,7 +66,18 @@
   }
 }
 ,
-        { data: "reminder_text" },
+       {
+  data: null,
+  render: function (data, type, row) {
+    const modalId = `action${row.id}-modal`;
+    return `
+      ${row.reminder_text}
+      <a href="#" title="Click for details" data-bs-toggle="modal" data-bs-target="#${modalId}">
+        <i class="fas fa-info-circle ms-2 text-info"></i>
+      </a>
+    `;
+  }
+},
         { data: "due_date" },
         { data: "status" },
         { data: "system_type" }
