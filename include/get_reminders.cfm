@@ -8,7 +8,7 @@
 <cfset showInactive = url.showInactive>
 
 <cfif contactID EQ 0>
-  <cfoutput>#serializeJSON({ "error": "Missing required parameter: currentid" })#</cfoutput>
+  <cfoutput>#serializeJSON({ "error": "Missing required parameter: currentid" }, true)#</cfoutput>
   <cfexit>
 </cfif>
 
@@ -28,10 +28,11 @@
     a.actionInfo,
 
     ns.status_color,
-     f.sustartDate,
+    f.sustartDate,
     f.suEndDate,
-s.recordname,
-s.systemdescript
+    s.recordname,
+    s.systemdescript
+
   FROM funotifications n
   INNER JOIN fusystemusers f ON f.suID = n.suID
   INNER JOIN fuactions a ON a.actionID = n.actionID
@@ -59,6 +60,9 @@ s.systemdescript
 
 <cfset results = []>
 <cfloop query="getReminders">
+  <cfset formattedStart = (sustartDate NEQ "") ? dateFormat(sustartDate, "mm/dd/yyyy") : "">
+  <cfset formattedEnd   = (suenddate NEQ "") ? dateFormat(suenddate, "mm/dd/yyyy") : "">
+
   <cfset arrayAppend(results, {
     "id": notID,
     "reminder_text": actionTitle,
@@ -70,11 +74,11 @@ s.systemdescript
     "action_info": actionInfo,
     "action_details": actionDetails,
     "suid": suid,
-    "sustartDate": sustartDate,
-    "suenddate": suenddate,
+    "sustartDate": formattedStart,
+    "suenddate": formattedEnd,
     "recordname": recordname,
     "systemdescript": systemdescript
   })>
 </cfloop>
 
-<cfoutput>#serializeJSON(results)#</cfoutput>
+<cfoutput>#serializeJSON(results, true)#</cfoutput>
