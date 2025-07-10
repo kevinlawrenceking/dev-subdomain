@@ -31,45 +31,6 @@
     </cfif>
 </cffunction>
 
-<cffunction output="false" name="getUserById" access="public" returntype="struct">
-    <cfargument name="userId" type="numeric" required="true">
-    
-    <cfset var user = {}>
-
-    <cfquery name="qUserDetails">
-        SELECT
-            u.*,  
-            t.tzname, 
-            t.tzgeneral,
-            tc.*, 
-            df.formatexample AS dateformatExample,
-            df.id AS dateformatID,
-            pp.planName,
-            pr.BaseProductLabel,
-            r.regionname AS regionName,
-            c.countryname AS countryName
-        FROM taousers u
-        LEFT JOIN dateformats df ON u.dateformatid = df.id
-        LEFT JOIN timezones t ON u.tzid = t.tzid
-        LEFT JOIN thrivecart tc ON u.customerid = tc.id  
-        LEFT JOIN paymentplans pp ON pp.BasePaymentPlanId = tc.BasePaymentPlanId
-        LEFT JOIN products pr ON pr.BaseProductId = tc.BaseProductId
-        LEFT JOIN regions r ON u.region_id = r.region_id
-        LEFT JOIN countries c ON u.countryid = c.countryid
-        WHERE u.userid = <cfqueryparam value="#arguments.userId#" cfsqltype="cf_sql_integer">
-    </cfquery>
-
-    <cfif qUserDetails.recordCount>
-        <cfloop array="#qUserDetails.getRow(1)#" index="col">
-            <cfset user[col] = iif(isNull(qUserDetails[col]), "", qUserDetails[col])>
-        </cfloop>
-        <cfset user.calendarName = REReplace(user.recordName, "[\s\-]", "", "all")>
-    </cfif>
-
-    <cfreturn user>
-</cffunction>
-
-
 
 
 <cffunction name="getUserByHash" access="public" returntype="query" output="false">
