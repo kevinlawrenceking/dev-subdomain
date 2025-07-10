@@ -22,9 +22,9 @@
         <tr>
           <th>Action</th>
           <th>Reminder</th>
-          <th>Due</th>
+          <th>Start Date</th>
           <th>Status</th>
-          <th>Last Updated</th>
+          <th>Type</th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -63,7 +63,7 @@
         { data: "reminder_text" },
         { data: "due_date" },
         { data: "status" },
-        { data: "last_updated" }
+        { data: "system_type" }
       ]
     });
   }
