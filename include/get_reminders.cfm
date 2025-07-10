@@ -27,8 +27,11 @@
     a.actionDetails,
     a.actionInfo,
 
-    ns.status_color
-
+    ns.status_color,
+     f.sustartDate,
+    f.suEndDate,
+s.recordname,
+s.systemdescript
   FROM funotifications n
   INNER JOIN fusystemusers f ON f.suID = n.suID
   INNER JOIN fuactions a ON a.actionID = n.actionID
@@ -65,7 +68,12 @@
     "ispastdue": ispastdue,
     "system_type": systemType,
     "action_info": actionInfo,
-    "action_details": actionDetails
+    "action_details": actionDetails,
+    "suid": suid,
+    "sustartDate": sustartDate,
+    "suenddate": suenddate,
+    "recordname": recordname,
+    "systemdescript": systemdescript
   })>
 </cfloop>
 
