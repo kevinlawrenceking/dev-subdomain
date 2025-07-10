@@ -169,5 +169,16 @@ function injectReminderModals(data) {
     });
   });
 </script>
+<script>
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return '';
+  return date.toLocaleDateString(undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
+}
+</script>
 
 <div id="modalContainer"></div>
