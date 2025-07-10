@@ -48,18 +48,22 @@
       },
       columns: [
         {
-          data: "id",
-          render: function (data, type, row) {
-            if (row.status === "Pending") {
-              return `
-                <button class="btn btn-sm btn-success mark-complete" data-id="${data}">Complete</button>
-                <button class="btn btn-sm btn-warning mark-skip" data-id="${data}">Skip</button>
-              `;
-            } else {
-              return "-";
-            }
-          }
-        },
+  data: "id",
+  render: function (data, type, row) {
+    if (row.status === "Pending") {
+      return `
+        <button class="btn btn-sm btn-outline-success mark-complete" data-id="${data}" title="Mark Complete">
+          <i class="fas fa-check"></i>
+        </button>
+        <button class="btn btn-sm btn-outline-secondary mark-skip" data-id="${data}" title="Skip">
+          <i class="fas fa-forward"></i>
+        </button>
+      `;
+    } else {
+      return "-";
+    }
+  }
+},
         { data: "reminder_text" },
         { data: "due_date" },
         { data: "status" },
