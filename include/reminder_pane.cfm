@@ -1,5 +1,4 @@
-<!-- reminder_pane.cfm -->
-
+ 
 <cfparam name="url.showInactive" default="0">
 
 <cfparam name="url.contactid" default="0">
@@ -82,75 +81,33 @@
         },
         { data: "due_date" },
         { data: "status" },
-        {
-  data: null,
-  render: function (data, type, row) {
-    const systemModalId = `action${row.suid}-modal`;
-    return `
-      ${row.system_type}
-      <a href="#" title="Click for details" data-bs-toggle="modal" data-bs-target="#${systemModalId}">
-        <i class="fas fa-info-circle ms-2 text-muted"></i>
-      </a>
-    `;
-  }
-}
+        { data: "system_type" }
       ]
     });
   }
 
-function injectReminderModals(data) {
-  let html = '';
-  const renderedSystems = new Set(); // prevent duplicate system modals
-
-  data.forEach(row => {
-    // Action-level modal
-    html += `
-      <div id="action${row.id}-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h4 class="modal-title">${row.reminder_text}</h4>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-              <h5>${row.action_details}</h5>
-              <p>${row.action_info}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-
-    // System-level modal (only render once per suid)
-    if (!renderedSystems.has(row.suid)) {
-      const start = formatDate(row.sustartDate);
-      const end = row.suenddate ? `<p><strong>Completed:</strong> ${formatDate(row.suenddate)}</p>` : '';
-
+  function injectReminderModals(data) {
+    let html = '';
+    data.forEach(row => {
       html += `
-        <div id="action${row.suid}-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+        <div id="action${row.id}-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
           <div class="modal-dialog">
             <div class="modal-content">
               <div class="modal-header">
-                <h4 class="modal-title">${row.recordname}</h4>
+                <h4 class="modal-title">${row.reminder_text}</h4>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
               </div>
               <div class="modal-body">
-                <h5>Description</h5>
-                <p>${row.systemdescript}</p>
-                <p><strong>Start Date:</strong> ${start}</p>
-                ${end}
+                <h5>${row.action_details}</h5>
+                <p>${row.action_info}</p>
               </div>
             </div>
           </div>
         </div>
       `;
-      renderedSystems.add(row.suid);
-    }
-  });
-
-  $("#modalContainer").html(html);
-}
-
+    });
+    $("#modalContainer").html(html);
+  }
 
   $(document).ready(function () {
     loadReminders();
@@ -169,16 +126,4 @@ function injectReminderModals(data) {
     });
   });
 </script>
-<script>
-function formatDate(dateString) {
-  const date = new Date(dateString);
-  if (isNaN(date.getTime())) return '';
-  return date.toLocaleDateString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  });
-}
-</script>
 
-<div id="modalContainer"></div>

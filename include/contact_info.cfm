@@ -879,7 +879,7 @@ x</button>
 
 <h5 class="text-muted font-weight-lighter">
 
-                                  <a href="javascript:;" data-bs-remote="true" data-bs-toggle="modal" data-bs-target="#remoteUpdateSUID0" data-bs-placement="top" title="Relationship" data-bs-original-title="Relationship ">Add Relationship System
+                                  <a href="javascript:;" data-bs-remote="true" data-bs-toggle="modal" data-bs-target="##remoteUpdateSUID0" data-bs-placement="top" title="Relationship" data-bs-original-title="Relationship ">Add Relationship System
 
                                   </a>
 
@@ -931,8 +931,7 @@ x</button>
                 </cfloop>
 
             </div>
-        </div><!--- /btn-group --->
-
+        </div> 
 <div class="card-body">
 
             <cfif #pgid# is "117">
