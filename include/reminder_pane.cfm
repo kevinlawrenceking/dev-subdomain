@@ -17,7 +17,7 @@
     </div>
   </div>
   <div class="card-body">
-    <table class="table table-sm table-striped" id="remindersTable">
+    <table class="table table-sm table-striped w-100" id="remindersTable">
       <thead>
         <tr>
           <th>Action</th>
