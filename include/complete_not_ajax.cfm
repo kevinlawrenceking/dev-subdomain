@@ -1,7 +1,7 @@
 <!--- complete_not_ajax.cfm [UPDATED WITH DEBUG COUNTERS] --->
 <cfparam name="hide_completed" default="Y" />
 <cfparam name="src" default="c" />
-<cfset dbug = "n" />
+<cfset dbug = "Y" />
 
 <cfset debugCounters = {
   selectedNotifications = 0,
@@ -79,9 +79,11 @@
 </cfif>
 
 <cfset notEndDate = dateFormat(now(), 'yyyy-mm-dd') />
-<cfoutput>
-  notEndDate: #notEndDate#<br/>
-</cfoutput>
+<cfif dbug EQ "Y">
+  <cfoutput>
+    <p>notEndDate: #notEndDate#</p>
+  </cfoutput>
+</cfif>
 
 <!--- Update Notification --->
 <cfinclude template="/include/qry/updateNotificationCompleted.cfm" />
