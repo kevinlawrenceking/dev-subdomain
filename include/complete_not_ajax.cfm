@@ -157,20 +157,87 @@
 <cfif dbug EQ "Y">
   <cfoutput>
     <h4>Find Next notification</h4>
-    SELECT ... full query as before ...
+    <pre>SELECT 
+            n.notID, 
+            n.actionID, 
+            n.userID, 
+            n.suID, 
+            n.notTimeStamp, 
+            n.notStartDate, 
+            n.notEndDate, 
+            n.notStatus, 
+            n.notNotes, 
+            f.systemID, 
+            f.contactID, 
+            f.suTimeStamp, 
+            f.suStartDate, 
+            f.suEndDate, 
+            f.suStatus, 
+            f.suNotes, 
+            a.actionID, 
+            a.actionNo, 
+            a.actionDetails, 
+            a.actionTitle, 
+            a.navToURL, 
+            au.actionDaysNo, 
+            au.actionDaysRecurring, 
+            a.actionNotes, 
+            a.actionInfo, 
+            n.ispastdue, 
+            ns.checktype, 
+            ns.delstart, 
+            ns.delend, 
+            ns.status_color 
+        FROM 
+            funotifications n 
+        INNER JOIN 
+            fusystemusers f ON f.suID = n.suID 
+        INNER JOIN 
+            fuactions a ON a.actionID = n.actionID 
+        INNER JOIN 
+            actionusers au ON a.actionID = au.actionID 
+        INNER JOIN 
+            notstatuses ns ON ns.notstatus = n.notStatus 
+        WHERE 
+            n.suID = #newsuid#
+            AND au.userID = f.userID 
+            AND n.notStatus = 'Pending' 
+            AND n.notStartDate IS NULL 
+        ORDER BY 
+            au.actionDaysNo, a.actionID
+        LIMIT 1</pre>
   </cfoutput>
 </cfif>
 
 <cfif notsafter EQ 1>
   <cfif dbug EQ "Y">
-    <cfoutput><h4>Next record found!</h4></cfoutput>
+    <cfoutput><h4>Next record found!</h4>
+notsnext.recordcount: #notsnext.recordcount#
+<br/>
+</cfoutput>
   </cfif>
   <cfloop query="notsnext">
     <cfset new_notstartdate = dateAdd('d', notsnext.actiondaysno, currentStartDate) />
+      <cfif dbug EQ "Y">
+      <cfoutput>
+        new_notstartdate: #new_notstartdate#<br/>
+      </cfoutput>
+    </cfif>
     <cfinclude template="/include/qry/updateNotificationNext.cfm" />
     <cfset debugCounters.updatedNotifications++ />
     <cfif dbug EQ "Y">
       <cfoutput>
+        UPDATE funotifications<br>
+        SET <br>
+            notStatus = 'Pending'<br>
+            <cfif #new_notstartdate# IS NOT ""> 
+                , notstartdate = '#new_notstartdate#'<br>
+            </cfif><br>
+            <cfif notstatus EQ "Completed" OR notstatus EQ "Skipped"><br>
+                , notenddate = '#notEndDate#'<br>
+            </cfif>
+        WHERE notid = #notid#<br>
+
         <br/>New start date will be #dateFormat(new_notstartdate, 'yyyy-mm-dd')#<br/>
         UPDATE funotifications SET notStatus = 'Pending', notstartdate = '#new_notstartdate#' WHERE notid = #notsnext.notid#<br/>
       </cfoutput>
@@ -189,10 +256,24 @@
   <!--- Check for Maintenance --->
   <cfinclude template="/include/qry/checkformaint_71_6.cfm" />
   <cfif dbug EQ "Y">
-    <cfoutput><p>Check if a maintenance record exists</p></cfoutput>
+    <cfoutput>
+    <PRE>        SELECT fc.suID 
+        FROM fusystemusers fc 
+        INNER JOIN fusystems s ON s.systemID = fc.systemID 
+        WHERE fc.contactid = #contactid#
+        AND s.systemtype = 'Maintenance List'
+        AND fc.userid = #userid#</PRE><br>
+    
+    
+    
+    <p>Check if a maintenance record exists</p></cfoutput>
   </cfif>
 
   <cfif checkformaint.recordcount EQ 0>
+  <CFIF DBUG EQ "Y"><CFOUTPUT>
+  checkformaint.recordcount: #checkformaint.recordcount#<br> 
+    </CFOUTPUT></CFIF>
+
     <cfinclude template="/include/qry/addNotifications.cfm" />
     <cfinclude template="/include/qry/findSystemByScope.cfm" />
     <cfset session.ftom = "Y" />
