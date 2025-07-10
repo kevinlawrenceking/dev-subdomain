@@ -1,7 +1,7 @@
 <!--- This ColdFusion page processes notifications and updates system information based on user input and session data. --->
 <cfparam name="hide_completed" default="Y"/>
 <cfparam name="src" default="c"/>
-<cfset dbug="Y"/>
+<cfset dbug="n"/>
 
 <!--- Check if session variable 'mocktoday' is defined and set currentStartDate accordingly --->
 <cfif #isdefined('session.mocktoday')#>
@@ -294,15 +294,4 @@
 
 <Cfif #dbug# is "Y">
 <Cfabort />
-</cfif>
-<cfif #src# is "c">
-
-<cflocation url="/app/contact?contactid=#contactid#&t4=1&hide_completed=#hide_completed#"/>
-
-</cfif>
-
-<cfif #src# is "d">
-
-<cflocation url="/app/dashboard_new/"/>
-
 </cfif>
