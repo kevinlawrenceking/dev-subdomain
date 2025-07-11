@@ -20,11 +20,11 @@
     <table class="table table-sm table-striped w-100" id="remindersTable">
       <thead>
         <tr>
-          <th></th>
           <th>Action</th>
+          <th>Reminder</th>
           <th>ID</th>
           <th>Contact</th>
-          <th>Reminder</th>
+          <th></th>
           <th>Start Date</th>
           <th>End Date</th>
           <th>Status</th>
