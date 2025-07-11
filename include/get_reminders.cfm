@@ -7,9 +7,20 @@
 <cfset contactID = url.currentid>
 <cfset showInactive = url.showInactive>
 
+  <cfset host=ListFirst(cgi.server_name, ".")/>
+ 
 
+    <cfif host is "app">
+        <cfset dsn="abo"/>
+        <cfset information_schema="actorsbusinessoffice"/>
+        <cfset suffix="_1.5"/>
+    <cfelse>
+        <cfset dsn="abod"/>
+        <cfset information_schema="actorsbusinessoffice"/>
+        <cfset suffix="_1.5"/>
+    </cfif>
 
-<cfquery name="getReminders" datasource="abod">
+<cfquery name="getReminders" datasource="#dsn#">
   SELECT
     n.notID,
     s.systemType,
