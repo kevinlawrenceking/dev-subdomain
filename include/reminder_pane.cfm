@@ -17,12 +17,12 @@
     <table id="remindersTable" class="table table-striped table-bordered table-sm w-100">
       <thead>
         <tr>
-          <th>Actionz</th>
-          <th >ID</th>
-          <th >Contact</th>
+          <th>Actionx</th>
+          <th>ID</th>
+          <th>Contact</th>
                <th>Start Date</th>
                      <th>End Date</th>
-          <th>Reminder</th>
+          <th>Reminderx</th>
       
      
     
