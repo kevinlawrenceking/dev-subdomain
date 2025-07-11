@@ -78,10 +78,12 @@
 
                     <div class="col-md-12 col-lg-12">
                         
-                        <A href="/app/reminders/" class="btn btn-primary editable-submit btn-sm waves-effect waves-light" style="width:85px">
-                            <button  style="border: 1px solid #406E8E!important; outline: none!important;"  class="badge badge-light text-dark">
-                                <i class="mdi mdi-book-plus-multiple"></i> View All
-                            </button></a>
+                        <A href="/app/reminders/">
+                         <button style="border: 1px solid #406E8E!important; outline: none!important; color: #406E8E!important;" class="badge badge-light text-dark">
+                                <i class="mdi mdi-book-plus-multiple"></i> Open All
+                            </button>
+                            
+                            </a>
                     </div>
                 </div>
             </form>
