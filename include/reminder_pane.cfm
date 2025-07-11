@@ -84,28 +84,42 @@
         { data: "notStartDatef" },
         { data: "notEndDatef" },
         {
-          data: "reminder_text",
-          render: function (data, type, row) {
-            const modalId = `action${row.id}-modal`;
-            return `
-              ${data}
-              <a href="#" title="Click for details" data-bs-toggle="modal" data-bs-target="#${modalId}">
-                <i class="fas fa-info-circle ms-2 text-info"></i>
-              </a>
-            `;
-          }
+          data: "reminder_text"
         },
         { data: "status" },
         {
-          data: null,
+          data: "system_type"
+        }
+      ],
+      columnDefs: [
+        {
+          targets: 4, // reminder_text with icon
           render: function (data, type, row) {
-            const systemModalId = `system${row.suid}-modal`;
-            return `
-              ${row.system_type}
-              <a href="#" title="Click for system details" data-bs-toggle="modal" data-bs-target="#${systemModalId}">
-                <i class="fas fa-info-circle ms-2 text-muted"></i>
-              </a>
-            `;
+            if (type === 'display') {
+              const modalId = `action${row.id}-modal`;
+              return `
+                ${data}
+                <a href="#" title="Click for details" data-bs-toggle="modal" data-bs-target="#${modalId}">
+                  <i class="fas fa-info-circle ms-2 text-info"></i>
+                </a>
+              `;
+            }
+            return data;
+          }
+        },
+        {
+          targets: 6, // system_type with icon
+          render: function (data, type, row) {
+            if (type === 'display') {
+              const systemModalId = `system${row.suid}-modal`;
+              return `
+                ${data}
+                <a href="#" title="Click for system details" data-bs-toggle="modal" data-bs-target="#${systemModalId}">
+                  <i class="fas fa-info-circle ms-2 text-muted"></i>
+                </a>
+              `;
+            }
+            return data;
           }
         }
       ],
@@ -117,7 +131,6 @@
       initComplete: function () {
         const api = this.api();
 
-        // Create exact number of <th> filter placeholders
         let filterRow = '<tr id="filterRow">';
         this.api().columns().every(function () {
           filterRow += '<th></th>';
@@ -125,7 +138,6 @@
         filterRow += '</tr>';
         $('#remindersTable thead').append(filterRow);
 
-        // Add dropdown filters to specific columns
         const dropdownColumns = [1, 4, 5, 6];
 
         dropdownColumns.forEach(function (colIdx) {
