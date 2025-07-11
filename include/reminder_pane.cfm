@@ -1,6 +1,7 @@
 <cfparam name="url.showInactive" default="0">
 <cfparam name="url.contactid" default="0">
 <cfparam name="contactid" default="0">
+<cfparam name="showContact" default="N">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <cfset showInactive = url.showInactive>
 
@@ -12,13 +13,23 @@
       <label class="form-check-label" for="showInactive">Show action log</label>
     </div>
   </div>
+<Cfif showContact eq "N">
+<Cfset contactVisible = "none"/>
+<Cfset contactVisibilty = "false"/>
+<cfelse>
+<Cfset contactVisible = ""/>
+<Cfset contactVisibilty = "true"/>
+</cfif>
+
   <div class="card-body">
     <table id="remindersTable" class="table table-striped table-bordered table-sm w-100">
       <thead>
         <tr>
           <th>Action</th>
           <th style="display:none;">ID</th>
-          <th style="display:none;">Contact</th>
+        
+          <th style="display:<cfoutput>#contactVisible#</cfoutput>;">Contact</th>
+     
           <th>Start Date</th>
           <th>End Date</th>
           <th>Reminder</th>
@@ -69,7 +80,7 @@
           }
         },
         { data: "contactid", visible: false },
-        { data: "contactfullname", visible: false },
+        { data: "contactfullname", visible: <cfoutput>#contactVisibility#</cfoutput> },
         { data: "notStartDatef" },
         { data: "notEndDatef" },
         {
