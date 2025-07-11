@@ -61,7 +61,7 @@ ORDER BY
     ELSE 0 
   END,
   n.notStartDate
-  /cfquery>
+  </cfquery>
 
 <cfset results = []>
 <cfloop query="getReminders">
