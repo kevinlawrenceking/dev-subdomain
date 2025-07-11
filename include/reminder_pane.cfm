@@ -85,9 +85,9 @@
             `;
           }
         },
+         { data: "status" },
         { data: "due_date" },
         { data: "notenddate" },
-        { data: "status" },
         {
           data: null,
           render: function (data, type, row) {
