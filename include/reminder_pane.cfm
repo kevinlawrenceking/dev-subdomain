@@ -35,72 +35,75 @@
 <script>
   let selectedReminder = {};
 
-  function loadReminders() {
-    const showInactive = $("#showInactive").is(":checked") ? 1 : 0;
+function loadReminders() {
+  const showInactive = $("#showInactive").is(":checked") ? 1 : 0;
 
-    $('#remindersTable').DataTable({
-      destroy: true,
-      ajax: {
-        url: "/include/get_reminders.cfm",
-          language: {
-    emptyTable: "No reminders to display"
-  }
-        data: {
-          showInactive: showInactive,
-          currentid: <cfoutput>#contactid#</cfoutput>
-        },
-        dataSrc: function (json) {
-          injectReminderModals(json);
-          return json;
+  $('#remindersTable').DataTable({
+    destroy: true,
+    ajax: {
+      url: "/include/get_reminders.cfm",
+      data: {
+        showInactive: showInactive,
+        currentid: <cfoutput>#contactid#</cfoutput>
+      },
+      dataSrc: function (json) {
+        injectReminderModals(json);
+        return json;
+      }
+    },
+    columns: [
+      {
+        data: "id",
+        render: function (data, type, row) {
+          if (row.status === "Pending") {
+            return `
+              <button class="btn btn-success btn-sm mark-complete" data-id="${data}" data-status="Completed" data-text="${row.reminder_text}" title="Mark Complete">
+                <i class="fas fa-check"></i>
+              </button>
+              <button class="btn btn-secondary btn-sm mark-skip" data-id="${data}" data-status="Skipped" data-text="${row.reminder_text}" title="Skip">
+                <i class="fas fa-circle-minus"></i>
+              </button>
+            `;
+          } else {
+            return "-";
+          }
         }
       },
-      columns: [
-        {
-          data: "id",
-          render: function (data, type, row) {
-            if (row.status === "Pending") {
-              return `
-                <button class="btn btn-success btn-sm mark-complete" data-id="${data}" data-status="Completed" data-text="${row.reminder_text}" title="Mark Complete">
-                  <i class="fas fa-check"></i>
-                </button>
-                <button class="btn btn-secondary btn-sm mark-skip" data-id="${data}" data-status="Skipped" data-text="${row.reminder_text}" title="Skip">
-                  <i class="fas fa-circle-minus"></i>
-                </button>
-              `;
-            } else {
-              return "-";
-            }
-          }
-        },
-        {
-          data: null,
-          render: function (data, type, row) {
-            const modalId = `action${row.id}-modal`;
-            return `
-              ${row.reminder_text}
-              <a href="#" title="Click for details" data-bs-toggle="modal" data-bs-target="#${modalId}">
-                <i class="fas fa-info-circle ms-2 text-info"></i>
-              </a>
-            `;
-          }
-        },
-        { data: "due_date" },
-        { data: "status" },
-        {
-          data: null,
-          render: function (data, type, row) {
-            const systemModalId = `system${row.suid}-modal`;
-            return `
-              ${row.system_type}
-              <a href="#" title="Click for system details" data-bs-toggle="modal" data-bs-target="#${systemModalId}">
-                <i class="fas fa-info-circle ms-2 text-muted"></i>
-              </a>
-            `;
-          }
+      {
+        data: null,
+        render: function (data, type, row) {
+          const modalId = `action${row.id}-modal`;
+          return `
+            ${row.reminder_text}
+            <a href="#" title="Click for details" data-bs-toggle="modal" data-bs-target="#${modalId}">
+              <i class="fas fa-info-circle ms-2 text-info"></i>
+            </a>
+          `;
         }
-      ]
-    });
-  }
+      },
+      { data: "due_date" },
+      { data: "status" },
+      {
+        data: null,
+        render: function (data, type, row) {
+          const systemModalId = `system${row.suid}-modal`;
+          return `
+            ${row.system_type}
+            <a href="#" title="Click for system details" data-bs-toggle="modal" data-bs-target="#${systemModalId}">
+              <i class="fas fa-info-circle ms-2 text-muted"></i>
+            </a>
+          `;
+        }
+      }
+    ],
+    language: {
+      emptyTable: showInactive
+        ? "No completed or skipped reminders"
+        : "You have no active reminders"
+    }
+  });
+}
+
 
   function injectReminderModals(data) {
     let html = '';
