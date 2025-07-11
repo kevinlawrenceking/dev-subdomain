@@ -18,8 +18,8 @@
       <thead>
         <tr>
           <th>Actionz</th>
-          <th style="display: none;">ID</th>
-          <th style="display: none;">Contact</th>
+          <th >ID</th>
+          <th >Contact</th>
                <th>Start Date</th>
                      <th>End Date</th>
           <th>Reminder</th>
