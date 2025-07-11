@@ -40,11 +40,12 @@
   INNER JOIN fusystems s ON s.systemID = f.systemid
 
   WHERE f.contactID = <cfqueryparam value="#contactID#" cfsqltype="cf_sql_integer">
-    AND n.notStartDate IS NOT NULL
+    
     
     <cfif showInactive EQ 1>
       AND n.notStatus IN ('Pending', 'Completed', 'Skipped')
     <cfelse>
+    AND n.notStartDate IS NOT NULL
       AND n.notStatus = 'Pending' AND n.notStartDate <= <cfqueryparam value="#now()#" cfsqltype="cf_sql_timestamp">
     </cfif>
 
