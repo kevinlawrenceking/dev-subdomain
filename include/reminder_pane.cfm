@@ -97,8 +97,20 @@
               </a>
             `;
           }
-        }
-
+        },
+        { data: "status" },
+        {
+          data: null,
+          render: function (data, type, row) {
+            const systemModalId = `system${row.suid}-modal`;
+            return `
+              ${row.system_type}
+              <a href="#" title="Click for system details" data-bs-toggle="modal" data-bs-target="#${systemModalId}">
+                <i class="fas fa-info-circle ms-2 text-muted"></i>
+              </a>
+            `;
+          }
+        },
         { data: "due_date" },
         { data: "notenddate" },
         
