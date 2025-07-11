@@ -123,7 +123,7 @@
             <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.actionID#">,
             <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#">,
             <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.suid#">,
-            <cfqueryparam cfsqltype="CF_SQL_DATE" value="#DateFormat(local.finalNotStartDate, 'yyyy-mm-dd')#" null="#NOT len(trim(local.finalNotStartDate))#">,
+            <cfqueryparam cfsqltype="CF_SQL_DATE" value="#DateFormat(arguments.notstartdate, 'yyyy-mm-dd')#" null="#NOT len(trim(arguments.notstartdate))#">,
             <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#arguments.notstatus#">
         )
     </cfquery>
