@@ -20,10 +20,12 @@
           <th>Actionz</th>
           <th style="display: none;">ID</th>
           <th style="display: none;">Contact</th>
+               <th>Start Date</th>
+                     <th>End Date</th>
           <th>Reminder</th>
       
-          <th>Start Date</th>
-          <th>End Date</th>
+     
+    
           <th>Status</th>
           <th>Type</th>
         </tr>
