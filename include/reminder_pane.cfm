@@ -127,7 +127,7 @@
         emptyTable: showInactive
           ? "No completed or skipped reminders"
           : "You have no active reminders"
-      },
+      }<Cfif showContact eq "y">,
       initComplete: function () {
         const api = this.api();
 
@@ -157,7 +157,7 @@
           });
         });
       }
-    });
+    });</cfif>
   }
 
   function injectReminderModals(data) {
