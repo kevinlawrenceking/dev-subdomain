@@ -34,7 +34,7 @@
           <th>End Date</th>
           <th>Reminder</th>
           <th>Status</th>
-          <th>Typex</th>
+          <th>Type</th>
         </tr>
       </thead>
     </table>
