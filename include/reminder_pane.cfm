@@ -46,6 +46,7 @@
 
   function loadReminders() {
     const showInactive = $("#showInactive").is(":checked") ? 1 : 0;
+    const enableFiltering = <cfoutput>'#ucase(showContact)#'</cfoutput> === 'Y';
 
     $('#remindersTable').DataTable({
       destroy: true,
@@ -79,21 +80,16 @@
             }
           }
         },
-
         { data: "contactfullname", visible: <cfoutput>#contactVisibilty#</cfoutput> },
         { data: "notStartDatef" },
         { data: "notEndDatef" },
-        {
-          data: "reminder_text"
-        },
+        { data: "reminder_text" },
         { data: "status" },
-        {
-          data: "system_type"
-        }
+        { data: "system_type" }
       ],
       columnDefs: [
         {
-          targets: 4, // reminder_text with icon
+          targets: 4,
           render: function (data, type, row) {
             if (type === 'display') {
               const modalId = `action${row.id}-modal`;
@@ -108,7 +104,7 @@
           }
         },
         {
-          targets: 6, // system_type with icon
+          targets: 6,
           render: function (data, type, row) {
             if (type === 'display') {
               const systemModalId = `system${row.suid}-modal`;
@@ -124,13 +120,12 @@
         }
       ],
       language: {
-        emptyTable: showInactive
-          ? "No completed or skipped reminders"
-          : "You have no active reminders"
-      }<Cfif showContact eq "y">,
+        emptyTable: showInactive ? "No completed or skipped reminders" : "You have no active reminders"
+      },
       initComplete: function () {
-        const api = this.api();
+        if (!enableFiltering) return;
 
+        const api = this.api();
         let filterRow = '<tr id="filterRow">';
         this.api().columns().every(function () {
           filterRow += '<th></th>';
@@ -157,7 +152,7 @@
           });
         });
       }
-    });</cfif>
+    });
   }
 
   function injectReminderModals(data) {
@@ -233,6 +228,7 @@
     });
   });
 </script>
+
 
 
 
