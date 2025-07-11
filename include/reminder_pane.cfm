@@ -17,11 +17,11 @@
     <table id="remindersTable" class="table table-striped table-bordered table-sm w-100">
       <thead>
         <tr>
-          <th>Action</th>
+          <th>Actionz</th>
           <th style="display: none;">ID</th>
           <th style="display: none;">Contact</th>
           <th>Reminder</th>
-          <th>Reminder</th>
+      
           <th>Start Date</th>
           <th>End Date</th>
           <th>Status</th>
