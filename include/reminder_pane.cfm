@@ -13,7 +13,7 @@
     <h5 class="mb-0">Reminders</h5>
     <div class="form-check">
       <input class="form-check-input" type="checkbox" id="showInactive" value="1" <cfif showInactive EQ 1>checked</cfif>>
-      <label class="form-check-label" for="showInactive">Show inactive records</label>
+      <label class="form-check-label" for="showInactive">Show action log</label>
     </div>
   </div>
   <div class="card-body">
