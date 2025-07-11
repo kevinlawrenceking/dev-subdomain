@@ -68,14 +68,14 @@
             }
           }
         },
-        { data: "contactid", visible: false },         // Hidden column
-        { data: "contactfullname", visible: false },   // Hidden column
+        { data: "contactid", visible: false },
+        { data: "contactfullname", visible: false },
         {
-          data: null,
+          data: "reminder_text",
           render: function (data, type, row) {
             const modalId = `action${row.id}-modal`;
             return `
-              ${row.reminder_text}
+              ${data}
               <a href="#" title="Click for details" data-bs-toggle="modal" data-bs-target="#${modalId}">
                 <i class="fas fa-info-circle ms-2 text-info"></i>
               </a>
@@ -104,7 +104,6 @@
           : "You have no active reminders"
       },
       initComplete: function () {
-        // Hide header cells for invisible columns
         $('#remindersTable thead th:eq(1), #remindersTable thead th:eq(2)').hide();
       }
     });
