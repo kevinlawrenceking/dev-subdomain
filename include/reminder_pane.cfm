@@ -80,7 +80,7 @@
           }
         },
         { data: "contactid", visible: false },
-        { data: "contactfullname", visible: <cfoutput>#contactVisibility#</cfoutput> },
+        { data: "contactfullname", visible: <cfoutput>#contactVisibilty#</cfoutput> },
         { data: "notStartDatef" },
         { data: "notEndDatef" },
         {
