@@ -49,15 +49,19 @@
       AND n.notStatus = 'Pending' AND n.notStartDate <= <cfqueryparam value="#now()#" cfsqltype="cf_sql_timestamp">
     </cfif>
 
-  ORDER BY 
-    CASE 
-      WHEN n.notStatus = 'Pending' THEN 1
-      WHEN n.notStatus = 'Completed' THEN 2
-      WHEN n.notStatus = 'Skipped' THEN 3
-      ELSE 4
-    END,
-    n.notStartDate
-</cfquery>
+ORDER BY 
+  CASE 
+    WHEN n.notStatus = 'Pending' THEN 1
+    WHEN n.notStatus = 'Completed' THEN 2
+    WHEN n.notStatus = 'Skipped' THEN 3
+    ELSE 4
+  END,
+  CASE 
+    WHEN n.notStartDate IS NULL THEN 1 
+    ELSE 0 
+  END,
+  n.notStartDate
+  /cfquery>
 
 <cfset results = []>
 <cfloop query="getReminders">
