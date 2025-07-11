@@ -42,6 +42,9 @@
       destroy: true,
       ajax: {
         url: "/include/get_reminders.cfm",
+          language: {
+    emptyTable: "No reminders to display"
+  }
         data: {
           showInactive: showInactive,
           currentid: <cfoutput>#contactid#</cfoutput>
