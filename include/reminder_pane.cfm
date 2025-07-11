@@ -85,8 +85,8 @@ function loadReminders() {
           `;
         }
       },   { data: "status" },
-      { data: "due_date" },
-      { data: "notenddate" },
+      { data: "notStartDatef" },
+      { data: "notEndDatef" },
    
       {
         data: null,
