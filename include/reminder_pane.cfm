@@ -21,10 +21,10 @@
       <thead>
         <tr>
           <th>Action</th>
-          <th>Reminder</th>
+       
           <th>ID</th>
           <th>Contact</th>
-          <th></th>
+   <th>Reminder</th>
           <th>Start Date</th>
           <th>End Date</th>
           <th>Status</th>
