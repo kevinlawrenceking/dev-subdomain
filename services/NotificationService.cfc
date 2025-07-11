@@ -75,7 +75,7 @@
             AND n.notStatus = 'Pending' 
             AND n.notStartDate IS NULL 
         ORDER BY 
-            au.actionDaysNo, a.actionID
+            a.actionNo, a.actionID
         LIMIT <cfqueryparam value="#arguments.maxrow#" cfsqltype="cf_sql_integer">
     </cfquery>
 

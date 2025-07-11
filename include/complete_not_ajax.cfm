@@ -205,8 +205,8 @@
             AND au.userID = f.userID 
             AND n.notStatus = 'Pending' 
             AND n.notStartDate IS NULL 
-        ORDER BY 
-            au.actionDaysNo, a.actionID
+ 
+            ORDER BY a.actionno, a.actionID
         LIMIT 1</pre>
   </cfoutput>
 </cfif>
