@@ -138,7 +138,7 @@
         filterRow += '</tr>';
         $('#remindersTable thead').append(filterRow);
 
-        const dropdownColumns = [1, 4, 5, 6];
+        const dropdownColumns = [3, 4, 5];
 
         dropdownColumns.forEach(function (colIdx) {
           const column = api.column(colIdx);
