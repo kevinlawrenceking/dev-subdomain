@@ -48,7 +48,7 @@
   <cfset t2=1/>
 
 </cfif>
-
+<cfparam name="new_region_id" default=""/>
 <cfif #new_region_id# is "" and #def_region_id# is not "">
 
   <cfset new_region_id=def_region_id/>
