@@ -22,11 +22,11 @@
           <th>Contact</th>
                <th>Start Date</th>
                      <th>End Date</th>
-          <th>Reminderx</th>
+          <th>Reminder</th>
       
      
     
-          <th>Statusx</th>
+          <th>Status</th>
           <th>Typex</th>
         </tr>
       </thead>
@@ -84,10 +84,10 @@ function loadReminders() {
             </a>
           `;
         }
-      },
+      },   { data: "status" },
       { data: "due_date" },
       { data: "notenddate" },
-      { data: "status" },
+   
       {
         data: null,
         render: function (data, type, row) {
