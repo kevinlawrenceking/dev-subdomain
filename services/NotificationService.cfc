@@ -525,7 +525,7 @@
 <cffunction output="false" name="SELfunotifications_24709" access="public" returntype="query">
     <cfargument name="userID" type="numeric" required="true">
 
-<cfquery name="result">
+<cfquery name="result" maxrows="10">
   SELECT 
     c.recordname, 
     f.contactID, 
