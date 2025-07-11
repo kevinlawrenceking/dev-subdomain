@@ -26,8 +26,8 @@
       
      
     
-          <th>Status</th>
-          <th>Type</th>
+          <th>Statusx</th>
+          <th>Typex</th>
         </tr>
       </thead>
     </table>
