@@ -18,7 +18,7 @@
         <tr>
           <th>Action</th>
           <th style="display:none;">ID</th>
-          <th >Contact</th>
+          <th style="display:none;">Contact</th>
           <th>Start Date</th>
           <th>End Date</th>
           <th>Reminder</th>
@@ -68,7 +68,7 @@
           }
         },
         { data: "contactid", visible: false },
-        { data: "contactfullname", visible: true },
+        { data: "contactfullname", visible: false },
         { data: "notStartDatef" },
         { data: "notEndDatef" },
         {
