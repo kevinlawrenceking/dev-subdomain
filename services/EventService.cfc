@@ -56,7 +56,7 @@
             WHERE eventid IN (SELECT eventid FROM events WHERE isdeleted = 1);
         </cfquery>
 
-        <!--- 6. Update contact dateadded field from events or systemusers --->
+        <!--- 6. Update contact dateadded field from events or systemusers 
         <cfquery>
             UPDATE contactdetails_tbl d
             INNER JOIN (
@@ -79,7 +79,7 @@
             SET d.dateadded = LEAST(COALESCE(d.dateadded, sub.new_dateadded), sub.new_dateadded)
             WHERE d.isdeleted = 0
               AND d.dateadded IS NULL;
-        </cfquery>
+        </cfquery>--->
    <cfquery>
         UPDATE audprojects pr
 JOIN (

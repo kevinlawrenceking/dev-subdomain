@@ -21,8 +21,11 @@
       <thead>
         <tr>
           <th>Action</th>
+          <th>ID</th>
+          <th>Contact</th>
           <th>Reminder</th>
           <th>Start Date</th>
+          <th>End Date</th>
           <th>Status</th>
           <th>Type</th>
         </tr>
@@ -81,7 +84,10 @@ function loadReminders() {
           `;
         }
       },
+      { data: "contactid" },
+      { data: "contactfullname" },
       { data: "due_date" },
+      { data: "notenddate" },
       { data: "status" },
       {
         data: null,

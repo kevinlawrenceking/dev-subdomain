@@ -22,11 +22,12 @@
     n.notStartDate,
     n.notStatus,
     n.ispastdue,
-
+    n.notenddate,
     a.actionTitle,
     a.actionDetails,
     a.actionInfo,
-
+    c.contactid,
+    c.contactfullname,
     ns.status_color,
     f.sustartDate,
     f.suEndDate,
@@ -35,9 +36,10 @@
 
   FROM funotifications n
   INNER JOIN fusystemusers f ON f.suID = n.suID
+  INNER JOIN contactdetails c on c.contactid = f.contactid
   INNER JOIN fuactions a ON a.actionID = n.actionID
   INNER JOIN notstatuses ns ON ns.notstatus = n.notStatus
-  INNER JOIN fusystems s ON s.systemID = f.systemid
+  
 
   WHERE f.contactID = <cfqueryparam value="#contactID#" cfsqltype="cf_sql_integer">
     
@@ -67,12 +69,17 @@ ORDER BY
 <cfloop query="getReminders">
   <cfset formattedStart = (sustartDate NEQ "") ? dateFormat(sustartDate, "mm/dd/yyyy") : "">
   <cfset formattedEnd   = (suenddate NEQ "") ? dateFormat(suenddate, "mm/dd/yyyy") : "">
+  <cfset notStartDatef   = (notStartDate NEQ "") ? dateFormat(notStartDate, "mm/dd/yyyy") : "">
+  <cfset notEndDatef     = (notEndDate NEQ "") ? dateFormat(notEndDate, "mm/dd/yyyy") : "">
 
   <cfset arrayAppend(results, {
     "id": notID,
     "reminder_text": actionTitle,
-    "due_date": dateFormat(notStartDate, "mm/dd/yyyy"),
+    "contactid": contactid,
+    "due_date": notstartDatef,
+    "notenddate": notenddatef,
     "status": notStatus,
+    "contactfullname": contactfullname,
     "status_color": status_color,
     "ispastdue": ispastdue,
     "system_type": systemType,

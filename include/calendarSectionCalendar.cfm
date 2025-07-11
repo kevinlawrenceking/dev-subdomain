@@ -1,7 +1,7 @@
 <!--- This ColdFusion page handles the display and interaction of appointment and audition functionalities, including Google Calendar integration and a legend for event types. --->
 
 <cfparam name="legendstatus" default="" />
-
+<cfparam name="accesstoken" default="" />
 <script>
     $(document).ready(function() {
         <!--- Load the audition modal when triggered --->
