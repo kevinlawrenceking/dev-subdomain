@@ -73,6 +73,10 @@ function loadReminders() {
       },
       { data: "contactid", visible: false },
       { data: "contactfullname", visible: false },
+
+    { data: "notStartDatef" },
+      { data: "notEndDatef" },
+
       {
         data: "reminder_text",
         render: function (data, type, row) {
@@ -84,9 +88,9 @@ function loadReminders() {
             </a>
           `;
         }
-      },   { data: "status" },
-      { data: "notStartDatef" },
-      { data: "notEndDatef" },
+      },   
+      { data: "status" },
+  
    
       {
         data: null,
