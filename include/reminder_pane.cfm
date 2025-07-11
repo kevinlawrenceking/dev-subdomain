@@ -117,13 +117,22 @@
       initComplete: function () {
         const api = this.api();
 
-        // Dropdown filter columns
-        const dropdownColumns = [2, 5, 6, 7]; // Contact, Reminder, Status, Type
+        // Create exact number of <th> filter placeholders
+        let filterRow = '<tr id="filterRow">';
+        this.api().columns().every(function () {
+          filterRow += '<th></th>';
+        });
+        filterRow += '</tr>';
+        $('#remindersTable thead').append(filterRow);
+
+        // Add dropdown filters to specific columns
+        const dropdownColumns = [2, 5, 6, 7];
 
         dropdownColumns.forEach(function (colIdx) {
           const column = api.column(colIdx);
+          const th = $('#remindersTable thead tr:eq(1) th').eq(colIdx);
           const select = $('<select class="form-select form-select-sm"><option value="">All</option></select>')
-            .appendTo($('#remindersTable thead tr:eq(1) th').eq(colIdx).empty())
+            .appendTo(th.empty())
             .on('change', function () {
               const val = $.fn.dataTable.util.escapeRegex($(this).val());
               column.search(val ? '^' + val + '$' : '', true, false).draw();
@@ -180,12 +189,6 @@
   }
 
   $(document).ready(function () {
-    // Insert second header row for filters
-    $('#remindersTable thead').append('<tr id="filterRow"></tr>');
-    $('#remindersTable thead tr:eq(0) th').each(function () {
-      $('#filterRow').append(`<th>${$(this).text()}</th>`);
-    });
-
     loadReminders();
 
     $("#showInactive").change(function () {
@@ -218,6 +221,7 @@
     });
   });
 </script>
+
 
 
 <div id="modalContainer"></div>
