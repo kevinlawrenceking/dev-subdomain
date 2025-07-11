@@ -126,7 +126,7 @@
         $('#remindersTable thead').append(filterRow);
 
         // Add dropdown filters to specific columns
-        const dropdownColumns = [1, 4, 5, 6];
+        const dropdownColumns = [2, 4, 5, 6];
 
         dropdownColumns.forEach(function (colIdx) {
           const column = api.column(colIdx);
