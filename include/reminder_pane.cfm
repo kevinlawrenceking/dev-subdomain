@@ -18,8 +18,8 @@
       <thead>
         <tr>
           <th>Action</th>
-          <th style="display: none;">ID</th>         <!-- Hidden -->
-          <th style="display: none;">Contact</th>    <!-- Hidden -->
+          <th style="display: none;">ID</th>
+          <th style="display: none;">Contact</th>
           <th>Reminder</th>
           <th>Start Date</th>
           <th>End Date</th>
@@ -68,8 +68,8 @@
             }
           }
         },
-        { data: "contactid", visible: false },         // Hidden ID
-        { data: "contactfullname", visible: false },   // Hidden Contact
+        { data: "contactid", visible: false },         // Hidden column
+        { data: "contactfullname", visible: false },   // Hidden column
         {
           data: null,
           render: function (data, type, row) {
@@ -104,7 +104,7 @@
           : "You have no active reminders"
       },
       initComplete: function () {
-        // Hide headers for hidden columns (ID, Contact)
+        // Hide header cells for invisible columns
         $('#remindersTable thead th:eq(1), #remindersTable thead th:eq(2)').hide();
       }
     });
