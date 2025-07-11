@@ -39,7 +39,9 @@
 </cfif>
 
 <!--- Set values from query --->
-<cfset notstartdate = dateAdd('d', NotificationDetails.actionDaysRecurring, currentStartDate) />
+<cfset safeRecurringDays = val(NotificationDetails.actionDaysRecurring) />
+<cfset notstartdate = dateAdd('d', safeRecurringDays, currentStartDate) />
+
 <cfset contactid = NotificationDetails.contactid />
 <cfset new_contactname = NotificationDetails.new_contactname />
 <cfset systemid = NotificationDetails.systemid />
@@ -47,7 +49,7 @@
 <cfset actionid = NotificationDetails.actionid />
 <cfset newsuid = NotificationDetails.newsuid />
 <cfset newsystemscope = NotificationDetails.newsystemscope />
-<cfset actionDaysRecurring = NotificationDetails.actionDaysRecurring />
+<cfset actionDaysRecurring = safeRecurringDays />
 <cfset uniquename = NotificationDetails.uniquename />
 <cfset IsUnique = NotificationDetails.IsUnique />
 
