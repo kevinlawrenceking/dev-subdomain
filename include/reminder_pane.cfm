@@ -37,17 +37,18 @@
     const showInactive = $("#showInactive").is(":checked") ? 1 : 0;
 
     $('#remindersTable').DataTable({
-      destroy: true,
-      ajax: {
-        url: "/include/get_reminders.cfm",
-        data: {
-          showInactive: showInactive,
-          currentid: <cfoutput>#contactid#</cfoutput>
-        },
-        dataSrc: function (json) {
-          injectReminderModals(json);
-          return json;
-        }
+  destroy: true,
+  ajax: {
+    url: "/include/get_reminders.cfm",
+    data: {
+      showInactive: showInactive,
+      currentid: <cfoutput>#contactid#</cfoutput>,
+      userid: <cfoutput>#userid#</cfoutput>
+    },
+    dataSrc: function (json) {
+      injectReminderModals(json);
+      return json;
+    }
       },
       columns: [
         {

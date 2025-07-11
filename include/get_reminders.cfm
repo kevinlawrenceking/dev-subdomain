@@ -3,7 +3,7 @@
 
 <cfparam name="url.currentid" default="0" type="numeric">
 <cfparam name="url.showInactive" default="0" type="numeric">
-
+<cfparam name="url.showInactive" default="0" type="numeric">
 <cfset contactID = url.currentid>
 <cfset showInactive = url.showInactive>
 
@@ -42,8 +42,10 @@
   INNER JOIN notstatuses ns ON ns.notstatus = n.notStatus
   
 
-  WHERE f.contactID = <cfqueryparam value="#contactID#" cfsqltype="cf_sql_integer">
-    
+  WHERE c.userid = <cfqueryparam value="#userid#" cfsqltype="cf_sql_integer">
+  <cfif contactid NEQ 0>
+  AND c.contactID = <cfqueryparam value="#contactID#" cfsqltype="cf_sql_integer">
+   </cfif>
     
     <cfif showInactive EQ 1>
       AND n.notStatus IN ('Pending', 'Completed', 'Skipped')
