@@ -1,10 +1,7 @@
- 
 <cfparam name="url.showInactive" default="0">
-
 <cfparam name="url.contactid" default="0">
- 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 <cfset showInactive = url.showInactive>
 
@@ -17,21 +14,19 @@
     </div>
   </div>
   <div class="card-body">
-    <table class="table table-sm table-striped w-100" id="remindersTable">
+    <table id="remindersTable" class="table table-striped table-bordered table-sm w-100">
       <thead>
         <tr>
           <th>Action</th>
-       
-          <th>ID</th>
-          <th>Contact</th>
-   <th>Reminder</th>
+          <th style="display: none;">ID</th>         <!-- Hidden -->
+          <th style="display: none;">Contact</th>    <!-- Hidden -->
+          <th>Reminder</th>
           <th>Start Date</th>
           <th>End Date</th>
           <th>Status</th>
           <th>Type</th>
         </tr>
       </thead>
-      <tbody></tbody>
     </table>
   </div>
 </div>
@@ -39,78 +34,81 @@
 <script>
   let selectedReminder = {};
 
-function loadReminders() {
-  const showInactive = $("#showInactive").is(":checked") ? 1 : 0;
+  function loadReminders() {
+    const showInactive = $("#showInactive").is(":checked") ? 1 : 0;
 
-  $('#remindersTable').DataTable({
-    destroy: true,
-    ajax: {
-      url: "/include/get_reminders.cfm",
-      data: {
-        showInactive: showInactive,
-        currentid: <cfoutput>#contactid#</cfoutput>
+    $('#remindersTable').DataTable({
+      destroy: true,
+      ajax: {
+        url: "/include/get_reminders.cfm",
+        data: {
+          showInactive: showInactive,
+          currentid: <cfoutput>#contactid#</cfoutput>
+        },
+        dataSrc: function (json) {
+          injectReminderModals(json);
+          return json;
+        }
       },
-      dataSrc: function (json) {
-        injectReminderModals(json);
-        return json;
-      }
-    },
-    columns: [
-      {
-        data: "id",
-        render: function (data, type, row) {
-          if (row.status === "Pending") {
+      columns: [
+        {
+          data: "id",
+          render: function (data, type, row) {
+            if (row.status === "Pending") {
+              return `
+                <button class="btn btn-success btn-sm mark-complete" data-id="${data}" data-status="Completed" data-text="${row.reminder_text}" title="Mark Complete">
+                  <i class="fas fa-check"></i>
+                </button>
+                <button class="btn btn-secondary btn-sm mark-skip" data-id="${data}" data-status="Skipped" data-text="${row.reminder_text}" title="Skip">
+                  <i class="fas fa-circle-minus"></i>
+                </button>
+              `;
+            } else {
+              return "-";
+            }
+          }
+        },
+        { data: "contactid", visible: false },         // Hidden ID
+        { data: "contactfullname", visible: false },   // Hidden Contact
+        {
+          data: null,
+          render: function (data, type, row) {
+            const modalId = `action${row.id}-modal`;
             return `
-              <button class="btn btn-success btn-sm mark-complete" data-id="${data}" data-status="Completed" data-text="${row.reminder_text}" title="Mark Complete">
-                <i class="fas fa-check"></i>
-              </button>
-              <button class="btn btn-secondary btn-sm mark-skip" data-id="${data}" data-status="Skipped" data-text="${row.reminder_text}" title="Skip">
-                <i class="fas fa-circle-minus"></i>
-              </button>
+              ${row.reminder_text}
+              <a href="#" title="Click for details" data-bs-toggle="modal" data-bs-target="#${modalId}">
+                <i class="fas fa-info-circle ms-2 text-info"></i>
+              </a>
             `;
-          } else {
-            return "-";
+          }
+        },
+        { data: "due_date" },
+        { data: "notenddate" },
+        { data: "status" },
+        {
+          data: null,
+          render: function (data, type, row) {
+            const systemModalId = `system${row.suid}-modal`;
+            return `
+              ${row.system_type}
+              <a href="#" title="Click for system details" data-bs-toggle="modal" data-bs-target="#${systemModalId}">
+                <i class="fas fa-info-circle ms-2 text-muted"></i>
+              </a>
+            `;
           }
         }
+      ],
+      language: {
+        emptyTable: showInactive
+          ? "No completed or skipped reminders"
+          : "You have no active reminders"
       },
-      {
-        data: null,
-        render: function (data, type, row) {
-          const modalId = `action${row.id}-modal`;
-          return `
-            ${row.reminder_text}
-            <a href="#" title="Click for details" data-bs-toggle="modal" data-bs-target="#${modalId}">
-              <i class="fas fa-info-circle ms-2 text-info"></i>
-            </a>
-          `;
-        }
-      },
-      { data: "contactid" },
-      { data: "contactfullname" },
-      { data: "due_date" },
-      { data: "notenddate" },
-      { data: "status" },
-      {
-        data: null,
-        render: function (data, type, row) {
-          const systemModalId = `system${row.suid}-modal`;
-          return `
-            ${row.system_type}
-            <a href="#" title="Click for system details" data-bs-toggle="modal" data-bs-target="#${systemModalId}">
-              <i class="fas fa-info-circle ms-2 text-muted"></i>
-            </a>
-          `;
-        }
+      initComplete: function () {
+        // Hide headers for hidden columns (ID, Contact)
+        $('#remindersTable thead th:eq(1), #remindersTable thead th:eq(2)').hide();
       }
-    ],
-    language: {
-      emptyTable: showInactive
-        ? "No completed or skipped reminders"
-        : "You have no active reminders"
-    }
-  });
-}
-
+    });
+  }
 
   function injectReminderModals(data) {
     let html = '';
@@ -167,26 +165,27 @@ function loadReminders() {
       };
 
       $("#confirmReminderText").text(
-        `Are you sure you want to mark "${selectedReminder.text} reminder" as ${selectedReminder.status}?\n\n`
+        `Are you sure you want to mark "${selectedReminder.text} reminder" as ${selectedReminder.status}?`
       );
 
       const confirmModal = new bootstrap.Modal(document.getElementById('confirmReminderModal'));
       confirmModal.show();
     });
 
-$('#confirmReminderButton').click(function () {
-  $.post("/include/complete_not_ajax.cfm", {
-    notid: selectedReminder.id,
-    notstatus: selectedReminder.status
-  }, function () {
-    loadReminders();
-    bootstrap.Modal.getInstance(document.getElementById('confirmReminderModal')).hide();
-  });
-});
+    $('#confirmReminderButton').click(function () {
+      $.post("/include/complete_not_ajax.cfm", {
+        notid: selectedReminder.id,
+        notstatus: selectedReminder.status
+      }, function () {
+        loadReminders();
+        bootstrap.Modal.getInstance(document.getElementById('confirmReminderModal')).hide();
+      });
+    });
   });
 </script>
 
 <div id="modalContainer"></div>
+
 <div class="modal fade" id="confirmReminderModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
