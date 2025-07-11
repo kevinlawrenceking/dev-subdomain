@@ -86,9 +86,7 @@
           }
         },
          { data: "status" },
-        { data: "due_date" },
-        { data: "notenddate" },
-        {
+{
           data: null,
           render: function (data, type, row) {
             const systemModalId = `system${row.suid}-modal`;
@@ -100,6 +98,10 @@
             `;
           }
         }
+
+        { data: "due_date" },
+        { data: "notenddate" },
+        
       ],
       language: {
         emptyTable: showInactive
