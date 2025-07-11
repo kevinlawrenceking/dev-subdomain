@@ -36,6 +36,7 @@
 
   FROM funotifications n
   INNER JOIN fusystemusers f ON f.suID = n.suID
+  INNER JOIN fusystems s ON s.systemID = f.systemid
   INNER JOIN contactdetails c on c.contactid = f.contactid
   INNER JOIN fuactions a ON a.actionID = n.actionID
   INNER JOIN notstatuses ns ON ns.notstatus = n.notStatus
