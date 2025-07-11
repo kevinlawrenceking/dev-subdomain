@@ -7,10 +7,7 @@
 <cfset contactID = url.currentid>
 <cfset showInactive = url.showInactive>
 
-<cfif contactID EQ 0>
-  <cfoutput>#serializeJSON({ "error": "Missing required parameter: currentid" }, true)#</cfoutput>
-  <cfexit>
-</cfif>
+
 
 <cfquery name="getReminders" datasource="abod">
   SELECT
