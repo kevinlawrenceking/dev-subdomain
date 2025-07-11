@@ -41,11 +41,11 @@
 
   WHERE f.contactID = <cfqueryparam value="#contactID#" cfsqltype="cf_sql_integer">
     AND n.notStartDate IS NOT NULL
-    AND n.notStartDate <= <cfqueryparam value="#now()#" cfsqltype="cf_sql_timestamp">
+    
     <cfif showInactive EQ 1>
       AND n.notStatus IN ('Pending', 'Completed', 'Skipped')
     <cfelse>
-      AND n.notStatus = 'Pending'
+      AND n.notStatus = 'Pending' AND n.notStartDate <= <cfqueryparam value="#now()#" cfsqltype="cf_sql_timestamp">
     </cfif>
 
   ORDER BY 
