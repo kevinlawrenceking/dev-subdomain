@@ -76,15 +76,14 @@
                         </div>
                     </cfif>
 
-                    <div class="col-md-12 col-lg-12">
-                        
-                        <A href="/app/reminders/">
-                         <button style="border: 1px solid #406E8E!important; outline: none!important; color: #406E8E!important;" class="badge badge-light text-dark">
-                                <i class="mdi mdi-book-plus-multiple"></i> Open All
-                            </button>
-                            
-                            </a>
-                    </div>
+                  <div class="col-md-12 col-lg-12">
+  <a href="/app/reminders/" 
+     class="badge badge-light text-dark" 
+     style="border: 1px solid #406E8E; outline: none; color: #406E8E; display: inline-block; padding: 6px 12px; text-decoration: none;">
+    <i class="mdi mdi-book-plus-multiple"></i> Open All
+  </a>
+</div>
+
                 </div>
             </form>
         </div><!--- card-body end --->
