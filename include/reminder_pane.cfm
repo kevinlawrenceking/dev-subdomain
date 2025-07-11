@@ -26,7 +26,7 @@
       <thead>
         <tr>
           <th>Action</th>
-          <th style="display:none;">ID</th>
+   
         
           <th style="display:<cfoutput>#contactVisible#</cfoutput>;">Contact</th>
      
@@ -79,7 +79,7 @@
             }
           }
         },
-        { data: "contactid", visible: false },
+
         { data: "contactfullname", visible: <cfoutput>#contactVisibilty#</cfoutput> },
         { data: "notStartDatef" },
         { data: "notEndDatef" },
