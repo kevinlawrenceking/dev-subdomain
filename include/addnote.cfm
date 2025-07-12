@@ -1,4 +1,4 @@
-<!--- This checking! ColdFusion page handles user actions for adding, deleting, or updating notes based on the provided user ID and page type. --->
+<!--- This ColdFusion page handles user actions for adding, deleting, or updating notes based on the provided user ID and page type. --->
 
 <cfif #isdefined('userid')#>
 
