@@ -245,15 +245,15 @@
             <ul class="nav nav-pills navtab-bg nav-justified p-1">
                 <cfoutput>
                     <cfset tabsConfig = [
-                        {id: "info", name: "Info", expand: tab0_expand},
-                        {id: "profile", name: "Dashboard", expand: tab1_expand},
-                        {id: "myteam", name: "Team", expand: tab2_expand},
-                        {id: "mybrand", name: "Essence", expand: tab3_expand},
-                        {id: "myheadshots", name: "Headshots", expand: tab8_expand},
-                        {id: "mymaterials", name: "Materials", expand: tab9_expand},
-                        {id: "pref", name: "Preferences", expand: tab4_expand},
-                        {id: "systems", name: "Systems", expand: tab7_expand},
-                        {id: "billing", name: "Billing", expand: tab10_expand}
+                        {id: "info", name: "Info", expand: tab0_expand, template: "myinfo_pane.cfm"},
+                        {id: "profile", name: "Dashboard", expand: tab1_expand, template: "mylinks_pane.cfm"},
+                        {id: "myteam", name: "Team", expand: tab2_expand, template: "myteam_pane.cfm"},
+                        {id: "mybrand", name: "Essence", expand: tab3_expand, template: "mybrand_pane.cfm"},
+                        {id: "myheadshots", name: "Headshots", expand: tab8_expand, template: "myheadshots_pane.cfm"},
+                        {id: "mymaterials", name: "Materials", expand: tab9_expand, template: "mymaterials_pane.cfm"},
+                        {id: "pref", name: "Preferences", expand: tab4_expand, template: "prefs_pane.cfm"},
+                        {id: "systems", name: "Systems", expand: tab7_expand, template: "systemprefs_pane.cfm"},
+                        {id: "billing", name: "Billing", expand: tab10_expand, template: "mybilling_pane.cfm"}
                     ]>
                     
                     <cfloop array="#tabsConfig#" index="tab">
@@ -272,7 +272,7 @@
                 <cfoutput>
                     <cfloop array="#tabsConfig#" index="tab">
                         <div class="tab-pane<cfif tab.expand is 'true'> show active</cfif>" id="#tab.id#">
-                            <cfinclude template="/include/#tab.id#_pane.cfm"/>
+                            <cfinclude template="/include/#tab.template#"/>
                         </div>
                     </cfloop>
                 </cfoutput>
