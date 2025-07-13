@@ -13,7 +13,7 @@
 <cfparam name="currentid" default="0"/>
 <cfparam name="new_region_id" default=""/>
 <cfparam name="new_countryid" default=""/>
-
+<cfparam name="def_region_id" default=""/>
 <!--- Set Session Variables --->
 <cfset session.pgrtn="P"/>
 <cfset pgrtn="P"/>
