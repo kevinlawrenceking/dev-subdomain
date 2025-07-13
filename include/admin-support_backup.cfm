@@ -1,13 +1,10 @@
-<!--- This ColdFusion page manages support tickets, allowing users to filter and view ticket details. --->
+
 <cfparam name="select_userid" default="%" />
 <cfparam name="select_ticketstatus" default="%" />
 <cfparam name="select_tickettype" default="%" />
 <cfparam name="select_ticketpriority" default="%" />
 <cfparam name="select_pgid" default="%" />
 <cfparam name="select_verid" default="%" />
-
-
-
 
 <div class="row">
     <div class="col-12">
