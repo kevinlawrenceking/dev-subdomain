@@ -14,6 +14,8 @@
 <cfparam name="new_region_id" default=""/>
 <cfparam name="new_countryid" default=""/>
 <cfparam name="def_region_id" default=""/>
+<cfparam name="DEF_COUNTRYID" default=""/>
+ 
 <!--- Set Session Variables --->
 <cfset session.pgrtn="P"/>
 <cfset pgrtn="P"/>
