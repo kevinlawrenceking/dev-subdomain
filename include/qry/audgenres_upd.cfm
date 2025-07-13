@@ -6,5 +6,5 @@
 
 <cfparam name="new_isDeleted" default="0" />
 
-<cfinclude template="/include/qry/audgenres_ins_364_1.cfm" />
+<cfinclude template="/include/qry/audgenres_update.cfm" />
 

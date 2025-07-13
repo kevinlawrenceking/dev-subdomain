@@ -1,6 +1,7 @@
 <cfset auditionGenreService = createObject("component", "services.AuditionGenreService")>
-<cfset new_audgenreid = auditionGenreService.INSaudgenres(
-    new_audgenre = trim(new_audgenre),
-    new_audCatid = new_audCatid,
-    new_isDeleted = new_isDeleted
+<!--- Create new audition genre using the standardized function name --->
+<cfset new_audgenreid = auditionGenreService.create(
+    audgenre = trim(new_audgenre),
+    audCatid = new_audCatid,
+    isDeleted = new_isDeleted ?: false
 )>
