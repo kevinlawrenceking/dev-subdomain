@@ -1,4 +1,4 @@
-<!--- This page processes event details, calculates event stop time, cleans event descriptions, and manages relationships for contacts. --->
+<!--- This Coldfusion page processes event details, calculates event stop time, cleans event descriptions, and manages relationships for contacts. --->
 
 <cfparam name="rcontactid" default="0" />     
 <cfparam name="eventstarttime" default="" />     
