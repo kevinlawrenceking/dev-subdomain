@@ -44,13 +44,21 @@ Last Updated: 2025
 ================================================================================
 --->
 
+<!--- ============================================================================ --->
+<!--- SECTION 1: INITIALIZATION AND SETUP --->
+<!--- ============================================================================ --->
+
 <!--- Parameters and variable initialization --->
 <cfparam name="materials" default="" />
 
-<!--- Include files --->
+<!--- Include core data queries --->
 <cfinclude template="/include/qry/materials_sel.cfm" />
 
-<!--- Modal setup for material management --->
+<!--- ============================================================================ --->
+<!--- SECTION 2: MODAL SETUP --->
+<!--- ============================================================================ --->
+
+<!--- Standard modal setup for material management --->
 <cfset modalid = "remoteaddMaterial" />
 <cfset modaltitle = "Add Material" />
 <cfinclude template="/include/modal.cfm" />
@@ -62,6 +70,10 @@ Last Updated: 2025
 <cfset modalid = "remoteupdatematerial" />
 <cfset modaltitle = "Update Material" />
 <cfinclude template="/include/modal.cfm" />
+
+<!--- ============================================================================ --->
+<!--- SECTION 3: HELP MODAL --->
+<!--- ============================================================================ --->
 
 <!--- Help information modal --->
 <div id="mymaterialshelp" class="modal fade" tabindex="-1" aria-labelledby="standard-modalLabel">
@@ -82,7 +94,11 @@ Last Updated: 2025
     </div>
 </div>
 
-<!--- Page header and controls --->
+<!--- ============================================================================ --->
+<!--- SECTION 4: PAGE HEADER AND CONTROLS --->
+<!--- ============================================================================ --->
+
+<!--- Page header with help link --->
 <cfoutput>
     <h4 class="p-1 d-flex">
         My Materials &nbsp;&nbsp; 
@@ -92,6 +108,7 @@ Last Updated: 2025
     </h4>
 </cfoutput>
 
+<!--- Add Material button --->
 <cfoutput>
     <div class="col-md-12 col-lg-12 col-xl-12 p-1 d-flex">
         <center>
@@ -103,7 +120,11 @@ Last Updated: 2025
     </div>
 </cfoutput>
 
-<!--- Materials data table --->
+<!--- ============================================================================ --->
+<!--- SECTION 5: MATERIALS DATA TABLE --->
+<!--- ============================================================================ --->
+
+<!--- Materials data table structure --->
 <div class="row pt-3 pb-3">
     <table id="materials_tbl" class="table display nowrap table-striped dataTable w-100 dtr-inline dt-checkboxes-select dt-responsive">
         <thead>
@@ -118,19 +139,30 @@ Last Updated: 2025
             </tr>
         </thead>
         <tbody>
-            <!--- Loop through materials and generate table rows --->
+            <!--- ============================================================================ --->
+            <!--- SECTION 6: MATERIALS LOOP AND TABLE ROWS --->
+            <!--- ============================================================================ --->
+            
+            <!--- Loop through materials and generate table rows with associated modals --->
             <cfloop query="materials_sel">
+                <!--- Load audition events for this material --->
                 <cfinclude template="/include/qry/events_166_1.cfm" />
-                <cfset materials = ValueList(events.audprojectid)>
+                <cfset materials = ValueList(events.audprojectid) />
                 
                 <cfoutput>
-                    <!--- Dynamic modals for each material item --->
+                    <!--- ============================================================================ --->
+                    <!--- SECTION 7: DYNAMIC MODAL SETUP FOR EACH MATERIAL --->
+                    <!--- ============================================================================ --->
+                    
+                    <!--- JavaScript for dynamic modal initialization --->
                     <script>
                         $(document).ready(function() {
+                            // Initialize delete material modal
                             $("##remoteDeleteaudmedia#materials_sel.mediaid#").on("show.bs.modal", function() {
                                 $(this).find(".modal-body").load("/include/remoteDeleteaudmedia.cfm?mediaid=#materials_sel.mediaid#&new_secid=196&secid=196");
                             });
                             
+                            // Initialize update material modal
                             $("##remoteupdatematerial#materials_sel.mediaid#").on("show.bs.modal", function() {
                                 $(this).find(".modal-body").load("/include/remoteupdatematerial.cfm?src=account&mediaid=#materials_sel.mediaid#");
                             });
@@ -167,8 +199,13 @@ Last Updated: 2025
                         </div>
                     </div>
 
+                    <!--- ============================================================================ --->
+                    <!--- SECTION 8: TABLE ROW DATA --->
+                    <!--- ============================================================================ --->
+                    
                     <!--- Table row for material data --->
                     <tr>
+                        <!--- Action column with edit/delete buttons --->
                         <td>
                             <a title="Edit" data-bs-toggle="modal" data-bs-target="##remoteupdatematerial#materials_sel.mediaid#">
                                 <i class="mdi mdi-square-edit-outline"></i>
@@ -179,23 +216,36 @@ Last Updated: 2025
                                 </a>
                             </cfif>
                         </td>
+                        
+                        <!--- Material type --->
                         <td class="text-nowrap">#materials_sel.mediaType#</td>
+                        
+                        <!--- Material name --->
                         <td class="text-nowrap">#materials_sel.mediaName#</td>
+                        
+                        <!--- Filename with download link --->
                         <td class="text-nowrap">
                             <a href="##" id="downloadLink_#materials_sel.mediaid#" style="text-decoration: underline; color: blue;">
                                 #materials_sel.mediaFilename#
                             </a>
                         </td>
+                        
+                        <!--- URL link (if available) --->
                         <td class="text-nowrap">
-                            <cfif #materials_sel.mediaurl# is not "" and #materials_sel.mediaurl# is not "https://">
+                            <cfif materials_sel.mediaurl is not "" and materials_sel.mediaurl is not "https://">
                                 <a href="#materials_sel.mediaurl#" target="_blank" style="text-decoration: underline; color: blue;">
                                     #materials_sel.mediaurl#
                                 </a>
                             </cfif>
                         </td>
+                        
+                        <!--- Created date and time --->
                         <td class="text-nowrap">
-                            #this.formatDate(materials_sel.mediacreated)#<br />#timeformat(materials_sel.mediacreated, 'medium')#
+                            #this.formatDate(materials_sel.mediacreated)#<br />
+                            #timeformat(materials_sel.mediacreated, 'medium')#
                         </td>
+                        
+                        <!--- Audition count with link --->
                         <td class="text-nowrap">
                             <cfif events.recordcount neq 0>
                                 <a href="/app/auditions/?materials=#materials#" style="text-decoration: underline; color: blue;">
@@ -207,6 +257,10 @@ Last Updated: 2025
                         </td>
                     </tr>
 
+                    <!--- ============================================================================ --->
+                    <!--- SECTION 9: DOWNLOAD FUNCTIONALITY --->
+                    <!--- ============================================================================ --->
+                    
                     <!--- Download link functionality --->
                     <script type="text/javascript">
                         document.getElementById('downloadLink_#materials_sel.mediaid#').addEventListener('click', function(e) {
@@ -222,7 +276,11 @@ Last Updated: 2025
         </tbody>
     </table>
 </div>
-<!--- JavaScript initialization and functionality --->
+<!--- ============================================================================ --->
+<!--- SECTION 10: JAVASCRIPT INITIALIZATION --->
+<!--- ============================================================================ --->
+
+<!--- Main JavaScript initialization and DataTable setup --->
 <cfoutput>
     <script>
         $(document).ready(function() {
@@ -231,14 +289,14 @@ Last Updated: 2025
                 $(this).find(".modal-body").load("/include/remoteaddMaterial.cfm?userid=#userid#&src=account&new_isshare=1");
             });
             
-            // Initialize DataTable
+            // Initialize DataTable with responsive settings
             var table = $('##materials_tbl').DataTable({
                 responsive: true,
                 ordering: true,
                 searching: true
             });
             
-            // Adjust DataTable columns when tab is shown
+            // Adjust DataTable columns when tab is shown (for responsive layout)
             $('a[data-bs-toggle="tab"]').on('shown.bs.tab', function(e) {
                 table.columns.adjust();
             });
