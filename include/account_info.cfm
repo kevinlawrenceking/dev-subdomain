@@ -178,17 +178,17 @@ Last Updated: 2025
         <script>
             $(document).ready(function () {
                 // Dashboard update modal handler
-                $("###dashboardupdate").on("show.bs.modal", function (event) {
+                $("##dashboardupdate").on("show.bs.modal", function (event) {
                     $(this).find(".modal-body").load("/include/dashboardupdate.cfm?userid=#userid#");
                 });
                 
                 // User update modal handler
-                $("###remoteUserUpdate").on("show.bs.modal", function (event) {
+                $("##remoteUserUpdate").on("show.bs.modal", function (event) {
                     $(this).find(".modal-body").load("/include/remoteUserUpdate.cfm?userid=#userid#&src=account");
                 });
                 
                 // Add contact modal handler
-                $("###remoteAddContact").on("show.bs.modal", function (event) {
+                $("##remoteAddContact").on("show.bs.modal", function (event) {
                     $(this).find(".modal-body").load("/include/remoteAddContact.cfm?userid=#userid#&src=account");
                 });
             });
@@ -315,7 +315,7 @@ Last Updated: 2025
                     
                     <cfloop array="#tabsConfig#" index="tab">
                         <li class="nav-item">
-                            <a href="###tab.id#" data-bs-toggle="tab" aria-expanded="#tab.expand#" 
+                            <a href="##tab.id#" data-bs-toggle="tab" aria-expanded="#tab.expand#" 
                                class="nav-link<cfif tab.expand is 'true'> active</cfif>">#tab.name#</a>
                         </li>
                     </cfloop>
