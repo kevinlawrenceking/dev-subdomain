@@ -161,7 +161,7 @@ Tables: contactdetails, contactitems, contactsimport, tags_user, fusystemusers
                     <ul class="nav nav-pills navtab-bg nav-justified p-1" role="tablist">
                         <li class="nav-item">
                             <a id="tab-A" href="#contacts" class="nav-link <cfif contact_expand is 'true'> active</cfif>" data-bs-toggle="tab" role="tab">
-                                All Relationshipz
+                                All Relationships
                             </a>
                         </li>
                         <li class="nav-item">
