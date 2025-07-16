@@ -192,13 +192,13 @@
                             <div class="card-header" id="heading#sitetypes.sitetypeid#">
                                 <h5 class="m-0">
                                     <a class="text-dark" data-bs-toggle="collapse" 
-                                       href="###collapse#sitetypes.sitetypeid#" aria-expanded="true">
+                                       href="##collapse#sitetypes.sitetypeid#" aria-expanded="true">
                                         #sitetypes.sitetypename#
                                     </a>
                                     
                                     <!--- Edit title button --->
                                     <a title="Edit Title" href="" data-bs-remote="true" 
-                                       data-bs-toggle="modal" data-bs-target="###updateheading#sitetypes.sitetypeid#">
+                                       data-bs-toggle="modal" data-bs-target="##updateheading#sitetypes.sitetypeid#">
                                         <i class="mdi mdi-square-edit-outline"></i>
                                     </a>
 
@@ -212,7 +212,7 @@
                                     
                                     <!--- Link count badge --->
                                     <a class="text-dark" data-bs-toggle="collapse" 
-                                       href="###collapse#sitetypes.sitetypeid#" aria-expanded="true">
+                                       href="##collapse#sitetypes.sitetypeid#" aria-expanded="true">
                                         <span class="badge badge-blue badge-pill float-end">
                                             #numberformat(mylinks_user.recordcount)#
                                         </span>
@@ -232,13 +232,13 @@
                             <div class="card-header" id="heading#sitetypes.sitetypeid#">
                                 <h5 class="m-0">
                                     <a class="text-dark collapsed" data-bs-toggle="collapse" 
-                                       href="###collapse#sitetypes.sitetypeid#" aria-expanded="false">
+                                       href="##collapse#sitetypes.sitetypeid#" aria-expanded="false">
                                         #sitetypes.sitetypename#
                                     </a>
                                     
                                     <!--- Edit title button --->
                                     <a title="Edit Title" href="" data-bs-remote="true" 
-                                       data-bs-toggle="modal" data-bs-target="###updateheading#sitetypes.sitetypeid#">
+                                       data-bs-toggle="modal" data-bs-target="##updateheading#sitetypes.sitetypeid#">
                                         <i class="mdi mdi-square-edit-outline"></i>
                                     </a>
 
@@ -252,7 +252,7 @@
                                     
                                     <!--- Link count badge --->
                                     <a class="text-dark collapsed" data-bs-toggle="collapse" 
-                                       href="###collapse#sitetypes.sitetypeid#" aria-expanded="false">
+                                       href="##collapse#sitetypes.sitetypeid#" aria-expanded="false">
                                         <span class="badge badge-blue badge-pill float-end">
                                             #numberformat(mylinks_user.recordcount)#
                                         </span>
@@ -273,9 +273,9 @@
                     <!--- Add custom link button --->
                     <cfoutput>
                         <button type="button" class="btn btn-xs btn-primary waves-effect mb-2 waves-light" 
-                                style="background-color: ###406e8e; border: ###406e8e" 
+                                style="background-color: ##406e8e; border: ##406e8e" 
                                 href="addlink.cfm" data-bs-remote="true" data-bs-toggle="modal" 
-                                data-bs-target="###addlink_#sitetypes.sitetypeid#">
+                                data-bs-target="##addlink_#sitetypes.sitetypeid#">
                             Add Custom
                         </button>
                     </cfoutput>
@@ -288,7 +288,7 @@
                                     <h5 id="item#mylinks_user.id#">
                                         <!--- Edit link --->
                                         <a title="Edit" href="updateuserlink.cfm" data-bs-remote="true" 
-                                           data-bs-toggle="modal" data-bs-target="###updatelink_#mylinks_user.id#">
+                                           data-bs-toggle="modal" data-bs-target="##updatelink_#mylinks_user.id#">
                                             <img src="#application.retinaIcons14Url#/#mylinks_user.siteicon#" width="14px" /> 
                                             #mylinks_user.sitename# 
                                             <cfif mylinks_user.ver is not ""> (#mylinks_user.ver#)</cfif>
