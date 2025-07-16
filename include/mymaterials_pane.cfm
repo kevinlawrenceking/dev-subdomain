@@ -227,12 +227,12 @@ Last Updated: 2025
     <script>
         $(document).ready(function() {
             // Initialize Add Material modal
-            $("#remoteaddMaterial").on("show.bs.modal", function() {
+            $("##remoteaddMaterial").on("show.bs.modal", function() {
                 $(this).find(".modal-body").load("/include/remoteaddMaterial.cfm?userid=#userid#&src=account&new_isshare=1");
             });
             
             // Initialize DataTable
-            var table = $('#materials_tbl').DataTable({
+            var table = $('##materials_tbl').DataTable({
                 responsive: true,
                 ordering: true,
                 searching: true
