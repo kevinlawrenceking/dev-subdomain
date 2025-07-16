@@ -1,33 +1,88 @@
-<!--- This ColdFusion page handles audition project details, including status updates and appointment management. --->
+<!--- 
+===========================================================================================
+AUDITION PROJECT DETAILS INTERFACE
+===========================================================================================
 
+Purpose: 
+- Individual audition project detail view and management interface
+- Handles audition status updates and appointment management
+- Provides comprehensive project information display with tabbed interface
+- Manages audition workflow progression (Audition → Callback → Redirect → Pin/Avail → Booking)
+
+Part of TAO Relationship System:
+- Audition Project Management Module
+- Status tracking and workflow management
+- Appointment scheduling and tracking
+- Project details and notes management
+- Relationship and materials management
+
+Database Tables/Components:
+- audprojects (main project data)
+- audroles (role and status information)
+- audsteps (workflow steps and status definitions)
+- events_tbl (audition appointments and events)
+- auditiondetails (appointment details)
+- audunions (union information)
+- audnetworks (network information)
+- audtones (tone/style information)
+- audcontracttypes (contract types)
+- contactdetails (casting director information)
+- AuditionProjectService (project data management)
+- AuditionStepService (workflow management)
+- EventService (appointment management)
+
+Key Features:
+- Dynamic status management with modal confirmations
+- Appointment creation and management
+- Tabbed interface for different data views
+- Project details editing
+- Category and location management
+- Notes and materials tracking
+- Relationship management
+- Booking information when applicable
+
+Status Workflow:
+- Audition → Callback → Redirect → Pin/Avail → Booking
+- Direct booking support for bypassing initial audition
+
+===========================================================================================
+--->
+
+<!--- Core includes and parameter definitions --->
 <cfinclude template="/include/audition_check.cfm" />
+
+<!--- Page parameters --->
 <cfparam name="istab" default="Y" />
 <cfparam name="pgaction" default="View" />
 <cfparam name="new_iscallback" default="0" />
 <cfparam name="new_isredirect" default="0" />
 <cfparam name="new_ispin" default="0" />
 <cfparam name="new_isbooked" default="0" />
+
+<!--- Query includes --->
 <cfinclude template="/include/qry/steps_29_1.cfm" />
 
-<!--- Loop through steps query to generate modals for each step. --->
+<!--- Status confirmation modals --->
+<!--- Generate status confirmation and cancellation modals for each step --->
 <cfloop query="steps">
-    <Cfoutput>
+    <cfoutput>
         <cfset statusfield="is#steps.stepcss#" />
 
-        <div id="StatusConfirm#steps.audstepid#" class="modal fade" tabindex="-1" role="dialog" >
-
+        <!--- Status confirmation modal --->
+        <div id="StatusConfirm#steps.audstepid#" class="modal fade" tabindex="-1" role="dialog">
             <div class="modal-dialog">
                 <div class="modal-content">
-                    <div class="modal-header" >
+                    <div class="modal-header">
                         <h4 class="modal-title">#steps.audstep#</h4>
                         <a href="/include/removestatus.cfm?audprojectid=#audprojectid#&STATUSFIELD=#STATUSFIELD#&new_audroleid=#audroleid#&new_audstepid=#steps.audstepid#">
-                            <button type="button" class="close" >
-<i class="mdi mdi-close-thick"></i></button>
+                            <button type="button" class="close">
+                                <i class="mdi mdi-close-thick"></i>
+                            </button>
                         </a>
                     </div>
                     <div class="modal-body">
                         <h4>#steps.stepinfo1#</h4>
-                        <BR>
+                        <br>
                         <p>#steps.stepinfo2#</p>
 
                         <cfif #steps.stepinfo4# is not ""> 
@@ -51,19 +106,20 @@
             </div>
         </div>
 
-        <div id="StatusCancel#steps.audstepid#" class="modal fade" tabindex="-1" role="dialog" >
-
+        <!--- Status cancellation modal --->
+        <div id="StatusCancel#steps.audstepid#" class="modal fade" tabindex="-1" role="dialog">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header" style="background-color: red;color:white;">
                         <h4 class="modal-title">Cancel #steps.audstep#</h4>
                         <a href="">
-                            <button type="button" value="Cancel" class="close" >
-<i class="mdi mdi-close-thick"></i></button>
+                            <button type="button" value="Cancel" class="close">
+                                <i class="mdi mdi-close-thick"></i>
+                            </button>
                         </a>
                     </div>
                     <div class="modal-body">
-                        <h4>Do you need to cancel your #steps.audstep# status?</h4><BR>
+                        <h4>Do you need to cancel your #steps.audstep# status?</h4><br>
                         <form action="/include/changestatus.cfm">
                             <input type="hidden" value="#audprojectid#" name="audprojectid" />
                             <input type="hidden" value="cancel" name="pgaction" />
@@ -76,7 +132,7 @@
                 </div>
             </div>
         </div>
-    </Cfoutput>
+    </cfoutput>
 </cfloop>
 
 <cfinclude template="/include/qry/rolecheck_29_2.cfm" />
@@ -347,30 +403,30 @@
     </div>
 </div>
 
+<!--- Status workflow controls --->
 <cfparam name="secid" default="176" />
 
 <form action="/include/rolecheck.cfm">
-    <Cfoutput>
+    <cfoutput>
         <input type="hidden" name="audroleid" value="#audroleid#" />
         <input type="hidden" name="audprojectid" value="#audprojectid#" />
         <input type="hidden" name="pgaction" value="switchit" />
-    </Cfoutput>
+    </cfoutput>
 
     <div class="card h-100 ribbon-box p-1 pb-0 mb-1" style="background-color: #FFFAE8;border-width:thin;border-color:#406E8E;">
         <center>
             <div class="container">
                 <div class="row">
                     <cfoutput>
+                        <!--- Callback Status --->
                         <div class="form-switch col-md-3 col-sm-6 col-xs-6">
                             <cfif #projectdetails.isdirect# is "0">
                                 <cfinclude template="/include/qry/callback_check_29_5.cfm" />
                                 <cfif #rolecheck.iscallback# is "1">
-                                    <input class="form-check-input form-check-input-callback" type="checkbox" id="new_iscallback" name="new_iscallback" value="1" <cfif #rolecheck.iscallback# is "1" >
- checked </cfif>
+                                    <input class="form-check-input form-check-input-callback" type="checkbox" id="new_iscallback" name="new_iscallback" value="1" <cfif #rolecheck.iscallback# is "1"> checked </cfif>
                                     <cfif #callback_check.recordcount# is not "0"> onclick="return false;" <cfelse> data-bs-toggle="modal" data-bs-target="##StatusCancel2" </cfif> />
                                 <cfelse>
-                                    <input class="form-check-input form-check-input-callback" type="checkbox" data-bs-toggle="modal" data-bs-target="##StatusConfirm2" id="new_iscallback" name="new_iscallback" value="1" <cfif #rolecheck.iscallback# is "1" >
- checked </cfif>
+                                    <input class="form-check-input form-check-input-callback" type="checkbox" data-bs-toggle="modal" data-bs-target="##StatusConfirm2" id="new_iscallback" name="new_iscallback" value="1" <cfif #rolecheck.iscallback# is "1"> checked </cfif>
                                     <cfif #callback_check.recordcount# is not "0"> onclick="return false;" </cfif> />
                                 </cfif>
                                 <label class="form-check-label" for="new_iscallback">Callback </label>
@@ -378,123 +434,68 @@
                                     <a href="javascript:;" data-bs-remote="true" data-bs-toggle="modal" data-bs-target="##auditionadd_Callback" data-bs-placement="top" title="Add Callback appointment" data-bs-original-title="Add Callback"><i class="fe-plus-circle"></i></a>
                                 </cfif>
                             </cfif>
-                        </div><!--- end form-check --->
+                        </div>
 
+                        <!--- Redirect Status --->
                         <div class="form-switch col-md-3 col-sm-6 col-xs-6">
                             <cfif #projectdetails.isdirect# is "0">
                                 <cfinclude template="/include/qry/Redirect_check_29_6.cfm" />
                                 <cfif #rolecheck.isRedirect# is "1">
-                                    <input class="form-check-input form-check-input-Redirect" type="checkbox" id="new_isRedirect" name="new_isRedirect" value="1" <cfif #rolecheck.isRedirect# is "1" >
- checked </cfif>
-                                   <cfif #Redirect_check.recordcount# is not "0"> onclick="return false;"
+                                    <input class="form-check-input form-check-input-Redirect" type="checkbox" id="new_isRedirect" name="new_isRedirect" value="1" <cfif #rolecheck.isRedirect# is "1"> checked </cfif>
+                                    <cfif #Redirect_check.recordcount# is not "0"> onclick="return false;" <cfelse> data-bs-toggle="modal" data-bs-target="##StatusCancel3" </cfif> />
                                 <cfelse>
-                       
-              data-bs-toggle="modal" data-bs-target="##StatusCancel3"  
-
-                            </cfif> />
-
-                            <cfelse>
-
-                                <input class="form-check-input form-check-input-Redirect" type="checkbox" data-bs-toggle="modal" data-bs-target="##StatusConfirm3" id="new_isRedirect" name="new_isRedirect" value="1" <cfif #rolecheck.isRedirect# is "1" >
- checked </cfif>
-
-                                <cfif #Redirect_check.recordcount# is not "0"> onclick="return false;"</cfif> />
-
+                                    <input class="form-check-input form-check-input-Redirect" type="checkbox" data-bs-toggle="modal" data-bs-target="##StatusConfirm3" id="new_isRedirect" name="new_isRedirect" value="1" <cfif #rolecheck.isRedirect# is "1"> checked </cfif>
+                                    <cfif #Redirect_check.recordcount# is not "0"> onclick="return false;" </cfif> />
                                 </cfif>
-
                                 <label class="form-check-label" for="new_isRedirect">Redirect </label>
-
                                 <cfif #rolecheck.isRedirect# is "1">
-
                                     <a href="javascript:;" data-bs-remote="true" data-bs-toggle="modal" data-bs-target="##auditionadd_Redirect" data-bs-placement="top" title="Add Redirect appointment" data-bs-original-title="Add Redirect"><i class="fe-plus-circle"></i></a>
-
                                 </cfif>
-    </cfif>
-    
-                        </div><!--- end form-check --->
-
-<div class="form-switch col-md-3 col-sm-6 col-xs-6">
-<cfif #projectdetails.isdirect# is "0">
-
-<cfinclude template="/include/qry/Pin_check_29_7.cfm" />
-
-<cfif #rolecheck.isPin# is "1">
-
-                                <input class="form-check-input form-check-input-Pin" type="checkbox" id="new_isPin" name="new_isPin" value="1" <cfif #rolecheck.isPin# is "1" >
- checked
                             </cfif>
+                        </div>
 
-                            <cfif #Pin_check.recordcount# is not "0"> onclick="return false;"
+                        <!--- Pin/Avail Status --->
+                        <div class="form-switch col-md-3 col-sm-6 col-xs-6">
+                            <cfif #projectdetails.isdirect# is "0">
+                                <cfinclude template="/include/qry/Pin_check_29_7.cfm" />
+                                <cfif #rolecheck.isPin# is "1">
+                                    <input class="form-check-input form-check-input-Pin" type="checkbox" id="new_isPin" name="new_isPin" value="1" <cfif #rolecheck.isPin# is "1"> checked </cfif>
+                                    <cfif #Pin_check.recordcount# is not "0"> onclick="return false;" <cfelse> data-bs-toggle="modal" data-bs-target="##StatusCancel4" </cfif> />
                                 <cfelse>
- 
-                      data-bs-toggle="modal" data-bs-target="##StatusCancel4"  
-
-                            </cfif> />
-
-                            <cfelse>
-
-                                <input class="form-check-input form-check-input-Pin" type="checkbox" data-bs-toggle="modal" data-bs-target="##StatusConfirm4" id="new_isPin" name="new_isPin" value="1" <cfif #rolecheck.isPin# is "1" >
- checked </cfif>
-
-                                <cfif #Pin_check.recordcount# is not "0"> onclick="return false;"</cfif> />
-
+                                    <input class="form-check-input form-check-input-Pin" type="checkbox" data-bs-toggle="modal" data-bs-target="##StatusConfirm4" id="new_isPin" name="new_isPin" value="1" <cfif #rolecheck.isPin# is "1"> checked </cfif>
+                                    <cfif #Pin_check.recordcount# is not "0"> onclick="return false;" </cfif> />
                                 </cfif>
-
                                 <label class="form-check-label" for="new_isPin">Pin/Avail </label>
-
                             </cfif>
+                        </div>
 
-                        </div><!--- end form-check --->
-
-<div class="form-switch col-md-3 col-sm-6 col-xs-6">
-
-<cfinclude  template="/include/qry/Booked_check_29_8.cfm" />
-                       
-<cfif #Booked_check.recordcount# is not "0"> 
- <a href="" data-bs-target="##RemoveBook" data-bs-toggle="modal"></cfif>
-
-                            <cfif #rolecheck.isBooked# is "1">
-
-                                <input class="form-check-input form-check-input-Booked" type="checkbox" id="new_isBooked" name="new_isBooked" value="1" <cfif #rolecheck.isBooked# is "1" >
- checked
-                            </cfif>
-
+                        <!--- Booked Status --->
+                        <div class="form-switch col-md-3 col-sm-6 col-xs-6">
+                            <cfinclude template="/include/qry/Booked_check_29_8.cfm" />
                             <cfif #Booked_check.recordcount# is not "0"> 
+                                <a href="" data-bs-target="##RemoveBook" data-bs-toggle="modal">
+                            </cfif>
                             
-                             disabled="disabled"  
-                                <cfelse>
-
-                     data-bs-toggle="modal" data-bs-target="##StatusCancel5" 
-
-                            </cfif> />
-
+                            <cfif #rolecheck.isBooked# is "1">
+                                <input class="form-check-input form-check-input-Booked" type="checkbox" id="new_isBooked" name="new_isBooked" value="1" <cfif #rolecheck.isBooked# is "1"> checked </cfif>
+                                <cfif #Booked_check.recordcount# is not "0"> disabled="disabled" <cfelse> data-bs-toggle="modal" data-bs-target="##StatusCancel5" </cfif> />
                             <cfelse>
-
-                                <input class="form-check-input form-check-input-Booked" type="checkbox" data-bs-toggle="modal" data-bs-target="##StatusConfirm5" id="new_isBooked" name="new_isBooked" value="1" <cfif #rolecheck.isBooked# is "1" >
- checked </cfif>
-
-                                <cfif #Booked_check.recordcount# is not "0"> onclick="return false;"</cfif> />
-
-                                </cfif>
-
-                                <label class="form-check-label" for="new_isBooked">Booked </label>
-
-                                <cfif #rolecheck.isBooked# is "1">
-
-                                    <a href="javascript:;"  data-bs-remote="true" data-bs-toggle="modal" data-bs-target="##auditionadd_Booking" data-bs-placement="top" title="Add Booked appointment" data-bs-original-title="Add Booked"><i class="fe-plus-circle"></i></a>
-
-                                </cfif>
-<cfif #Booked_check.recordcount# is not "0"> </a></cfif>
-                        </div><!--- end form-check --->
-
-</cfoutput>
-
+                                <input class="form-check-input form-check-input-Booked" type="checkbox" data-bs-toggle="modal" data-bs-target="##StatusConfirm5" id="new_isBooked" name="new_isBooked" value="1" <cfif #rolecheck.isBooked# is "1"> checked </cfif>
+                                <cfif #Booked_check.recordcount# is not "0"> onclick="return false;" </cfif> />
+                            </cfif>
+                            
+                            <label class="form-check-label" for="new_isBooked">Booked </label>
+                            <cfif #rolecheck.isBooked# is "1">
+                                <a href="javascript:;" data-bs-remote="true" data-bs-toggle="modal" data-bs-target="##auditionadd_Booking" data-bs-placement="top" title="Add Booked appointment" data-bs-original-title="Add Booked"><i class="fe-plus-circle"></i></a>
+                            </cfif>
+                            
+                            <cfif #Booked_check.recordcount# is not "0"> </a></cfif>
+                        </div>
+                    </cfoutput>
                 </div>
             </div>
-
         </center>
     </div>
-
 </form>
 
 <div class="row">
@@ -832,51 +833,42 @@ Appointments
     </div>
 
 </div>
+<!--- Section navigation and content --->
 <p>&nbsp;</p>
 
 <cfif #istab# is "N">
-
     <div class="card mb-3">
-
         <div class="btn-group col-md-12">
-
             <button type="button" class="btn btn-primary btn-lg dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-
-                <Cfoutput>#sec_det.pgtitle#</Cfoutput>
+                <cfoutput>#sec_det.pgtitle#</cfoutput>
                 <i class="fe-menu"></i>
-
             </button>
             <div class="dropdown-menu">
-
                 <cfloop query="options">
                     <cfoutput>
                         <a class="dropdown-item" href="/app/audition/?audprojectid=#audprojectid#&secid=#options.pgid#">#options.pgtitle#</a>
                     </cfoutput>
                 </cfloop>
-
             </div>
-        </div><!--- /btn-group --->
-
-<div class="card-body">
-
+        </div>
+        
+        <div class="card-body">
             <cfset includeTemplates = {
-    "176": "/include/aud_role_pane.cfm",
-    "175": "/include/aud_rel_pane.cfm",
-    "196": "/include/aud_head_pane.cfm",
-    "177": "/include/aud_mat_pane.cfm",
-    "178": "/include/aud_notes_pane.cfm",
-    "179": "/include/aud_ques_pane.cfm",
-    "180": "/include/aud_call_pane.cfm",
-    "181": roledetails.isbooked eq "1" ? "/include/aud_book_pane.cfm" : ""
-} />
-
-<cfif structKeyExists(includeTemplates, secid) and len(includeTemplates[secid])>
-    <cfinclude template="#includeTemplates[secid]#" />
-</cfif>
-
-</div>
+                "176": "/include/aud_role_pane.cfm",
+                "175": "/include/aud_rel_pane.cfm",
+                "196": "/include/aud_head_pane.cfm",
+                "177": "/include/aud_mat_pane.cfm",
+                "178": "/include/aud_notes_pane.cfm",
+                "179": "/include/aud_ques_pane.cfm",
+                "180": "/include/aud_call_pane.cfm",
+                "181": roledetails.isbooked eq "1" ? "/include/aud_book_pane.cfm" : ""
+            } />
+            
+            <cfif structKeyExists(includeTemplates, secid) and len(includeTemplates[secid])>
+                <cfinclude template="#includeTemplates[secid]#" />
+            </cfif>
+        </div>
     </div>
-
 </cfif>
 
 <cfif istab is "Y">
@@ -1063,48 +1055,36 @@ Appointments
 
                 </div>
 
-<div id="RemoveBook" class="modal fade" tabindex="-1" aria-labelledby="standard-modalLabel" >
-
-
-            <div class="modal-dialog">
-
-                <div class="modal-content">
-
-                    <div class="modal-header" >
-
-                        <h4 class="modal-title" id="standard-modalLabel">Warning</h4>
-
-<button type="button" class="close" data-bs-dismiss="modal" >
-<i class="mdi mdi-close-thick"></i>
-
-                        </button>
-
-                    </div>
-
-                    <div class="modal-body">
-     <p>You have to remove any booked appointments you have before you can change the booked status of this audition</p>
-
-                    </div>
-
-                </div>
-
+<!--- Warning modal for booked status --->
+<div id="RemoveBook" class="modal fade" tabindex="-1" aria-labelledby="standard-modalLabel">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="standard-modalLabel">Warning</h4>
+                <button type="button" class="close" data-bs-dismiss="modal">
+                    <i class="mdi mdi-close-thick"></i>
+                </button>
             </div>
-
+            <div class="modal-body">
+                <p>You have to remove any booked appointments you have before you can change the booked status of this audition</p>
+            </div>
         </div>
+    </div>
+</div>
 
+<!--- JavaScript for booked status validation --->
 <script>
-
-document.addEventListener('DOMContentLoaded', function() {
-    var bookedCheckbox = document.getElementById('new_isBooked');
-
-    bookedCheckbox.addEventListener('click', function(event) {
-        var isBooked = <cfoutput>#rolecheck.isBooked#</cfoutput>;
-        var bookedCheckRecordCount = <cfoutput>#Booked_check.recordcount#</cfoutput>;
-
-        if (isBooked === "1" && bookedCheckRecordCount !== 0 && !this.checked) {
-            event.preventDefault(); // Prevent unchecking
-            $('#RemoveBook').modal('show'); // Show the modal
-        }
+    document.addEventListener('DOMContentLoaded', function() {
+        var bookedCheckbox = document.getElementById('new_isBooked');
+        
+        bookedCheckbox.addEventListener('click', function(event) {
+            var isBooked = <cfoutput>#rolecheck.isBooked#</cfoutput>;
+            var bookedCheckRecordCount = <cfoutput>#Booked_check.recordcount#</cfoutput>;
+            
+            if (isBooked === "1" && bookedCheckRecordCount !== 0 && !this.checked) {
+                event.preventDefault(); // Prevent unchecking
+                $('#RemoveBook').modal('show'); // Show the modal
+            }
+        });
     });
-});
 </script>
