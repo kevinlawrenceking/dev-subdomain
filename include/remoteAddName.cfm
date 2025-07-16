@@ -1,12 +1,12 @@
 <!--- This ColdFusion page handles a form for adding a new contact with various fields including name, birthday, meeting date, and pronouns. It includes AJAX functionality for autocomplete on name and company fields. --->
-<cfif NOT structKeyExists(application, "dsn")>
+
     <cfset host = ListFirst(cgi.server_name, ".") />
     <cfif host EQ "app">
-        <cfset application.dsn = "abo" />
+        <cfset dsn = "abo" />
     <cfelse>
-        <cfset application.dsn = "abod" />
+        <cfset dsn = "abod" />
     </cfif>
-</cfif>
+
 <cfinclude template="/include/qry/pronouns_210_1.cfm" />
 <cfinclude template="/include/qry/refers_210_2.cfm" />
 
