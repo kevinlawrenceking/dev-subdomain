@@ -348,16 +348,64 @@ Last Updated: 2025
   </ul>
 
             
-            <!--- Tab content areas --->
-            <div class="tab-content">
-                <cfoutput>
-                    <cfloop array="#tabsConfig#" index="tab">
-                        <div class="tab-pane<cfif tab.expand is 'true'> show active</cfif>" id="#tab.id#">
-                            <cfinclude template="/include/#tab.template#"/>
-                        </div>
-                    </cfloop>
-                </cfoutput>
-            </div>
-        </div>
+       
+  <div class="tab-content">
+
+    <div class="tab-pane<cfif #tab0_expand# is 'true'> show active</cfif>" id="info">
+
+      <cfinclude template="/include/myinfo_pane.cfm"/>
+
     </div>
+
+    <div class="tab-pane<cfif #tab1_expand# is 'true'> show active</cfif>" id="profile">
+
+      <cfinclude template="/include/mylinks_pane.cfm"/>
+
+    </div>
+
+    <div class="tab-pane<cfif #tab2_expand# is 'true'> show active</cfif>" id="myteam">
+
+      <cfinclude template="/include/myteam_pane.cfm"/>
+
+    </div>
+
+    <div class="tab-pane<cfif #tab3_expand# is 'true'> show active</cfif>" id="mybrand">
+
+      <cfinclude template="/include/mybrand_pane.cfm"/>
+
+    </div>
+
+    <div class="tab-pane<cfif #tab8_expand# is 'true'> show active</cfif>" id="myheadshots">
+
+      <cfinclude template="/include/myheadshots_pane.cfm"/>
+
+    </div>
+
+    <div class="tab-pane<cfif #tab9_expand# is 'true'> show active</cfif>" id="mymaterials">
+
+      <cfinclude template="/include/mymaterials_pane.cfm"/>
+
+    </div>
+
+    <div class="tab-pane<cfif #tab4_expand# is 'true'> show active</cfif>" id="pref">
+
+      <cfinclude template="/include/prefs_pane.cfm"/>
+
+    </div>
+
+    <div class="tab-pane<cfif #tab7_expand# is 'true'> show active</cfif>" id="systems">
+
+      <cfinclude template="/include/systemprefs_pane.cfm"/>
+
+    </div>
+
+    <div class="tab-pane<cfif #tab10_expand# is 'true'> show active</cfif>" id="billing">
+
+      <cfinclude template="/include/mybilling_pane.cfm"/>
+
+    </div>
+
+  </div>
+
+</div>
 </cfif>
