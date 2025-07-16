@@ -127,11 +127,11 @@ Last Updated: 2025
                     <!--- Dynamic modals for each material item --->
                     <script>
                         $(document).ready(function() {
-                            $("#remoteDeleteaudmedia#materials_sel.mediaid#").on("show.bs.modal", function() {
+                            $("##remoteDeleteaudmedia#materials_sel.mediaid#").on("show.bs.modal", function() {
                                 $(this).find(".modal-body").load("/include/remoteDeleteaudmedia.cfm?mediaid=#materials_sel.mediaid#&new_secid=196&secid=196");
                             });
                             
-                            $("#remoteupdatematerial#materials_sel.mediaid#").on("show.bs.modal", function() {
+                            $("##remoteupdatematerial#materials_sel.mediaid#").on("show.bs.modal", function() {
                                 $(this).find(".modal-body").load("/include/remoteupdatematerial.cfm?src=account&mediaid=#materials_sel.mediaid#");
                             });
                         });
