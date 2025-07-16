@@ -298,8 +298,8 @@ Last Updated: 2025
     <!--- Main content area with tabbed interface --->
     <div class="card mb-3">
         <div class="card-body">
-
-  <ul class="nav nav-pills navtab-bg nav-justified p-1">
+            <!--- Tab navigation --->
+           <ul class="nav nav-pills navtab-bg nav-justified p-1">
 
     <cfoutput>
 
