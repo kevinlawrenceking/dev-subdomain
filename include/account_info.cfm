@@ -298,31 +298,55 @@ Last Updated: 2025
     <!--- Main content area with tabbed interface --->
     <div class="card mb-3">
         <div class="card-body">
-            <!--- Tab navigation --->
-            <ul class="nav nav-pills navtab-bg nav-justified p-1">
-                <cfoutput>
-                    <cfset tabsConfig = [
-                        {id: "info", name: "Info", expand: tab0_expand, template: "myinfo_pane.cfm"},
-                        {id: "profile", name: "Dashboard", expand: tab1_expand, template: "mylinks_pane.cfm"},
-                        {id: "myteam", name: "Team", expand: tab2_expand, template: "myteam_pane.cfm"},
-                        {id: "mybrand", name: "Essence", expand: tab3_expand, template: "mybrand_pane.cfm"},
-                        {id: "myheadshots", name: "Headshots", expand: tab8_expand, template: "myheadshots_pane.cfm"},
-                        {id: "mymaterials", name: "Materials", expand: tab9_expand, template: "mymaterials_pane.cfm"},
-                        {id: "pref", name: "Preferences", expand: tab4_expand, template: "prefs_pane.cfm"},
-                        {id: "systems", name: "Systems", expand: tab7_expand, template: "systemprefs_pane.cfm"},
-                        {id: "billing", name: "Billing", expand: tab10_expand, template: "mybilling_pane.cfm"}
-                    ]>
-                    
-                    <cfloop array="#tabsConfig#" index="tab">
-                        <li class="nav-item">
-                            <a href="#tab.id#" data-bs-toggle="tab" aria-expanded="#tab.expand#" 
-                               class="nav-link<cfif tab.expand is 'true'> active</cfif>">#tab.name#</a>
-                        </li>
-                    </cfloop>
-                    
-                    <span class="ml-auto" style="border-top:0 !important;border-left:0 !important;border-right:0 !important;"></span>
-                </cfoutput>
-            </ul>
+
+  <ul class="nav nav-pills navtab-bg nav-justified p-1">
+
+    <cfoutput>
+
+      <li class="nav-item">
+        <a href="##info" data-bs-toggle="tab" aria-expanded="#tab0_expand#" class="nav-link<cfif #tab0_expand# is 'true'> active</cfif>">Info
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a href="##profile" data-bs-toggle="tab" aria-expanded="#tab1_expand#" class="nav-link<cfif #tab1_expand# is 'true'> active</cfif>">Dashboard
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a href="##myteam" data-bs-toggle="tab" aria-expanded="#tab2_expand#" class="nav-link<cfif #tab2_expand# is 'true'> active</cfif>">Team</a>
+      </li>
+
+      <li class="nav-item">
+        <a href="##mybrand" data-bs-toggle="tab" aria-expanded="#tab3_expand#" class="nav-link<cfif #tab3_expand# is 'true'> active</cfif>">Essence</a>
+      </li>
+
+      <li class="nav-item">
+        <a href="##myheadshots" data-bs-toggle="tab" aria-expanded="#tab8_expand#" class="nav-link<cfif #tab8_expand# is 'true'> active</cfif>">Headshots</a>
+      </li>
+
+      <li class="nav-item">
+        <a href="##mymaterials" data-bs-toggle="tab" aria-expanded="#tab9_expand#" class="nav-link<cfif #tab9_expand# is 'true'> active</cfif>">Materials</a>
+      </li>
+
+      <li class="nav-item">
+        <a href="##pref" data-bs-toggle="tab" aria-expanded="#tab4_expand#" class="nav-link<cfif #tab4_expand# is 'true'> active</cfif>">Preferences</a>
+      </li>
+
+      <li class="nav-item">
+        <a href="##systems" data-bs-toggle="tab" aria-expanded="#tab7_expand#" class="nav-link<cfif #tab7_expand# is 'true'> active</cfif>">Systems</a>
+      </li>
+
+      <li class="nav-item">
+        <a href="##billing" data-bs-toggle="tab" aria-expanded="#tab10_expand#" class="nav-link<cfif #tab10_expand# is 'true'> active</cfif>">Billing</a>
+      </li>
+
+      <span class="ml-auto padding-bottom:11px;text-nowrap border border-top-0 !important border-left-0 !important border-right-0 !important" style="border-top:0 !important;border-left:0 !important;border-right:0 !important;"></span>
+
+    </cfoutput>
+
+  </ul>
+
             
             <!--- Tab content areas --->
             <div class="tab-content">
