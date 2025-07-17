@@ -1,5 +1,25 @@
 <cfcomponent displayname="AuditionRoleService" hint="Handles operations for AuditionRole table" > 
-<cffunction output="false" name="SELaudroles" access="public" returntype="query">
+<cffunction name="setFirstMeetingDates" access="public" returntype="void" output="false">
+    <cfquery >
+        UPDATE contactdetails c
+        JOIN (
+            SELECT 
+                x.contactid,
+                MIN(e.eventstart) AS first_event_date
+            FROM audcontacts_auditions_xref x
+            INNER JOIN audprojects p ON p.audprojectid = x.audprojectid
+            INNER JOIN audroles r ON r.audprojectid = p.audprojectid
+            INNER JOIN events e ON e.audroleid = r.audroleid
+            WHERE e.eventstart IS NOT NULL
+            GROUP BY x.contactid
+        ) sub ON sub.contactid = c.contactid
+        SET c.contactmeetingdate = sub.first_event_date
+        WHERE c.contactmeetingdate IS NULL
+    </cfquery>
+</cffunction>
+
+
+    <cffunction output="false" name="SELaudroles" access="public" returntype="query">
     <cfargument name="audroleid" type="numeric" required="true">
 
 <cfquery name="result" >
