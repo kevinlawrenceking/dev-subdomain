@@ -815,7 +815,7 @@ Appointments
                         </cfif>
 
 <cfif #audnetworks_user_sel.recordcount# is not "0">
-                            <div class="col-md-12 col-lg-12 p-1 text-nowrap"><strong>Network: </strong>#projectdetails.network#</div>
+                            <div class="col-md-12 col-lg-12 p-1 text-nowrap"><strong>Network/Studio/Platform: </strong>#projectdetails.network#</div>
                         </cfif>
 
 <cfif #audtones_user_sel.recordcount# is not "0">
