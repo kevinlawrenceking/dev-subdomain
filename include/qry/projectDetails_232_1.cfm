@@ -1,6 +1,6 @@
 <!--- This ColdFusion page retrieves project details along with associated roles, categories, tones, networks, and contact information based on a specific project ID. --->
 
-<cfquery name="projectDetails" datasource="#application.dsn#">
+<cfquery name="projectDetails" >
     SELECT 
         proj.audprojectID, 
         r.audroleid,
