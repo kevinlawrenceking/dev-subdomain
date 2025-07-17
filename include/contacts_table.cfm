@@ -108,20 +108,20 @@ $(document).ready(function() {
         },
     </cfif>
     {
-        text: 'Delete',
-        className: 'batchdelete',
-        action: function() {
-            updateIdList('#myformdelete');  // Ensure idlist is set
-            $('#exampleModaldelete').modal('show');
-        },
-        enabled: false
-    },
-    {
         text: 'Export',
         className: 'exportcontacts',
         action: function() {
             updateIdList('#myformexport');  // Ensure idlist is set
             $('#exampleModal5').modal('show');
+        },
+        enabled: false
+    },
+    {
+        text: 'Delete',
+        className: 'batchdelete',
+        action: function() {
+            updateIdList('#myformdelete');  // Ensure idlist is set
+            $('#exampleModaldelete').modal('show');
         },
         enabled: false
     }
