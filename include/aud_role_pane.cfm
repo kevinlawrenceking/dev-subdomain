@@ -139,7 +139,7 @@
         </cfif>
     </cfif>
 
-    <cfif #audcatid# is "5">
+    <cfif #audcatid# is "5" or #audcatid# is "6">
         <cfoutput>
             <div class="col-md-12 col-lg-6 col-xl-4 p-1 text-nowrap"><strong>Dialect: </strong>#roledetails.auddialect#</div>
         </cfoutput>
