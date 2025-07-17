@@ -51,6 +51,7 @@
     <cfargument name="new_contractTypeID" type="numeric" required="false" default="0">
     <cfargument name="new_contactid" type="numeric" required="false" default="0">
     <cfargument name="new_payrate" type="string" required="false" default="">
+    <cfargument name="new_buyout" type="string" required="false" default="">
     <cfargument name="new_audprojectID" type="numeric" required="true">
 
 <!--- Build the update query dynamically --->
@@ -95,6 +96,10 @@
 
         <cfif len(trim(arguments.new_payrate))>
             ,payrate = <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#arguments.new_payrate#" maxlength="100">
+        </cfif>
+
+        <cfif len(trim(arguments.new_buyout))>
+            ,buyout = <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#arguments.new_buyout#" maxlength="255">
         </cfif>
 
     WHERE audprojectID = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_audprojectID#">
@@ -206,6 +211,7 @@
                 a.projname, 
                 a.projDescription, 
                 a.payrate,
+                a.buyout,
                 a.userid, 
                 a.audSubCatID, 
                 a2.audcatid, 
@@ -363,7 +369,7 @@
     <cfargument name="audprojectid" type="numeric" required="true">
 
 <cfquery name="result" >
-            SELECT projname, projdescription, payrate, contactid
+            SELECT projname, projdescription, payrate, buyout, contactid
             FROM audprojects
             WHERE audprojectid = <cfqueryparam value="#arguments.audprojectid#" cfsqltype="CF_SQL_INTEGER">
          
@@ -381,6 +387,7 @@
                 proj.projName, 
                 proj.projDescription, 
                 proj.payrate,
+                proj.buyout,
                 cat.audCatName, 
                 cat.audcatid, 
                 subcat.audSubCatName, 
@@ -416,6 +423,7 @@
                 a.projName, 
                 a.projDescription, 
                 a.payrate,
+                a.buyout,
                 ad.eventStartTime, 
                 ad.eventStopTime, 
                 ad.eventStart, 
@@ -478,6 +486,7 @@
                 ad.eventid, 
                 pr.audprojectid, 
                 pr.payrate,
+                pr.buyout,
                 ad.audLocation, 
                 ad.eventStart, 
                 ad.eventStartTime, 
@@ -536,6 +545,7 @@
                 proj.projName, 
                 proj.projDescription, 
                 proj.payrate,
+                proj.buyout,
                 cat.audCatName, 
                 cat.audcatid, 
                 subcat.audSubCatName, 
