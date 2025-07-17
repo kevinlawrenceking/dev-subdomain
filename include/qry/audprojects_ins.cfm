@@ -19,6 +19,8 @@
 <!--- Parameter to indicate if the project is deleted --->
 <cfparam name="new_contactid" default="" />
 <!--- Parameter for contact ID --->
+<cfparam name="new_payrate" default="" />
+<!--- Parameter for payrate --->
 <cfparam name="isdirect" default="0" />
 <!--- Parameter to indicate if the project is direct --->
 <cfinclude template="/include/qry/audprojects_ins_399_1.cfm" />

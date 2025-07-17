@@ -28,6 +28,10 @@
 <Cfset new_contactid = "0" />
 </cfif>
 
+<Cfif #new_payrate# is "">
+<Cfset new_payrate = "" />
+</cfif>
+
 <Cfif #new_contractTypeID# is "">
 <Cfset new_contractTypeID = "0" />
 </cfif>
@@ -44,6 +48,7 @@
     new_isDeleted = new_isDeleted,
     isdirect = isdirect
     ,new_contactid = new_contactid
+    ,new_payrate = new_payrate
     ,new_eventStart = new_eventStart
 
 ) />

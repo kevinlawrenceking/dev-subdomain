@@ -187,6 +187,16 @@
             </div>
         </cfif>
 
+        <cfoutput query="auditionprojectdetails">
+            <div class="form-group col-md-12">
+                <label for="payrate">Payrate / Session Fee</label>
+                <input class="form-control" type="text" id="payrate" name="new_payrate" value="#auditionprojectdetails.payrate#" placeholder="Enter payrate or session fee" />
+                <div class="invalid-feedback">
+                    Please enter a valid payrate or session fee.
+                </div>
+            </div>
+        </cfoutput>
+
         <div class="form-group text-center col-md-12">
             <button class="btn btn-xs btn-primary waves-effect mb-2 waves-light" style="background-color: #406e8e; border: #406e8e;" type="submit">Update</button>
         </div>

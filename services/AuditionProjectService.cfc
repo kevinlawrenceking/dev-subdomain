@@ -50,6 +50,7 @@
     <cfargument name="new_toneID" type="numeric" required="false" default="0">
     <cfargument name="new_contractTypeID" type="numeric" required="false" default="0">
     <cfargument name="new_contactid" type="numeric" required="false" default="0">
+    <cfargument name="new_payrate" type="string" required="false" default="">
     <cfargument name="new_audprojectID" type="numeric" required="true">
 
 <!--- Build the update query dynamically --->
@@ -90,6 +91,10 @@
             ,contactid = NULL
         <cfelse>
             ,contactid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_contactid#">
+        </cfif>
+
+        <cfif len(trim(arguments.new_payrate))>
+            ,payrate = <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#arguments.new_payrate#" maxlength="100">
         </cfif>
 
     WHERE audprojectID = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_audprojectID#">
@@ -1229,6 +1234,7 @@ ORDER BY label
                 a.audprojectid, 
                 a.projname, 
                 a.projDescription, 
+                a.payrate,
                 a.userid, 
                 a.audSubCatID, 
                 a2.audcatid, 
@@ -1401,6 +1407,7 @@ ORDER BY p.projdate DESC
     <cfargument name="new_isDeleted" type="string" required="false">
     <cfargument name="isdirect" type="string" required="false">
     <cfargument name="new_contactid" type="numeric" required="false">
+    <cfargument name="new_payrate" type="string" required="false">
     <cfargument name="new_eventStart" type="string" required="true">
 
     <cfquery result="result">
@@ -1418,6 +1425,7 @@ ORDER BY p.projdate DESC
             <cfif structKeyExists(arguments, "new_isDeleted")>, isDeleted</cfif>
             <cfif structKeyExists(arguments, "isdirect")>, isDirect</cfif>
             <cfif structKeyExists(arguments, "new_contactid") AND arguments.new_contactid NEQ 0>, contactid</cfif>
+            <cfif structKeyExists(arguments, "new_payrate") AND len(trim(arguments.new_payrate))>, payrate</cfif>
         ) VALUES (
             <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#arguments.new_projName#" maxlength="500">,
             <cfqueryparam cfsqltype="CF_SQL_LONGVARCHAR" value="#arguments.new_projDescription#">,
@@ -1432,6 +1440,7 @@ ORDER BY p.projdate DESC
             <cfif structKeyExists(arguments, "new_isDeleted")>, <cfqueryparam cfsqltype="CF_SQL_BIT" value="#arguments.new_isDeleted#"></cfif>
             <cfif structKeyExists(arguments, "isdirect")>, <cfqueryparam cfsqltype="CF_SQL_BIT" value="#arguments.isdirect#"></cfif>
             <cfif structKeyExists(arguments, "new_contactid") AND arguments.new_contactid NEQ 0>, <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_contactid#"></cfif>
+            <cfif structKeyExists(arguments, "new_payrate") AND len(trim(arguments.new_payrate))>, <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#arguments.new_payrate#" maxlength="100"></cfif>
         )
     </cfquery>
 
