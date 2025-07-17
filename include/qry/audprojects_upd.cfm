@@ -30,5 +30,8 @@
 <cfparam name="new_payrate" default="" />
 <!--- Initialize payrate parameter --->
 
+<cfparam name="new_buyout" default="" />
+<!--- Initialize buyout parameter --->
+
 <cfinclude template="/include/qry/audprojects_ins_401_1.cfm" />
 <!--- Include the template for inserting a new project --->

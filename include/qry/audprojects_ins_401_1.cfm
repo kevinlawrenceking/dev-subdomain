@@ -9,6 +9,7 @@
 <cfif NOT len(trim(new_contractTypeID))><cfset new_contractTypeID = 0></cfif>
 <cfif NOT len(trim(new_contactid))><cfset new_contactid = 0></cfif>
 <cfif NOT len(trim(new_payrate))><cfset new_payrate = ""></cfif>
+<cfif NOT len(trim(new_buyout))><cfset new_buyout = ""></cfif>
 
 <!--- Call the function --->
 <cfset AuditionProjectService.UPDaudprojects_24586(
@@ -20,5 +21,6 @@
     new_contractTypeID = new_contractTypeID,
     new_contactid = new_contactid,
     new_payrate = new_payrate,
+    new_buyout = new_buyout,
     new_audprojectID = new_audprojectID
 )>
