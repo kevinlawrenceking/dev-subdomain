@@ -75,7 +75,7 @@
 
     <!--- Network Selection --->
     <div class="form-group col-md-6">
-        <label for="networkID">Network</label>
+        <label for="networkID">Network/Studio/Platform</label>
         <select class="form-control" name="new_networkID" id="networkID">
             <option value="">--</option>
             <cfoutput query="audnetworks_sel">
@@ -87,7 +87,7 @@
             </cfoutput>
         </select>
         <div class="invalid-feedback">
-            Please select a Network.
+            Please select a Network/Studio/Platform.
         </div>
     </div>
 
