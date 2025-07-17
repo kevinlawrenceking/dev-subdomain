@@ -205,6 +205,7 @@
                 a.audprojectid, 
                 a.projname, 
                 a.projDescription, 
+                a.payrate,
                 a.userid, 
                 a.audSubCatID, 
                 a2.audcatid, 
@@ -362,7 +363,7 @@
     <cfargument name="audprojectid" type="numeric" required="true">
 
 <cfquery name="result" >
-            SELECT projname, projdescription, contactid
+            SELECT projname, projdescription, payrate, contactid
             FROM audprojects
             WHERE audprojectid = <cfqueryparam value="#arguments.audprojectid#" cfsqltype="CF_SQL_INTEGER">
          
@@ -379,6 +380,7 @@
                 r.audroleid, 
                 proj.projName, 
                 proj.projDescription, 
+                proj.payrate,
                 cat.audCatName, 
                 cat.audcatid, 
                 subcat.audSubCatName, 
@@ -413,6 +415,7 @@
                 a4.audroleid, 
                 a.projName, 
                 a.projDescription, 
+                a.payrate,
                 ad.eventStartTime, 
                 ad.eventStopTime, 
                 ad.eventStart, 
@@ -474,6 +477,7 @@
                 pr.audprojectid AS recid, 
                 ad.eventid, 
                 pr.audprojectid, 
+                pr.payrate,
                 ad.audLocation, 
                 ad.eventStart, 
                 ad.eventStartTime, 
@@ -531,6 +535,7 @@
                 r.audroleid, 
                 proj.projName, 
                 proj.projDescription, 
+                proj.payrate,
                 cat.audCatName, 
                 cat.audcatid, 
                 subcat.audSubCatName, 
@@ -1077,6 +1082,7 @@ ORDER BY label
     <cfargument name="new_isDeleted" type="boolean" required="false" default=false>
     <cfargument name="isdirect" type="boolean" required="false" default=false>
     <cfargument name="new_contactid" type="numeric" required="false">
+    <cfargument name="new_payrate" type="string" required="false" default="">
     <cfargument name="new_projdate" type="date" required="true">
 
 <cfquery result="result" >
@@ -1088,6 +1094,7 @@ ORDER BY label
                 isDeleted,
                 IsDirect,
                 contactid,
+                payrate,
                 projdate
             ) VALUES (
                 <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#arguments.new_projName#" maxlength="500" null="#NOT len(trim(arguments.new_projName))#" />,
@@ -1097,6 +1104,7 @@ ORDER BY label
                 <cfqueryparam cfsqltype="CF_SQL_BIT" value="#arguments.new_isDeleted#" null="#NOT len(trim(arguments.new_isDeleted))#" />,
                 <cfqueryparam cfsqltype="CF_SQL_BIT" value="#arguments.isdirect#" null="#NOT len(trim(arguments.isdirect))#" />,
                 <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_contactid#" null="#NOT len(trim(arguments.new_contactid))#" />,
+                <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#arguments.new_payrate#" maxlength="100" null="#NOT len(trim(arguments.new_payrate))#" />,
                 <cfqueryparam cfsqltype="CF_SQL_DATE" value="#arguments.new_projdate#" />
             )
          
@@ -1111,6 +1119,7 @@ ORDER BY label
                 a4.audroleid, 
                 a.projName, 
                 a.projDescription, 
+                a.payrate,
                 a1.network, 
                 a2.audSubCatName, 
                 a3.unionName, 
@@ -1145,6 +1154,7 @@ ORDER BY label
                 r.audroleid, 
                 proj.projName, 
                 proj.projDescription, 
+                proj.payrate,
                 cat.audCatName, 
                 cat.audcatid, 
                 subcat.audSubCatName, 
@@ -1201,6 +1211,7 @@ ORDER BY label
                 a4.audroleid, 
                 a.projName, 
                 a.projDescription, 
+                a.payrate,
                 a1.network, 
                 a2.audSubCatName, 
                 a3.unionName, 
@@ -1294,6 +1305,7 @@ ORDER BY label
             SELECT 
                 p.audprojectid AS recid, 
                 p.audprojectid, 
+                p.payrate,
                 r.audroleid, 
                 st.audstep, 
                 st.stepcss, 
@@ -1456,6 +1468,7 @@ ORDER BY p.projdate DESC
             SELECT 
                 proj.audprojectID, 
                 proj.projName, 
+                proj.payrate,
                 cat.audCatName, 
                 cat.audcatid, 
                 subcat.audSubCatName, 
