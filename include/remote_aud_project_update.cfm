@@ -72,7 +72,7 @@
     </cfoutput>
 <cfelse>
     <div class="form-group col-md-6">
-        <label for="new_networkID">Network</label>
+        <label for="new_networkID">Network/Studio/Platform</label>
         <select class="form-control" name="new_networkID" id="new_networkID" onchange="toggleCustomNetwork(this);">
             <option value="">--</option>
             <option value="CustomNetwork">***ADD CUSTOM</option>
@@ -85,14 +85,14 @@
             </cfoutput>
         </select>
         <div class="invalid-feedback">
-            Please select a Network.
+            Please select a Network/Studio/Platform.
         </div>
     </div>
 
     <cfoutput>
         <div class="form-group col-md-6" id="CustomNetworks" style="display:none;">
-            <label for="CustomTone">Custom Network</label>
-            <input class="form-control" type="text" id="CustomNetwork" name="CustomNetwork" value="" placeholder="Enter a Custom Network" />
+            <label for="CustomTone">Custom Network/Studio/Platform</label>
+            <input class="form-control" type="text" id="CustomNetwork" name="CustomNetwork" value="" placeholder="Enter a Custom Network/Studio/Platform" />
         </div>
     </cfoutput>
 </cfif>
