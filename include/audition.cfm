@@ -826,6 +826,10 @@ Appointments
                             <div class="col-md-12 col-lg-12 p-1 text-nowrap"><strong>Payrate / Session Fee: </strong>#projectdetails.payrate#</div>
                         </cfif>
 
+                        <cfif #projectdetails.buyout# is not "">
+                            <div class="col-md-12 col-lg-12 p-1 text-nowrap"><strong>Buyout: </strong>#projectdetails.buyout#</div>
+                        </cfif>
+
                         <div class="col-md-12 p-1"><strong>Project Description / Logline: </strong>#projectdetails.projDescription#</div>
 
 </div>

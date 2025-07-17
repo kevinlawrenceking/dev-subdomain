@@ -195,6 +195,14 @@
                     Please enter a valid payrate or session fee.
                 </div>
             </div>
+
+            <div class="form-group col-md-12">
+                <label for="buyout">Buyout</label>
+                <input class="form-control" type="text" id="buyout" name="new_buyout" value="#auditionprojectdetails.buyout#" placeholder="Enter buyout terms or fee notes" />
+                <div class="invalid-feedback">
+                    Please enter valid buyout information.
+                </div>
+            </div>
         </cfoutput>
 
         <div class="form-group text-center col-md-12">
