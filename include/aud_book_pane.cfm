@@ -118,6 +118,16 @@
             <cfif #projectDetails.audcatname# is "Commercial">
                 <div class="col-md-12 col-lg-6 col-xl-4 p-1 text-nowrap"><strong>Buyout: </strong>#dollarformat(roledetails.buyout)#</div>
             </cfif>
+            
+            <!--- Display Conflict Information if available --->
+            <cfif len(trim(projectDetails.conflict_notes))>
+                <div class="col-md-12 col-lg-6 p-1">
+                    <strong>Conflict: </strong>#projectDetails.conflict_notes#
+                    <cfif isDate(projectDetails.conflict_enddate)>
+                        (ends #dateFormat(projectDetails.conflict_enddate, 'mmm d, yyyy')#)
+                    </cfif>
+                </div>
+            </cfif>
         </cfoutput>
     </cfif>
 </div>

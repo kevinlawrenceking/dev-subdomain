@@ -145,6 +145,8 @@
     <cfargument name="new_netincome" required="false">
     <cfargument name="new_buyout" required="false">
     <cfargument name="new_paycycleid" required="false">
+    <cfargument name="new_conflict_notes" required="false">
+    <cfargument name="new_conflict_enddate" required="false">
 
     <cfquery >
         UPDATE audroles
@@ -174,6 +176,32 @@
     </cfquery>
 
 </cffunction>
+
+<!--- 
+    PURPOSE: Update conflict notes and end date for an audition project
+    AUTHOR: [Your Name]
+    DATE: 2025-07-17
+    PARAMETERS: audprojectid, conflict_notes, conflict_enddate
+    DEPENDENCIES: none
+--->
+<cffunction output="false" name="UPDaudprojects_conflict" access="public" returntype="void">
+    <cfargument name="audprojectid" type="numeric" required="true">
+    <cfargument name="conflict_notes" type="string" required="false" default="">
+    <cfargument name="conflict_enddate" type="string" required="false" default="">
+
+    <cfquery>
+        UPDATE audprojects
+        SET 
+            conflict_notes = <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#arguments.conflict_notes#" null="#NOT len(trim(arguments.conflict_notes))#">
+            <cfif isDate(arguments.conflict_enddate)>
+                ,conflict_enddate = <cfqueryparam cfsqltype="CF_SQL_DATE" value="#arguments.conflict_enddate#">
+            <cfelse>
+                ,conflict_enddate = NULL
+            </cfif>
+        WHERE audprojectid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.audprojectid#">
+    </cfquery>
+</cffunction>
+
 <cffunction output="false" name="UPDaudroles_23813" access="public" returntype="void">
     <cfargument name="statusField" type="string" required="true">
     <cfargument name="newAudRoleId" type="numeric" required="true">
