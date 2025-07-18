@@ -119,6 +119,8 @@
                 r.payrate, 
                 r.netincome, 
                 r.buyout, 
+                p.conflict_notes,
+                p.conflict_enddate,
                 pc.paycycleid, 
                 pc.paycyclename
             FROM 

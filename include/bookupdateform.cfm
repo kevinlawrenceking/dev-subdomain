@@ -103,11 +103,11 @@
             <div class="form-group row">
                 <div class="col-md-6 col-sm-12">
                     <label for="new_conflict_notes">Conflict</label>
-                    <input class="form-control" id="new_conflict_notes" name="new_conflict_notes" value="#book_det.conflict_notes#" placeholder="Enter conflict details" type="text" />
+                    <input class="form-control" id="new_conflict_notes" name="new_conflict_notes" value="#structKeyExists(book_det, 'conflict_notes') ? book_det.conflict_notes : ''#" placeholder="Enter conflict details" type="text" />
                 </div>
                 <div class="col-md-6 col-sm-12">
                     <label for="new_conflict_enddate">End Date of Conflict</label>
-                    <input class="form-control" id="new_conflict_enddate" name="new_conflict_enddate" value="#dateFormat(book_det.conflict_enddate, 'yyyy-mm-dd')#" type="date" />
+                    <input class="form-control" id="new_conflict_enddate" name="new_conflict_enddate" value="#(structKeyExists(book_det, 'conflict_enddate') AND isDate(book_det.conflict_enddate)) ? dateFormat(book_det.conflict_enddate, 'yyyy-mm-dd') : ''#" type="date" />
                 </div>
             </div>
         </cfoutput>
