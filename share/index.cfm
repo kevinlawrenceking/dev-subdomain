@@ -28,14 +28,14 @@
     <cfset legacy_token = len(trim(url.u)) gt 0 ? url.u : url.uid />
     <cfoutput>legacy_token: #legacy_token#</cfoutput>
     <!--- Get user ID from legacy token --->
-    <cfquery name="default" datasource="#application.dsn#">
-        SELECT top 1 
+    <cfquery name="default" datasource="#application.dsn#" maxrows="1">
+        SELECT 
             left(t.UUID,10) as default_u,
-            userid 
+            u.userid 
         FROM 
             taousers u inner join thrivecart t on t.id = u.customerid
         WHERE 
-            left(passwordhash,10) = <cfqueryparam value="#left(legacy_token,10)#" cfsqltype="cf_sql_varchar">
+            left(t.passwordhash,10) = <cfqueryparam value="#left(legacy_token,10)#" cfsqltype="cf_sql_varchar">
     </cfquery>
 
     <cfif default.recordCount eq 0>
