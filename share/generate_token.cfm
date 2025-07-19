@@ -67,7 +67,7 @@
 
 <!--- Get the user info --->
 <cfquery name="userInfo" datasource="#application.dsn#">
-    SELECT firstname, lastname
+    SELECT userfirstname, userlastname
     FROM taousers
     WHERE userid = <cfqueryparam value="#url.userId#" cfsqltype="cf_sql_integer">
 </cfquery>
@@ -105,7 +105,7 @@
         <table>
             <tr>
                 <th>User</th>
-                <td><cfoutput>#userInfo.firstname# #userInfo.lastname# (ID: #url.userId#)</cfoutput></td>
+                <td><cfoutput>#userInfo.userfirstname# #userInfo.userlastname# (ID: #url.userId#)</cfoutput></td>
             </tr>
             <tr>
                 <th>Share Type</th>
