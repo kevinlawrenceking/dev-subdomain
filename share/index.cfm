@@ -37,7 +37,7 @@
         WHERE 
             left(passwordhash,10) = <cfqueryparam value="#legacy_token#" cfsqltype="cf_sql_varchar">
     </cfquery>
-    <cfoutput>default_u: #default.default_u#<cfabort></cfoutput>
+
     <cfif default.recordCount eq 0>
         <cfinclude template="invalid_token.cfm" />
         <cfabort>
