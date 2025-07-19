@@ -26,7 +26,7 @@
 
 <!--- Debug URL parameters --->
 <cfif debug is "YES">
-    <div style="background:blue;padding:10px;margin:10px 0;border:1px solid blue;">
+    <div style="background:##0000ff;padding:10px;margin:10px 0;border:1px solid ##0000ff;">
         <h3>URL Parameters</h3>
         <cfoutput>
             <ul>
