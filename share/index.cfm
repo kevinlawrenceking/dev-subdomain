@@ -7,6 +7,7 @@
 
 <cfparam name="url.shareToken" default="" />
 <cfparam name="url.u" default="" />  <!--- Keep legacy parameter for backward compatibility --->
+<cfparam name="url.uid" default="" /> <!--- Original legacy parameter --->
 
 <!--- Ensure application variables are set --->
 <cfif not structKeyExists(application, "dsn")>
@@ -20,10 +21,11 @@
 </cfif>
 
 <!--- Legacy system handling --->
-<cfif len(trim(url.u)) gt 0>
+<cfif len(trim(url.u)) gt 0 OR len(trim(url.uid)) gt 0>
     <cfset session.userid = 0 />
     <cfparam name="refresh_yn" default="N" />
     <cfparam name="NEW_USERID" default="0" />
+    <cfset legacy_token = len(trim(url.u)) gt 0 ? url.u : url.uid />
     
     <!--- Get user ID from legacy token --->
     <cfquery name="default" datasource="#application.dsn#">
@@ -33,7 +35,7 @@
         FROM 
             taousers 
         WHERE 
-            left(passwordhash,10) = <cfqueryparam value="#url.u#" cfsqltype="cf_sql_varchar">
+            left(passwordhash,10) = <cfqueryparam value="#legacy_token#" cfsqltype="cf_sql_varchar">
     </cfquery>
     
     <cfif default.recordCount eq 0>
@@ -50,7 +52,7 @@
     <!--- No token provided - redirect to main site --->
     <cflocation url="https://theactorsoffice.com" addtoken="false" />
 </cfif>
-<cfquery name="shares" datasource="#dsn#">
+<cfquery name="shares" datasource="#application.dsn#">
 SELECT `contactid`,`Name`,`Company`,`Title`,`Audition`,`WhereMet`,`WhenMet`,`NotesLog`,`userid`,`u`
 FROM sharez where userid = #new_userid#
 </cfquery>
