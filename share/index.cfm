@@ -8,14 +8,47 @@
 <cfparam name="url.shareToken" default="" />
 <cfparam name="url.u" default="" />  <!--- Keep legacy parameter for backward compatibility --->
 <cfparam name="url.uid" default="" /> <!--- Original legacy parameter --->
-<cfparam name="url.uid" default="" />
+
+<!--- Debug Helper Function --->
+<cffunction name="debugDump" returntype="void" output="true">
+    <cfargument name="label" type="string" required="true">
+    <cfargument name="value" required="true">
+    <cfif debug is "YES">
+        <cfdump var="#arguments.value#" label="#arguments.label#">
+        <hr>
+    </cfif>
+</cffunction>
 <!--- Ensure application variables are set --->
 <cfif not structKeyExists(application, "dsn")>
+    <cfif debug is "YES"><cfoutput><p style="background:#ffe6e6;padding:5px;border:1px solid red">Application DSN not found, initializing...</p></cfoutput></cfif>
     <cfset onApplicationStart() />
+</cfif>
+
+<!--- Debug URL parameters --->
+<cfif debug is "YES">
+    <div style="background:#f0f8ff;padding:10px;margin:10px 0;border:1px solid #add8e6;">
+        <h3>URL Parameters</h3>
+        <cfoutput>
+            <ul>
+                <li><strong>shareToken:</strong> #url.shareToken#</li>
+                <li><strong>u:</strong> #url.u#</li>
+                <li><strong>uid:</strong> #url.uid#</li>
+            </ul>
+        </cfoutput>
+        
+        <h3>Application Settings</h3>
+        <cfdump var="#application#" label="Application Scope" expand="false">
+    </div>
 </cfif>
 
 <!--- Handle new shareToken system --->
 <cfif len(trim(url.shareToken)) gt 0>
+    <cfif debug is "YES">
+        <div style="background:#e6ffe6;padding:10px;margin:10px 0;border:1px solid #90ee90;">
+            <h3>Using New Token System</h3>
+            <p>Token: <cfoutput>#url.shareToken#</cfoutput></p>
+        </div>
+    </cfif>
     <cfinclude template="remote_load.cfm" />
     <cfabort />
 </cfif>
@@ -26,8 +59,32 @@
     <cfparam name="refresh_yn" default="N" />
     <cfparam name="NEW_USERID" default="0" />
     <cfset legacy_token = len(trim(url.u)) gt 0 ? url.u : url.uid />
-    <cfoutput>legacy_token: #legacy_token#</cfoutput>
+    
+    <cfif debug is "YES">
+        <div style="background:#fff8e6;padding:10px;margin:10px 0;border:1px solid #ffd700;">
+            <h3>Using Legacy Token System</h3>
+            <p>Legacy token: <cfoutput>#legacy_token#</cfoutput></p>
+            <p>Token source: <cfoutput>#len(trim(url.u)) gt 0 ? "u parameter" : "uid parameter"#</cfoutput></p>
+            <p>Token length: <cfoutput>#len(legacy_token)#</cfoutput></p>
+        </div>
+    </cfif>
     <!--- Get user ID from legacy token --->
+    <cfif debug is "YES">
+        <div style="background:#e6e6ff;padding:10px;margin:10px 0;border:1px solid #9370db;">
+            <h3>SQL Query Information</h3>
+            <p>Looking up user with token prefix: <cfoutput>#left(legacy_token,10)#</cfoutput></p>
+            <code style="display:block;background:#f8f8f8;padding:10px;white-space:pre-wrap;">
+                SELECT 
+                    left(t.UUID,10) as default_u,
+                    u.userid 
+                FROM 
+                    taousers u inner join thrivecart t on t.id = u.customerid
+                WHERE 
+                    left(t.UUID,10) = '<cfoutput>#left(legacy_token,10)#</cfoutput>'
+            </code>
+        </div>
+    </cfif>
+    
     <cfquery name="default" datasource="#application.dsn#" maxrows="1">
         SELECT 
             left(t.UUID,10) as default_u,
@@ -38,7 +95,22 @@
             left(t.UUID,10) = <cfqueryparam value="#left(legacy_token,10)#" cfsqltype="cf_sql_varchar">
     </cfquery>
 
+    <cfif debug is "YES">
+        <div style="background:#e6e6ff;padding:10px;margin:10px 0;border:1px solid #9370db;">
+            <h3>Query Result</h3>
+            <p>Records found: <cfoutput>#default.recordCount#</cfoutput></p>
+            <cfdump var="#default#" label="Default Query Result">
+        </div>
+    </cfif>
+
     <cfif default.recordCount eq 0>
+        <cfif debug is "YES">
+            <div style="background:#ffe6e6;padding:10px;margin:10px 0;border:1px solid red;">
+                <h3>Authentication Failed</h3>
+                <p>No user found with the provided token: <cfoutput>#legacy_token#</cfoutput></p>
+                <p>Redirecting to invalid token page...</p>
+            </div>
+        </cfif>
         <cfinclude template="invalid_token.cfm" />
         <cfabort>
     </cfif>
@@ -46,16 +118,56 @@
     <cfset u = default.default_u />
     <cfset new_userid = default.userid />
     
+    <cfif debug is "YES">
+        <div style="background:#e6ffe6;padding:10px;margin:10px 0;border:1px solid #90ee90;">
+            <h3>Authentication Successful</h3>
+            <p>User ID: <cfoutput>#new_userid#</cfoutput></p>
+            <p>Token (u): <cfoutput>#u#</cfoutput></p>
+        </div>
+    </cfif>
+    
     <!--- Include legacy page --->
+    <cfif debug is "YES">
+        <div style="background:#f0f8ff;padding:10px;margin:10px 0;border:1px solid #add8e6;">
+            <h3>Including Legacy Page</h3>
+            <p>Template: pgload.cfm</p>
+            <p>User ID: <cfoutput>#new_userid#</cfoutput></p>
+        </div>
+    </cfif>
     <cfinclude template="pgload.cfm" />
 <cfelse>
+    <cfif debug is "YES">
+        <div style="background:#ffe6e6;padding:10px;margin:10px 0;border:1px solid red;">
+            <h3>No Token Provided</h3>
+            <p>Redirecting to main site...</p>
+        </div>
+    </cfif>
     <!--- No token provided - redirect to main site --->
     <cflocation url="https://theactorsoffice.com" addtoken="false" />
 </cfif>
+
+<cfif debug is "YES">
+    <div style="background:#e6e6ff;padding:10px;margin:10px 0;border:1px solid #9370db;">
+        <h3>Shares Query</h3>
+        <code style="display:block;background:#f8f8f8;padding:10px;white-space:pre-wrap;">
+            SELECT `contactid`,`Name`,`Company`,`Title`,`Audition`,`WhereMet`,`WhenMet`,`NotesLog`,`userid`,`u`
+            FROM sharez where userid = <cfoutput>#new_userid#</cfoutput>
+        </code>
+    </div>
+</cfif>
+
 <cfquery name="shares" datasource="#application.dsn#">
 SELECT `contactid`,`Name`,`Company`,`Title`,`Audition`,`WhereMet`,`WhenMet`,`NotesLog`,`userid`,`u`
 FROM sharez where userid = #new_userid#
 </cfquery>
+
+<cfif debug is "YES">
+    <div style="background:#e6e6ff;padding:10px;margin:10px 0;border:1px solid #9370db;">
+        <h3>Shares Query Result</h3>
+        <p>Records found: <cfoutput>#shares.recordCount#</cfoutput></p>
+        <cfdump var="#shares#" label="Shares Query Result">
+    </div>
+</cfif>
 
 
 
@@ -265,8 +377,35 @@ $(document).ready(function() {
 
     </cfloop>
 
-
-
+    <cfif debug is "YES">
+        <div style="background:#f0f8ff;padding:20px;margin:20px 0;border:1px solid #add8e6;">
+            <h2>Debug Information Summary</h2>
+            
+            <h3>URL Parameters</h3>
+            <cfdump var="#url#" label="URL Scope">
+            
+            <h3>Form Parameters</h3>
+            <cfdump var="#form#" label="Form Scope">
+            
+            <h3>Cookie Values</h3>
+            <cfdump var="#cookie#" label="Cookie Scope">
+            
+            <h3>Session Values</h3>
+            <cfdump var="#session#" label="Session Scope" expand="false">
+            
+            <h3>CGI Variables</h3>
+            <cfdump var="#cgi#" label="CGI Scope" expand="false">
+            
+            <h3>Server Information</h3>
+            <cfdump var="#server#" label="Server Scope" expand="false">
+            
+            <h3>Application Settings</h3>
+            <cfdump var="#application#" label="Application Scope" expand="false">
+            
+            <hr>
+            <p>Debug mode is enabled. Set debug="NO" at the top of the page to disable.</p>
+        </div>
+    </cfif>
 
 
 </body>
