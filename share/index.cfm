@@ -26,7 +26,7 @@
     <cfparam name="refresh_yn" default="N" />
     <cfparam name="NEW_USERID" default="0" />
     <cfset legacy_token = len(trim(url.u)) gt 0 ? url.u : url.uid />
-    <cfoutput>#legacy_token#</cfoutput>
+    <cfoutput>legacy_token: #legacy_token#</cfoutput>
     <!--- Get user ID from legacy token --->
     <cfquery name="default" datasource="#application.dsn#">
         SELECT 
