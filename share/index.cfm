@@ -1,19 +1,55 @@
-<cfparam name="u" default="" />
-<cfset session.userid = 0 />
-<CFPARAM name="refresh_yn" default="N" />
-<cfparam name="NEW_USERID" default="0" />
-<CFINCLUDE template="remote_load.cfm" />
-<cfif #u# is "">
-    <cfif #isdefined('userid')#>
-        <cfquery name="default" datasource="#dsn#"> select left(passwordhash,10) as default_u,userid from taousers where userid = #userid# </cfquery>
-        <cfelse> Invalid. <cfabort> `
-    </cfif>
-    <cfelse>
-        <cfquery name="default" datasource="#dsn#"> select left(passwordhash,10) as default_u,userid from taousers where left(passwordhash,10) = '#u#' </cfquery>
+<!--- 
+    PURPOSE: Main entry point for share directory
+    AUTHOR: Updated by GitHub Copilot
+    DATE: 2025-07-19
+    NOTES: Updated to use a more secure shareToken system
+--->
+
+<cfparam name="url.shareToken" default="" />
+<cfparam name="url.u" default="" />  <!--- Keep legacy parameter for backward compatibility --->
+
+<!--- Ensure application variables are set --->
+<cfif not structKeyExists(application, "dsn")>
+    <cfset onApplicationStart() />
 </cfif>
-<cfset u=default.default_u />
-<cfinclude template="pgload.cfm" />
-<cfset new_userid=default.userid />
+
+<!--- Handle new shareToken system --->
+<cfif len(trim(url.shareToken)) gt 0>
+    <cfinclude template="remote_load.cfm" />
+    <cfabort />
+</cfif>
+
+<!--- Legacy system handling --->
+<cfif len(trim(url.u)) gt 0>
+    <cfset session.userid = 0 />
+    <cfparam name="refresh_yn" default="N" />
+    <cfparam name="NEW_USERID" default="0" />
+    
+    <!--- Get user ID from legacy token --->
+    <cfquery name="default" datasource="#application.dsn#">
+        SELECT 
+            left(passwordhash,10) as default_u,
+            userid 
+        FROM 
+            taousers 
+        WHERE 
+            left(passwordhash,10) = <cfqueryparam value="#url.u#" cfsqltype="cf_sql_varchar">
+    </cfquery>
+    
+    <cfif default.recordCount eq 0>
+        <cfinclude template="invalid_token.cfm" />
+        <cfabort>
+    </cfif>
+    
+    <cfset u = default.default_u />
+    <cfset new_userid = default.userid />
+    
+    <!--- Include legacy page --->
+    <cfinclude template="pgload.cfm" />
+<cfelse>
+    <!--- No token provided - redirect to main site --->
+    <cflocation url="https://theactorsoffice.com" addtoken="false" />
+</cfif>
 <cfquery name="shares" datasource="#dsn#">
 SELECT `contactid`,`Name`,`Company`,`Title`,`Audition`,`WhereMet`,`WhenMet`,`NotesLog`,`userid`,`u`
 FROM sharez where userid = #new_userid#
