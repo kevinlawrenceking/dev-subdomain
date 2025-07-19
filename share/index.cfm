@@ -20,13 +20,13 @@
 </cffunction>
 <!--- Ensure application variables are set --->
 <cfif not structKeyExists(application, "dsn")>
-    <cfif debug is "YES"><cfoutput><p style="background:#ffe6e6;padding:5px;border:1px solid red">Application DSN not found, initializing...</p></cfoutput></cfif>
+    <cfif debug is "YES"><cfoutput><p style="background:##ffe6e6;padding:5px;border:1px solid red">Application DSN not found, initializing...</p></cfoutput></cfif>
     <cfset onApplicationStart() />
 </cfif>
 
 <!--- Debug URL parameters --->
 <cfif debug is "YES">
-    <div style="background:#f0f8ff;padding:10px;margin:10px 0;border:1px solid #add8e6;">
+    <div style="background:##f0f8ff;padding:10px;margin:10px 0;border:1px solid #add8e6;">
         <h3>URL Parameters</h3>
         <cfoutput>
             <ul>
@@ -44,7 +44,7 @@
 <!--- Handle new shareToken system --->
 <cfif len(trim(url.shareToken)) gt 0>
     <cfif debug is "YES">
-        <div style="background:#e6ffe6;padding:10px;margin:10px 0;border:1px solid #90ee90;">
+        <div style="background:##e6ffe6;padding:10px;margin:10px 0;border:1px solid #90ee90;">
             <h3>Using New Token System</h3>
             <p>Token: <cfoutput>#url.shareToken#</cfoutput></p>
         </div>
