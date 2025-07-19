@@ -35,7 +35,7 @@
         FROM 
             taousers u inner join thrivecart t on t.id = u.customerid
         WHERE 
-            left(passwordhash,10) = <cfqueryparam value="#legacy_token#" cfsqltype="cf_sql_varchar">
+            left(passwordhash,10) = <cfqueryparam value="#left(legacy_token,10)#" cfsqltype="cf_sql_varchar">
     </cfquery>
 
     <cfif default.recordCount eq 0>
