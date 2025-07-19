@@ -8,7 +8,7 @@
 <cfparam name="url.shareToken" default="" />
 <cfparam name="url.u" default="" />  <!--- Keep legacy parameter for backward compatibility --->
 <cfparam name="url.uid" default="" /> <!--- Original legacy parameter --->
-
+<cfparam name="url.uid" default="" />
 <!--- Ensure application variables are set --->
 <cfif not structKeyExists(application, "dsn")>
     <cfset onApplicationStart() />
@@ -37,7 +37,7 @@
         WHERE 
             left(passwordhash,10) = <cfqueryparam value="#legacy_token#" cfsqltype="cf_sql_varchar">
     </cfquery>
-    <cfoutput>default_u: #default_u#<cfabort></cfoutput>
+    <cfoutput>default_u: #default.default_u#<cfabort></cfoutput>
     <cfif default.recordCount eq 0>
         <cfinclude template="invalid_token.cfm" />
         <cfabort>
