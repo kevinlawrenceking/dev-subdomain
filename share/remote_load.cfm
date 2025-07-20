@@ -26,14 +26,14 @@
 
 <!--- Ensure we have access to the application datasource --->
 <cfif not structKeyExists(application, "dsn")>
-    <cfif debug is "YES"><cfoutput><p style="background:#ffe6e6;padding:5px;border:1px solid red">Application DSN not found, initializing...</p></cfoutput></cfif>
+    <cfif debug is "YES"><cfoutput><p style="background:##ffe6e6;padding:5px;border:1px solid red">Application DSN not found, initializing...</p></cfoutput></cfif>
     <cfset onApplicationStart() />
 </cfif>
 <cfset dsn = application.dsn />
 
 <!--- Debug information --->
 <cfif debug is "YES">
-    <div style="background:#e6e6ff;padding:10px;margin:10px 0;border:1px solid #9370db;">
+    <div style="background:##e6e6ff;padding:10px;margin:10px 0;border:1px solid ##9370db;">
         <h3>Remote Load Processing</h3>
         <ul>
             <li>Share Token: <cfoutput>#url.shareToken#</cfoutput></li>
@@ -47,9 +47,9 @@
     <!--- Check if the shareTokens table exists --->
     <cftry>
         <cfif debug is "YES">
-            <div style="background:#f0f8ff;padding:10px;margin:10px 0;border:1px solid #add8e6;">
+            <div style="background:##f0f8ff;padding:10px;margin:10px 0;border:1px solid ##add8e6;">
                 <h3>ShareToken Validation</h3>
-                <code style="display:block;background:#f8f8f8;padding:10px;white-space:pre-wrap;">
+                <code style="display:block;background:##f8f8f8;padding:10px;white-space:pre-wrap;">
                     SELECT 
                         s.shareID,
                         s.userID,
@@ -93,7 +93,7 @@
         </cfquery>
         
         <cfif debug is "YES">
-            <div style="background:#e6e6ff;padding:10px;margin:10px 0;border:1px solid #9370db;">
+            <div style="background:##e6e6ff;padding:10px;margin:10px 0;border:1px solid ##9370db;">
                 <h3>Token Validation Results</h3>
                 <p>Records found: <cfoutput>#qValidateToken.recordCount#</cfoutput></p>
                 <cfdump var="#qValidateToken#" label="Token Query Result">
@@ -108,7 +108,7 @@
             <cfset new_userid = qValidateToken.userID />
             
             <cfif debug is "YES">
-                <div style="background:#e6ffe6;padding:10px;margin:10px 0;border:1px solid #90ee90;">
+                <div style="background:##e6ffe6;padding:10px;margin:10px 0;border:1px solid ##90ee90;">
                     <h3>Token Valid - User Information</h3>
                     <ul>
                         <li>User ID: <cfoutput>#request.shareUserID#</cfoutput></li>
@@ -120,7 +120,7 @@
             
             <!--- Log this view --->
             <cfif debug is "YES">
-                <div style="background:#f0f8ff;padding:10px;margin:10px 0;border:1px solid #add8e6;">
+                <div style="background:##f0f8ff;padding:10px;margin:10px 0;border:1px solid ##add8e6;">
                     <h3>Logging View</h3>
                     <p>Inserting record into shareViews table:</p>
                     <ul>
@@ -145,7 +145,7 @@
             
             <!--- Load appropriate content based on share type --->
             <cfif debug is "YES">
-                <div style="background:#f0f8ff;padding:10px;margin:10px 0;border:1px solid #add8e6;">
+                <div style="background:##f0f8ff;padding:10px;margin:10px 0;border:1px solid ##add8e6;">
                     <h3>Loading Content Template</h3>
                     <p>Share Type: <cfoutput>#request.shareType#</cfoutput></p>
                     <p>Template to Load: <cfoutput>#request.shareType eq "relationships" ? "relationships_shared.cfm" : (request.shareType eq "calendar" ? "calendar_shared.cfm" : "pgload.cfm")#</cfoutput></p>
@@ -165,7 +165,7 @@
             </cfif>
         <cfelse>
             <cfif debug is "YES">
-                <div style="background:#ffe6e6;padding:10px;margin:10px 0;border:1px solid red;">
+                <div style="background:##ffe6e6;padding:10px;margin:10px 0;border:1px solid red;">
                     <h3>Invalid Token</h3>
                     <p>The provided token is invalid, has expired, or has been deactivated.</p>
                     <p>Token: <cfoutput>#url.shareToken#</cfoutput></p>
@@ -178,7 +178,7 @@
     <cfcatch>
         <!--- If the shareTokens table doesn't exist, just continue with the regular flow --->
         <cfif debug is "YES">
-            <div style="background:#ffe6e6;padding:10px;margin:10px 0;border:1px solid red;">
+            <div style="background:##ffe6e6;padding:10px;margin:10px 0;border:1px solid red;">
                 <h3>Error Processing Token</h3>
                 <p>There was an error processing the share token. The shareTokens table may not exist.</p>
                 <cfdump var="#cfcatch#" label="Error Details">
