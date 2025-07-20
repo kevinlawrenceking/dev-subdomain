@@ -1,4 +1,4 @@
-<CFINCLUDE template="remote_load.cfm" />
+<CFINCLUDE template="remote_load_common.cfm" />
 
 <cfoutput>
 <cfset share_dir = "C:\home\theactorsoffice.com\media-#host#\share" />

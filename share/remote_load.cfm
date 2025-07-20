@@ -6,23 +6,12 @@
     DEPENDENCIES: services.ContactItemService, services.ReminderService
 --->
 
+<!--- Include common settings and variables --->
+<cfinclude template="remote_load_common.cfm" />
+
 <cfparam name="url.shareToken" default="" />
-<cfparam name="debug" default="NO">
 
-<!--- Import debug settings from parent --->
-<cfif isDefined("variables.debug") AND variables.debug eq "YES">
-    <cfset debug = "YES">
-</cfif>
-
-<!--- Debug Helper Function --->
-<cffunction name="debugDump" returntype="void" output="true">
-    <cfargument name="label" type="string" required="true">
-    <cfargument name="value" required="true">
-    <cfif debug is "YES">
-        <cfdump var="#arguments.value#" label="#arguments.label#">
-        <hr>
-    </cfif>
-</cffunction>
+<!--- Note: debugDump function is defined in index.cfm and should not be redefined here --->
 
 <!--- Ensure we have access to the application datasource --->
 <cfif not structKeyExists(application, "dsn")>

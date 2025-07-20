@@ -1,4 +1,4 @@
-<CFINCLUDE template="remote_load.cfm" />
+<CFINCLUDE template="remote_load_common.cfm" />
 
  
 <cfquery name="details" datasource="#dsn#">

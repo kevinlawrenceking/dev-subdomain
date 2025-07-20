@@ -1,4 +1,4 @@
-<CFINCLUDE template="remote_load.cfm" />
+<CFINCLUDE template="remote_load_common.cfm" />
 <cfparam name="u" default="434F6AD485112F73A9" />
 
 <cfparam name="pgaction" default="view" />
