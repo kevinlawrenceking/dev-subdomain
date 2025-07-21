@@ -96,7 +96,7 @@
             <cfquery name="getEventCount" dbtype="query">
               SELECT eventCount 
               FROM allEvents
-              WHERE contactid = <cfqueryparam value="#shares.contactid#" cfsqltype="cf_sql_integer">
+              WHERE contactid = #shares.contactid#
             </cfquery>
             <cfif getEventCount.recordCount GT 0>
               <cfset eventCount = getEventCount.eventCount>
