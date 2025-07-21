@@ -213,6 +213,7 @@ FROM sharez where userid = <cfqueryparam value="#new_userid#" cfsqltype="cf_sql_
             </cfoutput>
         </cfloop>
     <cfelse>
+        
         <!--- Fallback if FindLinksT query is not defined --->
         <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
