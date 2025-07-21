@@ -91,10 +91,10 @@
             u.userid 
         FROM 
             taousers u inner join thrivecart t on t.id = u.customerid
-        WHERE u.userid = 30
-         <!---   left(t.UUID,10) = <cfqueryparam value="#left(legacy_token,10)#" cfsqltype="cf_sql_varchar"> --->
+        WHERE 
+            left(t.UUID,10) = <cfqueryparam value="#left(legacy_token,10)#" cfsqltype="cf_sql_varchar">
     </cfquery>
-S
+
     <cfif debug is "YES">
         <div style="background:##e6e6ff;padding:10px;margin:10px 0;border:1px solid ##9370db;">
             <h3>Query Result</h3>
@@ -327,6 +327,9 @@ FROM sharez where userid = #new_userid#
         <cfoutput>
         <script>
         $(document).ready(function() {
+            // Remove loading spinner
+            $('body').removeClass('loading');
+            
             <cfloop query="shares">
                 $("##remoteShareViewC#shares.contactid#").on("show.bs.modal", function(event) {
                     $(this).find(".modal-body").load("remoteShareViewC.cfm?contactid=#shares.contactid#");
@@ -354,6 +357,13 @@ FROM sharez where userid = #new_userid#
             </div>
         </cfloop>
         </cfoutput>
+    <cfelse>
+        <!--- If no shares, still remove loading spinner --->
+        <script>
+        $(document).ready(function() {
+            $('body').removeClass('loading');
+        });
+        </script>
     </cfif>
 
     <cfif debug is "YES">
