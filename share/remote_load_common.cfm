@@ -23,7 +23,7 @@
 </cfif>
 <cfset dsn = application.dsn />
 
-<!--- Common variable defaults for share.cfm --->
+<!--- Common variable defaults for share index.cfm --->
 <cfparam name="userid" default="0">
 <cfparam name="userfirstname" default="">
 <cfparam name="userlastname" default="">
