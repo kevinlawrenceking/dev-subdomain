@@ -31,7 +31,8 @@
 <cfparam name="u" default="0">
 <cfparam name="auditions" default="false">
 
-<!--- Default empty shares query if not defined elsewhere --->
+<!--- Default empty query variables to prevent undefined errors --->
+<!--- Default shares query --->
 <cfif NOT isDefined("shares")>
     <cfquery name="shares" datasource="#dsn#">
         SELECT 0 as contactid, '' as name, '' as Company, '' as Title, 
@@ -40,6 +41,11 @@
         WHERE 1=0
     </cfquery>
 </cfif>
+
+<!--- Ensure other queries used in loops are defined --->
+<cfparam name="totContactsQuery" default="#QueryNew('total', 'integer', [{total=0}])#">
+<cfparam name="todaysEvents" default="#QueryNew('eventid', 'integer')#">
+<cfparam name="nextContactsQuery" default="#QueryNew('next_date,count', 'date,integer')#">
 
 <!--- Use built-in ColdFusion functions --->
 <!--- Note: 'rand' is already a built-in ColdFusion function, so we don't need to define it --->

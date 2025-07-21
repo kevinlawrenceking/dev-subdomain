@@ -323,39 +323,21 @@ FROM sharez where userid = #new_userid#
     
     <!--- Process shares modal views --->
     <cfif isDefined("shares") AND isQuery(shares)>
-        <cfloop query="shares">
-                </cfif>
-
-            </cfif>
-        </cfoutput>
-    </cfloop>
-
-
-
-
-
-
-
-
-
-
-    <!--- Create modal handlers for each contact --->
-    <cfloop query="shares">
+        <!--- Modal handlers for each contact --->
         <cfoutput>
-            <script>
-            $(document).ready(function() {
+        <script>
+        $(document).ready(function() {
+            <cfloop query="shares">
                 $("##remoteShareViewC#shares.contactid#").on("show.bs.modal", function(event) {
                     $(this).find(".modal-body").load("remoteShareViewC.cfm?contactid=#shares.contactid#");
                 });
-            });  
-            </script>
-        </cfoutput>
-
-
-
-
-
+            </cfloop>
+        });  
+        </script>
+        
+        <!--- Modal HTML structures --->
         <cfoutput>
+        <cfloop query="shares">
             <div id="remoteShareViewC#shares.contactid#" class="modal modal-lg fade" tabindex="-1" role="dialog" aria-hidden="true">
                 <div class="modal-dialog">
                     <div class="modal-content">
@@ -369,9 +351,9 @@ FROM sharez where userid = #new_userid#
                     </div>
                 </div>
             </div>
+        </cfloop>
         </cfoutput>
-
-    </cfloop>
+    </cfif>
 
     <cfif debug is "YES">
         <div style="background:##f0f8ff;padding:20px;margin:20px 0;border:1px solid ##add8e6;">
