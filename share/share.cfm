@@ -74,7 +74,7 @@
             <th></th>
             <th>Name</th>
             <cfif isDefined("auditions")>
-              <th>Auditionz</th>
+              <th>Auditions</th>
             </cfif>
             <th>Company</th>
             <th>Title</th>
