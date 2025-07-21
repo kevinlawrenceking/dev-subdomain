@@ -58,7 +58,7 @@
         </thead>
         <tbody>
           <cfloop query="shares">
-            <cfquery name="events" datasource="#dsn#">
+            <cfquery name="events" datasource="#dsn#" maxrows="5">
               SELECT eventid, eventTitle, eventDescription, eventLocation, eventstatus, eventcreation,
                      eventStart, eventStop, eventTypeName, userid, eventStartTime, eventStopTime,
                      recordname, contactid, isDeleted

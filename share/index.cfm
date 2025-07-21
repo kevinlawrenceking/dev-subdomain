@@ -134,7 +134,7 @@ S
             <p>User ID: <cfoutput>#new_userid#</cfoutput></p>
         </div>
     </cfif>
-    
+ 
 <cfelse>
     <cfif debug is "YES">
         <div style="background:##ffe6e6;padding:10px;margin:10px 0;border:1px solid ##ff0000;">
