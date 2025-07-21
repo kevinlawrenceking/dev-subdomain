@@ -213,7 +213,7 @@ FROM sharez where userid = <cfqueryparam value="#new_userid#" cfsqltype="cf_sql_
             </cfoutput>
         </cfloop>
     <cfelse>
-        
+
         <!--- Fallback if FindLinksT query is not defined --->
         <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
@@ -335,22 +335,29 @@ FROM sharez where userid = <cfqueryparam value="#new_userid#" cfsqltype="cf_sql_
             <cfinclude template="topmenu_main.cfm" />
              <div class="logo-box">
             <a href="/app/" class="logo logo-dark text-center">
-                <span class="logo-sm">
-                    <img src="/assets/images/logo-sm.png" alt="" height="30">
+                <span class="logo-sm"><cfoutput
+                    <img src="/media-#dsn#/images/logo-sm.png" alt="" height="30">
                     <!--- <span class="logo-lg-text-light">UBold</span> --->
-                </span>
+                </cfoutput> </span>
+
+
+
+                
+
+ 
+
                 <span class="logo-lg">
-                    <img src="/assets/images/logo-sm.png" alt="" height="30">
+                    <img src="/media-#dsn#/images/logo-sm.png" alt="" height="30">
                     <!--- <span class="logo-lg-text-light">U</span> --->
                 </span>
             </a>
     
             <a href="/app/" class="logo logo-light text-center">
                 <span class="logo-sm">
-                    <img src="/assets/images/logo-sm.png" alt="" height="30">
+                    <img src="/media-#dsn#/images/logo-sm.png" alt="" height="30">
                 </span>
                 <span class="logo-lg">
-                    <img src="/assets/images/logo-light.png" alt="" height="30">
+                    <img src="/media-#dsn#/images/logo-light.png" alt="" height="30">
                 </span>
             </a>
         </div>
