@@ -36,32 +36,39 @@
 </cfif>
 
 <!--- Page Content --->
-<div class="row">
-  <div class="card w-100">
-    <div class="card-body">
-      <!--- Header --->
-      <div class="col-md-12">
-        <div class="media p-2">
-          <cfoutput>
-            <figure class="text-center">
-              <img src="/media-#dsn#/users/#userid#/avatar.jpg?ver=#RandRange(1, 1000000)#" class="mr-3 rounded-circle gambar img-responsive img-thumbnail" style="height:80px;" alt="profile-image" id="item-img-output">
-              <figcaption></figcaption>
-            </figure>
-            <div class="media-body pl-2">
-              <h3 class="mt-0 mb-0">#userfirstname# #userlastname#</h3>
-              <p class="mt-1 mb-0 text-muted font-12">
-                <strong>Report Date: #dateFormat(now(), 'medium')#</strong><br>
-                <a href="https://#host#.theactorsoffice.com/share/export.cfm?u=#u#" class="btn btn-xs btn-primary waves-effect mb-2 waves-light" style="background-color: ##406e8e; border: ##406e8e;">
-                  Download <i class="fe-download"></i>
-                </a>
-              </p>
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body">
+          <!--- Header --->
+          <div class="row mb-3">
+            <div class="col-md-12">
+              <div class="media p-2">
+                <cfoutput>
+                  <figure class="text-center">
+                    <img src="/media-#dsn#/users/#userid#/avatar.jpg?ver=#RandRange(1, 1000000)#" class="mr-3 rounded-circle gambar img-responsive img-thumbnail" style="height:80px;" alt="profile-image" id="item-img-output">
+                    <figcaption></figcaption>
+                  </figure>
+                  <div class="media-body pl-2">
+                    <h3 class="mt-0 mb-0">#userfirstname# #userlastname#</h3>
+                    <p class="mt-1 mb-0 text-muted font-12">
+                      <strong>Report Date: #dateFormat(now(), 'medium')#</strong><br>
+                      <a href="https://#host#.theactorsoffice.com/share/export.cfm?u=#u#" class="btn btn-xs btn-primary waves-effect mb-2 waves-light" style="background-color: ##406e8e; border: ##406e8e;">
+                        Download <i class="fe-download"></i>
+                      </a>
+                    </p>
+                  </div>
+                </cfoutput>
+              </div>
             </div>
-          </cfoutput>
-        </div>
-      </div>
+          </div>
 
-      <!--- Table --->
-      <table id="basic-datatable" class="table table-striped table-bordered w-100">
+          <!--- Table Container --->
+          <div class="row">
+            <div class="col-12">
+              <div class="table-responsive">
+                <table id="basic-datatable" class="table table-striped table-bordered" style="width:100%">
         <thead>
           <tr>
             <th></th>
@@ -90,7 +97,7 @@
             GROUP BY contactid
           </cfquery>
           
-          <cfloop query="shares">
+          <cfoutput query="shares">
             <!--- Get event count for this contact --->
             <cfset eventCount = 0>
             <cfquery name="getEventCount" dbtype="query">
@@ -101,7 +108,7 @@
             <cfif getEventCount.recordCount GT 0>
               <cfset eventCount = getEventCount.eventCount>
             </cfif>
-            <cfoutput>
+            
             <tr>
               <!--- View Icon --->
               <td style="white-space: nowrap;">
@@ -144,10 +151,14 @@
               </cfif>
               <td style="max-width: 400px; white-space: normal !important; word-break: break-word !important; overflow-wrap: break-word !important;">#NotesLog2#</td>
             </tr>
-            </cfoutput>
-          </cfloop>
+          </cfoutput>
         </tbody>
       </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -156,17 +167,20 @@
 <script>
   $(document).ready(function () {
     $("#basic-datatable").DataTable({
-      responsive: false,
+      responsive: true,
       searching: true,
       autoWidth: false,
+      scrollX: true,
       pageLength: 25,
       dom: 'Bfrtip',
       buttons: [
         'copy', 'csv', 'excel', 'pdf', 'print'
       ],
       columnDefs: [
-        { targets: 8, width: "400px", className: "text-wrap" }, // Notes column
-        { targets: "_all", width: "1%", className: "text-nowrap" }
+        { targets: 0, width: "40px", orderable: false }, // View icon column
+        { targets: 1, width: "150px" }, // Name column
+        { targets: [2,3,4,5,6,7], width: "100px", className: "text-nowrap" }, // Other standard columns
+        { targets: -1, width: "300px", className: "text-wrap" } // Notes column (last column)
       ],
       language: {
         paginate: {
