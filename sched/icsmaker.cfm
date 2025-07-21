@@ -1,9 +1,17 @@
-<cflocation url="../include/icsmaker.cfm">
-
 <cfset dbug="N" />
 <CFINCLUDE template="remote_load.cfm" />
 <cfset currentURL=cgi.server_name />
 <cfset host=ListFirst(currentURL, "." ) />
+<Cfparam name="target_userid" default="0" />
+
+<!--- Check if session.userSharePath exists, if not create a fallback path --->
+<cfif not structKeyExists(session, "userSharePath")>
+    <cfif structKeyExists(session, "userMediaPath")>
+        <cfset session.userSharePath = session.userMediaPath & "\share">
+    <cfelse>
+        <cfset session.userSharePath = application.baseMediaPath & "\share">
+    </cfif>
+</cfif>
 
 <cfoutput>
     <cfset cal_root_dir="#session.userSharePath#\" />
@@ -13,6 +21,7 @@
 <cfquery result="result"  name="U">
     SELECT
     u.userid
+    ,REPLACE(REPLACE(u.recordname, ' ', ''), '-', '') AS calendarName
     ,u.recordname
     ,u.userFirstName
     ,u.userLastName
@@ -21,12 +30,43 @@
     ,u.userRole
     ,u.tzid
     FROM taousers u
-
+<Cfif #target_userid# is not "0">
+WHERE u.userid = #target_userid#
+</cfif>
 </cfquery>
 
 <cfloop query="U">
 
     <cfset new_userid=U.userid />
+
+        <cfquery result="result"  name="eventItem">
+        SELECT
+        e.eventID
+        ,e.eventID as recid
+        ,e.eventTitle as summary
+        ,e.eventDescription
+        ,e.eventLocation as LOCATION
+        ,e.eventStatus as col4
+        ,e.eventCreation
+        ,e.eventStart
+        ,e.eventStop
+        ,e.eventTypeName as col5
+        ,'Appointment' as head1
+        ,'Location' as head2
+        ,'Date' as head3
+        ,'Status' as head4
+        ,'Type' as head5
+        ,e.userid
+        ,e.eventStartTime
+        ,DATE_FORMAT(e.eventStartTime, '%k') as starthours_h
+        ,DATE_FORMAT(e.eventStopTime, '%k') as stophours_h
+        ,e.eventStopTime
+        ,t.eventtypecolor
+        FROM events e INNER JOIN eventtypes t on t.eventtypename = e.eventtypename
+        WHERE e.userid = #new_userid# and e.eventStart is not null and e.eventStop is not null and e.eventstatus = 'Active' and e.isdeleted = 0
+    </cfquery>
+
+<Cfif #eventItem.recordcount# is not "0">
 
     <cfoutput>
 
@@ -66,32 +106,7 @@
     <cfparam name="CALSCALE" default="Gregorian" />
     <cfparam name="utcHourOffset" default="Gregorian" />
     <cfparam name="location" default="" />
-    <cfquery result="result"  name="eventItem">
-        SELECT
-        e.eventID
-        ,e.eventID as recid
-        ,e.eventTitle as summary
-        ,e.eventDescription
-        ,e.eventLocation as LOCATION
-        ,e.eventStatus as col4
-        ,e.eventCreation
-        ,e.eventStart
-        ,e.eventStop
-        ,e.eventTypeName as col5
-        ,'Appointment' as head1
-        ,'Location' as head2
-        ,'Date' as head3
-        ,'Status' as head4
-        ,'Type' as head5
-        ,e.userid
-        ,e.eventStartTime
-        ,DATE_FORMAT(e.eventStartTime, '%k') as starthours_h
-        ,DATE_FORMAT(e.eventStopTime, '%k') as stophours_h
-        ,e.eventStopTime
-        ,t.eventtypecolor
-        FROM events e INNER JOIN eventtypes t on t.eventtypename = e.eventtypename
-        WHERE e.userid = #new_userid# and e.eventStart is not null and e.eventStop is not null
-    </cfquery>
+
 
 <cfif #isdefined('tzid')#>
         <cfset tzid=tzid />
@@ -180,12 +195,13 @@
         <cfset starthours_h=eventitem.starthours_h />
 
         <cfset starthours=#replace(starthours_h,'h','','All')# />
-
+      <cfset starthours = numberformat(starthours) />
         <cfset final_start_hour=numberformat(starthours + utchouroffset) />
 
         <cfset stopthours_h=eventitem.stophours_h />
 
         <cfset stophours=#replace(stophours_h,'h','','All')# />
+   <cfset stophours = numberformat(stophours) />
         <cfif #dbug# is "Y">
             <Cfoutput>
                 stophours: #stophours# utchouroffset: utchouroffset <BR>
@@ -228,15 +244,17 @@
         <cfset ICSContent=ICSContent & "SUMMARY:#eventItem.summary##chr(13)##chr(10)#" />
         <cfset ICSContent=ICSContent & "DESCRIPTION:#new_description##chr(13)##chr(10)#" />
         <cfset ICSContent=ICSContent & "LOCATION:#new_location##chr(13)##chr(10)#" />
-
         <cfset ICSContent=ICSContent & "DTSTART:#DateFormat(datestart,'yyyymmdd')#T#TimeFormat(DateAdd('h',utcHourOffset,timestart),'HHmmss')#Z#chr(13)##chr(10)#" />
         <cfset ICSContent=ICSContent & "DTEND:#DateFormat(dateend,'yyyymmdd')#T#TimeFormat(DateAdd('h',utcHourOffset,timeend),'HHmmss')#Z#chr(13)##chr(10)#" />
         <cfset ICSContent=ICSContent & "DTSTAMP:#DateFormat(now(),'yyyymmdd')#T#TimeFormat(now(),'HHmmss')#Z#chr(13)##chr(10)#">
-            <cfset ICSContent=ICSContent & "END:VEVENT#chr(13)##chr(10)#" />
+        <cfset ICSContent=ICSContent & "END:VEVENT#chr(13)##chr(10)#" />
+    
     </cfloop>
-
+ 
 <cfset ICSContent=ICSContent & "END:VCALENDAR" />
 
-<cffile action="write" file="#calendar_dir#.ics" output="#TRIM(ICSContent)#" />
+<Cfset calendar_path = "C:\home\theactorsoffice.com\media-#dsn#\calendar\#u.calendarname#.ics" />
 
+<cffile action="write" file="#calendar_path#" output="#TRIM(ICSContent)#" />
+</cfif>
 </cfloop>

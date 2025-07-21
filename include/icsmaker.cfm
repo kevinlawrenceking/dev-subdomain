@@ -3,6 +3,16 @@
 <cfset currentURL=cgi.server_name />
 <cfset host=ListFirst(currentURL, "." ) />
 <Cfparam name="target_userid" default="0" />
+
+<!--- Check if session.userSharePath exists, if not create a fallback path --->
+<cfif not structKeyExists(session, "userSharePath")>
+    <cfif structKeyExists(session, "userMediaPath")>
+        <cfset session.userSharePath = session.userMediaPath & "\share">
+    <cfelse>
+        <cfset session.userSharePath = application.baseMediaPath & "\share">
+    </cfif>
+</cfif>
+
 <cfoutput>
     <cfset cal_root_dir="#session.userSharePath#\" />
     <cfset cal_root_url="https://#host#.theactorsoffice.com/calendar/" />
