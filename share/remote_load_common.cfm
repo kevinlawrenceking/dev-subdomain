@@ -33,3 +33,42 @@
 <!--- Use built-in ColdFusion functions --->
 <!--- Note: 'rand' is already a built-in ColdFusion function, so we don't need to define it --->
 <!--- Instead, we can use it directly with RandRange() where needed --->
+
+<!--- Default CSS/JS for the share interface --->
+<cfquery name="FindLinksT" datasource="#dsn#">
+    SELECT 'script' as linktype, 
+           'https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js' as linkurl,
+           '' as rel, '' as hrefid
+    UNION
+    SELECT 'css' as linktype,
+           'https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/css/bootstrap.min.css' as linkurl,
+           'stylesheet' as rel, '' as hrefid
+    UNION
+    SELECT 'script' as linktype,
+           'https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/js/bootstrap.bundle.min.js' as linkurl,
+           '' as rel, '' as hrefid
+    UNION
+    SELECT 'css' as linktype,
+           'https://cdn.datatables.net/1.10.25/css/dataTables.bootstrap4.min.css' as linkurl,
+           'stylesheet' as rel, '' as hrefid
+    UNION
+    SELECT 'script' as linktype,
+           'https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js' as linkurl,
+           '' as rel, '' as hrefid
+    UNION
+    SELECT 'script' as linktype,
+           'https://cdn.datatables.net/1.10.25/js/dataTables.bootstrap4.min.js' as linkurl,
+           '' as rel, '' as hrefid
+    UNION
+    SELECT 'script' as linktype,
+           'https://cdn.datatables.net/buttons/1.7.1/js/dataTables.buttons.min.js' as linkurl,
+           '' as rel, '' as hrefid
+    UNION
+    SELECT 'script' as linktype,
+           'https://cdn.datatables.net/buttons/1.7.1/js/buttons.bootstrap4.min.js' as linkurl,
+           '' as rel, '' as hrefid
+    UNION
+    SELECT 'css' as linktype,
+           'https://cdn.datatables.net/buttons/1.7.1/css/buttons.bootstrap4.min.css' as linkurl,
+           'stylesheet' as rel, '' as hrefid
+</cfquery>

@@ -193,28 +193,33 @@ FROM sharez where userid = #new_userid#
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300&display=swap');
     </style>
-    <cfloop query="FindLinksT">
-        <cfoutput>
-            <cfif "#findlinkst.linktype#" is "script">
-                <script src="#findlinkst.linkurl#"></script>
-            </cfif>
+    <!--- Include styles and scripts from FindLinksT query --->
+    <cfif isDefined("FindLinksT") AND isQuery(FindLinksT)>
+        <cfloop query="FindLinksT">
+            <cfoutput>
+                <cfif FindLinksT.linktype is "script">
+                    <script src="#FindLinksT.linkurl#"></script>
+                </cfif>
 
-            <cfif "#findlinkst.linktype#" is "script_include">
-                <script>
-                    <cfinclude template = "#findlinkst.linkurl#?rev=#rand()#" >
-                </script>
-            </cfif>
-            <cfif "#findlinkst.linktype#" is "css" or "#findlinkst.linktype#" is "text/css" or "#findlinkst.linktype#" is "ico">
-                <link href="#findlinkst.linkurl#?rev=#rand()#" <cfif #findlinkst.rel# is not "">
-                rel="#rel#"
-
-            </cfif>
-
-            type="text/css" <cfif #findlinkst.hrefid# is not "">id="#findlinkst.hrefid#"</cfif> />
-
-            </cfif>
-        </cfoutput>
-    </cfloop>
+                <cfif FindLinksT.linktype is "script_include">
+                    <script>
+                        <cfinclude template = "#FindLinksT.linkurl#?rev=#RandRange(1, 1000000)#" >
+                    </script>
+                </cfif>
+                <cfif FindLinksT.linktype is "css" or FindLinksT.linktype is "text/css" or FindLinksT.linktype is "ico">
+                    <link href="#FindLinksT.linkurl#?rev=#RandRange(1, 1000000)#" 
+                    <cfif len(trim(FindLinksT.rel))>rel="#FindLinksT.rel#"</cfif>
+                    type="text/css" 
+                    <cfif len(trim(FindLinksT.hrefid))>id="#FindLinksT.hrefid#"</cfif> />
+                </cfif>
+            </cfoutput>
+        </cfloop>
+    <cfelse>
+        <!--- Fallback if FindLinksT query is not defined --->
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/js/bootstrap.bundle.min.js"></script>
+    </cfif>
     
     <style>
   .spinner {
