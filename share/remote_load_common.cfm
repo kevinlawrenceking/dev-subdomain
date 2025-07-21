@@ -41,7 +41,7 @@
         WHERE 1=0
     </cfquery>
 </cfif>
-
+<Cfoutput>
 <!--- Ensure other queries used in loops are defined --->
 <cfparam name="totContactsQuery" default="#QueryNew('total', 'integer', [{total=0}])#">
 <cfparam name="todaysEvents" default="#QueryNew('eventid', 'integer')#">
@@ -50,7 +50,7 @@
 <!--- Use built-in ColdFusion functions --->
 <!--- Note: 'rand' is already a built-in ColdFusion function, so we don't need to define it --->
 <!--- Instead, we can use it directly with RandRange() where needed --->
-
+</Cfoutput>
 <!--- Default CSS/JS for the share interface --->
 <cfquery name="FindLinksT" datasource="#dsn#">
     SELECT 'script' as linktype, 

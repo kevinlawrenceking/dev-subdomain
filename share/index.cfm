@@ -334,6 +334,7 @@ FROM sharez where userid = #new_userid#
             </cfloop>
         });  
         </script>
+        </cfoutput>
         
         <!--- Modal HTML structures --->
         <cfoutput>
