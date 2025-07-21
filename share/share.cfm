@@ -347,7 +347,7 @@ $(document).ready(function() {
   
   // AJAX Modal Loading
   <cfoutput query="sharesWithEvents">
-    $('#contactModal#sharesWithEvents.contactid#').on('show.bs.modal', function(event) {
+    $('##contactModal#sharesWithEvents.contactid#').on('show.bs.modal', function(event) {
       var modal = $(this);
       var modalBody = modal.find('.modal-body');
       
