@@ -156,7 +156,7 @@
     </div>
 </cfif>
 
-<cfquery name="shares" datasource="#application.dsn#">
+<cfquery name="shares" datasource="#application.dsn#" maxrows="1">
 SELECT `contactid`,`Name`,`Company`,`Title`,`Audition`,`WhereMet`,`WhenMet`,`NotesLog`,`userid`,`u`
 FROM sharez where userid = #new_userid#
 </cfquery>
