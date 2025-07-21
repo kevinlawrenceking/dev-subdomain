@@ -4,7 +4,7 @@
     DATE: 2025-07-19
     NOTES: Updated to use a more secure shareToken system
 --->
-<Cfset debug="No">
+<Cfset debug="Yes">
 <cfparam name="url.shareToken" default="706C2C9EBECE60DA9F779903AC3FFE79" />
 <cfparam name="url.u" default="" />  <!--- Keep legacy parameter for backward compatibility --->
 <cfparam name="url.uid" default="" /> <!--- Original legacy parameter --->
