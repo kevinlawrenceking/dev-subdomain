@@ -188,8 +188,7 @@ FROM sharez where userid = #new_userid#
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
         <title>#appName# #shares.recordcount#| #pgTitle#</title>
-        <meta content="#appDescription#" name="description" />
-        <meta content="#appAuthor#" name="author" />
+
     </cfoutput>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300&display=swap');

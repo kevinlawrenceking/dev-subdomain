@@ -9,6 +9,7 @@
 <!--- Do not define functions here, only set variables and parameters --->
 <cfparam name="debug" default="NO">
 <cfset appname = "The Actors Office" />
+<cfset pgTitle = "Summary"  />
 <!--- Import debug settings from parent if available --->
 <cfif isDefined("variables.debug") AND variables.debug eq "YES">
     <cfset debug = "YES">
