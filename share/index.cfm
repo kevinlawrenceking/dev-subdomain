@@ -49,7 +49,7 @@
             <p>Token: <cfoutput>#url.shareToken#</cfoutput></p>
         </div>
     </cfif>
-    <cfinclude template="remote_load.cfm" />
+   
    
 </cfif>
 
