@@ -20,13 +20,13 @@
 </cffunction>
 <!--- Ensure application variables are set --->
 <cfif not structKeyExists(application, "dsn")>
-    <cfif debug is "YES"><cfoutput><p style="background:##ffe6e6;padding:5px;border:1px solid red">Application DSN not found, initializing...</p></cfoutput></cfif>
+    <cfif debug is "YES"><cfoutput><p class="alert alert-danger debug-info-sm">Application DSN not found, initializing...</p></cfoutput></cfif>
     <cfset onApplicationStart() />
 </cfif>
 
 <!--- Debug URL parameters --->
 <cfif debug is "YES">
-    <div style="background:##f0f8ff;padding:10px;margin:10px 0;border:1px solid ##add8e6;">
+    <div class="debug-info info">
         <h3>URL Parameters</h3>
         <cfoutput>
             <ul>
@@ -44,7 +44,7 @@
 <!--- Handle new shareToken system --->
 <cfif len(trim(url.shareToken)) gt 0>
     <cfif debug is "YES">
-        <div style="background:##e6ffe6;padding:10px;margin:10px 0;border:1px solid ##90ee90;">
+        <div class="debug-info success">
             <h3>Using New Token System</h3>
             <p>Token: <cfoutput>#url.shareToken#</cfoutput></p>
         </div>
@@ -220,34 +220,102 @@ FROM sharez where userid = <cfqueryparam value="#new_userid#" cfsqltype="cf_sql_
     </cfif>
     
     <style>
-  .spinner {
-    display: inline-block;
-    width: 80px;
-    height: 80px;
-    border: 8px solid #f3f3f3;
-    border-radius: 50%;
-    border-top: 8px solid #3498db;
-    animation: spin 2s linear infinite;
-  }
+        /* Loading Spinner */
+        .spinner {
+            display: inline-block;
+            width: 80px;
+            height: 80px;
+            border: 8px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 8px solid #3498db;
+            animation: spin 2s linear infinite;
+        }
 
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
 
-  .loading {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    height: 100vh;
-    position: absolute;
-    top: 0;
-    left: 0;
-    background: rgba(255, 255, 255, 0.8);
-    z-index: 9999;
-  }
-</style>
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100vh;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background: rgba(255, 255, 255, 0.8);
+            z-index: 9999;
+        }
+
+        /* Debug Panels */
+        .debug-info {
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid;
+            border-radius: 4px;
+        }
+
+        .debug-info.info {
+            background: #f0f8ff;
+            border-color: #add8e6;
+        }
+
+        .debug-info.success {
+            background: #e6ffe6;
+            border-color: #90ee90;
+        }
+
+        .debug-info.warning {
+            background: #fff8e6;
+            border-color: #ffd700;
+        }
+
+        .debug-info.error {
+            background: #ffe6e6;
+            border-color: #ff0000;
+        }
+
+        .debug-info.purple {
+            background: #e6e6ff;
+            border-color: #9370db;
+        }
+
+        .debug-info-sm {
+            padding: 5px;
+            border-radius: 3px;
+        }
+
+        .debug-info-lg {
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .debug-code {
+            display: block;
+            background: #f8f8f8;
+            padding: 10px;
+            white-space: pre-wrap;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            border: 1px solid #ddd;
+        }
+
+        /* Custom navbar colors */
+        .navbar-custom.dev {
+            background-color: #8b0000 !important;
+        }
+
+        .navbar-custom.production {
+            background-color: var(--top-bar-color) !important;
+        }
+
+        /* Content spacing */
+        .content-main {
+            margin-top: 35px;
+        }
+    </style>
 
 </head>
 
