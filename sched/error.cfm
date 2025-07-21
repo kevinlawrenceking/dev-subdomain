@@ -17,6 +17,7 @@
     
     <!--- Prepare error email content --->
     <cfsavecontent variable="errorEmailContent">
+        <cfoutput>
         <h2>Error Details (ID: #errorLogID#)</h2>
         
         <h3>Error Message:</h3>
@@ -63,6 +64,7 @@
                 </cfif>
             </ul>
         </cfif>
+        </cfoutput>
     </cfsavecontent>
     
     <!--- Send error email to developer --->
@@ -102,9 +104,17 @@
                 padding: 40px;
                 margin-top: 50px;
             }
+            .logo-container {
+                background-color: #406E8E;
+                padding: 20px;
+                border-radius: 8px 8px 0 0;
+                margin: -40px -40px 30px -40px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
             .logo {
                 max-width: 200px;
-                margin-bottom: 30px;
             }
             h1 {
                 color: #e74c3c;
@@ -138,7 +148,9 @@
     </head>
     <body>
         <div class="error-container">
-            <img src="/app/assets/images/taologo.png" alt="The Actor's Office" class="logo">
+            <div class="logo-container">
+                <img src="/app/assets/images/taologo.png" alt="The Actor's Office" class="logo">
+            </div>
             <h1>Oops! Something went wrong</h1>
             <div class="error-message">
                 We apologize for the inconvenience. Our technical team has been notified and is working to resolve the issue.
