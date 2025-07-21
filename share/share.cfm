@@ -43,6 +43,7 @@
       s.NotesLog,
       s.userid,
       s.u,
+      s.u as userHash,
       COALESCE(e.eventCount, 0) AS eventCount
     FROM sharez s
     LEFT JOIN (
@@ -63,7 +64,7 @@
     SELECT 0 as contactid, '' as Name, '' as Company, '' as Title, 
            '' as audition, '' as WhereMet, 
            <cfqueryparam value="#CreateODBCDate(Now())#" cfsqltype="cf_sql_timestamp"> as WhenMet, 
-           '' as NotesLog, 0 as userid, '' as u, 0 as eventCount
+           '' as NotesLog, 0 as userid, '' as userHash, 0 as eventCount
     WHERE 1=0
   </cfquery>
 </cfif>
