@@ -166,6 +166,25 @@
 <!--- DataTables Script --->
 <script>
   $(document).ready(function () {
+    <cfif isDefined("auditions")>
+      // Configuration with auditions column
+      var columnDefs = [
+        { targets: 0, width: "40px", orderable: false }, // View icon column
+        { targets: 1, width: "150px" }, // Name column  
+        { targets: 2, width: "80px", className: "text-nowrap" }, // Auditions column
+        { targets: [3,4,5,6,7], width: "100px", className: "text-nowrap" }, // Other standard columns
+        { targets: -1, width: "300px", className: "text-wrap" } // Notes column (last column)
+      ];
+    <cfelse>
+      // Configuration without auditions column
+      var columnDefs = [
+        { targets: 0, width: "40px", orderable: false }, // View icon column
+        { targets: 1, width: "150px" }, // Name column
+        { targets: [2,3,4,5,6], width: "100px", className: "text-nowrap" }, // Other standard columns
+        { targets: -1, width: "300px", className: "text-wrap" } // Notes column (last column)
+      ];
+    </cfif>
+    
     $("#basic-datatable").DataTable({
       responsive: true,
       searching: true,
@@ -176,12 +195,7 @@
       buttons: [
         'copy', 'csv', 'excel', 'pdf', 'print'
       ],
-      columnDefs: [
-        { targets: 0, width: "40px", orderable: false }, // View icon column
-        { targets: 1, width: "150px" }, // Name column
-        { targets: [2,3,4,5,6,7], width: "100px", className: "text-nowrap" }, // Other standard columns
-        { targets: -1, width: "300px", className: "text-wrap" } // Notes column (last column)
-      ],
+      columnDefs: columnDefs,
       language: {
         paginate: {
           previous: "<i class='mdi mdi-chevron-left'>",
