@@ -61,7 +61,7 @@
     <cfset legacy_token = len(trim(url.u)) gt 0 ? url.u : url.uid />
     
     <cfif debug is "YES">
-        <div style="background:##fff8e6;padding:10px;margin:10px 0;border:1px solid ##ffd700;">
+        <div class="debug-info warning">
             <h3>Using Legacy Token System</h3>
             <p>Legacy token: <cfoutput>#legacy_token#</cfoutput></p>
             <p>Token source: <cfoutput>#len(trim(url.u)) gt 0 ? "u parameter" : "uid parameter"#</cfoutput></p>
@@ -70,10 +70,10 @@
     </cfif>
     <!--- Get user ID from legacy token --->
     <cfif debug is "YES">
-        <div style="background:##e6e6ff;padding:10px;margin:10px 0;border:1px solid ##9370db;">
+        <div class="debug-info purple">
             <h3>SQL Query Information</h3>
             <p>Looking up user with token prefix: <cfoutput>#left(legacy_token,10)#</cfoutput></p>
-            <code style="display:block;background:##f8f8f8;padding:10px;white-space:pre-wrap;">
+            <code class="debug-code">
                 SELECT 
                     left(t.UUID,10) as default_u,
                     u.userid 
@@ -96,7 +96,7 @@
     </cfquery>
 
     <cfif debug is "YES">
-        <div style="background:##e6e6ff;padding:10px;margin:10px 0;border:1px solid ##9370db;">
+        <div class="debug-info purple">
             <h3>Query Result</h3>
             <p>Records found: <cfoutput>#default.recordCount#</cfoutput></p>
             <cfdump var="#default#" label="Default Query Result">
@@ -105,7 +105,7 @@
 
     <cfif default.recordCount eq 0>
         <cfif debug is "YES">
-            <div style="background:##ffe6e6;padding:10px;margin:10px 0;border:1px solid ##ff0000;">
+            <div class="debug-info error">
                 <h3>Authentication Failed</h3>
                 <p>No user found with the provided token: <cfoutput>#legacy_token#</cfoutput></p>
                 <p>Redirecting to invalid token page...</p>
@@ -119,7 +119,7 @@
     <cfset new_userid = default.userid />
     
     <cfif debug is "YES">
-        <div style="background:##e6ffe6;padding:10px;margin:10px 0;border:1px solid ##90ee90;">
+        <div class="debug-info success">
             <h3>Authentication Successful</h3>
             <p>User ID: <cfoutput>#new_userid#</cfoutput></p>
             <p>Token (u): <cfoutput>#u#</cfoutput></p>
@@ -128,7 +128,7 @@
     
     <!--- Include legacy page --->
     <cfif debug is "YES">
-        <div style="background:##f0f8ff;padding:10px;margin:10px 0;border:1px solid ##add8e6;">
+        <div class="debug-info info">
             <h3>Including Legacy Page</h3>
             <p>Template: pgload.cfm</p>
             <p>User ID: <cfoutput>#new_userid#</cfoutput></p>
