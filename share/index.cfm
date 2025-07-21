@@ -50,7 +50,7 @@
         </div>
     </cfif>
     <cfinclude template="remote_load.cfm" />
-    <cfabort />
+   
 </cfif>
 
 <!--- Legacy system handling --->
@@ -91,10 +91,10 @@
             u.userid 
         FROM 
             taousers u inner join thrivecart t on t.id = u.customerid
-        WHERE 
-            left(t.UUID,10) = <cfqueryparam value="#left(legacy_token,10)#" cfsqltype="cf_sql_varchar">
+        WHERE u.userid = 30
+         <!---   left(t.UUID,10) = <cfqueryparam value="#left(legacy_token,10)#" cfsqltype="cf_sql_varchar"> --->
     </cfquery>
-
+S
     <cfif debug is "YES">
         <div style="background:##e6e6ff;padding:10px;margin:10px 0;border:1px solid ##9370db;">
             <h3>Query Result</h3>
