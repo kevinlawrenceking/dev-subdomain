@@ -75,7 +75,7 @@
             <p>Looking up user with token prefix: <cfoutput>#left(legacy_token,10)#</cfoutput></p>
             <code class="debug-code">
                 SELECT 
-                    left(t.UUID,10) as default_u,
+                    left(t.UUID,10) as userHash,
                     u.userid 
                 FROM 
                     taousers u inner join thrivecart t on t.id = u.customerid
@@ -87,7 +87,7 @@
     
     <cfquery name="default" datasource="#application.dsn#" maxrows="1">
         SELECT 
-            left(t.UUID,10) as default_u,
+            left(t.UUID,10) as userHash,
             u.userid 
         FROM 
             taousers u inner join thrivecart t on t.id = u.customerid
@@ -115,7 +115,7 @@
         <cfabort>
     </cfif>
     
-    <cfset u = default.default_u />
+    <cfset u = default.userHash />
     <cfset new_userid = default.userid />
     
     <cfif debug is "YES">
