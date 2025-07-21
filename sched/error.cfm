@@ -149,7 +149,7 @@
     <body>
         <div class="error-container">
             <div class="logo-container">
-                <img src="/app/assets/images/taologo.png" alt="The Actor's Office" class="logo">
+                <img src="https://app.theactorsoffice.com/media-abo/images/logo-light.png" alt="The Actor's Office" class="logo">
             </div>
             <h1>Oops! Something went wrong</h1>
             <div class="error-message">
