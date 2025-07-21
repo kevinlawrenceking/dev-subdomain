@@ -160,7 +160,7 @@
                 <a href="javascript:history.back()" class="btn">Go Back</a>
             </div>
             <div class="error-id">
-                Error ID: #errorLogID#
+                Error ID: <cfoutput>#errorLogID#</cfoutput>
             </div>
         </div>
         
