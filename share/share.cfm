@@ -42,8 +42,7 @@
       s.WhenMet,
       s.NotesLog,
       s.userid,
-      s.u,
-      s.u as userHash,
+
       COALESCE(e.eventCount, 0) AS eventCount
     FROM sharez s
     LEFT JOIN (
