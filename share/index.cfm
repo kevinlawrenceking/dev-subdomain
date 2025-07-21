@@ -176,8 +176,6 @@ FROM sharez where userid = #new_userid#
 
 
 
-
-
 <cfparam name="TAOVERSION" default="0" />
 <!DOCTYPE html>
 <html lang="en">
