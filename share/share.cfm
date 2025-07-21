@@ -90,7 +90,7 @@
             GROUP BY contactid
           </cfquery>
           
-          <cfoutput query="shares">
+          <cfloop query="shares">
             <!--- Get event count for this contact --->
             <cfset eventCount = 0>
             <cfquery name="getEventCount" dbtype="query">
@@ -101,7 +101,7 @@
             <cfif getEventCount.recordCount GT 0>
               <cfset eventCount = getEventCount.eventCount>
             </cfif>
-            
+            <cfoutput>
             <tr>
               <!-- View Icon -->
               <td style="white-space: nowrap;">
@@ -144,7 +144,8 @@
               </cfif>
               <td style="max-width: 400px; white-space: normal !important; word-break: break-word !important; overflow-wrap: break-word !important;">#NotesLog2#</td>
             </tr>
-          </cfoutput>
+            </cfoutput>
+          </cfloop>
         </tbody>
       </table>
     </div>
