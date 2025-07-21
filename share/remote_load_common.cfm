@@ -30,9 +30,6 @@
 <cfparam name="u" default="0">
 <cfparam name="auditions" default="false">
 
-<!--- Function wrappers --->
-<cfif not isDefined("rand")>
-    <cffunction name="rand" returntype="numeric">
-        <cfreturn RandRange(1, 1000000)>
-    </cffunction>
-</cfif>
+<!--- Use built-in ColdFusion functions --->
+<!--- Note: 'rand' is already a built-in ColdFusion function, so we don't need to define it --->
+<!--- Instead, we can use it directly with RandRange() where needed --->

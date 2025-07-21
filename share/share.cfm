@@ -44,7 +44,7 @@
         <div class="media p-2">
           <cfoutput>
             <figure class="text-center">
-              <img src="/media-#dsn#/users/#userid#/avatar.jpg?ver=#rand()#" class="mr-3 rounded-circle gambar img-responsive img-thumbnail" style="height:80px;" alt="profile-image" id="item-img-output">
+              <img src="/media-#dsn#/users/#userid#/avatar.jpg?ver=#RandRange(1, 1000000)#" class="mr-3 rounded-circle gambar img-responsive img-thumbnail" style="height:80px;" alt="profile-image" id="item-img-output">
               <figcaption></figcaption>
             </figure>
             <div class="media-body pl-2">
