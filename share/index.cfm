@@ -8,7 +8,7 @@
 <cfparam name="url.shareToken" default="706C2C9EBECE60DA9F779903AC3FFE79" />
 <cfparam name="url.u" default="" />  <!--- Keep legacy parameter for backward compatibility --->
 <cfparam name="url.uid" default="" /> <!--- Original legacy parameter --->
-
+<cfinclude template="remote_load_common.cfm" />
 <!--- Debug Helper Function --->
 <cffunction name="debugDump" returntype="void" output="true">
     <cfargument name="label" type="string" required="true">
