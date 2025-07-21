@@ -300,28 +300,31 @@ FROM sharez where userid = #new_userid#
                 <cfparam name="pgid" default="0" />
         </div>
     </div>
-    <cfloop query="FindLinksB">
-        <cfoutput>
-            <cfif "#findlinksb.linktype#" is "script">
-                <script src="#findlinksb.linkurl#?ver=#rand()#"></script>
-
-            </cfif>
-            <cfif "#findlinksb.linktype#" is "script_include">
-     
-                    <cfinclude template = "#findlinksb.linkurl#" >
-       
-            </cfif>
-            <cfif "#findlinksb.linktype#" is "css" or "#findlinksb.linktype#" is "text/css" or "#findlinksb.linktype#" is "ico">
-                <link href="#findlinksb.linkurl#" <cfif #findlinksb.rel# is not ""> rel="#findlinksb.rel#"
-            </cfif>
-
-            type="text/css"
-
-            <cfif #findlinksb.hrefid# is not "">
-
-                id="#findlinksb.hrefid#"
-
-            </cfif> />
+    <cfif isDefined("FindLinksB") AND isQuery(FindLinksB)>
+        <cfloop query="FindLinksB">
+            <cfoutput>
+                <cfif FindLinksB.linktype is "script">
+                    <script src="#FindLinksB.linkurl#?ver=#RandRange(1, 1000000)#"></script>
+                </cfif>
+                <cfif FindLinksB.linktype is "script_include">
+                    <script>
+                        <cfinclude template = "#FindLinksB.linkurl#?rev=#RandRange(1, 1000000)#" >
+                    </script>
+                </cfif>
+                <cfif FindLinksB.linktype is "css" or FindLinksB.linktype is "text/css" or FindLinksB.linktype is "ico">
+                    <link href="#FindLinksB.linkurl#?rev=#RandRange(1, 1000000)#" 
+                          <cfif len(trim(FindLinksB.rel))>rel="#FindLinksB.rel#"</cfif>
+                          type="text/css"
+                                                    <cfif len(trim(FindLinksB.hrefid))>id="#FindLinksB.hrefid#"</cfif> />
+                </cfif>
+            </cfoutput>
+        </cfloop>
+    </cfif>
+    
+    <!--- Process shares modal views --->
+    <cfif isDefined("shares") AND isQuery(shares)>
+        <cfloop query="shares">
+                </cfif>
 
             </cfif>
         </cfoutput>
@@ -336,48 +339,37 @@ FROM sharez where userid = #new_userid#
 
 
 
+    <!--- Create modal handlers for each contact --->
     <cfloop query="shares">
-
-
-
-<script>
-$(document).ready(function() {
-    $("#remoteShareViewC<cfoutput>#shares.contactid#</cfoutput>").on("show.bs.modal", function(event) {
-            $(this).find(".modal-body").load("remoteShareViewC.cfm?contactid=<cfoutput>#shares.contactid#</cfoutput>"
-            );
-        });
-});  
-</script>
-
+        <cfoutput>
+            <script>
+            $(document).ready(function() {
+                $("##remoteShareViewC#shares.contactid#").on("show.bs.modal", function(event) {
+                    $(this).find(".modal-body").load("remoteShareViewC.cfm?contactid=#shares.contactid#");
+                });
+            });  
+            </script>
+        </cfoutput>
 
 
 
 
-        <div id="remoteShareViewC<cfoutput>#shares.contactid#</cfoutput>" class="modal modal-lg fade" tabindex="-1" role="dialog" aria-hidden="true">
 
-            <div class="modal-dialog">
-
-                <div class="modal-content">
-
-                    <div class="modal-header">
-
-                        <h4 class="modal-title"><CFOUTPUT>#shares.name#</CFOUTPUT>
-
-                        </h4>
-
-                        <button type="button" class="close" data-bs-dismiss="modal" aria-hidden="true"><i class="mdi mdi-close-thick"></i></button>
-
+        <cfoutput>
+            <div id="remoteShareViewC#shares.contactid#" class="modal modal-lg fade" tabindex="-1" role="dialog" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h4 class="modal-title">#shares.name#</h4>
+                            <button type="button" class="close" data-bs-dismiss="modal" aria-hidden="true"><i class="mdi mdi-close-thick"></i></button>
+                        </div>
+                        <div class="modal-body">
+                            <!-- Content will be loaded via AJAX -->
+                        </div>
                     </div>
-
-                    <div class="modal-body">
-
-                    </div>
-
                 </div>
-
             </div>
-
-        </div>
+        </cfoutput>
 
     </cfloop>
 

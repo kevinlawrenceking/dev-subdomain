@@ -31,6 +31,16 @@
 <cfparam name="u" default="0">
 <cfparam name="auditions" default="false">
 
+<!--- Default empty shares query if not defined elsewhere --->
+<cfif NOT isDefined("shares")>
+    <cfquery name="shares" datasource="#dsn#">
+        SELECT 0 as contactid, '' as name, '' as Company, '' as Title, 
+               '' as audition, '' as Wheremet, #CreateODBCDate(Now())# as whenmet, 
+               '' as NotesLog
+        WHERE 1=0
+    </cfquery>
+</cfif>
+
 <!--- Use built-in ColdFusion functions --->
 <!--- Note: 'rand' is already a built-in ColdFusion function, so we don't need to define it --->
 <!--- Instead, we can use it directly with RandRange() where needed --->
@@ -72,4 +82,27 @@
     SELECT 'css' as linktype,
            'https://cdn.datatables.net/buttons/1.7.1/css/buttons.bootstrap4.min.css' as linkurl,
            'stylesheet' as rel, '' as hrefid
+</cfquery>
+
+<!--- Footer scripts for the share interface --->
+<cfquery name="FindLinksB" datasource="#dsn#">
+    SELECT 'script' as linktype, 
+           'https://cdn.datatables.net/buttons/1.7.1/js/buttons.html5.min.js' as linkurl,
+           '' as rel, '' as hrefid
+    UNION
+    SELECT 'script' as linktype,
+           'https://cdn.datatables.net/buttons/1.7.1/js/buttons.print.min.js' as linkurl,
+           '' as rel, '' as hrefid
+    UNION
+    SELECT 'script' as linktype,
+           'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.70/pdfmake.min.js' as linkurl,
+           '' as rel, '' as hrefid
+    UNION
+    SELECT 'script' as linktype,
+           'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.70/vfs_fonts.js' as linkurl,
+           '' as rel, '' as hrefid
+    UNION
+    SELECT 'script' as linktype,
+           'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.6.0/jszip.min.js' as linkurl,
+           '' as rel, '' as hrefid
 </cfquery>
