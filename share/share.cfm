@@ -78,31 +78,31 @@
           <!--- Header Section: User Info & Export --->
           <div class="row mb-4">
             <div class="col-12">
-              <div class="d-flex align-items-center">
+              <div class="d-flex align-items-center py-4">
                 <cfoutput>
                   <div class="flex-shrink-0 me-3">
                     <img src="/media-#application.dsn#/users/#new_userid#/avatar.jpg?ver=#RandRange(1, 1000000)#" 
                          class="rounded-circle img-thumbnail" 
-                         style="width: 80px; height: 80px; object-fit: cover;" 
+                         style="width: 100px; height: 100px; object-fit: cover;" 
                          alt="User Avatar" 
                          onerror="this.src='/assets/images/default-avatar.png';">
                   </div>
                   <div class="flex-grow-1">
-                    <h3 class="mb-1">
+                    <h2 class="mb-2">
                       <cfif structKeyExists(variables, 'userfirstname') AND structKeyExists(variables, 'userlastname')>
                         #userfirstname# #userlastname#
                       <cfelse>
                         Shared Contact Report
                       </cfif>
-                    </h3>
-                    <p class="text-muted mb-2">
+                    </h2>
+                    <p class="text-muted mb-3 lead">
                       <strong>Report Date:</strong> #dateFormat(now(), 'medium')#
-                      <span class="badge badge-info ms-2">#sharesWithEvents.recordCount# contacts</span>
+                      <span class="badge badge-info ms-3 px-3 py-2">#sharesWithEvents.recordCount# contacts</span>
                     </p>
                     <cfif structKeyExists(variables, 'u') AND len(trim(u))>
                       <a href="https://#host#.theactorsoffice.com/share/export.cfm?u=#u#" 
-                         class="btn btn-primary btn-sm">
-                        <i class="fe-download me-1"></i> Download Report
+                         class="btn btn-primary">
+                        <i class="fe-download me-2"></i> Download Report
                       </a>
                     </cfif>
                   </div>
@@ -142,7 +142,6 @@
                       <th>Status</th>
                       <th>Where Met</th>
                       <th>When Met</th>
-                      <th style="width: 300px;">Notes</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -224,23 +223,6 @@
                             <span class="text-muted">-</span>
                           </cfif>
                         </td>
-
-                        <!--- Notes with Truncation --->
-                        <td>
-                          <cfset cleanNotes = len(trim(sharesWithEvents.NotesLog)) ? 
-                                             replace(sharesWithEvents.NotesLog, "..", ".", "all") : "">
-                          <cfif len(cleanNotes) GT 100>
-                            <span class="text-truncate d-inline-block" 
-                                  style="max-width: 280px;" 
-                                  title="#HTMLEditFormat(cleanNotes)#">
-                              #HTMLEditFormat(left(cleanNotes, 100))#...
-                            </span>
-                          <cfelseif len(cleanNotes) GT 0>
-                            #HTMLEditFormat(cleanNotes)#
-                          <cfelse>
-                            <span class="text-muted">No notes</span>
-                          </cfif>
-                        </td>
                       </tr>
                     </cfoutput>
                   </tbody>
@@ -277,6 +259,23 @@
               <span class="sr-only">Loading...</span>
             </div>
             <span class="ms-2">Loading contact details...</span>
+            
+            <!--- Notes Section (will be shown after AJAX loads) --->
+            <div id="notesSection#sharesWithEvents.contactid#" style="display: none;">
+              <hr class="my-4">
+              <h6 class="mb-3"><i class="fe-edit-3 me-2"></i>Notes</h6>
+              <cfset cleanNotes = len(trim(sharesWithEvents.NotesLog)) ? 
+                                 replace(sharesWithEvents.NotesLog, "..", ".", "all") : "">
+              <cfif len(cleanNotes) GT 0>
+                <div class="alert alert-light border">
+                  <p class="mb-0">#HTMLEditFormat(cleanNotes)#</p>
+                </div>
+              <cfelse>
+                <div class="alert alert-light border text-muted">
+                  <p class="mb-0"><em>No notes available for this contact.</em></p>
+                </div>
+              </cfif>
+            </div>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -299,15 +298,13 @@ $(document).ready(function() {
       { targets: 0, width: "50px", orderable: false, searchable: false, className: "text-center" },
       { targets: 1, width: "200px", className: "fw-medium" },
       { targets: 2, width: "80px", orderable: false, className: "text-center" },
-      { targets: [3,4,5,6,7], width: "120px" },
-      { targets: 8, width: "300px", orderable: false }
+      { targets: [3,4,5,6,7], width: "150px" }
     ];
   <cfelse>
     var columnDefs = [
       { targets: 0, width: "50px", orderable: false, searchable: false, className: "text-center" },
       { targets: 1, width: "200px", className: "fw-medium" },
-      { targets: [2,3,4,5,6], width: "120px" },
-      { targets: 7, width: "300px", orderable: false }
+      { targets: [2,3,4,5,6], width: "150px" }
     ];
   </cfif>
   
@@ -356,6 +353,9 @@ $(document).ready(function() {
       modalBody.load('share_contact_details.cfm?contactid=#sharesWithEvents.contactid#', function(response, status) {
         if (status === "error") {
           modalBody.html('<div class="alert alert-danger">Error loading contact details. Please try again.</div>');
+        } else {
+          // Show the notes section after successful load
+          $('##notesSection#sharesWithEvents.contactid#').show();
         }
       });
     });
@@ -367,7 +367,12 @@ $(document).ready(function() {
     $(this).find('.modal-body').html(
       '<div class="spinner-border text-primary" role="status" aria-hidden="true">' +
       '<span class="sr-only">Loading...</span></div>' +
-      '<span class="ms-2">Loading contact details...</span>'
+      '<span class="ms-2">Loading contact details...</span>' +
+      '<div id="notesSection' + $(this).attr('id').replace('contactModal', '') + '" style="display: none;">' +
+      '<hr class="my-4">' +
+      '<h6 class="mb-3"><i class="fe-edit-3 me-2"></i>Notes</h6>' +
+      $(this).find('[id^="notesSection"]').html() +
+      '</div>'
     );
   });
 });
