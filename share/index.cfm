@@ -191,6 +191,7 @@ FROM sharez where userid = <cfqueryparam value="#new_userid#" cfsqltype="cf_sql_
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300&display=swap');
     </style>
+     <link href="./icons.min.css" rel="stylesheet" type="text/css" />
     <!--- Include styles and scripts from FindLinksT query --->
     <cfif isDefined("FindLinksT") AND isQuery(FindLinksT)>
         <cfloop query="FindLinksT">
