@@ -343,7 +343,7 @@ FROM sharez where userid = <cfqueryparam value="#new_userid#" cfsqltype="cf_sql_
 
 
                 
-
+<cfoutput>
  
 
                 <span class="logo-lg">
@@ -360,6 +360,8 @@ FROM sharez where userid = <cfqueryparam value="#new_userid#" cfsqltype="cf_sql_
                     <img src="/media-#dsn#/images/logo-light.png" alt="" height="30">
                 </span>
             </a>
+
+            </cfoutput>
         </div>
     
         </div>
