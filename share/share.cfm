@@ -1,3 +1,14 @@
+<!---
+    PURPOSE: Display shared contact information in a datatable
+    AUTHOR: Updated by GitHub Copilot
+    DATE: 2025-07-20
+    PARAMETERS: userid, shares query
+    DEPENDENCIES: remote_load_common.cfm
+--->
+
+<!--- Include common variables and settings --->
+<cfinclude template="remote_load_common.cfm">
+
 <!--- Param defaults --->
 <cfparam name="contact_expand" default="true">
 <cfparam name="a" default="0">
@@ -12,6 +23,16 @@
 <cfparam name="pgaction" default="view">
 <cfif NOT isDefined('session.pgaction')>
   <cfset session.pgaction = "view">
+</cfif>
+
+<!--- Ensure shares query exists --->
+<cfif NOT isDefined('shares')>
+  <cfquery name="shares" datasource="#dsn#">
+    SELECT 0 as contactid, '' as name, '' as Company, '' as Title, 
+           '' as audition, '' as Wheremet, #CreateODBCDate(Now())# as whenmet, 
+           '' as NotesLog
+    WHERE 1=0
+  </cfquery>
 </cfif>
 
 <!--- Page Content --->
@@ -57,55 +78,73 @@
           </tr>
         </thead>
         <tbody>
-          <cfloop query="shares">
-            <cfquery name="events" datasource="#dsn#" maxrows="5">
-              SELECT eventid, eventTitle, eventDescription, eventLocation, eventstatus, eventcreation,
-                     eventStart, eventStop, eventTypeName, userid, eventStartTime, eventStopTime,
-                     recordname, contactid, isDeleted
-              FROM events
-              WHERE contactid = <cfqueryparam value="#shares.CONTACTID#" cfsqltype="cf_sql_integer">
-              AND EventTypeName IN ('Meeting', 'Audition')
-              ORDER BY eventCreation
+          <!--- Pre-fetch all events for performance optimization --->
+          <cfquery name="allEvents" datasource="#dsn#">
+            SELECT contactid, COUNT(eventid) AS eventCount
+            FROM events
+            WHERE contactid IN (
+                SELECT contactid FROM shares
+            )
+            AND EventTypeName IN ('Meeting', 'Audition')
+            AND isDeleted = 0
+            GROUP BY contactid
+          </cfquery>
+          
+          <cfoutput query="shares">
+            <!--- Get event count for this contact --->
+            <cfset eventCount = 0>
+            <cfquery name="getEventCount" dbtype="query">
+              SELECT eventCount 
+              FROM allEvents
+              WHERE contactid = <cfqueryparam value="#shares.contactid#" cfsqltype="cf_sql_integer">
             </cfquery>
+            <cfif getEventCount.recordCount GT 0>
+              <cfset eventCount = getEventCount.eventCount>
+            </cfif>
+            
+            <tr>
+              <!-- View Icon -->
+              <td style="white-space: nowrap;">
+                <a href="javascript:;" data-bs-toggle="modal" data-bs-target="##remoteShareViewC#shares.contactid#"
+                   title="View Contact Info and Audition List">
+                  <i class="fe-search"></i>
+                </a>
+              </td>
 
-            <cfoutput>
-              <tr>
-                <!-- View Icon -->
-                <td style="white-space: nowrap;">
-                  <a href="javascript:;" data-bs-toggle="modal" data-bs-target="##remoteShareViewC#shares.contactid#"
-                     title="View Contact Info and Audition List">
-                    <i class="fe-search"></i>
-                  </a>
-                </td>
-
-                <!-- Name + Badge -->
-                <td style="white-space: nowrap;">
-                  #name#
-                  <cfif events.recordcount GT 0>
-                    <span class="badge badge-primary badge-pill">#events.recordcount#</span>
-                  </cfif>
-                </td>
-
-                <!-- Optional audition count -->
-                <cfif isDefined("auditions")>
-                  <td style="white-space: nowrap;">#events.recordcount#</td>
+              <!-- Name + Badge -->
+              <td style="white-space: nowrap;">
+                #shares.name#
+                <cfif eventCount GT 0>
+                  <span class="badge badge-primary badge-pill">#eventCount#</span>
                 </cfif>
+              </td>
 
-                <!-- Other Fields -->
-                <td style="white-space: nowrap;">#Company#</td>
-                <td style="white-space: nowrap;">#Title#</td>
-                <td style="white-space: nowrap;">#audition#</td>
-                <td style="white-space: nowrap;">#Wheremet#</td>
-                <td style="white-space: nowrap;">#dateFormat(whenmet, 'medium')#</td>
+              <!-- Optional audition count -->
+              <cfif isDefined("auditions")>
+                <td style="white-space: nowrap;">#eventCount#</td>
+              </cfif>
 
-                <!-- Notes (wrapped) -->
-                <cfset NotesLog2 = replace(NotesLog, "..", ".", "all")>
-<td style="max-width: 400px; white-space: normal !important; word-break: break-word !important; overflow-wrap: break-word !important;">#NotesLog2#</td>
+              <!-- Other Fields -->
+              <td style="white-space: nowrap;">#shares.Company#</td>
+              <td style="white-space: nowrap;">#shares.Title#</td>
+              <td style="white-space: nowrap;">#shares.audition#</td>
+              <td style="white-space: nowrap;">#shares.Wheremet#</td>
+              <td style="white-space: nowrap;">
+                <cfif isDate(shares.whenmet)>
+                  #dateFormat(shares.whenmet, 'medium')#
+                <cfelse>
+                  &nbsp;
+                </cfif>
+              </td>
 
-
-              </tr>
-            </cfoutput>
-          </cfloop>
+              <!-- Notes (wrapped) -->
+              <cfset NotesLog2 = "">
+              <cfif len(trim(shares.NotesLog))>
+                <cfset NotesLog2 = replace(shares.NotesLog, "..", ".", "all")>
+              </cfif>
+              <td style="max-width: 400px; white-space: normal !important; word-break: break-word !important; overflow-wrap: break-word !important;">#NotesLog2#</td>
+            </tr>
+          </cfoutput>
         </tbody>
       </table>
     </div>
@@ -119,6 +158,11 @@
       responsive: false,
       searching: true,
       autoWidth: false,
+      pageLength: 25,
+      dom: 'Bfrtip',
+      buttons: [
+        'copy', 'csv', 'excel', 'pdf', 'print'
+      ],
       columnDefs: [
         { targets: 8, width: "400px", className: "text-wrap" }, // Notes column
         { targets: "_all", width: "1%", className: "text-nowrap" }
@@ -127,7 +171,9 @@
         paginate: {
           previous: "<i class='mdi mdi-chevron-left'>",
           next: "<i class='mdi mdi-chevron-right'>"
-        }
+        },
+        search: "Filter Records:",
+        emptyTable: "No contacts available"
       },
       drawCallback: function () {
         $(".dataTables_paginate > .pagination").addClass("pagination-rounded");
@@ -135,3 +181,29 @@
     });
   });
 </script>
+
+<!--- Load modal views for contacts --->
+<cfoutput>
+  <div id="modal-container">
+    <cfif shares.recordcount GT 0>
+      <cfloop query="shares">
+        <div class="modal fade" id="remoteShareViewC#shares.contactid#" tabindex="-1" role="dialog" aria-labelledby="shareModalLabel#shares.contactid#" aria-hidden="true">
+          <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="shareModalLabel#shares.contactid#">Contact Details: #shares.name#</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-hidden="true"></button>
+              </div>
+              <div class="modal-body">
+                <cfinclude template="share_contact_details.cfm">
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </cfloop>
+    </cfif>
+  </div>
+</cfoutput>
