@@ -5,7 +5,7 @@
    <cfparam name="select_ticketpriority" default="%" />     
        <cfparam name="select_pgid" default="%" />     
      <cfparam name="select_verid" default="%" />  
-     <!-- Use datasource from Application.cfc -->
+     <!--- Use datasource from Application.cfc --->
      <cfset dsn=application.dsn>
 <cfquery name="results"     >
     

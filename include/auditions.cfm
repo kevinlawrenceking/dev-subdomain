@@ -371,7 +371,7 @@ Key Features:
 
                 <!--- Pagination placeholder --->
                 <div class="pagination-container text-center mt-4">
-                    <!-- Pagination will be added dynamically -->
+                    <!--- Pagination will be added dynamically --->
                 </div>
             </cfif>
         </cfif>

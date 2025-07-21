@@ -270,11 +270,11 @@ FROM sharez where userid = #new_userid#
             <a href="/app/" class="logo logo-dark text-center">
                 <span class="logo-sm">
                     <img src="/assets/images/logo-sm.png" alt="" height="30">
-                    <!-- <span class="logo-lg-text-light">UBold</span> -->
+                    <!--- <span class="logo-lg-text-light">UBold</span> --->
                 </span>
                 <span class="logo-lg">
                     <img src="/assets/images/logo-sm.png" alt="" height="30">
-                    <!-- <span class="logo-lg-text-light">U</span> -->
+                    <!--- <span class="logo-lg-text-light">U</span> --->
                 </span>
             </a>
     
@@ -346,7 +346,7 @@ FROM sharez where userid = #new_userid#
                             <button type="button" class="close" data-bs-dismiss="modal" aria-hidden="true"><i class="mdi mdi-close-thick"></i></button>
                         </div>
                         <div class="modal-body">
-                            <!-- Content will be loaded via AJAX -->
+                            <!--- Content will be loaded via AJAX --->
                         </div>
                     </div>
                 </div>

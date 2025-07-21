@@ -404,7 +404,7 @@
                 </cfloop>
             </select>
         </div>
-    </div> <!-- end #hiddenLocation -->
+    </div> <!--- end #hiddenLocation --->
 
     <!--- Self Tape Container (only if 'Self Tape' is selected [=2]) --->
 
@@ -463,7 +463,7 @@
                    name="CustomPlatform"
                    placeholder="Enter a Custom Platform" />
         </div>
-    </div> <!-- end #hiddenSelfTape -->
+    </div> <!--- end #hiddenSelfTape --->
 
     <!--- Worked with Coach? --->
 

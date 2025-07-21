@@ -61,8 +61,8 @@
     <!---
       End of last month is the day before the 1st of this month.
       For example, if today is March 10:
-        CreateDate(Year(Now()), Month(Now()), 1) --> March 1
-        DateAdd("d", -1, thatDate) --> February 28 (end of last month)
+        CreateDate(Year(Now()), Month(Now()), 1) ---> March 1
+        DateAdd("d", -1, thatDate) ---> February 28 (end of last month)
     --->
     <cfset lastMonthEnd = DateAdd("d", -1, CreateDate(Year(Now()), Month(Now()), 1))>
 

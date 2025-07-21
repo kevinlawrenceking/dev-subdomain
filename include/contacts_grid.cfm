@@ -11,7 +11,7 @@
     </button>
 </div>
 
-<!-- DataTable View -->
+<!--- DataTable View --->
 <div id="<cfoutput>#contacts_table#_container</cfoutput>">
     <table id="<cfoutput>#contacts_table#</cfoutput>" class="table table-striped">
         <thead>
@@ -26,7 +26,7 @@
     </table>
 </div>
 
-<!-- Gallery View -->
+<!--- Gallery View --->
 <div id="contacts-gallery-container" class="container-fluid d-none">
     <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3" id="contacts-gallery">
         <!--- Cards will be dynamically inserted here --->

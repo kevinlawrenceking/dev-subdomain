@@ -204,7 +204,7 @@ ORDER BY e.eventstart DESC
     <cfargument name="eventLocation" type="string" required="true">
     <cfargument name="eventStart" type="date" required="false">
     <cfargument name="eventStartTime" type="time" required="false">
-    <cfargument name="new_durseconds" type="numeric" required="true"> <!-- Duration in seconds -->
+    <cfargument name="new_durseconds" type="numeric" required="true"> <!--- Duration in seconds --->
     <cfargument name="dow" type="string" required="false" default="">
     <cfargument name="endRecur" required="false">
     <cfargument name="userid" type="numeric" required="true">

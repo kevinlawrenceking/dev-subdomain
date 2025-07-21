@@ -5,7 +5,7 @@
 
 
 <cfset apiUrl = "https://app.paykickstart.com/api/billing-customer">
-<cfset apiKey = "4OWaGHPXFibE"> <!-- Replace with your actual API key -->
+<cfset apiKey = "4OWaGHPXFibE"> <!--- Replace with your actual API key --->
 
 
 <!--- Make API Request --->

@@ -1,11 +1,11 @@
 <cfset userService = createObject("component", "services.UserService")>
 <cfset userData = userService.getUserById(userID)>
 
-<!-- Session-specific values -->
+<!--- Session-specific values --->
 <cfset session.dateformatExample = userData.dateformatExample>
 <cfset session.dateformatID = userData.dateformatID>
 
-<!-- Core user identity -->
+<!--- Core user identity --->
 <cfset userId           = userData.userId>
 <cfset uid              = userData.uuid>
 <cfset uuid             = userData.uuid>
@@ -23,7 +23,7 @@
 <cfset isauditionmodule = userData.isauditionmodule>
 <cfset recover          = userData.recover>
 
-<!-- Display / Calendar preferences -->
+<!--- Display / Calendar preferences --->
 <cfset calendarName     = userData.calendarName>
 <cfset calSlotDuration  = userData.calSlotDuration>
 <cfset calStartTime     = userData.calStarttime>
@@ -35,7 +35,7 @@
 <cfset tzName           = userData.tzname>
 <cfset tzGeneral        = userData.tzgeneral>
 
-<!-- Date format / region -->
+<!--- Date format / region --->
 <cfset dateFormatID     = userData.dateFormatID>
 <cfset datePrefID       = userData.datePrefID>
 <cfset defCountryID     = userData.countryId>
@@ -43,20 +43,20 @@
 <cfset countryName      = userData.countryName>
 <cfset regionName       = userData.regionName>
 
-<!-- Address -->
+<!--- Address --->
 <cfset add1             = userData.add1>
 <cfset add2             = userData.add2>
 <cfset city             = userData.city>
 <cfset zip              = userData.zip>
 
-<!-- Contact linkage -->
+<!--- Contact linkage --->
 <cfset userContactID    = userData.contactid>
 
-<!-- OAuth tokens -->
+<!--- OAuth tokens --->
 <cfset refreshToken     = userData.refresh_token>
 <cfset accessToken      = userData.access_token>
 
-<!-- ThriveCart / billing -->
+<!--- ThriveCart / billing --->
 <cfset customerId           = userData.customerId>
 <cfset customerFirst        = userData.customerFirst>
 <cfset customerLast         = userData.customerLast>
@@ -79,5 +79,5 @@
 <cfset billingCountry       = userData.billingCountry>
 <cfset billingState         = userData.billingState>
 <cfset planName             = userData.planName>
-<cfset accountStatus        = userData.status> <!-- renamed to avoid `status` clobber -->
+<cfset accountStatus        = userData.status> <!--- renamed to avoid `status` clobber --->
 <cfset cancelDate           = userData.cancelDate>

@@ -13623,7 +13623,7 @@
             <label for="CustomPlatform">Custom Platform</label>
             <input class="form-control" type="text" id="CustomPlatform" name="CustomPlatform" placeholder="Enter a Custom Platform">
         </div>
-    </div> <!-- end #hiddenSelfTape -->
+    </div> <!--- end #hiddenSelfTape --->
 
     
     <div class="row">

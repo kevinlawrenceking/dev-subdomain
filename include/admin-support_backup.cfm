@@ -397,9 +397,9 @@ SELECT tu.id
 													
 												</div>
 											</div>
-											<!-- /.modal-content -->
+											<!--- /.modal-content --->
 										</div>
-										<!-- /.modal-dialog -->
+										<!--- /.modal-dialog --->
 									</div>
                                         
                                         
@@ -424,9 +424,9 @@ SELECT tu.id
 													
 												</div>
 											</div>
-											<!-- /.modal-content -->
+											<!--- /.modal-content --->
 										</div>
-										<!-- /.modal-dialog -->
+										<!--- /.modal-dialog --->
 										</div>
 										</tbody>
 										</table>
@@ -450,8 +450,8 @@ SELECT tu.id
 
 
 
-										<!-- end card body-->
-        </div> <!-- end card -->
+										<!--- end card body-->
+        </div> <!--- end card --->
 
 
 
@@ -507,7 +507,7 @@ SELECT tu.id
 
 
 
-<!-- Default bootstrap modal example -->
+<!--- Default bootstrap modal example --->
 
 <cfset script_name_include="/include/#ListLast(GetCurrentTemplatePath(), "\")#" /><cfinclude template="/include/bigbrotherinclude.cfm" /> 
 

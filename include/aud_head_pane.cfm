@@ -5,7 +5,7 @@
 <cfinclude template="/include/qry/audlinks_44_2.cfm" />
 
 <div id="remoteselectheadshot" class="modal fade" tabindex="-1" aria-labelledby="headshotModalLabel">
-    <div class="modal-dialog modal-lg"> <!-- Large modal for better viewing -->
+    <div class="modal-dialog modal-lg"> <!--- Large modal for better viewing --->
         <div class="modal-content">
             <div class="modal-header">
                 <h4 class="modal-title" id="headshotModalLabel">Select a Headshot</h4>
@@ -14,7 +14,7 @@
                 </button>
             </div>
             <div class="modal-body">
-                <!-- Content will be loaded dynamically -->
+                <!--- Content will be loaded dynamically --->
                 <div id="headshotGalleryContainer">
                     <p class="text-center">Loading headshots...</p>
                 </div>

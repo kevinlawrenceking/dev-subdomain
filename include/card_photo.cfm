@@ -1,7 +1,7 @@
 <cfoutput>
     <div class="tao-card-photo">
        
- <!-- TRASH ICON (top-left) -->
+ <!--- TRASH ICON (top-left) --->
         <div class="tao-card-photo-header">
             <i class="mdi mdi-trash-can-outline" 
                style="color:red;" 
@@ -10,7 +10,7 @@
             </i>
         </div>
 
-        <!-- DOWNLOAD ICON (top-right) -->
+        <!--- DOWNLOAD ICON (top-right) --->
         <div class="tao-card-photo-header header-right" 
              >
             <a href="/include/download_media.cfm?mediaid=#currentid#"
@@ -19,11 +19,11 @@
             </a>
         </div>
 
-        <!-- Card Body: Image + Overlay -->
+        <!--- Card Body: Image + Overlay --->
         <div class="tao-card-photo-body">
             <img src="#card_image#" alt="#card_name#">
             
-            <!-- Magnifying Glass Icon (Opens Lightbox) -->
+            <!--- Magnifying Glass Icon (Opens Lightbox) --->
             <div class="image-overlay">
                 <a href="#card_image#" data-lightbox="headshots" data-title="#card_name#">
                     <i class="mdi mdi-magnify"></i>
@@ -31,7 +31,7 @@
             </div>
         </div>
 
-        <!-- Footer with Editable Name & Edit Icon -->
+        <!--- Footer with Editable Name & Edit Icon --->
         <div class="tao-card-photo-footer">
             <div class="photo-name" data-id="#currentid#">#card_name#</div>
             <i class="mdi mdi-square-edit-outline edit-icon" title="Edit Name" style="color:##1d80c2;"></i>
@@ -40,7 +40,7 @@
 </cfoutput>
 
 
-<!-- AJAX Script -->
+<!--- AJAX Script --->
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     document.body.addEventListener("click", function (event) {

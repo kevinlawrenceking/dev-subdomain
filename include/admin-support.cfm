@@ -79,8 +79,8 @@
         <h4 class="header-title">Support Tickets</h4>
         <form action="/app/admin-support/">
           <div class="row">
-            <!-- BEGIN FILTER CONTROLS -->
-<!-- User Filter -->
+            <!--- BEGIN FILTER CONTROLS --->
+<!--- User Filter --->
 <div class="form-group col-md-4">
   <label for="select_userid">User</label>
   <select class="form-control" name="select_userid" id="select_userid" onchange="this.form.submit()">
@@ -90,7 +90,7 @@
     </cfoutput>
   </select>
 </div>
-<!-- Status Filter -->
+<!--- Status Filter --->
 <div class="form-group col-md-4">
   <label for="select_ticketstatus">Status</label>
   <select class="form-control" name="select_ticketstatus" id="select_ticketstatus" onchange="this.form.submit()">
@@ -100,7 +100,7 @@
     </cfoutput>
   </select>
 </div>
-<!-- Type Filter -->
+<!--- Type Filter --->
 <div class="form-group col-md-4">
   <label for="select_tickettype">Type</label>
   <select class="form-control" name="select_tickettype" id="select_tickettype" onchange="this.form.submit()">
@@ -110,7 +110,7 @@
     </cfoutput>
   </select>
 </div>
-<!-- Page Filter -->
+<!--- Page Filter --->
 <div class="form-group col-md-4">
   <label for="select_pgid">Pages</label>
   <select class="form-control" name="select_pgid" id="select_pgid" onchange="this.form.submit()">
@@ -120,7 +120,7 @@
     </cfoutput>
   </select>
 </div>
-<!-- Priority Filter -->
+<!--- Priority Filter --->
 <div class="form-group col-md-4">
   <label for="select_ticketpriority">Priority</label>
   <select class="form-control" name="select_ticketpriority" id="select_ticketpriority" onchange="this.form.submit()">
@@ -130,7 +130,7 @@
     </cfoutput>
   </select>
 </div>
-<!-- Version Filter -->
+<!--- Version Filter --->
 <div class="form-group col-md-4">
   <label for="select_verid">Release (hours left)</label>
   <select class="form-control" name="select_verid" id="select_verid" onchange="this.form.submit()">
@@ -141,11 +141,11 @@
     </cfoutput>
   </select>
 </div>
-<!-- END FILTER CONTROLS -->
+<!--- END FILTER CONTROLS --->
           </div>
         </form>
 
-        <!-- Table Output -->
+        <!--- Table Output --->
         <table id="basic-datatable" class="table table-striped table-bordered dt-responsive nowrap w-100">
           <thead>
             <tr>
@@ -197,7 +197,7 @@
           </tbody>
         </table>
 
-        <!-- DataTables Script -->
+        <!--- DataTables Script --->
 <script>
   $(document).ready(function () {
     $('#basic-datatable').DataTable({

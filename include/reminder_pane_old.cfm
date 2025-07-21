@@ -14,7 +14,7 @@
 <cfif structKeyExists(session, "user_id")>
   <cfset sessionUserId = session.user_id>
 <cfelse>
-  <!-- Fallback if session is lost or not available -->
+  <!--- Fallback if session is lost or not available --->
   <cfquery name="findUser" >
     SELECT userid FROM contactdetails WHERE contactid = <cfqueryparam value="#contactid#" cfsqltype="cf_sql_integer">
   </cfquery>

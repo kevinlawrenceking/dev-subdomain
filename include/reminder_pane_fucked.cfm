@@ -50,39 +50,39 @@
       <cfloop query="notsActive">
         <cfoutput>
           <div class="reminder #LCase(notsActive.notstatus)# ps-4 mb-3">
-            <!-- Completion link -->
+            <!--- Completion link --->
             <cfif notsActive.notstatus EQ "Pending" OR notsActive.notstatus EQ "Upcoming">
               <a href="/include/complete_not.cfm?notid=#notsActive.notid#&notstatus=Completed&hide_completed=#hide_completed#">
             </cfif>
 
-            <!-- Icon -->
+            <!--- Icon --->
             <i class="mdi mdi-checkbox-#notsActive.checktype#-outline font-24 me-2" style="color:##notsActive.status_color"></i>
 
             <cfif notsActive.notstatus EQ "Pending" OR notsActive.notstatus EQ "Upcoming">
               </a>
             </cfif>
 
-            <!-- Description -->
+            <!--- Description --->
             #notsActive.delstart# #notsActive.actiondetails# #notsActive.delend#
 
-            <!-- Due/Complete Date -->
+            <!--- Due/Complete Date --->
             <cfif len(notsActive.notEndDate)>
               (#notsActive.notstatus# #this.formatDate(notsActive.notEndDate)#)
             <cfelse>
               (Due Date #this.formatDate(notsActive.notstartdate)#)
             </cfif>
 
-            <!-- Past due badge -->
+            <!--- Past due badge --->
             <cfif notsActive.ispastdue EQ "1">
               <span class="badge bg-danger-soft ms-2">Past Due</span>
             </cfif>
 
-            <!-- Modal trigger -->
+            <!--- Modal trigger --->
             <a href="##" data-bs-toggle="modal" data-bs-target="#notsActive.actionid#-modal" title="Click for details">
               <i class="fe-info font-14 ms-2"></i>
             </a>
 
-            <!-- Skip link -->
+            <!--- Skip link --->
             <cfif notsActive.notstatus EQ "Pending" OR notsActive.notstatus EQ "Upcoming">
               <a href="/include/complete_not.cfm?notid=#notsActive.notid#&notstatus=Skipped&hide_completed=#hide_completed#" title="Skip reminder">
                 <span class="badge bg-primary ms-3">x Skip</span>
@@ -95,7 +95,7 @@
   </cfloop>
 </div>
 
-<!-- JavaScript filter logic -->
+<!--- JavaScript filter logic --->
 <script>
 document.addEventListener("DOMContentLoaded", function () {
   document.querySelectorAll(".status-filter").forEach(cb => {

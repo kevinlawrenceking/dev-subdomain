@@ -39,7 +39,7 @@
 <div class="row">
   <div class="card w-100">
     <div class="card-body">
-      <!-- Header -->
+      <!--- Header --->
       <div class="col-md-12">
         <div class="media p-2">
           <cfoutput>
@@ -60,7 +60,7 @@
         </div>
       </div>
 
-      <!-- Table -->
+      <!--- Table --->
       <table id="basic-datatable" class="table table-striped table-bordered w-100">
         <thead>
           <tr>
@@ -103,7 +103,7 @@
             </cfif>
             <cfoutput>
             <tr>
-              <!-- View Icon -->
+              <!--- View Icon --->
               <td style="white-space: nowrap;">
                 <a href="javascript:;" data-bs-toggle="modal" data-bs-target="##remoteShareViewC#shares.contactid#"
                    title="View Contact Info and Audition List">
@@ -111,7 +111,7 @@
                 </a>
               </td>
 
-              <!-- Name + Badge -->
+              <!--- Name + Badge --->
               <td style="white-space: nowrap;">
                 #shares.name#
                 <cfif eventCount GT 0>
@@ -119,12 +119,12 @@
                 </cfif>
               </td>
 
-              <!-- Optional audition count -->
+              <!--- Optional audition count --->
               <cfif isDefined("auditions")>
                 <td style="white-space: nowrap;">#eventCount#</td>
               </cfif>
 
-              <!-- Other Fields -->
+              <!--- Other Fields --->
               <td style="white-space: nowrap;">#shares.Company#</td>
               <td style="white-space: nowrap;">#shares.Title#</td>
               <td style="white-space: nowrap;">#shares.audition#</td>
@@ -137,7 +137,7 @@
                 </cfif>
               </td>
 
-              <!-- Notes (wrapped) -->
+              <!--- Notes (wrapped) --->
               <cfset NotesLog2 = "">
               <cfif len(trim(shares.NotesLog))>
                 <cfset NotesLog2 = replace(shares.NotesLog, "..", ".", "all")>
@@ -152,7 +152,7 @@
   </div>
 </div>
 
-<!-- DataTables Script -->
+<!--- DataTables Script --->
 <script>
   $(document).ready(function () {
     $("#basic-datatable").DataTable({
