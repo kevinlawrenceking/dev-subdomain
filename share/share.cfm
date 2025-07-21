@@ -111,18 +111,6 @@
             </div>
           </div>
 
-          <!--- Search Bar --->
-          <div class="row mb-3">
-            <div class="col-md-6">
-              <div class="input-group">
-                <input type="text" id="contactSearch" class="form-control" placeholder="Search contacts..." aria-label="Search contacts">
-                <div class="input-group-append">
-                  <span class="input-group-text"><i class="fe-search"></i></span>
-                </div>
-              </div>
-            </div>
-          </div>
-
           <!--- Responsive Table Container --->
           <div class="row">
             <div class="col-12">
@@ -131,7 +119,7 @@
                   <thead class="thead-light">
                     <tr>
                       <th class="text-center" style="width: 50px;" aria-label="Actions">
-                        <i class="fe-eye" title="View Details"></i>
+                        <i class="mdi mdi-eye" title="View Details"></i>
                       </th>
                       <th>Name</th>
                       <cfif structKeyExists(variables, 'auditions') AND auditions>
@@ -155,7 +143,7 @@
                                   data-bs-target="##contactModal#sharesWithEvents.contactid#"
                                   title="View Contact Details"
                                   aria-label="View details for #HTMLEditFormat(sharesWithEvents.Name)#">
-                            <i class="fe-search"></i>
+                            <i class="mdi mdi-eye"></i>
                           </button>
                         </td>
 
@@ -263,7 +251,7 @@
             <!--- Notes Section (will be shown after AJAX loads) --->
             <div id="notesSection#sharesWithEvents.contactid#" style="display: none;">
               <hr class="my-4">
-              <h6 class="mb-3"><i class="fe-edit-3 me-2"></i>Notes</h6>
+              <h6 class="mb-3"><i class="mdi mdi-note-text me-2"></i>Notes</h6>
               <cfset cleanNotes = len(trim(sharesWithEvents.NotesLog)) ? 
                                  replace(sharesWithEvents.NotesLog, "..", ".", "all") : "">
               <cfif len(cleanNotes) GT 0>
@@ -335,11 +323,6 @@ $(document).ready(function() {
       // Add Bootstrap styling to pagination
       $('.dataTables_paginate > .pagination').addClass('pagination-sm');
     }
-  });
-  
-  // Connect custom search input to DataTable
-  $('#contactSearch').on('keyup', function() {
-    table.search(this.value).draw();
   });
   
   // AJAX Modal Loading

@@ -159,7 +159,7 @@
 <cfquery name="shares" datasource="#application.dsn#">
 SELECT `contactid`,`Name`,`Company`,`Title`,`Audition`,`WhereMet`,`WhenMet`,`NotesLog`,`userid`
 FROM sharez where userid = <cfqueryparam value="#new_userid#" cfsqltype="cf_sql_integer">
-</cfquery>
+</cfquery>  
 
 <cfif debug is "YES">
     <div class="debug-info purple">
