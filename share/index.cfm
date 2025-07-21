@@ -335,7 +335,7 @@ FROM sharez where userid = <cfqueryparam value="#new_userid#" cfsqltype="cf_sql_
             <cfinclude template="topmenu_main.cfm" />
              <div class="logo-box">
             <a href="/app/" class="logo logo-dark text-center">
-                <span class="logo-sm"><cfoutput
+                <span class="logo-sm"><cfoutput> 
                     <img src="/media-#dsn#/images/logo-sm.png" alt="" height="30">
                     <!--- <span class="logo-lg-text-light">UBold</span> --->
                 </cfoutput> </span>
