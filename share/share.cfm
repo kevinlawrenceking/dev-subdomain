@@ -346,7 +346,8 @@ $(document).ready(function() {
   });
   
   // AJAX Modal Loading
-  <cfoutput query="sharesWithEvents">
+  <cfoutput>
+  <cfloop query="sharesWithEvents">
     $('##contactModal#sharesWithEvents.contactid#').on('show.bs.modal', function(event) {
       var modal = $(this);
       var modalBody = modal.find('.modal-body');
@@ -359,6 +360,7 @@ $(document).ready(function() {
       });
     });
   </cfloop>
+  </cfoutput>
   
   // Reset modal content when hidden
   $('.modal').on('hidden.bs.modal', function() {
