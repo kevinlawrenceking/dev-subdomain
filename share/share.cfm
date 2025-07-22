@@ -206,14 +206,6 @@
                           </cfif>
                         </td>
 
-     <!--- no_mtgs --->
-                        <td>
-                          <cfif len(trim(sharesWithEvents.no_mtgs))>
-                            #sharesWithEvents.no_mtgs#
-                          <cfelse>
-                            <span class="text-muted">-</span>
-                          </cfif>
-                        </td>
 
             <!--- Where Met --->
                         <td>
@@ -224,6 +216,14 @@
                           </cfif>
                         </td>
 
+     <!--- no_mtgs --->
+                        <td>
+                          <cfif len(trim(sharesWithEvents.no_mtgs))>
+                            #sharesWithEvents.no_mtgs#
+                          <cfelse>
+                            <span class="text-muted">-</span>
+                          </cfif>
+                        </td>
 
 
 
