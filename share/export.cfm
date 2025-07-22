@@ -62,6 +62,6 @@
 <cfheader name="Expires" value="0">
 
 <!--- Output CSV content directly --->
-<cfcontent type="text/csv" reset="true"><cfoutput>Name,Company,Title,Audition Status,Where Met,Meeting Type,Total Meetings,Notes Log
+<cfcontent type="text/csv" reset="true"><cfoutput>Name,Company,Title,Audition Status,Last Met,Last Meeting Type,Total Meetings,Notes Log
 <cfloop query="qExportData">"#Replace(Name, '"', '""', 'ALL')#","#Replace(Company, '"', '""', 'ALL')#","#Replace(Title, '"', '""', 'ALL')#","#Replace(Audition_Status, '"', '""', 'ALL')#","#Replace(Last_Met, '"', '""', 'ALL')#","#Replace(Meeting_Type, '"', '""', 'ALL')#","#Total_Meetings#","#Replace(Notes_Log, '"', '""', 'ALL')#"
 </cfloop></cfoutput>
