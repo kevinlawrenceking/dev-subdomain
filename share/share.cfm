@@ -182,7 +182,34 @@ SELECT DISTINCT
                         <!--- Audition Status --->
                         <td>
                           <cfif len(trim(sharesWithEvents.Audition))>
-                            <span class="badge badge-info">#HTMLEditFormat(sharesWithEvents.Audition)#</span>
+                            <cfset statusLower = lcase(trim(sharesWithEvents.Audition))>
+                            <cfset statusClass = "status-badge">
+                            <cfset statusIcon = "">
+                            
+                            <!--- Determine status-specific styling --->
+                            <cfif statusLower eq "callback">
+                              <cfset statusClass = statusClass & " status-callback">
+                              <cfset statusIcon = "mdi mdi-phone-incoming">
+                            <cfelseif statusLower eq "redirect">
+                              <cfset statusClass = statusClass & " status-redirect">
+                              <cfset statusIcon = "mdi mdi-swap-horizontal">
+                            <cfelseif statusLower eq "audition">
+                              <cfset statusClass = statusClass & " status-audition">
+                              <cfset statusIcon = "mdi mdi-microphone">
+                            <cfelseif statusLower eq "booking">
+                              <cfset statusClass = statusClass & " status-booking">
+                              <cfset statusIcon = "mdi mdi-thumb-up">
+                            <cfelse>
+                              <cfset statusClass = statusClass & " badge-info">
+                              <cfset statusIcon = "mdi mdi-information">
+                            </cfif>
+                            
+                            <span class="#statusClass#">
+                              <cfif len(statusIcon)>
+                                <i class="#statusIcon#"></i>
+                              </cfif>
+                              #HTMLEditFormat(sharesWithEvents.Audition)#
+                            </span>
                           <cfelse>
                             <span class="text-muted">-</span>
                           </cfif>
@@ -271,6 +298,43 @@ SELECT DISTINCT
 </div>
 
 <!--- Optimized DataTables Configuration --->
+<style>
+/* Status Badge Styling */
+.status-callback {
+    background-color: #A1D9EC !important;
+    color: #333 !important;
+    border: 1px solid #A1D9EC !important;
+}
+
+.status-redirect {
+    background-color: #74C0FC !important;
+    color: #333 !important;
+    border: 1px solid #74C0FC !important;
+}
+
+.status-audition {
+    background-color: #406e8e !important;
+    color: #fff !important;
+    border: 1px solid #406e8e !important;
+}
+
+.status-booking {
+    background-color: #28a745 !important;
+    color: #fff !important;
+    border: 1px solid #28a745 !important;
+}
+
+/* Default status styling for other statuses */
+.status-badge {
+    padding: 0.375rem 0.75rem;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+</style>
 <script>
 $(document).ready(function() {
   // Remove loading spinner from body
