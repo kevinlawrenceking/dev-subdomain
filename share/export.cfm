@@ -1,107 +1,67 @@
-<CFINCLUDE template="remote_load_common.cfm" />
+<!---
+    PURPOSE: Export shared contact data as CSV file (OPTIMIZED)
+    AUTHOR: Updated by GitHub Copilot
+    DATE: 2025-07-22
+    PARAMETERS: u (user hash token)
+    DEPENDENCIES: remote_load_common.cfm
+    OPTIMIZATIONS: Secure parameterization, simplified query, direct CSV output
+--->
 
-<cfoutput>
-<cfset share_dir = "C:\home\theactorsoffice.com\media-#host#\share" />
-</cfoutput>
+<cfinclude template="remote_load_common.cfm">
 
+<!--- Validate required parameters --->
+<cfparam name="url.u" default="">
+<cfif NOT len(trim(url.u))>
+    <cflocation url="index.cfm" addtoken="false">
+</cfif>
 
-<cfquery name="shares" datasource="#dsn#" >	
-SELECT 
-	`d`.`recordname` AS `Name`
-	,`ci_company`.`valueCompany` AS `Company`
-	,`ci_tag`.`valueText` AS `Title`
-	,`mx`.`audstep` AS `Audition Status`
-	,`d`.`contactMeetingLoc` AS `WhereMet`
-	,`d`.`contactMeetingDate` AS `WhenMet`
-
-	
-	,p.projname AS `Project`
-	,c.audcatname AS `Category`
-	,sc.audsubcatname AS `SubCategory`
-	,rt.audroletype AS `RoleType`
-	,group_concat(`n`.`noteDetails` separator ',') AS `NotesLog`
-FROM (
-	(
-		(
-			(
-				(
-					(
-						`actorsbusinessoffice`.`contactdetails` `d` 
-			LEFT JOIN audcontacts_auditions_xref x ON d.contactid = x.contactid
-			LEFT JOIN audprojects p ON p.audprojectID = x.audprojectid
-inner JOIN audroles r ON r.audprojectID = p.audprojectid
-			LEFT JOIN audsubcategories sc ON  sc.audsubcatid = p.audsubcatid
-LEFT JOIN audcategories c ON  c.audcatid = sc.audcatid
-LEFT JOIN audroletypes rt ON rt.audroletypeid = r.audroletypeid						
-						LEFT JOIN `actorsbusinessoffice`.`maxaudition` `mx` ON ((`mx`.`contactid` = `d`.`contactID`))
-						) INNER JOIN `actorsbusinessoffice`.`taousers` `u` ON ((`u`.`userID` = `d`.`userID`))
-					) LEFT JOIN `actorsbusinessoffice`.`contactitems` `ci_company` ON (
-						(
-							(`ci_company`.`contactID` = `d`.`contactID`)
-							AND (`ci_company`.`valueCategory` = 'Company')
-							AND (`ci_company`.`itemStatus` = 'active')
-							)
-						)
-				) LEFT JOIN `actorsbusinessoffice`.`contactitems` `ci_tag` ON (
-					(
-						(`ci_tag`.`contactID` = `d`.`contactID`)
-						AND (`ci_tag`.`valueCategory` = 'Tag')
-						AND (`ci_tag`.`itemStatus` = 'Active')
-						)
-					)
-			) LEFT JOIN `actorsbusinessoffice`.`noteslog` `n` ON (
-				(
-					(`n`.`contactID` = `d`.`contactID`)
-					AND (`n`.`isPublic` = 1)
-					)
-				)
-		) INNER JOIN `actorsbusinessoffice`.`fusystemusers` `su` ON ((`su`.`contactID` = `d`.`contactID`))
-	)
-WHERE
-r.userid = d.userid AND 
-
-left(`u`.`passwordHash`, 10) ='#u#' AND 
- (
-		(`su`.`userid` = `d`.`userID`)
-		AND (`su`.`suStatus` = 'Active')
-		AND (
-			`su`.`systemID` IN (
-				1
-				,2
-				,3
-				,4
-				)
-			)
-		)
-GROUP BY `d`.`contactID` 
+<!--- Get user information from token --->
+<cfquery name="qUser" datasource="#application.dsn#" maxrows="1">
+    SELECT 
+        u.userid,
+        u.userfirstname,
+        u.userlastname
+    FROM taousers u 
+    INNER JOIN thrivecart t ON t.id = u.customerid
+    WHERE left(t.UUID, 10) = <cfqueryparam value="#left(url.u, 10)#" cfsqltype="cf_sql_varchar">
 </cfquery>
 
-<cfquery name="x" datasource="#dsn#" >	
-select * from taousers 
-where left(passwordhash,10) = '#U#'
-</cfquery>	   
-        
+<cfif qUser.recordCount EQ 0>
+    <cfinclude template="invalid_token.cfm">
+    <cfabort>
+</cfif>
 
-<cfoutput>
-    
-    <cfset sub_name_a = "#x.userfirstname#_#x.userlastname#" />
-    
- 
-    <cfset sub_name_b = "#Replace(sub_name_a,' ','','all')#" />
+<!--- OPTIMIZED EXPORT QUERY: Use same data as main report --->
+<cfquery name="qExportData" datasource="#application.dsn#">
+    SELECT 
+        s.Name,
+        COALESCE(s.Company, '') AS Company,
+        COALESCE(s.Title, '') AS Title,
+        COALESCE(s.Audition, '') AS 'Audition_Status',
+        COALESCE(s.last_met, '') AS 'Where_Met',
+        COALESCE(s.lasteventtype, '') AS 'Meeting_Type',
+        s.no_mtgs AS 'Total_Meetings',
+        REPLACE(REPLACE(COALESCE(s.NotesLog, ''), '<BR>', ' | '), '\n', ' ') AS 'Notes_Log'
+    FROM sharez s
+    WHERE s.userid = <cfqueryparam value="#qUser.userid#" cfsqltype="cf_sql_integer">
+    ORDER BY s.Name
+</cfquery>
 
+<!--- Generate unique filename --->
+<cfset cleanFirstName = REReplace(qUser.userfirstname, "[^A-Za-z0-9]", "", "ALL")>
+<cfset cleanLastName = REReplace(qUser.userlastname, "[^A-Za-z0-9]", "", "ALL")>
+<cfset dateStamp = dateFormat(now(), "yyyymmdd")>
+<cfset timeStamp = timeFormat(now(), "HHmmss")>
+<cfset fileName = "#cleanFirstName##cleanLastName#_Contacts_#dateStamp#_#timeStamp#.csv">
 
-    <cfset sub_name_c = "#dateformat('#now()#','YYYYMMDD')#" />   
-    <cfset sub_name_d = "#timeformat('#now()#','HHMMSS')#" />   
-    
-    
-<cfset fileName = "#sub_name_b##sub_name_c##sub_name_d#.xls" />
- 
+<!--- Set CSV headers --->
+<cfheader name="Content-Disposition" value="attachment; filename=#fileName#">
+<cfheader name="Content-Type" value="text/csv; charset=utf-8">
+<cfheader name="Cache-Control" value="no-cache, no-store, must-revalidate">
+<cfheader name="Pragma" value="no-cache">
+<cfheader name="Expires" value="0">
 
-<cfscript>
-cfspreadsheet( action="write", fileName="#share_dir#\#fileName#", query="shares", overwrite=true );
-    </cfscript>
-
-    <cfheader name="content-disposition"  value="Attachment;filename=#fileName#">
-<cfcontent  file="#share_dir#\#fileName#"  type="application/vnd.ms-excel">
-
-    </cfoutput>
+<!--- Output CSV content directly --->
+<cfcontent type="text/csv" reset="true"><cfoutput>Name,Company,Title,Audition Status,Where Met,Meeting Type,Total Meetings,Notes Log
+<cfloop query="qExportData">"#Replace(Name, '"', '""', 'ALL')#","#Replace(Company, '"', '""', 'ALL')#","#Replace(Title, '"', '""', 'ALL')#","#Replace(Audition_Status, '"', '""', 'ALL')#","#Replace(Where_Met, '"', '""', 'ALL')#","#Replace(Meeting_Type, '"', '""', 'ALL')#","#Total_Meetings#","#Replace(Notes_Log, '"', '""', 'ALL')#"
+</cfloop></cfoutput>

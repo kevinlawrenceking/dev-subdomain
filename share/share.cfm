@@ -89,12 +89,12 @@ SELECT DISTINCT
                     </h2>
                     <p class="text-muted mb-3 lead">
                       <strong>Report Date:</strong> #dateFormat(now(), 'medium')#
-                      <span class="badge badge-info ms-3 px-3 py-2">#sharesWithEvents.recordCount# contacts</span>
+                      <span class="badge badge-info ml-3 px-3 py-2">#sharesWithEvents.recordCount# contacts</span>
                     </p>
                     <cfif structKeyExists(variables, 'u') AND len(trim(u))>
                       <a href="https://#host#.theactorsoffice.com/share/export.cfm?u=#u#" 
                          class="btn btn-primary">
-                        <i class="fe-download me-2"></i> Download Report
+                        <i class="fe-download mr-2"></i> Download Report
                       </a>
                     </cfif>
                   </div>
@@ -147,7 +147,7 @@ SELECT DISTINCT
                         <td style="white-space: nowrap;">
                           <span class="fw-medium">#HTMLEditFormat(sharesWithEvents.Name)#</span>
                           <cfif sharesWithEvents.no_mtgs GT 0>
-                            <span class="badge badge-primary badge-pill ms-1" 
+                            <span class="badge badge-primary badge-pill ml-1" 
                                   title="#sharesWithEvents.no_mtgs# events">
                               #sharesWithEvents.no_mtgs#
                             </span>
