@@ -188,13 +188,10 @@ SELECT DISTINCT
                           </cfif>
                         </td>
 
-            
-                        <!--- When Met --->
+                        <!--- Meeting Type --->
                         <td>
-                          <cfif isDate(sharesWithEvents.lasteventtype)>
-                            <time datetime="#dateFormat(sharesWithEvents.lasteventtype, 'yyyy-mm-dd')#">
-                              #dateFormat(sharesWithEvents.lasteventtype, 'medium')#
-                            </time>
+                          <cfif len(trim(sharesWithEvents.lasteventtype))>
+                            #HTMLEditFormat(sharesWithEvents.lasteventtype)#
                           <cfelse>
                             <span class="text-muted">-</span>
                           </cfif>
