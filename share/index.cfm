@@ -347,13 +347,9 @@ FROM sharez where userid = <cfqueryparam value="#new_userid#" cfsqltype="cf_sql_
 
     
     
-    <div id="wrapper">
-        <cfif #host# is "dev">
-            <div class="navbar-custom dev">
-                <cfelse>
-                    <div class="navbar-custom production" style="--top-bar-color: <cfoutput>#colorTopBar#</cfoutput>;">
-        </cfif>
-        <div class="container-fluid">
+    <div id="wrapper" style="height:60px;">
+
+        <div class="container-fluid" >
             <cfinclude template="topmenu_main.cfm" />
              <div class="logo-box">
    
