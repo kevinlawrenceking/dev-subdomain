@@ -313,9 +313,44 @@ FROM sharez where userid = <cfqueryparam value="#new_userid#" cfsqltype="cf_sql_
             background-color: var(--top-bar-color) !important;
         }
 
-        /* Content spacing */
+        /* Header Bar Styling */
+        .container-fluid {
+            padding: 0;
+        }
+        
+        /* Top header bar with primary background and 60px height */
+        #wrapper > .container-fluid {
+            background-color: #406E8E;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .logo-box {
+            display: flex;
+            align-items: center;
+            height: 100%;
+        }
+        
+        .logo-lg img {
+            height: 30px;
+            width: auto;
+        }
+        
+        /* Content spacing - adjust for fixed header */
+        .content-pag {
+            margin-top: 60px;
+        }
+        
         .content-main {
-            margin-top: 35px;
+            margin-top: 0;
         }
 
     .badge-primary {
