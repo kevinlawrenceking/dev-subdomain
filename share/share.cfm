@@ -43,7 +43,8 @@
       s.NotesLog,
       s.userid,
 
-      COALESCE(e.eventCount, 0) AS eventCount
+      COALESCE(e.eventCount, 0) AS eventCount,
+         COALESCE(e.eventCount, 0) AS no_mtgs
     FROM sharez s
     LEFT JOIN (
       SELECT 
