@@ -107,57 +107,77 @@ WHERE r.isdeleted = 0
 <div class="row">
     <div class="col-md-12">
         <h5 class="text-primary">Contact Information</h5>
-        <div class="table-responsive">
-            <table class="table table-sm table-striped mb-3">
-                <tbody>
-                    <cfif qGetContactDetail.recordCount GT 0>
-                        <cfoutput query="qGetContactDetail">
-                                   <tr>
-                                <th>Title</th>
-                                <td>#IIF(isDefined('Title') AND len(trim(Title)), "Title", "''")#</td>
-                            </tr>
-                       
-                                <th>Company</th>
-                                <td>#IIF(isDefined('Company') AND len(trim(Company)), "Company", "''")#</td>
-                            </tr>
-
-                                     <cfif isDefined('phone') AND len(trim(phone))>
-                                <tr>
-                                    <th>Phone</th>
-                                    <td>#phone#</td>
-                                </tr>
-                            </cfif>
-                            <cfif isDefined('email') AND len(trim(email))>
-                                <tr>
-                                    <th>Email</th>
-                                    <td>#email#</td>
-                                </tr>
-                            </cfif>
-                            <tr>
-                                <th>Originally Met</th>
-                                <td>#IIF(isDefined('Wheremet') AND len(trim(Wheremet)), "Wheremet", "''")#</td>
-                            </tr>
-                            <tr>
-                                <th>Last Mtg.</th>
-                                <td>
-                                    <cfif isDefined('last_met') AND isDate(last_met)>
-                                        #dateFormat(last_met, "mmm d, yyyy")#
+        <div class="row">
+            <cfif qGetContactDetail.recordCount GT 0>
+                <cfoutput query="qGetContactDetail">
+                    <!--- Avatar Column (1/3 width) --->
+                    <div class="col-md-4 text-center mb-3">
+                        <img src="#share_avatar#" 
+                             class="rounded-circle img-thumbnail" 
+                             style="width: 120px; height: 120px; object-fit: cover;" 
+                             alt="Contact Avatar" 
+                             onerror="this.src='#default_share_avatar#';">
+                    </div>
+                    
+                    <!--- Contact Details Column (2/3 width) --->
+                    <div class="col-md-8">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped mb-3">
+                                <tbody>
+                                    <tr>
+                                        <th>Title</th>
+                                        <td>#IIF(isDefined('Title') AND len(trim(Title)), "Title", "''")#</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Company</th>
+                                        <td>#IIF(isDefined('Company') AND len(trim(Company)), "Company", "''")#</td>
+                                    </tr>
+                                    <cfif isDefined('phone') AND len(trim(phone))>
+                                        <tr>
+                                            <th>Phone</th>
+                                            <td>#phone#</td>
+                                        </tr>
                                     </cfif>
-                                </td>
-                            </tr>
-                              <tr>
-                                <th style="width:30%">Last Mtg. Type</th>
-                                <td>#IIF(isDefined('lasteventtype') AND len(trim(lasteventtype)), "lasteventtype", "''")#</td>
-                            </tr>
-                   
-                        </cfoutput>
-                    <cfelse>
-                        <tr>
-                            <td colspan="2" class="text-center">No contact details available</td>
-                        </tr>
-                    </cfif>
-                </tbody>
-            </table>
+                                    <cfif isDefined('email') AND len(trim(email))>
+                                        <tr>
+                                            <th>Email</th>
+                                            <td>#email#</td>
+                                        </tr>
+                                    </cfif>
+                                    <tr>
+                                        <th>Originally Met</th>
+                                        <td>#IIF(isDefined('Wheremet') AND len(trim(Wheremet)), "Wheremet", "''")#</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Last Mtg.</th>
+                                        <td>
+                                            <cfif isDefined('last_met') AND isDate(last_met)>
+                                                #dateFormat(last_met, "mmm d, yyyy")#
+                                            </cfif>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th style="width:40%">Last Mtg. Type</th>
+                                        <td>#IIF(isDefined('lasteventtype') AND len(trim(lasteventtype)), "lasteventtype", "''")#</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </cfoutput>
+            <cfelse>
+                <div class="col-md-12">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-striped mb-3">
+                            <tbody>
+                                <tr>
+                                    <td colspan="2" class="text-center">No contact details available</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </cfif>
         </div>
     </div>
 </div>
