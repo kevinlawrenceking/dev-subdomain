@@ -144,7 +144,7 @@ SELECT DISTINCT
                         </td>
 
                         <!--- Name with Event Badge --->
-                        <td>
+                        <td style="white-space: nowrap;">
                           <span class="fw-medium">#HTMLEditFormat(sharesWithEvents.Name)#</span>
                           <cfif sharesWithEvents.no_mtgs GT 0>
                             <span class="badge badge-primary badge-pill ms-1" 
@@ -162,7 +162,7 @@ SELECT DISTINCT
                         </cfif>
 
                         <!--- Company --->
-                        <td>
+                        <td  style="white-space: nowrap;">
                           <cfif len(trim(sharesWithEvents.Company))>
                             #HTMLEditFormat(sharesWithEvents.Company)#
                           <cfelse>
@@ -171,7 +171,7 @@ SELECT DISTINCT
                         </td>
 
                         <!--- Title --->
-                        <td>
+                        <td  style="white-space: nowrap;">
                           <cfif len(trim(sharesWithEvents.Title))>
                             #HTMLEditFormat(sharesWithEvents.Title)#
                           <cfelse>
