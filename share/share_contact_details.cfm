@@ -80,8 +80,8 @@ WHERE r.isdeleted = 0
     </cfquery>
     
     <cfcatch type="any">
-        <cfset qGetContactEvents = QueryNew("eventid,eventTitle,eventDescription,eventStart,eventTypeName", 
-                                          "integer,varchar,varchar,timestamp,varchar")>
+        <cfset qGetContactEvents = QueryNew("col1,col2,col3", 
+                                          "varchar,varchar,varchar")>
     </cfcatch>
 </cftry>
 
@@ -155,30 +155,24 @@ WHERE r.isdeleted = 0
                     <thead>
                         <tr>
                             <th>Date</th>
-                            <th>Type</th>
-                            <th>Title</th>
-                            <th>Description</th>
+                            
+                            <th>Project</th>
+                      <th>Type</th>
                         </tr>
                     </thead>
                     <tbody>
                         <cfoutput query="qGetContactEvents" maxrows="10">
                             <tr>
                                 <td>
-                                    <cfif isDefined('eventStart') AND isDate(eventStart)>
-                                        #dateFormat(eventStart, "mmm d, yyyy")#
+                                    <cfif isDefined('col1') AND isDate(col1)>
+                                        #dateFormat(col1, "mmm d, yyyy")#
                                     <cfelse>
                                         &nbsp;
                                     </cfif>
                                 </td>
-                                <td>#IIF(isDefined('eventTypeName') AND len(trim(eventTypeName)), "eventTypeName", "''")#</td>
-                                <td>#IIF(isDefined('eventTitle') AND len(trim(eventTitle)), "eventTitle", "''")#</td>
-                                <td>
-                                    <cfif isDefined('eventDescription') AND len(trim(eventDescription))>
-                                        #left(eventDescription, 100)##iif(len(eventDescription) GT 100, de("..."), de(""))#
-                                    <cfelse>
-                                        &nbsp;
-                                    </cfif>
-                                </td>
+                                <td>#IIF(isDefined('col2') AND len(trim(col2)), "col2", "''")#</td>
+                                <td>#IIF(isDefined('col3') AND len(trim(col3)), "col3", "''")#</td>
+                   
                             </tr>
                         </cfoutput>
                     </tbody>
