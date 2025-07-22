@@ -42,9 +42,7 @@
       s.lasteventtype,
       s.NotesLog,
       s.userid,
-
-      COALESCE(e.eventCount, 0) AS eventCount,
-         COALESCE(e.eventCount, 0) AS no_mtgs
+s.no_mtgs
     FROM sharez s
     LEFT JOIN (
       SELECT 
@@ -64,7 +62,7 @@
     SELECT 0 as contactid, '' as Name, '' as Company, '' as Title, 
            '' as audition, '' as last_met, 
            <cfqueryparam value="#CreateODBCDate(Now())#" cfsqltype="cf_sql_timestamp"> as lasteventtype, 
-           '' as NotesLog, 0 as userid, '' as userHash, 0 as eventCount
+           '' as NotesLog, 0 as userid, '' as userHash, 0 as no_Mtgs
     WHERE 1=0
   </cfquery>
 </cfif>
