@@ -15,27 +15,29 @@
 <cfparam name="shares" default="#QueryNew('contactid', 'integer')#">
 <cfparam name="contactid" default="#IIF(isDefined('shares.contactid') AND shares.recordCount GT 0, 'shares.contactid', 0)#">
 
-<!--- Get detailed contact information --->
+<!--- Get detailed contact information
+
+SELECT `Name`,`Company`,`Title`,`WhereMet`,`WhenMet`,`NotesLog`
+FROM sharez where contactid = '#contactid#'
+
+--->
 <cftry>
     <cfquery name="qGetContactDetail" datasource="#dsn#">
-        SELECT c.*, 
-               ct.contacttypename,
-               cg.contactcategoryname
-        FROM contacts c
-        LEFT JOIN contacttypes ct ON c.contacttypeid = ct.contacttypeid
-        LEFT JOIN contactcategories cg ON c.contactcategoryid = cg.contactcategoryid
-        WHERE c.contactid = <cfqueryparam value="#contactid#" cfsqltype="cf_sql_integer">
+    SELECT s.name, s.company, s.title, s.wheremet, w.last_met, s.noteslog, s.lasteventtype,c.col3 as phone, c.col4 as email, c.contactid, c.col2 as tag
+    FROM sharez s
+    INNER JOIN contacts_ss c on c.contactid = s.contactid
+    WHERE s.contactid = <cfqueryparam value="#contactid#" cfsqltype="cf_sql_integer">
     </cfquery>
 
     <!--- If no record is found, create an empty query with the expected columns --->
     <cfif qGetContactDetail.recordCount EQ 0>
-        <cfset qGetContactDetail = QueryNew("contactid,contacttypename,contactcategoryname,Company,Title,Wheremet,whenmet,phone,email", 
-                                          "integer,varchar,varchar,varchar,varchar,varchar,timestamp,varchar,varchar")>
+        <cfset qGetContactDetail = QueryNew("name,company,title,wheremet,last_met,noteslog,lasteventtype,phone,email,contactid,tag", 
+                                          "varchar,varchar,varchar,varchar,timestamp,varchar,varchar,varchar,varchar,integer,varchar")>
     </cfif>
     
     <cfcatch type="any">
-        <cfset qGetContactDetail = QueryNew("contactid,contacttypename,contactcategoryname,Company,Title,Wheremet,whenmet,phone,email", 
-                                          "integer,varchar,varchar,varchar,varchar,varchar,timestamp,varchar,varchar")>
+        <cfset qGetContactDetail = QueryNew("name,company,title,wheremet,last_met,noteslog,lasteventtype,phone,email,contactid,tag", 
+                                          "varchar,varchar,varchar,varchar,timestamp,varchar,varchar,varchar,varchar,integer,varchar")>
     </cfcatch>
 </cftry>
 
@@ -68,13 +70,9 @@
                         <cfoutput query="qGetContactDetail">
                             <tr>
                                 <th style="width:30%">Type</th>
-                                <td>#IIF(isDefined('contacttypename') AND len(trim(contacttypename)), "contacttypename", "''")#</td>
+                                <td>#IIF(isDefined('lasteventtype') AND len(trim(lasteventtype)), "lasteventtype", "''")#</td>
                             </tr>
-                            <tr>
-                                <th>Category</th>
-                                <td>#IIF(isDefined('contactcategoryname') AND len(trim(contactcategoryname)), "contactcategoryname", "''")#</td>
-                            </tr>
-                            <tr>
+                       
                                 <th>Company</th>
                                 <td>#IIF(isDefined('Company') AND len(trim(Company)), "Company", "''")#</td>
                             </tr>
@@ -87,10 +85,10 @@
                                 <td>#IIF(isDefined('Wheremet') AND len(trim(Wheremet)), "Wheremet", "''")#</td>
                             </tr>
                             <tr>
-                                <th>When Met</th>
+                                <th>Last Met</th>
                                 <td>
-                                    <cfif isDefined('whenmet') AND isDate(whenmet)>
-                                        #dateFormat(whenmet, "mmm d, yyyy")#
+                                    <cfif isDefined('last_met') AND isDate(whenmet)>
+                                        #dateFormat(last_met, "mmm d, yyyy")#
                                     </cfif>
                                 </td>
                             </tr>
