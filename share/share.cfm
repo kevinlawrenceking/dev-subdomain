@@ -194,15 +194,7 @@
                           </cfif>
                         </td>
 
-                        <!--- Where Met --->
-                        <td>
-                          <cfif len(trim(sharesWithEvents.last_met))>
-                            #HTMLEditFormat(sharesWithEvents.last_met)#
-                          <cfelse>
-                            <span class="text-muted">-</span>
-                          </cfif>
-                        </td>
-
+            
                         <!--- When Met --->
                         <td>
                           <cfif isDate(sharesWithEvents.lasteventtype)>
@@ -214,11 +206,19 @@
                           </cfif>
                         </td>
 
-
      <!--- no_mtgs --->
                         <td>
                           <cfif len(trim(sharesWithEvents.no_mtgs))>
                             #sharesWithEvents.no_mtgs#
+                          <cfelse>
+                            <span class="text-muted">-</span>
+                          </cfif>
+                        </td>
+
+            <!--- Where Met --->
+                        <td>
+                          <cfif len(trim(sharesWithEvents.last_met))>
+                            #HTMLEditFormat(sharesWithEvents.last_met)#
                           <cfelse>
                             <span class="text-muted">-</span>
                           </cfif>
