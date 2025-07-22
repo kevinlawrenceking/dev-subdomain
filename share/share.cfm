@@ -118,7 +118,7 @@ SELECT DISTINCT
                         <th class="text-center" style="width: 100px;">Events</th>
                       </cfif>
                       <th nowrap>Company</th>
-                      <th>Title</th>
+                      <th nowrap>Title</th>
                       <th>Status</th>
                       <th>Mtg. Type</th>
                       <th>Last Met</th>
