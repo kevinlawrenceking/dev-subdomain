@@ -38,7 +38,7 @@
         COALESCE(s.Company, '') AS Company,
         COALESCE(s.Title, '') AS Title,
         COALESCE(s.Audition, '') AS 'Audition_Status',
-        COALESCE(s.last_met, '') AS 'Where_Met',
+        COALESCE(s.last_met, '') AS 'Last_Met',
         COALESCE(s.lasteventtype, '') AS 'Meeting_Type',
         s.no_mtgs AS 'Total_Meetings',
         REPLACE(REPLACE(COALESCE(s.NotesLog, ''), '<BR>', ' | '), '\n', ' ') AS 'Notes_Log'
@@ -63,5 +63,5 @@
 
 <!--- Output CSV content directly --->
 <cfcontent type="text/csv" reset="true"><cfoutput>Name,Company,Title,Audition Status,Where Met,Meeting Type,Total Meetings,Notes Log
-<cfloop query="qExportData">"#Replace(Name, '"', '""', 'ALL')#","#Replace(Company, '"', '""', 'ALL')#","#Replace(Title, '"', '""', 'ALL')#","#Replace(Audition_Status, '"', '""', 'ALL')#","#Replace(Where_Met, '"', '""', 'ALL')#","#Replace(Meeting_Type, '"', '""', 'ALL')#","#Total_Meetings#","#Replace(Notes_Log, '"', '""', 'ALL')#"
+<cfloop query="qExportData">"#Replace(Name, '"', '""', 'ALL')#","#Replace(Company, '"', '""', 'ALL')#","#Replace(Title, '"', '""', 'ALL')#","#Replace(Audition_Status, '"', '""', 'ALL')#","#Replace(Last_Met, '"', '""', 'ALL')#","#Replace(Meeting_Type, '"', '""', 'ALL')#","#Total_Meetings#","#Replace(Notes_Log, '"', '""', 'ALL')#"
 </cfloop></cfoutput>
