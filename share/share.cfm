@@ -72,7 +72,7 @@ SELECT DISTINCT
             <div class="col-12">
               <div class="d-flex align-items-center py-4">
                 <cfoutput>
-                  <div class="flex-shrink-0 me-3">
+                  <div class="flex-shrink-0 mr-4">
                     <img src="/media-#application.dsn#/users/#new_userid#/avatar.jpg?ver=#RandRange(1, 1000000)#" 
                          class="rounded-circle img-thumbnail" 
                          style="width: 100px; height: 100px; object-fit: cover;" 
