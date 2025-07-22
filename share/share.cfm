@@ -143,10 +143,10 @@ SELECT DISTINCT
                         <!--- Name with Event Badge --->
                         <td>
                           <span class="fw-medium">#HTMLEditFormat(sharesWithEvents.Name)#</span>
-                          <cfif sharesWithEvents.eventCount GT 0>
+                          <cfif sharesWithEvents.no_mtgs GT 0>
                             <span class="badge badge-primary badge-pill ms-1" 
-                                  title="#sharesWithEvents.eventCount# events">
-                              #sharesWithEvents.eventCount#
+                                  title="#sharesWithEvents.no_mtgs# events">
+                              #sharesWithEvents.no_mtgs#
                             </span>
                           </cfif>
                         </td>
@@ -154,7 +154,7 @@ SELECT DISTINCT
                         <!--- Optional Events Column --->
                         <cfif structKeyExists(variables, 'auditions') AND auditions>
                           <td class="text-center">
-                            <span class="badge badge-secondary">#sharesWithEvents.eventCount#</span>
+                            <span class="badge badge-secondary">#sharesWithEvents.no_mtgs#</span>
                           </td>
                         </cfif>
 
