@@ -102,7 +102,6 @@ WHERE r.isdeleted = 0
                                 <th>Company</th>
                                 <td>#IIF(isDefined('Company') AND len(trim(Company)), "Company", "''")#</td>
                             </tr>
-                   
 
                                      <cfif isDefined('phone') AND len(trim(phone))>
                                 <tr>
@@ -163,7 +162,8 @@ WHERE r.isdeleted = 0
                     <tbody>
                         <cfoutput query="qGetContactEvents" maxrows="10">
                             <tr>
-                                <td>
+                    
+                                <td style="white-space: nowrap;">
                                     <cfif isDefined('col1') AND isDate(col1)>
                                         #dateFormat(col1, "mmm d, yyyy")#
                                     <cfelse>
@@ -171,7 +171,7 @@ WHERE r.isdeleted = 0
                                     </cfif>
                                 </td>
                                 <td>#IIF(isDefined('col2') AND len(trim(col2)), "col2", "''")#</td>
-                                <td>#IIF(isDefined('col3') AND len(trim(col3)), "col3", "''")#</td>
+                                <td style="white-space: nowrap;">#IIF(isDefined('col3') AND len(trim(col3)), "col3", "''")#</td>
                    
                             </tr>
                         </cfoutput>
