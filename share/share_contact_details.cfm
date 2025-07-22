@@ -167,7 +167,7 @@ WHERE r.isdeleted = 0
     <div class="row mt-3">
         <div class="col-md-12">
             <h5 class="text-primary">Events History</h5>
-            <div class="table-responsive">
+            <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
                 <table class="table table-sm table-striped">
                     <thead>
                         <tr>
