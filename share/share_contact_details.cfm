@@ -23,7 +23,7 @@ FROM sharez where contactid = '#contactid#'
 --->
 <cftry>
     <cfquery name="qGetContactDetail" datasource="#dsn#">
-    SELECT s.name, s.company, s.title, s.wheremet, w.last_met, s.noteslog, s.lasteventtype,c.col3 as phone, c.col4 as email, c.contactid, c.col2 as tag
+    SELECT s.name, s.company, s.title, s.wheremet, s.last_met, s.noteslog, s.lasteventtype,c.col3 as phone, c.col4 as email, c.contactid, c.col2 as tag
     FROM sharez s
     INNER JOIN contacts_ss c on c.contactid = s.contactid
     WHERE s.contactid = <cfqueryparam value="#contactid#" cfsqltype="cf_sql_integer">
