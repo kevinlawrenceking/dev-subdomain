@@ -206,7 +206,6 @@ SELECT DISTINCT
                             <span class="text-muted">-</span>
                           </cfif>
                         </td>
-
      <!--- no_mtgs --->
                         <td>
                           <cfif len(trim(sharesWithEvents.no_mtgs))>
