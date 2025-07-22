@@ -32,27 +32,20 @@
 <!--- OPTIMIZED QUERY: Single JOIN to get shares with event counts --->
 <cfif structKeyExists(variables, 'new_userid') AND len(trim(new_userid))>
   <cfquery name="sharesWithEvents" datasource="#application.dsn#">
-    SELECT DISTINCT 
+SELECT DISTINCT 
       s.contactid,
       s.Name,
       s.Company,
       s.Title,
       s.Audition,
       s.last_met,
+      s.no_mtgs,
       s.lasteventtype,
       s.NotesLog,
       s.userid,
-s.no_mtgs
+      s.userHash 
+ 
     FROM sharez s
-    LEFT JOIN (
-      SELECT 
-        contactid, 
-        COUNT(eventid) AS eventCount
-      FROM events 
-      WHERE EventTypeName IN ('Meeting', 'Audition')
-        AND isDeleted = <cfqueryparam value="0" cfsqltype="cf_sql_bit">
-      GROUP BY contactid
-    ) e ON s.contactid = e.contactid
     WHERE s.userid = <cfqueryparam value="#new_userid#" cfsqltype="cf_sql_integer">
     ORDER BY s.Name
   </cfquery>
@@ -60,9 +53,9 @@ s.no_mtgs
   <!--- Fallback empty query if no valid userid --->
   <cfquery name="sharesWithEvents" datasource="#application.dsn#">
     SELECT 0 as contactid, '' as Name, '' as Company, '' as Title, 
-           '' as audition, '' as last_met, 
+           '' as audition, '' as last_met, 0 as no_Mtgs, 
            <cfqueryparam value="#CreateODBCDate(Now())#" cfsqltype="cf_sql_timestamp"> as lasteventtype, 
-           '' as NotesLog, 0 as userid, '' as userHash, 0 as no_Mtgs
+           '' as NotesLog, 0 as userid, '' as userHash
     WHERE 1=0
   </cfquery>
 </cfif>
