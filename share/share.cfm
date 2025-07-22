@@ -113,16 +113,16 @@ SELECT DISTINCT
                       <th class="text-center" style="width: 50px;" aria-label="Actions">
                         <i class="mdi mdi-eye" title="View Details"></i>
                       </th>
-                      <th nowrap>Name</th>
+                      <th style="white-space: nowrap;">Name</th>
                       <cfif structKeyExists(variables, 'auditions') AND auditions>
                         <th class="text-center" style="width: 100px;">Events</th>
                       </cfif>
-                      <th nowrap>Company</th>
-                      <th nowrap>Title</th>
-                      <th>Status</th>
-                      <th>Mtg. Type</th>
-                      <th>Last Met</th>
-                       <th>Total Mtgs.</th>
+                      <th style="white-space: nowrap;">Company</th>
+                      <th style="white-space: nowrap;">Title</th>
+                      <th style="white-space: nowrap;">Status</th>
+                      <th style="white-space: nowrap;">Mtg. Type</th>
+                      <th style="white-space: nowrap;">Last Met</th>
+                      <th style="white-space: nowrap;">Total Mtgs.</th>
                     </tr>
                   </thead>
                   <tbody>
