@@ -347,7 +347,7 @@ FROM sharez where userid = <cfqueryparam value="#new_userid#" cfsqltype="cf_sql_
 
     
     
-    <div id="wrapper" style="height:60px;">
+    <div id="wrapper" >
 
         <div class="container-fluid" >
             <cfinclude template="topmenu_main.cfm" />
