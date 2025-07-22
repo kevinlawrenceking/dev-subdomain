@@ -88,6 +88,7 @@
     <cfquery name="default" datasource="#application.dsn#" maxrows="1">
         SELECT 
             left(t.UUID,10) as userHash,
+            u.recordname,
             u.userid 
         FROM 
             taousers u inner join thrivecart t on t.id = u.customerid
