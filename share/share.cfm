@@ -92,7 +92,7 @@ SELECT DISTINCT
                       <span class="badge badge-info ml-3 px-3 py-2">#sharesWithEvents.recordCount# contacts</span>
                     </p>
                     <cfif structKeyExists(variables, 'u') AND len(trim(u))>
-                      <a href="https://#host#.theactorsoffice.com/share/export.cfm?u=#u#" 
+                      <a href="export.cfm?u=#u#" 
                          class="btn btn-primary">
                         <i class="fe-download mr-2"></i> Download Report
                       </a>
