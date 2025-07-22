@@ -87,7 +87,7 @@ FROM sharez where contactid = '#contactid#'
                             <tr>
                                 <th>Last Met</th>
                                 <td>
-                                    <cfif isDefined('last_met') AND isDate(whenmet)>
+                                    <cfif isDefined('last_met') AND isDate(last_met)>
                                         #dateFormat(last_met, "mmm d, yyyy")#
                                     </cfif>
                                 </td>
