@@ -132,8 +132,8 @@ SELECT DISTINCT
                         <td class="text-center">
                           <button type="button" 
                                   class="btn btn-sm btn-outline-primary view-contact-btn" 
-                                  data-bs-toggle="modal" 
-                                  data-bs-target="##contactDetailsModal"
+                                  data-toggle="modal" 
+                                  data-target="##contactDetailsModal"
                                   data-contactid="#sharesWithEvents.contactid#"
                                   data-contactname="#HTMLEditFormat(sharesWithEvents.Name)#"
                                   data-notes="#HTMLEditFormat(len(trim(sharesWithEvents.NotesLog)) ? replace(sharesWithEvents.NotesLog, '.', '.', 'all') : '')#"
@@ -244,25 +244,27 @@ SELECT DISTINCT
         <h5 class="modal-title" id="contactDetailsModalLabel">
           Contact Details
         </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
       </div>
       <div class="modal-body">
         <div class="spinner-border text-primary" role="status" aria-hidden="true">
           <span class="sr-only">Loading...</span>
         </div>
-        <span class="ms-2">Loading contact details...</span>
+        <span class="ml-2">Loading contact details...</span>
         
         <!--- Notes Section (will be shown after AJAX loads) --->
         <div id="notesSection" style="display: none;">
           <hr class="my-4">
-          <h6 class="mb-3"><i class="mdi mdi-note-text me-2"></i>Notes</h6>
+          <h6 class="mb-3"><i class="mdi mdi-note-text mr-2"></i>Notes</h6>
           <div id="notesContent">
             <!--- Notes content will be populated dynamically --->
           </div>
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -337,10 +339,10 @@ $(document).ready(function() {
     modalBody.html(
       '<div class="spinner-border text-primary" role="status" aria-hidden="true">' +
       '<span class="sr-only">Loading...</span></div>' +
-      '<span class="ms-2">Loading contact details...</span>' +
+      '<span class="ml-2">Loading contact details...</span>' +
       '<div id="notesSection" style="display: none;">' +
       '<hr class="my-4">' +
-      '<h6 class="mb-3"><i class="mdi mdi-note-text me-2"></i>Notes</h6>' +
+      '<h6 class="mb-3"><i class="mdi mdi-note-text mr-2"></i>Notes</h6>' +
       '<div id="notesContent"></div>' +
       '</div>'
     );
@@ -376,10 +378,10 @@ $(document).ready(function() {
     modalBody.html(
       '<div class="spinner-border text-primary" role="status" aria-hidden="true">' +
       '<span class="sr-only">Loading...</span></div>' +
-      '<span class="ms-2">Loading contact details...</span>' +
+      '<span class="ml-2">Loading contact details...</span>' +
       '<div id="notesSection" style="display: none;">' +
       '<hr class="my-4">' +
-      '<h6 class="mb-3"><i class="mdi mdi-note-text me-2"></i>Notes</h6>' +
+      '<h6 class="mb-3"><i class="mdi mdi-note-text mr-2"></i>Notes</h6>' +
       '<div id="notesContent"></div>' +
       '</div>'
     );
