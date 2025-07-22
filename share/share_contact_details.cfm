@@ -42,15 +42,41 @@ FROM sharez where contactid = '#contactid#'
 </cftry>
 
 <!--- Get contact events --->
+
+
+
+
+
+
 <cftry>
     <cfquery name="qGetContactEvents" datasource="#dsn#">
-        SELECT eventid, eventTitle, eventDescription, eventLocation, eventstatus, 
-               eventcreation, eventStart, eventStop, eventTypeName
-        FROM events
-        WHERE contactid = <cfqueryparam value="#contactid#" cfsqltype="cf_sql_integer">
-        AND EventTypeName IN ('Meeting', 'Audition')
-        AND isDeleted = 0
-        ORDER BY eventStart DESC
+SELECT DISTINCT 
+    p.projdate AS col1,
+    p.projname AS col2,
+    s.audstep AS col3
+FROM audprojects p
+INNER JOIN audroles r ON p.audprojectID = r.audprojectID
+INNER JOIN events a ON r.audroleid = a.audroleid
+INNER JOIN audsteps s ON a.audstepid = s.audstepid
+INNER JOIN audcontacts_auditions_xref x ON x.audprojectid = p.audprojectid
+INNER JOIN (
+    SELECT 
+        p.audprojectID, 
+        MAX(s.audstepid) AS max_audstepid
+    FROM audprojects p
+    INNER JOIN audroles r ON p.audprojectID = r.audprojectID
+    INNER JOIN events a ON r.audroleid = a.audroleid
+    INNER JOIN audsteps s ON a.audstepid = s.audstepid
+    INNER JOIN audcontacts_auditions_xref x ON x.audprojectid = p.audprojectid
+    WHERE r.isdeleted = 0 AND p.isDeleted = 0
+      AND x.contactid = #contactid#
+    GROUP BY p.audprojectID
+) AS max_values 
+  ON p.audprojectID = max_values.audprojectID 
+  AND s.audstepid = max_values.max_audstepid
+WHERE r.isdeleted = 0 
+  AND p.isDeleted = 0
+  AND x.contactid = #contactid#;
     </cfquery>
     
     <cfcatch type="any">
