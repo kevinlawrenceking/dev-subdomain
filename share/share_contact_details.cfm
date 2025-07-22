@@ -23,25 +23,39 @@ FROM sharez where contactid = '#contactid#'
 --->
 <cftry>
     <cfquery name="qGetContactDetail" datasource="#dsn#">
-    SELECT '/media/images/defaults/avatar.jpg' as default_share_avatar,s.name, s.company, s.title, 
-    s.wheremet, s.last_met, s.noteslog, s.lasteventtype,c.col3 as phone, c.col4 as email, 
-    c.contactid, c.col2 as tag,
-        '/media/users/' + CAST(c.userid AS VARCHAR) + '/contacts/' + CAST(c.contactid AS VARCHAR) + '/avatar.jpg?rev=' + CAST(FLOOR(RAND() * 90000 + 10000) AS VARCHAR) AS share_avatar
-    
-    FROM sharez s
-    INNER JOIN contacts_ss c on c.contactid = s.contactid
+    SELECT 
+    '/media/images/defaults/avatar.jpg' AS default_share_avatar,
+    s.name, 
+    s.company, 
+    s.title, 
+    s.wheremet, 
+    s.last_met, 
+    s.noteslog, 
+    s.lasteventtype,
+    c.col3 AS phone, 
+    c.col4 AS email, 
+    c.contactid, 
+    c.col2 AS tag,
+    CONCAT(
+        '/media/users/', c.userid, 
+        '/contacts/', c.contactid, 
+        '/avatar.jpg?rev=', FLOOR(RAND() * 90000 + 10000)
+    ) AS share_avatar
+FROM sharez s
+INNER JOIN contacts_ss c ON c.contactid = s.contactid
     WHERE s.contactid = <cfqueryparam value="#contactid#" cfsqltype="cf_sql_integer">
+
     </cfquery>
 
     <!--- If no record is found, create an empty query with the expected columns --->
     <cfif qGetContactDetail.recordCount EQ 0>
-        <cfset qGetContactDetail = QueryNew("name,company,title,wheremet,last_met,noteslog,lasteventtype,phone,email,contactid,tag", 
-                                          "varchar,varchar,varchar,varchar,timestamp,varchar,varchar,varchar,varchar,integer,varchar")>
+        <cfset qGetContactDetail = QueryNew("default_share_avatar,name,company,title,wheremet,last_met,noteslog,lasteventtype,phone, email,contactid,tag,share_avatar", 
+                                          "varchar,varchar,varchar,varchar,varchar,timestamp,varchar,varchar,varchar,varchar,integer,varchar,varchar,varchar")>
     </cfif>
     
     <cfcatch type="any">
-        <cfset qGetContactDetail = QueryNew("name,company,title,wheremet,last_met,noteslog,lasteventtype,phone,email,contactid,tag", 
-                                          "varchar,varchar,varchar,varchar,timestamp,varchar,varchar,varchar,varchar,integer,varchar")>
+         <cfset qGetContactDetail = QueryNew("default_share_avatar,name,company,title,wheremet,last_met,noteslog,lasteventtype,phone, email,contactid,tag,share_avatar", 
+                                          "varchar,varchar,varchar,varchar,varchar,timestamp,varchar,varchar,varchar,varchar,integer,varchar,varchar,varchar")>
     </cfcatch>
 </cftry>
 
