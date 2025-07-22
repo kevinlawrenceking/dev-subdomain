@@ -182,34 +182,41 @@ SELECT DISTINCT
                         <!--- Audition Status --->
                         <td>
                           <cfif len(trim(sharesWithEvents.Audition))>
-                            <cfset statusLower = lcase(trim(sharesWithEvents.Audition))>
-                            <cfset statusClass = "status-badge">
-                            <cfset statusIcon = "">
-                            
-                            <!--- Determine status-specific styling --->
-                            <cfif statusLower eq "callback">
-                              <cfset statusClass = statusClass & " status-callback">
-                              <cfset statusIcon = "mdi mdi-phone-incoming">
-                            <cfelseif statusLower eq "redirect">
-                              <cfset statusClass = statusClass & " status-redirect">
-                              <cfset statusIcon = "mdi mdi-swap-horizontal">
-                            <cfelseif statusLower eq "audition">
-                              <cfset statusClass = statusClass & " status-audition">
-                              <cfset statusIcon = "mdi mdi-microphone">
-                            <cfelseif statusLower eq "booking">
-                              <cfset statusClass = statusClass & " status-booking">
-                              <cfset statusIcon = "mdi mdi-thumb-up">
+                            <!--- Check if the field already contains HTML markup --->
+                            <cfif findNoCase("<span", sharesWithEvents.Audition) OR findNoCase("<badge", sharesWithEvents.Audition)>
+                              <!--- Output HTML directly without escaping --->
+                              #sharesWithEvents.Audition#
                             <cfelse>
-                              <cfset statusClass = statusClass & " badge-info">
-                              <cfset statusIcon = "mdi mdi-information">
-                            </cfif>
-                            
-                            <span class="#statusClass#">
-                              <cfif len(statusIcon)>
-                                <i class="#statusIcon#"></i>
+                              <!--- Create badge for plain text status --->
+                              <cfset statusLower = lcase(trim(sharesWithEvents.Audition))>
+                              <cfset statusClass = "status-badge">
+                              <cfset statusIcon = "">
+                              
+                              <!--- Determine status-specific styling --->
+                              <cfif statusLower eq "callback">
+                                <cfset statusClass = statusClass & " status-callback">
+                                <cfset statusIcon = "mdi mdi-phone-incoming">
+                              <cfelseif statusLower eq "redirect">
+                                <cfset statusClass = statusClass & " status-redirect">
+                                <cfset statusIcon = "mdi mdi-swap-horizontal">
+                              <cfelseif statusLower eq "audition">
+                                <cfset statusClass = statusClass & " status-audition">
+                                <cfset statusIcon = "mdi mdi-microphone">
+                              <cfelseif statusLower eq "booking">
+                                <cfset statusClass = statusClass & " status-booking">
+                                <cfset statusIcon = "mdi mdi-thumb-up">
+                              <cfelse>
+                                <cfset statusClass = statusClass & " badge-info">
+                                <cfset statusIcon = "mdi mdi-information">
                               </cfif>
-                              #HTMLEditFormat(sharesWithEvents.Audition)#
-                            </span>
+                              
+                              <span class="#statusClass#">
+                                <cfif len(statusIcon)>
+                                  <i class="#statusIcon#"></i>
+                                </cfif>
+                                #HTMLEditFormat(sharesWithEvents.Audition)#
+                              </span>
+                            </cfif>
                           <cfelse>
                             <span class="text-muted">-</span>
                           </cfif>
