@@ -23,7 +23,11 @@ FROM sharez where contactid = '#contactid#'
 --->
 <cftry>
     <cfquery name="qGetContactDetail" datasource="#dsn#">
-    SELECT s.name, s.company, s.title, s.wheremet, s.last_met, s.noteslog, s.lasteventtype,c.col3 as phone, c.col4 as email, c.contactid, c.col2 as tag
+    SELECT '/media/images/defaults/avatar.jpg' as default_share_avatar,s.name, s.company, s.title, 
+    s.wheremet, s.last_met, s.noteslog, s.lasteventtype,c.col3 as phone, c.col4 as email, 
+    c.contactid, c.col2 as tag,
+        '/media/users/' + CAST(c.userid AS VARCHAR) + '/contacts/' + CAST(c.contactid AS VARCHAR) + '/avatar.jpg?rev=' + CAST(FLOOR(RAND() * 90000 + 10000) AS VARCHAR) AS share_avatar
+    
     FROM sharez s
     INNER JOIN contacts_ss c on c.contactid = s.contactid
     WHERE s.contactid = <cfqueryparam value="#contactid#" cfsqltype="cf_sql_integer">
