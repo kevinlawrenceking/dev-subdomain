@@ -356,32 +356,13 @@ FROM sharez where userid = <cfqueryparam value="#new_userid#" cfsqltype="cf_sql_
         <div class="container-fluid">
             <cfinclude template="topmenu_main.cfm" />
              <div class="logo-box">
-            <a href="/app/" class="logo logo-dark text-center">
-                <span class="logo-sm"><cfoutput> 
-                    <img src="/media-#dsn#/images/logo-sm.png" alt="" height="30">
-                    <!--- <span class="logo-lg-text-light">UBold</span> --->
-                </cfoutput> </span>
-
-
-
-                
-<cfoutput>
- 
-
-                <span class="logo-lg">
-                    <img src="/media-#dsn#/images/logo-sm.png" alt="" height="30">
-                    <!--- <span class="logo-lg-text-light">U</span> --->
-                </span>
-            </a>
+   
+           <Cfoutput>     
     
-            <a href="/app/" class="logo logo-light text-center">
-                <span class="logo-sm">
-                    <img src="/media-#dsn#/images/logo-sm.png" alt="" height="30">
-                </span>
                 <span class="logo-lg">
                     <img src="/media-#dsn#/images/logo-light.png" alt="" height="30">
                 </span>
-            </a>
+
 
             </cfoutput>
         </div>
