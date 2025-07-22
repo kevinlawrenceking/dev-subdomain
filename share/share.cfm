@@ -117,7 +117,7 @@ SELECT DISTINCT
                       <cfif structKeyExists(variables, 'auditions') AND auditions>
                         <th class="text-center" style="width: 100px;">Events</th>
                       </cfif>
-                      <th>Company</th>
+                      <th nowrap>Company</th>
                       <th>Title</th>
                       <th>Status</th>
                       <th>Mtg. Type</th>
