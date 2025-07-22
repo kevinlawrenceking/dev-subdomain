@@ -131,9 +131,12 @@ SELECT DISTINCT
                         <!--- View Details Button --->
                         <td class="text-center">
                           <button type="button" 
-                                  class="btn btn-sm btn-outline-primary" 
+                                  class="btn btn-sm btn-outline-primary view-contact-btn" 
                                   data-bs-toggle="modal" 
-                                  data-bs-target="##contactModal#sharesWithEvents.contactid#"
+                                  data-bs-target="##contactDetailsModal"
+                                  data-contactid="#sharesWithEvents.contactid#"
+                                  data-contactname="#HTMLEditFormat(sharesWithEvents.Name)#"
+                                  data-notes="#HTMLEditFormat(len(trim(sharesWithEvents.NotesLog)) ? replace(sharesWithEvents.NotesLog, '.', '.', 'all') : '')#"
                                   title="View Contact Details"
                                   aria-label="View details for #HTMLEditFormat(sharesWithEvents.Name)#">
                             <i class="mdi mdi-eye"></i>
@@ -232,54 +235,42 @@ SELECT DISTINCT
   </div>
 </div>
 
-<!--- Contact Detail Modals (Generated Once) --->
-<cfoutput>
-  <cfloop query="sharesWithEvents">
-    <div class="modal fade" 
-         id="contactModal#sharesWithEvents.contactid#" 
-         tabindex="-1" 
-         role="dialog" 
-         aria-labelledby="contactModalLabel#sharesWithEvents.contactid#" 
-         aria-hidden="true">
-      <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="contactModalLabel#sharesWithEvents.contactid#">
-              Contact Details: #HTMLEditFormat(sharesWithEvents.Name)#
-            </h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <div class="spinner-border text-primary" role="status" aria-hidden="true">
-              <span class="sr-only">Loading...</span>
-            </div>
-            <span class="ms-2">Loading contact details...</span>
-            
-            <!--- Notes Section (will be shown after AJAX loads) --->
-            <div id="notesSection#sharesWithEvents.contactid#" style="display: none;">
-              <hr class="my-4">
-              <h6 class="mb-3"><i class="mdi mdi-note-text me-2"></i>Notes</h6>
-              <cfset cleanNotes = len(trim(sharesWithEvents.NotesLog)) ? 
-                                 replace(sharesWithEvents.NotesLog, "..", ".", "all") : "">
-              <cfif len(cleanNotes) GT 0>
-                <div class="alert alert-light border">
-                  <p class="mb-0">#HTMLEditFormat(cleanNotes)#</p>
-                </div>
-              <cfelse>
-                <div class="alert alert-light border text-muted">
-                  <p class="mb-0"><em>No notes available for this contact.</em></p>
-                </div>
-              </cfif>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+<!--- Single Reusable Contact Detail Modal --->
+<div class="modal fade" 
+     id="contactDetailsModal" 
+     tabindex="-1" 
+     role="dialog" 
+     aria-labelledby="contactDetailsModalLabel" 
+     aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="contactDetailsModalLabel">
+          Contact Details
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="spinner-border text-primary" role="status" aria-hidden="true">
+          <span class="sr-only">Loading...</span>
+        </div>
+        <span class="ms-2">Loading contact details...</span>
+        
+        <!--- Notes Section (will be shown after AJAX loads) --->
+        <div id="notesSection" style="display: none;">
+          <hr class="my-4">
+          <h6 class="mb-3"><i class="mdi mdi-note-text me-2"></i>Notes</h6>
+          <div id="notesContent">
+            <!--- Notes content will be populated dynamically --->
           </div>
         </div>
       </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
     </div>
-  </cfloop>
-</cfoutput>
+  </div>
+</div>
 
 <!--- Optimized DataTables Configuration --->
 <script>
@@ -332,36 +323,68 @@ $(document).ready(function() {
     }
   });
   
-  // AJAX Modal Loading
-  <cfoutput>
-  <cfloop query="sharesWithEvents">
-    $('##contactModal#sharesWithEvents.contactid#').on('show.bs.modal', function(event) {
-      var modal = $(this);
-      var modalBody = modal.find('.modal-body');
-      
-      // Load contact details via AJAX
-      modalBody.load('share_contact_details.cfm?contactid=#sharesWithEvents.contactid#', function(response, status) {
-        if (status === "error") {
-          modalBody.html('<div class="alert alert-danger">Error loading contact details. Please try again.</div>');
-        } else {
-          // Show the notes section after successful load
-          $('##notesSection#sharesWithEvents.contactid#').show();
-        }
-      });
-    });
-  </cfloop>
-  </cfoutput>
-  
-  // Reset modal content when hidden
-  $('.modal').on('hidden.bs.modal', function() {
-    $(this).find('.modal-body').html(
+  // Single Modal AJAX Loading
+  $('#contactDetailsModal').on('show.bs.modal', function(event) {
+    var button = $(event.relatedTarget); // Button that triggered the modal
+    var contactId = button.data('contactid');
+    var contactName = button.data('contactname');
+    var contactNotes = button.data('notes');
+    
+    var modal = $(this);
+    var modalBody = modal.find('.modal-body');
+    var modalTitle = modal.find('.modal-title');
+    
+    // Update modal title
+    modalTitle.text('Contact Details: ' + contactName);
+    
+    // Reset modal content to loading state
+    modalBody.html(
       '<div class="spinner-border text-primary" role="status" aria-hidden="true">' +
       '<span class="sr-only">Loading...</span></div>' +
       '<span class="ms-2">Loading contact details...</span>' +
-      '<div id="notesSection' + $(this).attr('id').replace('contactModal', '') + '" style="display: none;">' +
+      '<div id="notesSection" style="display: none;">' +
       '<hr class="my-4">' +
-      '<h6 class="mb-3"><i class="fe-edit-3 me-2"></i>Notes</h6>' +
-      $(this).find('[id^="notesSection"]').html() +
+      '<h6 class="mb-3"><i class="mdi mdi-note-text me-2"></i>Notes</h6>' +
+      '<div id="notesContent"></div>' +
+      '</div>'
+    );
+    
+    // Load contact details via AJAX
+    modalBody.load('share_contact_details.cfm?contactid=' + contactId, function(response, status) {
+      if (status === "error") {
+        modalBody.html('<div class="alert alert-danger">Error loading contact details. Please try again.</div>');
+      } else {
+        // Populate and show the notes section
+        var notesHtml = '';
+        if (contactNotes && contactNotes.trim() !== '') {
+          notesHtml = '<div class="alert alert-light border"><p class="mb-0">' + contactNotes + '</p></div>';
+        } else {
+          notesHtml = '<div class="alert alert-light border text-muted"><p class="mb-0"><em>No notes available for this contact.</em></p></div>';
+        }
+        
+        $('#notesContent').html(notesHtml);
+        $('#notesSection').show();
+      }
+    });
+  });
+  
+  // Reset modal content when hidden
+  $('#contactDetailsModal').on('hidden.bs.modal', function() {
+    var modalBody = $(this).find('.modal-body');
+    var modalTitle = $(this).find('.modal-title');
+    
+    // Reset title
+    modalTitle.text('Contact Details');
+    
+    // Reset content to loading state
+    modalBody.html(
+      '<div class="spinner-border text-primary" role="status" aria-hidden="true">' +
+      '<span class="sr-only">Loading...</span></div>' +
+      '<span class="ms-2">Loading contact details...</span>' +
+      '<div id="notesSection" style="display: none;">' +
+      '<hr class="my-4">' +
+      '<h6 class="mb-3"><i class="mdi mdi-note-text me-2"></i>Notes</h6>' +
+      '<div id="notesContent"></div>' +
       '</div>'
     );
   });
