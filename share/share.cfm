@@ -397,7 +397,7 @@ $(document).ready(function() {
     var modalTitle = modal.find('.modal-title');
     
     // Update modal title
-    modalTitle.text(contactName);
+    modalTitle.text('Contact Details');
     
     // Reset modal content to loading state
     modalBody.html(

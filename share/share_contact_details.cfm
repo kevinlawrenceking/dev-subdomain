@@ -117,6 +117,10 @@ WHERE r.isdeleted = 0
                              style="width: 120px; height: 120px; object-fit: cover;" 
                              alt="Contact Avatar" 
                              onerror="this.src='#default_share_avatar#';">
+                        <h4 class="mt-3 mb-1 text-primary">#HTMLEditFormat(name)#</h4>
+                        <cfif len(trim(tag))>
+                            <small class="text-muted d-block">#HTMLEditFormat(tag)#</small>
+                        </cfif>
                     </div>
                     
                     <!--- Contact Details Column (2/3 width) --->
