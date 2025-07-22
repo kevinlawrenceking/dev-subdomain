@@ -120,7 +120,7 @@ SELECT DISTINCT
                       <th>Company</th>
                       <th>Title</th>
                       <th>Status</th>
-                      <th>Type</th>
+                      <th>Mtg. Type</th>
                       <th>Last Met</th>
                        <th>Total Mtgs.</th>
                     </tr>
