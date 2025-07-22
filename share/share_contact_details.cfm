@@ -68,31 +68,17 @@ FROM sharez where contactid = '#contactid#'
                 <tbody>
                     <cfif qGetContactDetail.recordCount GT 0>
                         <cfoutput query="qGetContactDetail">
-                            <tr>
-                                <th style="width:30%">Type</th>
-                                <td>#IIF(isDefined('lasteventtype') AND len(trim(lasteventtype)), "lasteventtype", "''")#</td>
+                                   <tr>
+                                <th>Title</th>
+                                <td>#IIF(isDefined('Title') AND len(trim(Title)), "Title", "''")#</td>
                             </tr>
                        
                                 <th>Company</th>
                                 <td>#IIF(isDefined('Company') AND len(trim(Company)), "Company", "''")#</td>
                             </tr>
-                            <tr>
-                                <th>Title</th>
-                                <td>#IIF(isDefined('Title') AND len(trim(Title)), "Title", "''")#</td>
-                            </tr>
-                            <tr>
-                                <th>Where Met</th>
-                                <td>#IIF(isDefined('Wheremet') AND len(trim(Wheremet)), "Wheremet", "''")#</td>
-                            </tr>
-                            <tr>
-                                <th>Last Met</th>
-                                <td>
-                                    <cfif isDefined('last_met') AND isDate(last_met)>
-                                        #dateFormat(last_met, "mmm d, yyyy")#
-                                    </cfif>
-                                </td>
-                            </tr>
-                            <cfif isDefined('phone') AND len(trim(phone))>
+                   
+
+                                     <cfif isDefined('phone') AND len(trim(phone))>
                                 <tr>
                                     <th>Phone</th>
                                     <td>#phone#</td>
@@ -104,6 +90,23 @@ FROM sharez where contactid = '#contactid#'
                                     <td>#email#</td>
                                 </tr>
                             </cfif>
+                            <tr>
+                                <th>Originally Met</th>
+                                <td>#IIF(isDefined('Wheremet') AND len(trim(Wheremet)), "Wheremet", "''")#</td>
+                            </tr>
+                            <tr>
+                                <th>Last Mtg.</th>
+                                <td>
+                                    <cfif isDefined('last_met') AND isDate(last_met)>
+                                        #dateFormat(last_met, "mmm d, yyyy")#
+                                    </cfif>
+                                </td>
+                            </tr>
+                              <tr>
+                                <th style="width:30%">Last Mtg. Type</th>
+                                <td>#IIF(isDefined('lasteventtype') AND len(trim(lasteventtype)), "lasteventtype", "''")#</td>
+                            </tr>
+                   
                         </cfoutput>
                     <cfelse>
                         <tr>
