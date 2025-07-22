@@ -324,8 +324,8 @@ FROM sharez where userid = <cfqueryparam value="#new_userid#" cfsqltype="cf_sql_
 }
 
 .badge-info {
-    color: #fff;
-    background-color: #406E8E;
+    color: #1abc9c;
+    background-color: #1abc9c;
 }
 
 .btn-outline-primary {
