@@ -38,8 +38,8 @@
       s.Company,
       s.Title,
       s.Audition,
-      s.WhereMet,
-      s.WhenMet,
+      s.last_met,
+      s.lasteventtype,
       s.NotesLog,
       s.userid,
 
@@ -61,8 +61,8 @@
   <!--- Fallback empty query if no valid userid --->
   <cfquery name="sharesWithEvents" datasource="#application.dsn#">
     SELECT 0 as contactid, '' as Name, '' as Company, '' as Title, 
-           '' as audition, '' as WhereMet, 
-           <cfqueryparam value="#CreateODBCDate(Now())#" cfsqltype="cf_sql_timestamp"> as WhenMet, 
+           '' as audition, '' as last_met, 
+           <cfqueryparam value="#CreateODBCDate(Now())#" cfsqltype="cf_sql_timestamp"> as lasteventtype, 
            '' as NotesLog, 0 as userid, '' as userHash, 0 as eventCount
     WHERE 1=0
   </cfquery>
@@ -128,8 +128,9 @@
                       <th>Company</th>
                       <th>Title</th>
                       <th>Status</th>
-                      <th>Where Met</th>
-                      <th>When Met</th>
+                      <th>Type</th>
+                      <th>Last Met</th>
+                       <th>Total Mtgs.</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -194,8 +195,8 @@
 
                         <!--- Where Met --->
                         <td>
-                          <cfif len(trim(sharesWithEvents.WhereMet))>
-                            #HTMLEditFormat(sharesWithEvents.WhereMet)#
+                          <cfif len(trim(sharesWithEvents.last_met))>
+                            #HTMLEditFormat(sharesWithEvents.last_met)#
                           <cfelse>
                             <span class="text-muted">-</span>
                           </cfif>
@@ -203,14 +204,28 @@
 
                         <!--- When Met --->
                         <td>
-                          <cfif isDate(sharesWithEvents.WhenMet)>
-                            <time datetime="#dateFormat(sharesWithEvents.WhenMet, 'yyyy-mm-dd')#">
-                              #dateFormat(sharesWithEvents.WhenMet, 'medium')#
+                          <cfif isDate(sharesWithEvents.lasteventtype)>
+                            <time datetime="#dateFormat(sharesWithEvents.lasteventtype, 'yyyy-mm-dd')#">
+                              #dateFormat(sharesWithEvents.lasteventtype, 'medium')#
                             </time>
                           <cfelse>
                             <span class="text-muted">-</span>
                           </cfif>
                         </td>
+
+
+     <!--- no_mtgs --->
+                        <td>
+                          <cfif len(trim(sharesWithEvents.no_mtgs))>
+                            #sharesWithEvents.no_mtgs#
+                          <cfelse>
+                            <span class="text-muted">-</span>
+                          </cfif>
+                        </td>
+
+
+
+
                       </tr>
                     </cfoutput>
                   </tbody>
