@@ -13,13 +13,13 @@
 </cfif>
 
 <!--- Get all active users --->
-<cfquery name="getAllUsers" datasource="#application.dsn#">
+<cfquery name="getAllUsers" datasource="#application.dsn#" maxrows="10">
     SELECT userid, userfirstname, userlastname, 
            CONCAT(userfirstname, ' ', userlastname) as fullname,
            userstatus, issetup, userEmail
     FROM taousers 
     WHERE userstatus = 'Active'
-    ORDER BY userlastname, userfirstname
+    ORDER BY userid desc
 </cfquery>
 
 <!--- Define all user-specific tables to check --->
