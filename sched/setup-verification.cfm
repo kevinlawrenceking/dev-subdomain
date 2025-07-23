@@ -88,7 +88,13 @@
                 </p>
                 <p style="color: blue; font-size: 10px;">
                     SQL: SELECT COUNT(*) as recordCount FROM #table.name# WHERE userid = #getAllUsers.userid#
-                </p>
+              
+            <cfquery name="x" datasource="#application.dsn#">
+                SELECT COUNT(*) as recordCount 
+                FROM audgenres_user
+                WHERE userid = <cfqueryparam value="#getAllUsers.userid#" cfsqltype="CF_SQL_INTEGER">
+            </cfquery>
+audgenres_user recordcount: #x.recordcount#
                 </cfoutput>
             </cfif>
             
