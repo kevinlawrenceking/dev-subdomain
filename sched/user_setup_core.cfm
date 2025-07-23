@@ -20,7 +20,7 @@
     // Debug helper function
     function debugLog(message, showCondition = variables.dbug == "Y") {
         if (showCondition) {
-            writeOutput("<p style='color: ##666; font-size: 12px;'>" & htmlEditFormat(message) & "</p>");
+            writeOutput("<p style='color: ##666; font-size: 12px;'>" & message & "</p>");
         }
     }
     
