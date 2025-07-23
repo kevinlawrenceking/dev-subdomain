@@ -317,13 +317,21 @@
     debugLog("<h3>Syncing Lookup Tables</h3>");
     
     // Audition-related tables
+    debugLog("<h5>auddialects → auddialects_user</h5>");
     syncLookupTable("auddialects", "auddialects_user", "auddialectid", "auddialect", "audcatid");
+    
+    debugLog("<h5>audgenres → audgenres_user</h5>");
     syncLookupTable("audgenres", "audgenres_user", "audgenreid", "audgenre", "audcatid");
+    
+    debugLog("<h5>audnetworks → audnetworks_user</h5>");
     syncLookupTable("audnetworks", "audnetworks_user", "networkid", "network", "audcatid");
+    
+    debugLog("<h5>audopencalloptions → audopencalloptions_user</h5>");
     syncLookupTable("audopencalloptions", "audopencalloptions_user", "", "opencallname", "", "1=1");
     
     // Special debugging for audplatforms_user
     try {
+        debugLog("<h5>audplatforms → audplatforms_user (with debugging)</h5>");
         debugLog("<strong>DEBUGGING audplatforms_user</strong>");
         
         // Count master records
@@ -356,21 +364,31 @@
         debugLog("Error debugging audplatforms_user: " & e.message);
     }
     
+    debugLog("<h5>audtones → audtones_user</h5>");
     syncLookupTable("audtones", "audtones_user", "toneid", "tone", "audcatid");
     
     // Event and gender tables
+    debugLog("<h5>eventtypes → eventtypes_user</h5>");
     syncLookupTable("eventtypes", "eventtypes_user", "", "eventTypeName", "eventtypedescription, eventtypecolor", "1=1");
+    
+    debugLog("<h5>genderpronouns → genderpronouns_users</h5>");
     syncLookupTable("genderpronouns", "genderpronouns_users", "", "genderpronoun", "genderpronounplural", "1=1");
     
     // Item and site tables
+    debugLog("<h5>itemtypes → itemtypes_user</h5>");
     syncLookupTable("itemtypes", "itemtypes_user", "typeid", "valuetype", "typeicon");
+    
+    debugLog("<h5>tags → tags_user</h5>");
     syncLookupTable("tags", "tags_user", "", "tagname", "", "1=1");
+    
+    debugLog("<h5>sitetypes_master → sitetypes_user</h5>");
     syncLookupTable("sitetypes_master", "sitetypes_user", "", "sitetypename", "sitetypedescription");
 </cfscript>
 
 <cfscript>
     // Special handling for audquestions (needs qorder field checking)
     try {
+        debugLog("<h5>audquestions_default → audquestions_user (special handling)</h5>");
         debugLog("<strong>audquestions_user</strong>");
         questionsSQL = "SELECT qtypeid, qtext, qorder 
             FROM audquestions_default 
@@ -418,6 +436,7 @@
     
     // Special handling for audsubmitsites (has catlist field)
     try {
+        debugLog("<h5>audsubmitsites → audsubmitsites_user (special handling)</h5>");
         debugLog("<strong>audsubmitsites_user</strong>");
         submitsitesQuery = queryExecute("
             SELECT submitsitename, catlist 
@@ -456,6 +475,7 @@
     
     // Special handling for itemcatxref (complex join logic)
     try {
+        debugLog("<h5>itemcategory + itemcatxref → itemcatxref_user (complex join)</h5>");
         debugLog("<strong>itemcatxref_user</strong>");
         categoryQuery = queryExecute("
             SELECT DISTINCT c.catid, i.valuetype, i.typeid as master_typeid
@@ -511,6 +531,7 @@
     }
     
     // Sync panels from master
+    debugLog("<h5>pgpanels_master → pgpanels_user</h5>");
     syncLookupTable("pgpanels_master", "pgpanels_user", "", "pnFilename", "pnTitle, pnOrderNo, pnColXl, pnColMd, pnDescription", "1=1");
     
     // Update tag properties after syncing
@@ -558,6 +579,7 @@
 <cfscript>
     // Handle sitelinks with proper relationship to sitetypes
     try {
+        debugLog("<h5>sitelinks_master → sitelinks_user (with sitetypes relationship)</h5>");
         debugLog("<strong>sitelinks_user</strong>");
         sitelinksSQL = "SELECT s.id, s.sitename, s.siteURL, s.siteicon, s.sitetypeid, t.sitetypename
             FROM sitelinks_master s
