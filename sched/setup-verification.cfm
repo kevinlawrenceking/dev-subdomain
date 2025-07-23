@@ -67,8 +67,8 @@
                 WHERE userid = <cfqueryparam value="#getAllUsers.userid#" cfsqltype="CF_SQL_INTEGER">
             </cfquery>
             
-            <!--- Get the actual COUNT value from the first row --->
-            <cfset actualCount = getTableCount.recordCount[1]>
+            <!--- Get the actual COUNT value directly --->
+            <cfset actualCount = getTableCount.recordCount>
             
             <cfset currentUser.tableCounts[table.name] = actualCount>
             <cfset currentUser.totalRecords += actualCount>
