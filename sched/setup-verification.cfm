@@ -22,7 +22,7 @@
     FROM taousers 
     WHERE userstatus = 'Active'
 
-    <cfif #id# is not "">
+    <cfif #cx# is not "">
         AND userid = <cfqueryparam value="#cx#" cfsqltype="CF_SQL_INTEGER">
     </cfif>
     ORDER BY userid desc
