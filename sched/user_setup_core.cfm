@@ -295,14 +295,16 @@
                 SELECT tagname FROM tags WHERE IsTeam = 1
             )";
         
-        queryExecute(teamTagsSQL, {
-            isteam: {value: 1, cfsqltype: "CF_SQL_BIT"},
-            userid: {value: variables.userid, cfsqltype: "CF_SQL_INTEGER"}
-        }, {datasource: variables.dsn});
+        teamTagsParams = [
+            {value: 1, cfsqltype: "CF_SQL_BIT"},
+            {value: variables.userid, cfsqltype: "CF_SQL_INTEGER"}
+        ];
+        
+        queryExecute(teamTagsSQL, teamTagsParams, {datasource: variables.dsn});
         
         debugLog("Updated team tags for user");
     } catch (any e) {
-        logDatabaseError("Update Team Tags", teamTagsSQL, "cfqueryparam used", e);
+        logDatabaseError("Update Team Tags", teamTagsSQL, teamTagsParams, e);
     }
     
     // Sync all lookup tables using the generic function
@@ -488,13 +490,15 @@
                 SET IsTeam = ?, IsCasting = ?, tagtype = ? 
                 WHERE tagname = ? AND userid = ?";
             
-            queryExecute(updateSQL, {
-                isteam: {value: (tag.IsTeam ? 1 : 0), cfsqltype: "CF_SQL_BIT"},
-                iscasting: {value: (tag.IsCasting ? 1 : 0), cfsqltype: "CF_SQL_BIT"},
-                tagtype: {value: tag.tagtype, cfsqltype: "CF_SQL_VARCHAR"},
-                tagname: {value: tag.tagname, cfsqltype: "CF_SQL_VARCHAR"},
-                userid: {value: variables.userid, cfsqltype: "CF_SQL_INTEGER"}
-            }, {datasource: variables.dsn});
+            updateParams = [
+                {value: (tag.IsTeam ? 1 : 0), cfsqltype: "CF_SQL_BIT"},
+                {value: (tag.IsCasting ? 1 : 0), cfsqltype: "CF_SQL_BIT"},
+                {value: tag.tagtype, cfsqltype: "CF_SQL_VARCHAR"},
+                {value: tag.tagname, cfsqltype: "CF_SQL_VARCHAR"},
+                {value: variables.userid, cfsqltype: "CF_SQL_INTEGER"}
+            ];
+            
+            queryExecute(updateSQL, updateParams, {datasource: variables.dsn});
         }
         debugLog("Updated tag properties for " & tagUpdateQuery.recordCount & " tags");
     } catch (any e) {
@@ -505,7 +509,7 @@
             failedParams = [];
         } else if (isDefined("updateSQL")) {
             failedSQL = updateSQL;
-            failedParams = ["Using named parameters with cfqueryparam"];
+            failedParams = updateParams;
         }
         logDatabaseError("Update Tag Properties", failedSQL, failedParams, e);
     }
