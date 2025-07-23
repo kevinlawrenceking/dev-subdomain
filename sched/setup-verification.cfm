@@ -267,11 +267,13 @@
                             </div>
                             <div class="card-body">
                                 <div class="row">
+                                    <cfoutput>
                                     <cfloop array="#userTables#" index="table">
                                         <div class="col-md-6 col-lg-4 mb-2">
                                             <strong>#table.name#:</strong> #table.description#
                                         </div>
                                     </cfloop>
+                                    </cfoutput>
                                 </div>
                             </div>
                         </div>
