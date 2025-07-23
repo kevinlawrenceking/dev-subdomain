@@ -505,7 +505,7 @@
             failedParams = [];
         } else if (isDefined("updateSQL")) {
             failedSQL = updateSQL;
-            failedParams = updateParams;
+            failedParams = ["Using named parameters with cfqueryparam"];
         }
         logDatabaseError("Update Tag Properties", failedSQL, failedParams, e);
     }
