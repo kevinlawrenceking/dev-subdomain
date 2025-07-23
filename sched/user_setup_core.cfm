@@ -301,6 +301,87 @@
         
         return insertCount;
     }
+    
+    // Specialized function for tables with category fields (like audgenres with audcatid)
+    function syncLookupTableWithCategory(masterTable, userTable, keyField, valueField, categoryField, whereClause = "isdeleted = 0") {
+        var insertCount = 0;
+        var debugTitle = arguments.userTable;
+        var masterSQL = "";
+        var checkSQL = "";
+        var insertSQL = "";
+        
+        try {
+            // Build SELECT fields list
+            var selectFields = arguments.valueField & ", " & arguments.categoryField;
+            if (len(arguments.keyField)) {
+                selectFields = arguments.keyField & ", " & selectFields;
+            }
+            
+            // Build and execute master query
+            masterSQL = "SELECT " & selectFields & " FROM " & arguments.masterTable & 
+                (len(arguments.whereClause) ? " WHERE " & arguments.whereClause : "");
+            
+            var masterQuery = queryExecute(masterSQL, {}, {datasource: variables.dsn});
+            
+            for (var row in masterQuery) {
+                // Check if record exists for user WITH CATEGORY
+                checkSQL = "SELECT COUNT(*) as countValue 
+                    FROM " & arguments.userTable & " 
+                    WHERE " & arguments.valueField & " = ? AND " & arguments.categoryField & " = ? AND userid = ?";
+                var checkParams = [row[arguments.valueField], row[arguments.categoryField], variables.userid];
+                
+                var checkQuery = queryExecute(checkSQL, checkParams, {datasource: variables.dsn});
+                
+                // Debug for audgenres_user specifically
+                if (arguments.userTable == "audgenres_user") {
+                    debugLog("Checking if '" & row[arguments.valueField] & "' with audcatid=" & row[arguments.categoryField] & " exists for user " & variables.userid);
+                    debugLog("Check query result: actual count=" & checkQuery.countValue);
+                }
+                
+                if (checkQuery.countValue == 0) {
+                    // Execute insert
+                    insertSQL = "INSERT INTO " & arguments.userTable & " (" & arguments.valueField & ", " & arguments.categoryField & ", userid) 
+                        VALUES (?, ?, ?)";
+                    var insertParams = [row[arguments.valueField], row[arguments.categoryField], variables.userid];
+                    
+                    queryExecute(insertSQL, insertParams, {datasource: variables.dsn});
+                    
+                    insertCount++;
+                    if (insertCount == 1) {
+                        debugLog("<strong>" & debugTitle & " (with category consideration)</strong>");
+                    }
+                    debugLog("Added: " & row[arguments.valueField] & " (audcatid: " & row[arguments.categoryField] & ")");
+                }
+            }
+            
+            if (insertCount > 0) {
+                debugLog("Total " & debugTitle & " records added: " & insertCount);
+            }
+            
+        } catch (any e) {
+            // Determine which operation failed and log detailed error
+            var failedSQL = "";
+            var failedParams = [];
+            
+            if (len(masterSQL) && !isDefined("masterQuery")) {
+                failedSQL = masterSQL;
+                failedParams = [];
+                logDatabaseError("syncLookupTableWithCategory - Master Query (" & arguments.masterTable & ")", failedSQL, failedParams, e);
+            } else if (len(checkSQL)) {
+                failedSQL = checkSQL;
+                failedParams = checkParams;
+                logDatabaseError("syncLookupTableWithCategory - Check Query (" & arguments.userTable & ")", failedSQL, failedParams, e);
+            } else if (len(insertSQL)) {
+                failedSQL = insertSQL;
+                failedParams = insertParams;
+                logDatabaseError("syncLookupTableWithCategory - Insert Query (" & arguments.userTable & ")", failedSQL, failedParams, e);
+            } else {
+                logDatabaseError("syncLookupTableWithCategory - Unknown (" & arguments.masterTable & " -> " & arguments.userTable & ")", "Unknown SQL", [], e);
+            }
+        }
+        
+        return insertCount;
+    }
 </cfscript>
 
 <cfscript>
@@ -351,8 +432,8 @@
         missingCatQuery = queryExecute("SELECT COUNT(*) as countValue FROM audgenres WHERE isdeleted = 0 AND (audcatid IS NULL OR audcatid = '')", {}, {datasource: variables.dsn});
         debugLog("Master audgenres with missing audcatid: " & missingCatQuery.countValue);
         
-        // Run the sync
-        insertedCount = syncLookupTable("audgenres", "audgenres_user", "audgenreid", "audgenre", "audcatid");
+        // Run the sync with proper audcatid consideration
+        insertedCount = syncLookupTableWithCategory("audgenres", "audgenres_user", "audgenreid", "audgenre", "audcatid");
         debugLog("Records inserted: " & insertedCount);
         
         // Count user records after sync
