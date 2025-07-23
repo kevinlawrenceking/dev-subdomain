@@ -60,17 +60,15 @@
     <!--- Check each table for this user --->
     <cfloop array="#userTables#" index="table">
         <cftry>
-            <!--- Create unique query name to avoid caching issues --->
-            <cfset queryName = "getTableCount_" & getAllUsers.userid & "_" & replace(table.name, "_", "", "all")>
-            
-            <cfquery name="#queryName#" datasource="#application.dsn#">
+            <!--- Use a simple query with local variable assignment --->
+            <cfquery name="getTableCount" datasource="#application.dsn#">
                 SELECT COUNT(*) as recordCount 
                 FROM #table.name# 
                 WHERE userid = <cfqueryparam value="#getAllUsers.userid#" cfsqltype="CF_SQL_INTEGER">
             </cfquery>
             
-            <!--- Get the actual query result using evaluate --->
-            <cfset actualCount = evaluate("#queryName#.recordCount")>
+            <!--- Get the count directly from the query result --->
+            <cfset actualCount = getTableCount.recordCount>
             
             <cfset currentUser.tableCounts[table.name] = actualCount>
             <cfset currentUser.totalRecords += actualCount>
@@ -82,21 +80,9 @@
             
             <!--- Debug output for troubleshooting --->
             <cfif getAllUsers.userid EQ 912>
-                <cfquery name="debugTest" datasource="#application.dsn#">
-                    SELECT COUNT(*) as testCount 
-                    FROM #table.name#
-                    WHERE userid = <cfqueryparam value="#getAllUsers.userid#" cfsqltype="CF_SQL_INTEGER">
-                </cfquery>
-                
                 <cfoutput>
                 <p style="color: red; font-size: 12px;">
-                    DEBUG User 912 - Table: #table.name# - Query: #queryName# - Count: #actualCount# - Running Total: #currentUser.totalRecords#
-                </p>
-                <p style="color: blue; font-size: 10px;">
-                    SQL: SELECT COUNT(*) as recordCount FROM #table.name# WHERE userid = #getAllUsers.userid#
-                </p>
-                <p style="color: green; font-size: 10px;">
-                    VERIFICATION: Direct query for #table.name# userid #getAllUsers.userid# = #debugTest.testCount#
+                    DEBUG User 912 - Table: #table.name# - Count: #actualCount# - Running Total: #currentUser.totalRecords#
                 </p>
                 </cfoutput>
             </cfif>
