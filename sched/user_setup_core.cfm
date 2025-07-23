@@ -398,14 +398,14 @@
         
         questionsAdded = 0;
         for (question in questionsQuery) {
-            existsSQL = "SELECT COUNT(*) as recordCount 
+            existsSQL = "SELECT COUNT(*) as countValue 
                 FROM audquestions_user 
                 WHERE isdeleted = 0 AND qorder = ? AND userid = ?";
             existsParams = [question.qorder, variables.userid];
             
             existsQuery = queryExecute(existsSQL, existsParams, {datasource: variables.dsn});
             
-            if (existsQuery.recordCount == 0) {
+            if (existsQuery.countValue == 0) {
                 insertSQL = "INSERT INTO audquestions_user (qtypeid, qtext, qorder, userid) 
                     VALUES (?, ?, ?, ?)";
                 insertParams = [question.qtypeid, question.qtext, question.qorder, variables.userid];
@@ -448,14 +448,14 @@
         submitsitesAdded = 0;
         for (site in submitsitesQuery) {
             existsQuery = queryExecute("
-                SELECT COUNT(*) as recordCount 
+                SELECT COUNT(*) as countValue 
                 FROM audsubmitsites_user 
                 WHERE submitsitename = ? AND userid = ?",
                 [site.submitsitename, variables.userid],
                 {datasource: variables.dsn}
             );
             
-            if (existsQuery.recordCount == 0) {
+            if (existsQuery.countValue == 0) {
                 queryExecute("
                     INSERT INTO audsubmitsites_user (submitsitename, catlist, userid) 
                     VALUES (?, ?, ?)",
@@ -504,14 +504,14 @@
                 
                 // Check if this combination already exists
                 existsQuery = queryExecute("
-                    SELECT COUNT(*) as recordCount 
+                    SELECT COUNT(*) as countValue 
                     FROM itemcatxref_user 
                     WHERE userid = ? AND typeid = ? AND catid = ?",
                     [variables.userid, userTypeId, category.catid],
                     {datasource: variables.dsn}
                 );
                 
-                if (existsQuery.recordCount == 0) {
+                if (existsQuery.countValue == 0) {
                     queryExecute("
                         INSERT INTO itemcatxref_user (typeid, catid, userid) 
                         VALUES (?, ?, ?)",
@@ -602,14 +602,14 @@
                 userSiteTypeId = userSiteTypeQuery.sitetypeid;
                 
                 // Check if this sitelink already exists for user
-                existsSQL = "SELECT COUNT(*) as recordCount 
-                    FROM sitelinks_user 
+                existsSQL = "SELECT COUNT(*) as countValue 
+                    FROM sitelinks_user_tbl 
                     WHERE sitename = ? AND userid = ?";
                 existsParams = [sitelink.sitename, variables.userid];
                 
                 existsQuery = queryExecute(existsSQL, existsParams, {datasource: variables.dsn});
                 
-                if (existsQuery.recordCount == 0) {
+                if (existsQuery.countValue == 0) {
                     insertSQL = "INSERT INTO sitelinks_user_tbl (siteName, siteURL, siteicon, siteTypeid, userid) 
                         VALUES (?, ?, ?, ?, ?)";
                     insertParams = [sitelink.sitename, sitelink.siteURL, sitelink.siteicon, userSiteTypeId, variables.userid];
