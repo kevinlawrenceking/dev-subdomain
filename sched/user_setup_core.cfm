@@ -7,7 +7,8 @@
 --->
 
 <cfscript>
-    
+    // Use datasource from Application.cfc
+    variables.dsn = application.dsn;
     
     // Parameters with validation
     param name="dbugz" default="N";
@@ -259,7 +260,7 @@
     // Special handling for audquestions (needs qorder field checking)
     try {
         debugLog("<strong>audquestions_user</strong>");
-        var questionsQuery = queryExecute("
+        questionsQuery = queryExecute("
             SELECT qtypeid, qtext, qorder 
             FROM audquestions_default 
             WHERE isdeleted = 0",
@@ -267,9 +268,9 @@
             {datasource: variables.dsn}
         );
         
-        var questionsAdded = 0;
-        for (var question in questionsQuery) {
-            var existsQuery = queryExecute("
+        questionsAdded = 0;
+        for (question in questionsQuery) {
+            existsQuery = queryExecute("
                 SELECT COUNT(*) as recordCount 
                 FROM audquestions_user 
                 WHERE isdeleted = 0 AND qorder = ? AND userid = ?",
@@ -298,16 +299,16 @@
     // Special handling for audsubmitsites (has catlist field)
     try {
         debugLog("<strong>audsubmitsites_user</strong>");
-        var submitsitesQuery = queryExecute("
+        submitsitesQuery = queryExecute("
             SELECT submitsitename, catlist 
             FROM audsubmitsites",
             {},
             {datasource: variables.dsn}
         );
         
-        var submitsitesAdded = 0;
-        for (var site in submitsitesQuery) {
-            var existsQuery = queryExecute("
+        submitsitesAdded = 0;
+        for (site in submitsitesQuery) {
+            existsQuery = queryExecute("
                 SELECT COUNT(*) as recordCount 
                 FROM audsubmitsites_user 
                 WHERE submitsitename = ? AND userid = ?",
@@ -336,7 +337,7 @@
     // Special handling for itemcatxref (complex join logic)
     try {
         debugLog("<strong>itemcatxref_user</strong>");
-        var categoryQuery = queryExecute("
+        categoryQuery = queryExecute("
             SELECT DISTINCT c.catid, i.valuetype, i.typeid as master_typeid
             FROM itemcategory c
             INNER JOIN itemcatxref x ON x.catid = c.catid
@@ -347,10 +348,10 @@
             {datasource: variables.dsn}
         );
         
-        var categoryAdded = 0;
+        categoryAdded = 0;
         for (var category in categoryQuery) {
             // Get user's typeid for this valuetype
-            var userTypeQuery = queryExecute("
+            userTypeQuery = queryExecute("
                 SELECT typeid 
                 FROM itemtypes_user 
                 WHERE valuetype = ? AND userid = ?",
@@ -359,10 +360,10 @@
             );
             
             if (userTypeQuery.recordCount > 0) {
-                var userTypeId = userTypeQuery.typeid;
+                userTypeId = userTypeQuery.typeid;
                 
                 // Check if this combination already exists
-                var existsQuery = queryExecute("
+                existsQuery = queryExecute("
                     SELECT COUNT(*) as recordCount 
                     FROM itemcatxref_user 
                     WHERE userid = ? AND typeid = ? AND catid = ?",
@@ -394,7 +395,7 @@
     
     // Update tag properties after syncing
     try {
-        var tagUpdateQuery = queryExecute("
+        tagUpdateQuery = queryExecute("
             SELECT tagname, isteam, iscasting, tagtype 
             FROM tags",
             {},
@@ -420,7 +421,7 @@
     // Handle sitelinks with proper relationship to sitetypes
     try {
         debugLog("<strong>sitelinks_user</strong>");
-        var sitelinksQuery = queryExecute("
+        sitelinksQuery = queryExecute("
             SELECT s.id, s.sitename, s.siteURL, s.siteicon, s.sitetypeid, t.sitetypename
             FROM sitelinks_master s
             INNER JOIN sitetypes_master t ON t.sitetypeid = s.siteTypeid
@@ -429,10 +430,10 @@
             {datasource: variables.dsn}
         );
         
-        var sitelinksAdded = 0;
+        sitelinksAdded = 0;
         for (var sitelink in sitelinksQuery) {
             // Get user's sitetypeid for this sitetypename
-            var userSiteTypeQuery = queryExecute("
+            userSiteTypeQuery = queryExecute("
                 SELECT sitetypeid 
                 FROM sitetypes_user 
                 WHERE sitetypename = ? AND userid = ?",
@@ -441,10 +442,10 @@
             );
             
             if (userSiteTypeQuery.recordCount == 1) {
-                var userSiteTypeId = userSiteTypeQuery.sitetypeid;
+                userSiteTypeId = userSiteTypeQuery.sitetypeid;
                 
                 // Check if this sitelink already exists for user
-                var existsQuery = queryExecute("
+                existsQuery = queryExecute("
                     SELECT COUNT(*) as recordCount 
                     FROM sitelinks_user 
                     WHERE sitename = ? AND userid = ?",
@@ -474,7 +475,7 @@
     // Create panels for each sitetype
     try {
         debugLog("<strong>Creating sitetype panels</strong>");
-        var siteTypesQuery = queryExecute("
+        siteTypesQuery = queryExecute("
             SELECT sitetypeid, sitetypename, sitetypedescription 
             FROM sitetypes_user 
             WHERE userid = ?",
@@ -484,7 +485,7 @@
         
         for (var siteType in siteTypesQuery) {
             // Get next panel order number
-            var maxOrderQuery = queryExecute("
+            maxOrderQuery = queryExecute("
                 SELECT COALESCE(MAX(pnOrderno), 0) + 1 as nextOrderNo
                 FROM pgpanels_user 
                 WHERE userid = ?",
@@ -492,18 +493,18 @@
                 {datasource: variables.dsn}
             );
             
-            var nextOrderNo = maxOrderQuery.nextOrderNo;
-            var panelTitle = siteType.sitetypename & " Links";
+            nextOrderNo = maxOrderQuery.nextOrderNo;
+            panelTitle = siteType.sitetypename & " Links";
             
             // Insert new panel
-            var panelResult = queryExecute("
+            panelResult = queryExecute("
                 INSERT INTO pgpanels_user (pnTitle, pnFilename, pnorderno, pncolxl, pncolMd, pnDescription, IsDeleted, IsVisible, userid) 
                 VALUES (?, 'mylinks_user.cfm', ?, 3, 3, '', 0, 1, ?)",
                 [panelTitle, nextOrderNo, variables.userid],
                 {datasource: variables.dsn, result: "panelInsert"}
             );
             
-            var newPanelId = panelInsert.generatedKey;
+            newPanelId = panelInsert.generatedKey;
             
             // Update sitetype with panel ID
             queryExecute("
@@ -523,7 +524,7 @@
     // Handle users without contactid (create contact records)
     try {
         debugLog("<strong>Creating missing contact records</strong>");
-        var usersQuery = queryExecute("
+        usersQuery = queryExecute("
             SELECT userid, userfirstname, userlastname, contactid
             FROM taousers 
             WHERE contactid IS NULL OR contactid = ''",
@@ -531,18 +532,18 @@
             {datasource: variables.dsn}
         );
         
-        var contactsCreated = 0;
+        contactsCreated = 0;
         for (var user in usersQuery) {
             if (!len(trim(user.contactid))) {
                 // Create contact record
-                var contactResult = queryExecute("
+                contactResult = queryExecute("
                     INSERT INTO contactdetails (contactfullname, userid, user_yn) 
                     VALUES (?, ?, 'Y')",
                     [user.userfirstname & " " & user.userlastname, user.userid],
                     {datasource: variables.dsn, result: "contactInsert"}
                 );
                 
-                var newContactId = contactInsert.generatedKey;
+                newContactId = contactInsert.generatedKey;
                 
                 // Update user with contact ID
                 queryExecute("
@@ -565,8 +566,8 @@
     }
     
     // Final completion message
-    var endTime = timeFormat(now(), 'HHMMSS');
-    var timeDiff = timeFormat(dateAdd("s", timeFormat(endTime, "H")*3600 + timeFormat(endTime, "m")*60 + timeFormat(endTime, "s") - (timeFormat(variables.starttime, "H")*3600 + timeFormat(variables.starttime, "m")*60 + timeFormat(variables.starttime, "s")), createDate(1970,1,1)), 'HHMMSS');
+    endTime = timeFormat(now(), 'HHMMSS');
+    timeDiff = timeFormat(dateAdd("s", timeFormat(endTime, "H")*3600 + timeFormat(endTime, "m")*60 + timeFormat(endTime, "s") - (timeFormat(variables.starttime, "H")*3600 + timeFormat(variables.starttime, "m")*60 + timeFormat(variables.starttime, "s")), createDate(1970,1,1)), 'HHMMSS');
     
     debugLog("<hr><strong>User setup completed for userID " & variables.userid & "</strong>");
     debugLog("Total execution time: " & timeDiff);
