@@ -226,6 +226,12 @@
                 
                 var checkQuery = queryExecute(checkSQL, checkParams, {datasource: variables.dsn});
                 
+                // Debug for audgenres_user specifically
+                if (arguments.userTable == "audgenres_user") {
+                    debugLog("Checking if '" & row[arguments.valueField] & "' exists for user " & variables.userid & " (audcatid: " & (structKeyExists(row, "audcatid") ? row.audcatid : "NULL") & ")");
+                    debugLog("Check query result: actual count=" & checkQuery.countValue);
+                }
+                
                 // Debug for audplatforms_user specifically
                 if (arguments.userTable == "audplatforms_user") {
                     debugLog("Checking if '" & row[arguments.valueField] & "' exists for user " & variables.userid);
@@ -242,9 +248,14 @@
                     if (len(arguments.additionalFields)) {
                         var additionalFieldList = listToArray(arguments.additionalFields);
                         for (var field in additionalFieldList) {
-                            insertFields = listAppend(insertFields, field);
-                            insertValues = listAppend(insertValues, "?");
-                            arrayAppend(insertParams, row[field]);
+                            // Check if field exists in the row before trying to access it
+                            if (structKeyExists(row, field)) {
+                                insertFields = listAppend(insertFields, field);
+                                insertValues = listAppend(insertValues, "?");
+                                arrayAppend(insertParams, row[field]);
+                            } else {
+                                debugLog("Warning: Field '" & field & "' not found in " & arguments.masterTable & " record, skipping");
+                            }
                         }
                     }
                     
@@ -321,7 +332,38 @@
     syncLookupTable("auddialects", "auddialects_user", "auddialectid", "auddialect", "audcatid");
     
     debugLog("<h5>audgenres → audgenres_user</h5>");
-    syncLookupTable("audgenres", "audgenres_user", "audgenreid", "audgenre", "audcatid");
+    try {
+        // Add debugging for audgenres like we did for audplatforms
+        debugLog("Checking audgenres sync...");
+        
+        // Count master records with and without isdeleted filter
+        allMasterQuery = queryExecute("SELECT COUNT(*) as countValue FROM audgenres", {}, {datasource: variables.dsn});
+        activeMasterQuery = queryExecute("SELECT COUNT(*) as countValue FROM audgenres WHERE isdeleted = 0", {}, {datasource: variables.dsn});
+        
+        debugLog("Total audgenres records (all): " & allMasterQuery.countValue);
+        debugLog("Active audgenres records (isdeleted=0): " & activeMasterQuery.countValue);
+        
+        // Count existing user records
+        userCountQuery = queryExecute("SELECT COUNT(*) as countValue FROM audgenres_user WHERE userid = ?", [variables.userid], {datasource: variables.dsn});
+        debugLog("Existing audgenres_user records for user " & variables.userid & ": " & userCountQuery.countValue);
+        
+        // Check if there are records with missing audcatid
+        missingCatQuery = queryExecute("SELECT COUNT(*) as countValue FROM audgenres WHERE isdeleted = 0 AND (audcatid IS NULL OR audcatid = '')", {}, {datasource: variables.dsn});
+        debugLog("Master audgenres with missing audcatid: " & missingCatQuery.countValue);
+        
+        // Run the sync
+        insertedCount = syncLookupTable("audgenres", "audgenres_user", "audgenreid", "audgenre", "audcatid");
+        debugLog("Records inserted: " & insertedCount);
+        
+        // Count user records after sync
+        userCountAfterQuery = queryExecute("SELECT COUNT(*) as countValue FROM audgenres_user WHERE userid = ?", [variables.userid], {datasource: variables.dsn});
+        debugLog("Final audgenres_user records for user " & variables.userid & ": " & userCountAfterQuery.countValue);
+        
+    } catch (any e) {
+        debugLog("Error debugging audgenres: " & e.message);
+        // Fallback to regular sync
+        syncLookupTable("audgenres", "audgenres_user", "audgenreid", "audgenre", "audcatid");
+    }
     
     debugLog("<h5>audnetworks → audnetworks_user</h5>");
     syncLookupTable("audnetworks", "audnetworks_user", "networkid", "network", "audcatid");
@@ -548,10 +590,25 @@
         // Check what fields actually exist in pgpanels_master table first
         debugLog("Checking pgpanels_master table structure...");
         pgpanelsTestQuery = queryExecute("SELECT * FROM pgpanels_master LIMIT 1", {}, {datasource: variables.dsn});
-        debugLog("Available pgpanels_master fields: " & arrayToList(pgpanelsTestQuery.getColumnNames()));
         
-        // Sync with only the fields we know exist
-        syncLookupTable("pgpanels_master", "pgpanels_user", "", "pnFilename", "pnTitle, pnDescription", "1=1");
+        if (pgpanelsTestQuery.recordCount > 0) {
+            availableFields = arrayToList(pgpanelsTestQuery.getColumnNames());
+            debugLog("Available pgpanels_master fields: " & availableFields);
+            
+            // Build additional fields list based on what actually exists
+            additionalFields = "";
+            if (listFindNoCase(availableFields, "pnTitle")) {
+                additionalFields = listAppend(additionalFields, "pnTitle");
+            }
+            if (listFindNoCase(availableFields, "pnDescription")) {
+                additionalFields = listAppend(additionalFields, "pnDescription");
+            }
+            
+            debugLog("Using additional fields: " & additionalFields);
+            syncLookupTable("pgpanels_master", "pgpanels_user", "", "pnFilename", additionalFields, "1=1");
+        } else {
+            debugLog("No records found in pgpanels_master table");
+        }
     } catch (any e) {
         debugLog("Error with pgpanels sync: " & e.message);
         // Fallback: try with just the basic field
