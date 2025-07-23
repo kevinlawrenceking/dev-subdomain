@@ -408,9 +408,9 @@
     // Sync all lookup tables using the generic function
     debugLog("<h3>Syncing Lookup Tables</h3>");
     
-    // Audition-related tables
+    // Audition-related tables with category consideration
     debugLog("<h5>auddialects → auddialects_user</h5>");
-    syncLookupTable("auddialects", "auddialects_user", "auddialectid", "auddialect", "audcatid");
+    syncLookupTableWithCategory("auddialects", "auddialects_user", "auddialectid", "auddialect", "audcatid");
     
     debugLog("<h5>audgenres → audgenres_user</h5>");
     try {
@@ -447,7 +447,7 @@
     }
     
     debugLog("<h5>audnetworks → audnetworks_user</h5>");
-    syncLookupTable("audnetworks", "audnetworks_user", "networkid", "network", "audcatid");
+    syncLookupTableWithCategory("audnetworks", "audnetworks_user", "networkid", "network", "audcatid");
     
     debugLog("<h5>audopencalloptions → audopencalloptions_user</h5>");
     syncLookupTable("audopencalloptions", "audopencalloptions_user", "", "opencallname", "", "1=1");
@@ -488,7 +488,7 @@
     }
     
     debugLog("<h5>audtones → audtones_user</h5>");
-    syncLookupTable("audtones", "audtones_user", "toneid", "tone", "audcatid");
+    syncLookupTableWithCategory("audtones", "audtones_user", "toneid", "tone", "audcatid");
     
     // Event and gender tables
     debugLog("<h5>eventtypes → eventtypes_user</h5>");
