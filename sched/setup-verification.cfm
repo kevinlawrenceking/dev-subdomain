@@ -60,17 +60,23 @@
     <!--- Check each table for this user --->
     <cfloop array="#userTables#" index="table">
         <cftry>
-            <cfquery name="getTableCount" datasource="#application.dsn#">
+            <!--- Create unique query name to avoid caching issues --->
+            <cfset queryName = "getTableCount_" & getAllUsers.userid & "_" & replace(table.name, "_", "", "all")>
+            
+            <cfquery name="#queryName#" datasource="#application.dsn#">
                 SELECT COUNT(*) as recordCount 
                 FROM #table.name# 
                 WHERE userid = <cfqueryparam value="#getAllUsers.userid#" cfsqltype="CF_SQL_INTEGER">
             </cfquery>
             
-            <cfset currentUser.tableCounts[table.name] = getTableCount.recordCount>
-            <cfset currentUser.totalRecords += getTableCount.recordCount>
+            <!--- Get the actual query result using evaluate --->
+            <cfset actualCount = evaluate("#queryName#.recordCount")>
+            
+            <cfset currentUser.tableCounts[table.name] = actualCount>
+            <cfset currentUser.totalRecords += actualCount>
             
             <!--- Flag users with zero records in any table --->
-            <cfif getTableCount.recordCount EQ 0>
+            <cfif actualCount EQ 0>
                 <cfset currentUser.hasIssues = true>
             </cfif>
             
@@ -78,7 +84,10 @@
             <cfif getAllUsers.userid EQ 912>
                 <cfoutput>
                 <p style="color: red; font-size: 12px;">
-                    DEBUG User 912 - Table: #table.name# - Count: #getTableCount.recordCount# - Running Total: #currentUser.totalRecords#
+                    DEBUG User 912 - Table: #table.name# - Query: #queryName# - Count: #actualCount# - Running Total: #currentUser.totalRecords#
+                </p>
+                <p style="color: blue; font-size: 10px;">
+                    SQL: SELECT COUNT(*) as recordCount FROM #table.name# WHERE userid = #getAllUsers.userid#
                 </p>
                 </cfoutput>
             </cfif>
