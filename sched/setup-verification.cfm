@@ -14,7 +14,7 @@
 </cfif>
 
 <!--- Get all active users --->
-<cfquery name="getAllUsers" datasource="#application.dsn#" maxrows=#xrows#">
+<cfquery name="getAllUsers" datasource="#application.dsn#" maxrows="#xrows#">
     SELECT userid, userfirstname, userlastname, 
            CONCAT(userfirstname, ' ', userlastname) as fullname,
            userstatus, issetup, userEmail
