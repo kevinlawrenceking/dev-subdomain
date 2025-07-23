@@ -4,7 +4,7 @@
     DATE: 2025-01-27
     DEPENDENCIES: Application.cfc with DSN configured
 --->
-<cfparam name = "id" default = "" />
+<cfparam name = "cx default = "" />
 <cfparam name = "xrows" default = "9999" />
 <cfparam name = "USERROLE" default = "U" />
 <cfset session.userid = 30 />
@@ -23,7 +23,7 @@
     WHERE userstatus = 'Active'
 
     <cfif #id# is not ""></cfif>
-        AND userid = <cfqueryparam value="#id#" cfsqltype="CF_SQL_INTEGER">
+        AND userid = <cfqueryparam value="#cx#" cfsqltype="CF_SQL_INTEGER">
     </cfif>
     ORDER BY userid desc
 </cfquery>
