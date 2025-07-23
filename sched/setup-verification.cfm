@@ -4,7 +4,7 @@
     DATE: 2025-01-27
     DEPENDENCIES: Application.cfc with DSN configured
 --->
-<cfparam name = "cx default = "" />
+<cfparam name = "cx" default = "" />
 <cfparam name = "xrows" default = "9999" />
 <cfparam name = "USERROLE" default = "U" />
 <cfset session.userid = 30 />
