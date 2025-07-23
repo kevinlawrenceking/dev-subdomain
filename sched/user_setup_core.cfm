@@ -369,7 +369,19 @@
     
     // Event and gender tables
     debugLog("<h5>eventtypes → eventtypes_user</h5>");
-    syncLookupTable("eventtypes", "eventtypes_user", "", "eventTypeName", "eventtypedescription, eventtypecolor", "1=1");
+    try {
+        // Check what fields actually exist in eventtypes table first
+        debugLog("Checking eventtypes table structure...");
+        eventTypesTestQuery = queryExecute("SELECT * FROM eventtypes LIMIT 1", {}, {datasource: variables.dsn});
+        debugLog("Available eventtypes fields: " & arrayToList(eventTypesTestQuery.getColumnNames()));
+        
+        // Sync with only the fields we know exist
+        syncLookupTable("eventtypes", "eventtypes_user", "", "eventTypeName", "eventtypedescription", "1=1");
+    } catch (any e) {
+        debugLog("Error with eventtypes sync: " & e.message);
+        // Fallback: try with just the basic field
+        syncLookupTable("eventtypes", "eventtypes_user", "", "eventTypeName", "", "1=1");
+    }
     
     debugLog("<h5>genderpronouns → genderpronouns_users</h5>");
     syncLookupTable("genderpronouns", "genderpronouns_users", "", "genderpronoun", "genderpronounplural", "1=1");
