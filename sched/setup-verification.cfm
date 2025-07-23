@@ -28,28 +28,46 @@
     ORDER BY userid desc
 </cfquery>
 
-<!--- Define all user-specific tables to check --->
+<!--- Define all user-specific tables to check with their master tables --->
 <cfset userTables = [
-    {name: "auddialects_user", description: "Audition Dialects"},
-    {name: "audgenres_user", description: "Audition Genres"},
-    {name: "audnetworks_user", description: "Audition Networks"},
-    {name: "audopencalloptions_user", description: "Audition Open Call Options"},
-    {name: "audplatforms_user", description: "Audition Platforms"},
-    {name: "audtones_user", description: "Audition Tones"},
-    {name: "eventtypes_user", description: "Event Types"},
-    {name: "genderpronouns_users", description: "Gender Pronouns"},
-    {name: "itemtypes_user", description: "Item Types"},
-    {name: "tags_user", description: "Tags"},
-    {name: "sitetypes_user", description: "Site Types"},
-    {name: "audquestions_user", description: "Audition Questions"},
-    {name: "audsubmitsites_user", description: "Audition Submit Sites"},
-    {name: "itemcatxref_user", description: "Item Category Cross-Reference"},
-    {name: "pgpanels_user", description: "Dashboard Panels"},
-    {name: "sitelinks_user_tbl", description: "Site Links"}
+    {name: "auddialects_user", description: "Audition Dialects", masterTable: "auddialects", masterWhere: "isdeleted = 0"},
+    {name: "audgenres_user", description: "Audition Genres", masterTable: "audgenres", masterWhere: "isdeleted = 0"},
+    {name: "audnetworks_user", description: "Audition Networks", masterTable: "audnetworks", masterWhere: "isdeleted = 0"},
+    {name: "audopencalloptions_user", description: "Audition Open Call Options", masterTable: "audopencalloptions", masterWhere: "1=1"},
+    {name: "audplatforms_user", description: "Audition Platforms", masterTable: "audplatforms", masterWhere: "isdeleted = 0"},
+    {name: "audtones_user", description: "Audition Tones", masterTable: "audtones", masterWhere: "isdeleted = 0"},
+    {name: "eventtypes_user", description: "Event Types", masterTable: "eventtypes", masterWhere: "1=1"},
+    {name: "genderpronouns_users", description: "Gender Pronouns", masterTable: "genderpronouns", masterWhere: "1=1"},
+    {name: "itemtypes_user", description: "Item Types", masterTable: "itemtypes", masterWhere: "isdeleted = 0"},
+    {name: "tags_user", description: "Tags", masterTable: "tags", masterWhere: "1=1"},
+    {name: "sitetypes_user", description: "Site Types", masterTable: "sitetypes_master", masterWhere: "1=1"},
+    {name: "audquestions_user", description: "Audition Questions", masterTable: "audquestions_default", masterWhere: "isdeleted = 0"},
+    {name: "audsubmitsites_user", description: "Audition Submit Sites", masterTable: "audsubmitsites", masterWhere: "1=1"},
+    {name: "itemcatxref_user", description: "Item Category Cross-Reference", masterTable: "itemcatxref", masterWhere: "1=1"},
+    {name: "pgpanels_user", description: "Dashboard Panels", masterTable: "pgpanels_master", masterWhere: "1=1"},
+    {name: "sitelinks_user_tbl", description: "Site Links", masterTable: "sitelinks_master", masterWhere: "1=1"}
 ]>
 
 <!--- Prepare data structure to hold results --->
 <cfset userVerificationData = []>
+
+<!--- Get master table counts for comparison --->
+<cfset masterTableCounts = {}>
+<cfloop array="#userTables#" index="table">
+    <cftry>
+        <cfquery name="getMasterCount" datasource="#application.dsn#">
+            SELECT COUNT(*) as countValue
+            FROM #table.masterTable# 
+            <cfif len(table.masterWhere)>
+                WHERE #table.masterWhere#
+            </cfif>
+        </cfquery>
+        <cfset masterTableCounts[table.name] = getMasterCount.countValue>
+    <cfcatch type="any">
+        <cfset masterTableCounts[table.name] = "ERROR">
+    </cfcatch>
+    </cftry>
+</cfloop>
 
 <!--- Process each user --->
 <cfloop query="getAllUsers">
@@ -222,6 +240,27 @@
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    <!--- Master table counts row --->
+                                    <cfoutput>
+                                    <tr class="table-warning">
+                                        <td colspan="5">
+                                            <strong>MASTER TABLE TOTALS</strong>
+                                            <br><small class="text-muted">Expected records per user after sync</small>
+                                        </td>
+                                        <cfloop array="#userTables#" index="table">
+                                            <td class="text-center">
+                                                <cfset masterCount = masterTableCounts[table.name]>
+                                                <cfif masterCount EQ "ERROR">
+                                                    <span class="table-count-error">ERROR</span>
+                                                <cfelse>
+                                                    <strong class="text-primary">#masterCount#</strong>
+                                                </cfif>
+                                            </td>
+                                        </cfloop>
+                                    </tr>
+                                    </cfoutput>
+                                    
+                                    <!--- User data rows --->
                                     <cfoutput>
                                     <cfloop array="#userVerificationData#" index="user">
                                         <tr class="user-row<cfif user.hasIssues> has-issues</cfif>">
