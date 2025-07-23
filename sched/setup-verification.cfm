@@ -139,6 +139,7 @@
                     </cfif>
                 </cfloop>
 
+                <cfoutput>
                 <div class="row mb-4">
                     <div class="col-md-3">
                         <div class="card summary-card">
@@ -173,6 +174,7 @@
                         </div>
                     </div>
                 </div>
+                </cfoutput>
 
                 <!--- Export buttons --->
                 <div class="export-buttons">
