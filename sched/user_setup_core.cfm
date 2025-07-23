@@ -61,15 +61,15 @@
     
     // Test database connectivity and log details
     try {
-        var testQuery = queryExecute("SELECT COUNT(*) as recordCount FROM taousers WHERE userid = ?", 
+        testQuery = queryExecute("SELECT COUNT(*) as recordCount FROM taousers WHERE userid = ?", 
             [variables.userid], {datasource: variables.dsn});
         debugLog("Database connection verified - User " & variables.userid & " exists: " & (testQuery.recordCount > 0 ? "YES" : "NO"));
         
         // Test a few critical tables for existence
-        var testTables = ["audopencalloptions", "eventtypes", "genderpronouns", "tags", "sitetypes_master"];
-        for (var tableName in testTables) {
+        testTables = ["audopencalloptions", "eventtypes", "genderpronouns", "tags", "sitetypes_master"];
+        for (tableName in testTables) {
             try {
-                var tableTest = queryExecute("SELECT COUNT(*) as recordCount FROM " & tableName, {}, {datasource: variables.dsn});
+                tableTest = queryExecute("SELECT COUNT(*) as recordCount FROM " & tableName, {}, {datasource: variables.dsn});
                 debugLog("Table '" & tableName & "' accessible - " & tableTest.recordCount & " records");
             } catch (any tableError) {
                 debugLog("<span style='color: red;'>Table '" & tableName & "' ERROR: " & tableError.message & "</span>");
@@ -280,12 +280,12 @@
 <cfscript>
     // Update team tags first
     try {
-        var teamTagsSQL = "UPDATE tags_user 
+        teamTagsSQL = "UPDATE tags_user 
             SET IsTeam = 1 
             WHERE userid = ? AND tagname IN (
                 SELECT tagname FROM tags WHERE isteam = 1
             )";
-        var teamTagsParams = [variables.userid];
+        teamTagsParams = [variables.userid];
         
         queryExecute(teamTagsSQL, teamTagsParams, {datasource: variables.dsn});
         debugLog("Updated team tags for user");
@@ -318,7 +318,7 @@
     // Special handling for audquestions (needs qorder field checking)
     try {
         debugLog("<strong>audquestions_user</strong>");
-        var questionsSQL = "SELECT qtypeid, qtext, qorder 
+        questionsSQL = "SELECT qtypeid, qtext, qorder 
             FROM audquestions_default 
             WHERE isdeleted = 0";
         
@@ -326,17 +326,17 @@
         
         questionsAdded = 0;
         for (question in questionsQuery) {
-            var existsSQL = "SELECT COUNT(*) as recordCount 
+            existsSQL = "SELECT COUNT(*) as recordCount 
                 FROM audquestions_user 
                 WHERE isdeleted = 0 AND qorder = ? AND userid = ?";
-            var existsParams = [question.qorder, variables.userid];
+            existsParams = [question.qorder, variables.userid];
             
             existsQuery = queryExecute(existsSQL, existsParams, {datasource: variables.dsn});
             
             if (existsQuery.recordCount == 0) {
-                var insertSQL = "INSERT INTO audquestions_user (qtypeid, qtext, qorder, userid) 
+                insertSQL = "INSERT INTO audquestions_user (qtypeid, qtext, qorder, userid) 
                     VALUES (?, ?, ?, ?)";
-                var insertParams = [question.qtypeid, question.qtext, question.qorder, variables.userid];
+                insertParams = [question.qtypeid, question.qtext, question.qorder, variables.userid];
                 
                 queryExecute(insertSQL, insertParams, {datasource: variables.dsn});
                 questionsAdded++;
@@ -347,8 +347,8 @@
             debugLog("Total audquestions_user records added: " & questionsAdded);
         }
     } catch (any e) {
-        var failedSQL = "";
-        var failedParams = [];
+        failedSQL = "";
+        failedParams = [];
         if (isDefined("questionsSQL") && !isDefined("questionsQuery")) {
             failedSQL = questionsSQL;
             failedParams = [];
@@ -461,23 +461,23 @@
     
     // Update tag properties after syncing
     try {
-        var tagUpdateSQL = "SELECT tagname, isteam, iscasting, tagtype 
+        tagUpdateSQL = "SELECT tagname, isteam, iscasting, tagtype 
             FROM tags";
         
         tagUpdateQuery = queryExecute(tagUpdateSQL, {}, {datasource: variables.dsn});
         
         for (tag in tagUpdateQuery) {
-            var updateSQL = "UPDATE tags_user 
+            updateSQL = "UPDATE tags_user 
                 SET isteam = ?, iscasting = ?, tagtype = ? 
                 WHERE tagname = ? AND userid = ?";
-            var updateParams = [tag.isteam, tag.iscasting, tag.tagtype, tag.tagname, variables.userid];
+            updateParams = [tag.isteam, tag.iscasting, tag.tagtype, tag.tagname, variables.userid];
             
             queryExecute(updateSQL, updateParams, {datasource: variables.dsn});
         }
         debugLog("Updated tag properties for " & tagUpdateQuery.recordCount & " tags");
     } catch (any e) {
-        var failedSQL = "";
-        var failedParams = [];
+        failedSQL = "";
+        failedParams = [];
         if (isDefined("tagUpdateSQL") && !isDefined("tagUpdateQuery")) {
             failedSQL = tagUpdateSQL;
             failedParams = [];
@@ -493,7 +493,7 @@
     // Handle sitelinks with proper relationship to sitetypes
     try {
         debugLog("<strong>sitelinks_user</strong>");
-        var sitelinksSQL = "SELECT s.id, s.sitename, s.siteURL, s.siteicon, s.sitetypeid, t.sitetypename
+        sitelinksSQL = "SELECT s.id, s.sitename, s.siteURL, s.siteicon, s.sitetypeid, t.sitetypename
             FROM sitelinks_master s
             INNER JOIN sitetypes_master t ON t.sitetypeid = s.siteTypeid
             ORDER BY s.sitename";
@@ -503,10 +503,10 @@
         sitelinksAdded = 0;
         for (sitelink in sitelinksQuery) {
             // Get user's sitetypeid for this sitetypename
-            var userSiteTypeSQL = "SELECT sitetypeid 
+            userSiteTypeSQL = "SELECT sitetypeid 
                 FROM sitetypes_user 
                 WHERE sitetypename = ? AND userid = ?";
-            var userSiteTypeParams = [sitelink.sitetypename, variables.userid];
+            userSiteTypeParams = [sitelink.sitetypename, variables.userid];
             
             userSiteTypeQuery = queryExecute(userSiteTypeSQL, userSiteTypeParams, {datasource: variables.dsn});
             
@@ -514,17 +514,17 @@
                 userSiteTypeId = userSiteTypeQuery.sitetypeid;
                 
                 // Check if this sitelink already exists for user
-                var existsSQL = "SELECT COUNT(*) as recordCount 
+                existsSQL = "SELECT COUNT(*) as recordCount 
                     FROM sitelinks_user 
                     WHERE sitename = ? AND userid = ?";
-                var existsParams = [sitelink.sitename, variables.userid];
+                existsParams = [sitelink.sitename, variables.userid];
                 
                 existsQuery = queryExecute(existsSQL, existsParams, {datasource: variables.dsn});
                 
                 if (existsQuery.recordCount == 0) {
-                    var insertSQL = "INSERT INTO sitelinks_user_tbl (siteName, siteURL, siteicon, siteTypeid, userid) 
+                    insertSQL = "INSERT INTO sitelinks_user_tbl (siteName, siteURL, siteicon, siteTypeid, userid) 
                         VALUES (?, ?, ?, ?, ?)";
-                    var insertParams = [sitelink.sitename, sitelink.siteURL, sitelink.siteicon, userSiteTypeId, variables.userid];
+                    insertParams = [sitelink.sitename, sitelink.siteURL, sitelink.siteicon, userSiteTypeId, variables.userid];
                     
                     queryExecute(insertSQL, insertParams, {datasource: variables.dsn});
                     sitelinksAdded++;
@@ -536,8 +536,8 @@
             debugLog("Total sitelinks_user records added: " & sitelinksAdded);
         }
     } catch (any e) {
-        var failedSQL = "";
-        var failedParams = [];
+        failedSQL = "";
+        failedParams = [];
         if (isDefined("sitelinksSQL") && !isDefined("sitelinksQuery")) {
             failedSQL = sitelinksSQL;
             failedParams = [];
