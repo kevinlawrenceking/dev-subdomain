@@ -85,7 +85,7 @@
             <cfif getAllUsers.userid EQ 912>
                 <cfoutput>
                 <p style="color: red; font-size: 12px;">
-                    DEBUG User 912 - Table: #table.name# - Raw: "#getTableCount.recordCount#" - Val: #actualCount# - Running Total: #currentUser.totalRecords#
+                    DEBUG User 912 - Table: #table.name# - Raw count: "#getTableCount.recordCount#" - Val: #actualCount# - Running Total: #currentUser.totalRecords#
                 </p>
                 </cfoutput>
             </cfif>
