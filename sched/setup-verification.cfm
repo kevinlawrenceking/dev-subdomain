@@ -60,18 +60,15 @@
     <!--- Check each table for this user --->
     <cfloop array="#userTables#" index="table">
         <cftry>
-            <!--- Use a simple query and explicitly convert result --->
+            <!--- Use a simple query and get the actual COUNT value --->
             <cfquery name="getTableCount" datasource="#application.dsn#">
                 SELECT COUNT(*) as recordCount 
                 FROM #table.name# 
                 WHERE userid = <cfqueryparam value="#getAllUsers.userid#" cfsqltype="CF_SQL_INTEGER">
             </cfquery>
             
-            <!--- Get the count using multiple approaches for debugging --->
-            <cfset actualCount = 0>
-            <cfif getTableCount.recordCount NEQ "">
-                <cfset actualCount = val(getTableCount.recordCount)>
-            </cfif>
+            <!--- Get the actual COUNT value from the first row --->
+            <cfset actualCount = getTableCount.recordCount[1]>
             
             <cfset currentUser.tableCounts[table.name] = actualCount>
             <cfset currentUser.totalRecords += actualCount>
@@ -85,7 +82,7 @@
             <cfif getAllUsers.userid EQ 912>
                 <cfoutput>
                 <p style="color: red; font-size: 12px;">
-                    DEBUG User 912 - Table: #table.name# - Raw: "#getTableCount.recordCount#" - Val: #actualCount# - Running Total: #currentUser.totalRecords#
+                    DEBUG User 912 - Table: #table.name# - Count: #actualCount# - Running Total: #currentUser.totalRecords#
                 </p>
                 </cfoutput>
             </cfif>
