@@ -667,6 +667,14 @@
     try {
         debugLog("<h5>itemcategory + itemcatxref → itemcatxref_user (complex join)</h5>");
         debugLog("<strong>itemcatxref_user</strong>");
+        
+        // First, let's see what we're working with
+        debugLog("Debugging itemcatxref sync process...");
+        
+        // Count existing user records
+        existingUserRecords = queryExecute("SELECT COUNT(*) as countValue FROM itemcatxref_user WHERE userid = ?", [variables.userid], {datasource: variables.dsn});
+        debugLog("Existing itemcatxref_user records for user " & variables.userid & ": " & existingUserRecords.countValue);
+        
         categoryQuery = queryExecute("
             SELECT DISTINCT c.catid, i.valuetype, i.typeid as master_typeid
             FROM itemcategory c
@@ -678,9 +686,12 @@
             {datasource: variables.dsn}
         );
         
+        debugLog("Master itemcatxref combinations found: " & categoryQuery.recordCount);
+        
         // Build a query result with user typeid/catid pairs for the cross-reference sync
         userCategoryPairs = queryNew("typeid,catid", "integer,integer");
         categoryAdded = 0;
+        pairsFound = 0;
         
         for (category in categoryQuery) {
             // Get user's typeid for this valuetype
@@ -694,18 +705,30 @@
             
             if (userTypeQuery.recordCount > 0) {
                 userTypeId = userTypeQuery.typeid;
+                pairsFound++;
+                
+                debugLog("Found pair: valuetype='" & category.valuetype & "' -> user_typeid=" & userTypeId & ", catid=" & category.catid);
                 
                 // Add this pair to our query result for batch processing
                 queryAddRow(userCategoryPairs);
                 querySetCell(userCategoryPairs, "typeid", userTypeId);
                 querySetCell(userCategoryPairs, "catid", category.catid);
+            } else {
+                debugLog("No user typeid found for valuetype: " & category.valuetype & " (master_typeid: " & category.master_typeid & ")");
             }
         }
+        
+        debugLog("Total valid pairs found for user: " & pairsFound);
+        debugLog("User category pairs to sync: " & userCategoryPairs.recordCount);
         
         // Now use the cross-reference sync function
         if (userCategoryPairs.recordCount > 0) {
             categoryAdded = syncCrossReferenceTable(userCategoryPairs, "itemcatxref_user", "typeid", "catid", "itemcatxref_user");
         }
+        
+        // Count final user records
+        finalUserRecords = queryExecute("SELECT COUNT(*) as countValue FROM itemcatxref_user WHERE userid = ?", [variables.userid], {datasource: variables.dsn});
+        debugLog("Final itemcatxref_user records for user " & variables.userid & ": " & finalUserRecords.countValue);
         
     } catch (any e) {
         debugLog("Error syncing itemcatxref: " & e.message);
