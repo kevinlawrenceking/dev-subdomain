@@ -382,6 +382,61 @@
         
         return insertCount;
     }
+    
+    // Specialized function for cross-reference tables (like itemcatxref with typeid/catid pairs)
+    function syncCrossReferenceTable(masterQuery, userTable, field1, field2, debugTitle) {
+        var insertCount = 0;
+        var checkSQL = "";
+        var insertSQL = "";
+        
+        try {
+            for (var row in arguments.masterQuery) {
+                // Check if this combination already exists for user
+                checkSQL = "SELECT COUNT(*) as countValue 
+                    FROM " & arguments.userTable & " 
+                    WHERE userid = ? AND " & arguments.field1 & " = ? AND " & arguments.field2 & " = ?";
+                var checkParams = [variables.userid, row[arguments.field1], row[arguments.field2]];
+                
+                var checkQuery = queryExecute(checkSQL, checkParams, {datasource: variables.dsn});
+                
+                if (checkQuery.countValue == 0) {
+                    insertSQL = "INSERT INTO " & arguments.userTable & " (" & arguments.field1 & ", " & arguments.field2 & ", userid) 
+                        VALUES (?, ?, ?)";
+                    var insertParams = [row[arguments.field1], row[arguments.field2], variables.userid];
+                    
+                    queryExecute(insertSQL, insertParams, {datasource: variables.dsn});
+                    
+                    insertCount++;
+                    if (insertCount == 1) {
+                        debugLog("<strong>" & arguments.debugTitle & " (cross-reference pairs)</strong>");
+                    }
+                    debugLog("Added xref: " & arguments.field1 & "=" & row[arguments.field1] & ", " & arguments.field2 & "=" & row[arguments.field2]);
+                }
+            }
+            
+            if (insertCount > 0) {
+                debugLog("Total " & arguments.debugTitle & " records added: " & insertCount);
+            }
+            
+        } catch (any e) {
+            var failedSQL = "";
+            var failedParams = [];
+            
+            if (len(checkSQL)) {
+                failedSQL = checkSQL;
+                failedParams = checkParams;
+                logDatabaseError("syncCrossReferenceTable - Check Query (" & arguments.userTable & ")", failedSQL, failedParams, e);
+            } else if (len(insertSQL)) {
+                failedSQL = insertSQL;
+                failedParams = insertParams;
+                logDatabaseError("syncCrossReferenceTable - Insert Query (" & arguments.userTable & ")", failedSQL, failedParams, e);
+            } else {
+                logDatabaseError("syncCrossReferenceTable - Unknown (" & arguments.userTable & ")", "Unknown SQL", [], e);
+            }
+        }
+        
+        return insertCount;
+    }
 </cfscript>
 
 <cfscript>
@@ -608,7 +663,7 @@
         debugLog("Error syncing audsubmitsites: " & e.message);
     }
     
-    // Special handling for itemcatxref (complex join logic)
+    // Special handling for itemcatxref (complex join logic with unique typeid/catid pairs)
     try {
         debugLog("<h5>itemcategory + itemcatxref → itemcatxref_user (complex join)</h5>");
         debugLog("<strong>itemcatxref_user</strong>");
@@ -623,7 +678,10 @@
             {datasource: variables.dsn}
         );
         
+        // Build a query result with user typeid/catid pairs for the cross-reference sync
+        userCategoryPairs = queryNew("typeid,catid", "integer,integer");
         categoryAdded = 0;
+        
         for (category in categoryQuery) {
             // Get user's typeid for this valuetype
             userTypeQuery = queryExecute("
@@ -637,30 +695,18 @@
             if (userTypeQuery.recordCount > 0) {
                 userTypeId = userTypeQuery.typeid;
                 
-                // Check if this combination already exists
-                existsQuery = queryExecute("
-                    SELECT COUNT(*) as countValue 
-                    FROM itemcatxref_user 
-                    WHERE userid = ? AND typeid = ? AND catid = ?",
-                    [variables.userid, userTypeId, category.catid],
-                    {datasource: variables.dsn}
-                );
-                
-                if (existsQuery.countValue == 0) {
-                    queryExecute("
-                        INSERT INTO itemcatxref_user (typeid, catid, userid) 
-                        VALUES (?, ?, ?)",
-                        [userTypeId, category.catid, variables.userid],
-                        {datasource: variables.dsn}
-                    );
-                    categoryAdded++;
-                    debugLog("Added category xref: typeid=" & userTypeId & ", catid=" & category.catid);
-                }
+                // Add this pair to our query result for batch processing
+                queryAddRow(userCategoryPairs);
+                querySetCell(userCategoryPairs, "typeid", userTypeId);
+                querySetCell(userCategoryPairs, "catid", category.catid);
             }
         }
-        if (categoryAdded > 0) {
-            debugLog("Total itemcatxref_user records added: " & categoryAdded);
+        
+        // Now use the cross-reference sync function
+        if (userCategoryPairs.recordCount > 0) {
+            categoryAdded = syncCrossReferenceTable(userCategoryPairs, "itemcatxref_user", "typeid", "catid", "itemcatxref_user");
         }
+        
     } catch (any e) {
         debugLog("Error syncing itemcatxref: " & e.message);
     }
