@@ -349,7 +349,7 @@
         );
         
         categoryAdded = 0;
-        for (var category in categoryQuery) {
+        for (category in categoryQuery) {
             // Get user's typeid for this valuetype
             userTypeQuery = queryExecute("
                 SELECT typeid 
@@ -402,7 +402,7 @@
             {datasource: variables.dsn}
         );
         
-        for (var tag in tagUpdateQuery) {
+        for (tag in tagUpdateQuery) {
             queryExecute("
                 UPDATE tags_user 
                 SET isteam = ?, iscasting = ?, tagtype = ? 
@@ -431,7 +431,7 @@
         );
         
         sitelinksAdded = 0;
-        for (var sitelink in sitelinksQuery) {
+        for (sitelink in sitelinksQuery) {
             // Get user's sitetypeid for this sitetypename
             userSiteTypeQuery = queryExecute("
                 SELECT sitetypeid 
@@ -483,7 +483,7 @@
             {datasource: variables.dsn}
         );
         
-        for (var siteType in siteTypesQuery) {
+        for (siteType in siteTypesQuery) {
             // Get next panel order number
             maxOrderQuery = queryExecute("
                 SELECT COALESCE(MAX(pnOrderno), 0) + 1 as nextOrderNo
@@ -533,7 +533,7 @@
         );
         
         contactsCreated = 0;
-        for (var user in usersQuery) {
+        for (user in usersQuery) {
             if (!len(trim(user.contactid))) {
                 // Create contact record
                 contactResult = queryExecute("
