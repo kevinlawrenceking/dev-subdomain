@@ -1,797 +1,574 @@
-<!--- Use datasource from Application.cfc --->
-<cfset dsn = application.dsn />
+<!---
+    PURPOSE: Core user setup for TAO (The Actor's Office) system
+    AUTHOR: Updated by GitHub Copilot 
+    DATE: 2025-07-22
+    PARAMETERS: select_userid, select_contactid (optional), dbug (optional)
+    DEPENDENCIES: Application.cfc with DSN configured
+--->
 
-<cfparam name="dbugz" default="N" />
+<cfscript>
+    // Use datasource from Application.cfc
+    variables.dsn = application.dsn;
+    
+    // Parameters with validation
+    param name="dbugz" default="N";
+    param name="dbug" default="Y"; 
+    param name="select_user" default="0";
+    param name="select_contactid" default="0";
+    param name="select_userid" default="0";
+    
+    // Debug helper function
+    function debugLog(message, showCondition = variables.dbug == "Y") {
+        if (showCondition) {
+            writeOutput("<p style='color: ##666; font-size: 12px;'>" & htmlEditFormat(message) & "</p>");
+        }
+    }
+    
+    // Validation
+    if (val(select_userid) == 0) {
+        writeOutput("<p style='color: red;'>Error: No valid user ID provided</p>");
+        abort;
+    }
+    
+    // Scoped variables to avoid conflicts
+    variables.userid = val(select_userid);
+    variables.starttime = timeFormat(now(), 'HHMMSS');
+    
+    debugLog("Starting user setup for userID: " & variables.userid);
+    
+    // Media path configuration - Fixed application scope pollution
+    variables.baseMediaPath = "C:\home\theactorsoffice.com\media-" & variables.dsn;
+    variables.baseMediaUrl = "/media-" & variables.dsn;
+    variables.imagesPath = variables.baseMediaPath & "\images";
+    
+    // Set application-level paths (corrected from nested application keys)
+    application.imagesUrl = variables.baseMediaUrl & "/images";
+    application.datesPath = variables.imagesPath & "\dates";
+    application.datesUrl = application.imagesUrl & "/dates";
+    application.defaultsPath = variables.imagesPath & "\defaults";
+    application.defaultsUrl = application.imagesUrl & "/defaults";
+    application.defaultAvatarPath = application.defaultsPath & "/avatar.jpg";
+    application.defaultAvatarUrl = application.defaultsUrl & "/avatar.jpg";
+    application.emailImagesPath = variables.imagesPath & "\email";
+    application.emailImagesUrl = application.imagesUrl & "/email";
+    application.filetypesPath = variables.imagesPath & "\filetypes";
+    application.filetypesUrl = application.imagesUrl & "/filetypes";
+    application.retinaIconsPath = variables.imagesPath & "\retina-circular-icons";
+    application.retinaIconsUrl = application.imagesUrl & "/retina-circular-icons";
+    application.retinaIcons14Path = application.retinaIconsPath & "\14";
+    application.retinaIcons14Url = application.retinaIconsUrl & "/14";
+    application.retinaIcons32Path = application.retinaIconsPath & "\32";
+    application.retinaIcons32Url = application.retinaIconsUrl & "/32";
+    
+    // User-specific session paths
+    session.userMediaPath = variables.baseMediaPath & "\users\" & variables.userid;
+    session.userMediaUrl = variables.baseMediaUrl & "/users/" & variables.userid;
+    session.userContactsPath = session.userMediaPath & "\contacts";
+    session.userContactsUrl = session.userMediaUrl & "/contacts";
+    session.userImportsPath = session.userMediaPath & "\imports";
+    session.userImportsUrl = session.userMediaUrl & "/imports";
+    session.userExportsPath = session.userMediaPath & "\exports";
+    session.userExportsUrl = session.userMediaUrl & "/exports";
+    session.userSharePath = session.userMediaPath & "\share";
+    session.userShareUrl = session.userMediaUrl & "/share";
+    session.userAvatarPath = session.userMediaPath & "\avatar.jpg";
+    session.userAvatarUrl = session.userMediaUrl & "/avatar.jpg";
+</cfscript>
 
-<cfparam name="dbug" default="Y" />
+<cfscript>
+    // Directory creation helper function with error handling
+    function ensureDirectoryExists(dirPath) {
+        try {
+            if (!directoryExists(dirPath)) {
+                directoryCreate(dirPath);
+                debugLog("Created directory: " & dirPath);
+                return true;
+            }
+            return true;
+        } catch (any e) {
+            debugLog("Failed to create directory: " & dirPath & " - " & e.message);
+            return false;
+        }
+    }
+    
+    // File copy helper function with error handling
+    function ensureFileExists(sourcePath, destPath) {
+        try {
+            if (!fileExists(destPath) && fileExists(sourcePath)) {
+                fileCopy(sourcePath, destPath);
+                debugLog("Copied file: " & sourcePath & " to " & destPath);
+                return true;
+            }
+            return fileExists(destPath);
+        } catch (any e) {
+            debugLog("Failed to copy file: " & sourcePath & " - " & e.message);
+            return false;
+        }
+    }
+    
+    // Create user media directories
+    debugLog("Creating user media directories...");
+    ensureDirectoryExists(session.userMediaPath);
+    ensureDirectoryExists(session.userContactsPath);
+    ensureDirectoryExists(session.userImportsPath);
+    ensureDirectoryExists(session.userExportsPath);
+    ensureDirectoryExists(session.userSharePath);
+    
+    // Copy default avatar if needed
+    ensureFileExists(application.defaultAvatarPath, session.userAvatarPath);
+</cfscript>
 
-<cfparam name="select_user" default="0" />
+<cfscript>
+    // Contact directories setup with proper SQL security
+    debugLog("Setting up contact directories...");
+</cfscript>
 
-<cfparam name="select_contactid" default="0" />
-
-<cfparam name="select_userid" default="0" />
-
-<cfif select_userid is "0">
-    No user
-    <cfabort />
-</cfif>
-
-        <cfscript>
-           userid = select_userid;
-
-    baseMediaPath = "C:\home\theactorsoffice.com\media-" & dsn;
-    baseMediaUrl = "/media-" & dsn;
-
-            imagesPath = baseMediaPath & "\images";
-            application.imagesUrl = baseMediaUrl & "/images";
-
-            application.datesPath = imagesPath & "\dates";
-            application.datesUrl = application.imagesUrl & "/dates";
-
-            application.defaultsPath = imagesPath & "\defaults";
-            defaultsUrl = application.imagesUrl & "/defaults";
-              application.defaultAvatarPath = application.defaultsPath & "/avatar.jpg";
-                    application.defaultAvatarUrl = defaultsUrl & "/avatar.jpg";
-
-            application.emailImagesPath = imagesPath & "\email";
-            emailapplication.imagesUrl = application.imagesUrl & "/email";
-
-            application.application.application.filetypesPath = imagesPath & "\filetypes";
-            application.application.application.filetypesUrl = application.imagesUrl & "/filetypes";
-
-            application.application.retinaIconsPath = imagesPath & "\retina-circular-icons";
-            application.application.retinaIconsUrl = application.imagesUrl & "/retina-circular-icons";
-
-                    application.retinaIcons14Path = application.application.retinaIconsPath & "\14";
-                    application.retinaIcons14Url = application.application.retinaIconsUrl & "/14";
-
-                    retinaIcons32Path = application.application.retinaIconsPath & "\32";
-                    retinaIcons32Url = application.application.retinaIconsUrl & "/32";
-
-        session.userMediaPath = baseMediaPath & "\users\" & userID;
-        session.userMediaUrl = baseMediaUrl & "/users/" & userID;
-
-                    session.userContactsPath = session.userMediaPath & "\contacts";
-                    session.userContactsUrl = session.userMediaUrl & "/contacts";
-
-session.userImportsPath = session.userMediaPath & "\imports";
-                    session.userImportsUrl = session.userMediaUrl & "/imports";
-
-                    session.userExportsPath = session.userMediaPath & "\exports";
-                    session.userExportsUrl = session.userMediaUrl & "/exports";
-
-                    session.userSharePath = session.userMediaPath & "\share";
-                    session.userShareUrl = session.userMediaUrl & "/share";
-            
-                    session.userAvatarPath = session.userMediaPath & "\avatar.jpg";
-                    session.userAvatarUrl = session.userMediaUrl & "/avatar.jpg";
-        </cfscript>
-
-<cfset starttime = timeFormat(Now(), 'HHMMSS') />
-
-<cfif not DirectoryExists(session.userMediaPath)>
-    <cfdirectory directory="#session.userMediaPath#" action="create" />
-</cfif>
-
-<cfif not DirectoryExists(session.userContactsPath)>
-    <cfdirectory directory="#session.userContactsPath#" action="create" />
-</cfif>
-
-<cfif not DirectoryExists(session.userImportsPath)>
-    <cfdirectory directory="#session.userImportsPath#" action="create" />
-</cfif>
-
-<cfif not DirectoryExists(session.userExportsPath)>
-    <cfdirectory directory="#session.userExportsPath#" action="create" />
-</cfif>
-
-<cfif not DirectoryExists(session.userSharePath)>
-    <cfdirectory directory="#session.userSharePath#" action="create" />
-</cfif>
-
-<cfif NOT fileExists(session.userAvatarPath)>
-    <cffile action="copy" source="#application.defaultAvatarPath#" destination="#session.userAvatarPath#" />
-</cfif>
-
-<cfquery result="result" datasource="#dsn#" name="C">
+<cfquery result="result" datasource="#variables.dsn#" name="contactQuery">
     SELECT contactid, recordname
     FROM contactdetails
-    WHERE userid = <cfqueryparam value="#select_userid#" cfsqltype="CF_SQL_INTEGER">
-    <cfif select_contactid neq 0>
-        AND contactid = <cfqueryparam value="#select_contactid#" cfsqltype="CF_SQL_INTEGER">
+    WHERE userid = <cfqueryparam value="#variables.userid#" cfsqltype="CF_SQL_INTEGER">
+    <cfif val(select_contactid) neq 0>
+        AND contactid = <cfqueryparam value="#val(select_contactid)#" cfsqltype="CF_SQL_INTEGER">
     </cfif>
     ORDER BY contactid
 </cfquery>
 
-<cfloop query="C">
-    <cfset new_contactid = C.contactid />
-
-    <cfif not DirectoryExists(session.userContactsPath & "\" & new_contactid)>
-        <cfdirectory directory="#session.userContactsPath#\#new_contactid#" action="create" />
-    </cfif>
-
-    <cfset contactPath = session.userContactsPath & "\" & new_contactid />
-    <cfset contactAvatarPath = contactPath & "\avatar.jpg" />
-
-    <cfif NOT fileExists(contactAvatarPath)>
-        <cffile action="copy" source="#dir_missing_avatar_filename#" destination="#contactAvatarPath#" />
-    </cfif>
-</cfloop>
-
-<cfquery result="result" datasource="#dsn#" name="update_tags">
-    UPDATE tags_user
-    SET IsTeam = 1
-    WHERE userid = <cfqueryparam value="#select_userid#" cfsqltype="CF_SQL_INTEGER"> and tagname IN (
-    select tagname FROM tags WHERE isteam = 1)
-</cfquery>
-
-<cfset n=0 />
-
-<cfquery result="result" datasource="#dsn#" name="x">
-    SELECT auddialectid,
-    auddialect,
-    audcatid,
-    isDeleted
-    FROM auddialects
-    WHERE isdeleted = <cfqueryparam value="0" cfsqltype="CF_SQL_BIT">
-</cfquery>
-
-<cfloop query="x">
-
-    <cfquery result="result" datasource="#dsn#" name="find">
-        Select * from auddialects_user
-        where auddialect = '#x.auddialect#' and userid = <cfqueryparam value="#select_userid#" cfsqltype="CF_SQL_INTEGER">
-    </cfquery>
-
-    <cfif find.recordcount is "0">
-
-        <cfoutput>
-            <cfset n=n + 1 />
-            <cfif n is "1">
-                <h3>auddialects_user</h3>
-            </cfif>
-        </cfoutput>
-
-        <cfquery result="result" datasource="#dsn#" name="insert">
-            INSERT INTO auddialects_user (auddialect, audcatid, userid)
-            VALUES ('#x.auddialect#','#x.audcatid#',<cfqueryparam value="#select_userid#" cfsqltype="CF_SQL_INTEGER">);
-        </cfquery>
-
-        <cfoutput>
-            auddialects added: #x.auddialect# (user #select_userid#)<br />
-        </cfoutput>
-    </cfif>
-</cfloop>
-
-<cfset n=0 />
-
-<cfquery result="result" datasource="#dsn#" name="x">
-    select audgenreid,
-    audgenre,
-    audcatid,
-    isDeleted
-    FROM audgenres
-    where isdeleted = <cfqueryparam value="0" cfsqltype="CF_SQL_BIT">
-</cfquery>
-
-<cfloop query="x">
-    <cfquery result="result" datasource="#dsn#" name="find">
-        Select * from audgenres_user
-        where audgenre = '#x.audgenre#' and userid = <cfqueryparam value="#select_userid#" cfsqltype="CF_SQL_INTEGER">
-    </cfquery>
-
-    <cfif find.recordcount is "0">
-        <cfoutput>
-            <cfset n=n + 1 />
-            <cfif n is "1">
-                <h3>audgenres_user</h3>
-            </cfif>
-        </cfoutput>
-
-        <cfquery result="result" datasource="#dsn#" name="insert">
-            INSERT INTO audgenres_user (audgenre, audcatid, userid)
-            VALUES ('#x.audgenre#','#x.audcatid#',<cfqueryparam value="#select_userid#" cfsqltype="CF_SQL_INTEGER">);
-        </cfquery>
-
-        <cfif dbug is "Y">
-            <cfoutput>
-                audgenres added: #x.audgenre#<br />
-            </cfoutput>
-        </cfif>
-    </cfif>
-</cfloop>
-
-<cfset n=0 />
-
-<cfquery result="result" datasource="#dsn#" name="x">
-    select networkid,
-    network,
-    audcatid,
-    isDeleted
-    FROM audnetworks
-    where isdeleted = <cfqueryparam value="0" cfsqltype="CF_SQL_BIT">
-</cfquery>
-
-<cfloop query="x">
-    <cfquery result="result" datasource="#dsn#" name="find">
-        Select * from audnetworks_user
-        where network = '#x.network#' and userid = <cfqueryparam value="#select_userid#" cfsqltype="CF_SQL_INTEGER">
-    </cfquery>
-
-    <cfif find.recordcount is "0">
-        <cfoutput>
-            <cfset n=n + 1 />
-            <cfif n is "1">
-                <h3>audnetworks_user</h3>
-            </cfif>
-        </cfoutput>
-
-        <cfquery result="result" datasource="#dsn#" name="insert">
-            INSERT INTO audnetworks_user (network, audcatid, userid)
-            VALUES ('#x.network#','#x.audcatid#',<cfqueryparam value="#select_userid#" cfsqltype="CF_SQL_INTEGER">);
-        </cfquery>
-
-        <cfif dbug is "Y">
-            <cfoutput>
-                audnetworks added: #x.network#<br />
-            </cfoutput>
-        </cfif>
-    </cfif>
-</cfloop>
-
-<cfset n=0 />
-
-<cfquery result="result" datasource="#dsn#" name="x">
-    select opencallname FROM audopencalloptions WHERE isdeleted = <cfqueryparam value="0" cfsqltype="CF_SQL_BIT">
-</cfquery>
-
-<cfloop query="x">
-    <cfquery result="result" datasource="#dsn#" name="find">
-        select opencallname
-        FROM audopencalloptions_user
-        where opencallname = '#x.opencallname#' and userid = <cfqueryparam value="#select_userid#" cfsqltype="CF_SQL_INTEGER">
-    </cfquery>
-
-    <cfif find.recordcount is "0">
-        <cfoutput>
-            <cfset n=n + 1 />
-            <cfif n is "1">
-                <h3>audopencalloptions_user</h3>
-            </cfif>
-        </cfoutput>
-
-        <cfquery result="result" datasource="#dsn#" name="insert">
-            INSERT INTO audopencalloptions_user (opencallname, userid)
-            VALUES ('#x.opencallname#', <cfqueryparam value="#select_userid#" cfsqltype="CF_SQL_INTEGER">);
-        </cfquery>
-
-        <cfif dbug is "Y">
-            <cfoutput>opencallname_user: #x.opencallname# added</cfoutput><br />
-        </cfif>
-    </cfif>
-</cfloop>
-
-<cfset n=0 />
-
-<cfquery result="result" datasource="#dsn#" name="x">
-    select audplatformid,
-    audplatform,
-    isDeleted
-    FROM audplatforms
-</cfquery>
-
-<cfloop query="x">
-    <cfquery result="result" datasource="#dsn#" name="find">
-        Select * from audplatforms_user
-        where audplatform = '#x.audplatform#' and userid = <cfqueryparam value="#select_userid#" cfsqltype="CF_SQL_INTEGER">
-    </cfquery>
-
-    <cfif find.recordcount is "0">
-        <cfoutput>
-            <cfset n=n + 1 />
-            <cfif n is "1">
-                <h3>audplatforms_user</h3>
-            </cfif>
-        </cfoutput>
-
-        <cfquery result="result" datasource="#dsn#" name="insert">
-            INSERT INTO audplatforms_user (audplatform, userid)
-            VALUES ('#x.audplatform#',<cfqueryparam value="#select_userid#" cfsqltype="CF_SQL_INTEGER">);
-        </cfquery>
-
-        <cfif dbug is "Y">
-            <cfoutput>
-                audplatforms added: #x.audplatform#<br />
-            </cfoutput>
-        </cfif>
-    </cfif>
-</cfloop>
-
-<cfset n=0 />
-
-<cfquery result="result" datasource="#dsn#" name="x">
-    SELECT * FROM audquestions_default where isdeleted = <cfqueryparam value="0" cfsqltype="CF_SQL_BIT">
-</cfquery>
-
-<cfloop query="x">
-    <cfquery result="result" datasource="#dsn#" name="find">
-        Select * from audquestions_user
-        where isdeleted is false and qorder = #x.qorder# and userid = <cfqueryparam value="#select_userid#" cfsqltype="CF_SQL_INTEGER">
-    </cfquery>
-
-    <cfif find.recordcount is "0">
-        <cfoutput>
-            <cfset n=n + 1 />
-            <cfif n is "1">
-                <h3>audquestions_user</h3>
-            </cfif>
-        </cfoutput>
-
-        <cfquery result="result" datasource="#dsn#" name="insert">
-            INSERT INTO audquestions_user (qtypeid, qtext, qorder, userid)
-            VALUES (#x.qtypeid#, '#x.qtext#', #x.qorder#, <cfqueryparam value="#select_userid#" cfsqltype="CF_SQL_INTEGER">);
-        </cfquery>
-
-        <cfif dbug is "Y">
-            <cfoutput>Audquestions_user added: #x.qtext#</cfoutput><br />
-        </cfif>
-    </cfif>
-</cfloop>
-
-<cfset n=0 />
-
-<cfquery result="result" datasource="#dsn#" name="x">
-    SELECT submitsitename,catlist FROM audsubmitsites
-</cfquery>
-
-<cfloop query="x">
-    <cfquery result="result" datasource="#dsn#" name="find">
-        Select * from audsubmitsites_user
-        where submitsitename = '#x.submitsitename#' and userid = <cfqueryparam value="#select_userid#" cfsqltype="CF_SQL_INTEGER">
-    </cfquery>
-
-    <cfif find.recordcount is "0">
-        <cfoutput>
-            <cfset n=n + 1 />
-            <cfif n is "1">
-                <h3>audsubmitsites_user</h3>
-            </cfif>
-        </cfoutput>
-
-        <cfquery result="result" datasource="#dsn#" name="insert">
-            INSERT INTO audsubmitsites_user (submitsitename, catlist, userid)
-            VALUES ('#x.submitsitename#','#x.catlist#',<cfqueryparam value="#select_userid#" cfsqltype="CF_SQL_INTEGER">);
-        </cfquery>
-
-        <cfif dbug is "Y">
-            <cfoutput>audsubmitsites_user added: #x.submitsitename#</cfoutput><br />
-        </cfif>
-    </cfif>
-</cfloop>
-
-<cfset n=0 />
-
-<cfquery result="result" datasource="#dsn#" name="x">
-    select toneid,
-    tone,
-    audcatid,
-    isDeleted
-    FROM audtones
-    where isdeleted = <cfqueryparam value="0" cfsqltype="CF_SQL_BIT">
-</cfquery>
-
-<cfloop query="x">
-    <cfquery result="result" datasource="#dsn#" name="find">
-        Select * from audtones_user
-        where tone = '#x.tone#' and userid = <cfqueryparam value="#select_userid#" cfsqltype="CF_SQL_INTEGER">
-    </cfquery>
-
-    <cfif find.recordcount is "0">
-        <cfoutput>
-            <cfset n=n + 1 />
-            <cfif n is "1">
-                <h3>audtones_user</h3>
-            </cfif>
-        </cfoutput>
-
-        <cfquery result="result" datasource="#dsn#" name="insert">
-            INSERT INTO audtones_user (tone, audcatid, userid)
-            VALUES ('#x.tone#','#x.audcatid#',<cfqueryparam value="#select_userid#" cfsqltype="CF_SQL_INTEGER">);
-        </cfquery>
-
-        <cfoutput>
-            audtones added: #x.tone#<br />
-        </cfoutput>
-    </cfif>
-</cfloop>
-
-<cfset n=0 />
-
-<cfquery result="result" datasource="#dsn#" name="x">
-    select eventTypeName,
-    eventtypedescription,
-    eventtypecolor
-    FROM eventtypes
-    where isdeleted = <cfqueryparam value="0" cfsqltype="CF_SQL_BIT">
-</cfquery>
-
-<cfloop query="x">
-    <cfquery result="result" datasource="#dsn#" name="find">
-        select eventTypeName,
-        eventtypedescription,
-        eventtypecolor
-        FROM eventtypes_user
-        where eventTypeName = '#x.eventtypeName#' and userid = <cfqueryparam value="#select_userid#" cfsqltype="CF_SQL_INTEGER">
-    </cfquery>
-
-    <cfif find.recordcount is "0">
-        <cfoutput>
-            <cfset n=n + 1 />
-            <cfif n is "1">
-                <h3>eventtypes_user</h3>
-            </cfif>
-        </cfoutput>
-
-        <cfquery result="result" datasource="#dsn#" name="insert">
-            INSERT INTO eventtypes_user (eventTypeName, eventtypedescription, eventtypecolor, userid)
-            VALUES ('#x.eventTypeName#', '#x.eventtypedescription#', '#x.eventtypecolor#', <cfqueryparam value="#select_userid#" cfsqltype="CF_SQL_INTEGER">);
-        </cfquery>
-
-        <cfif dbug is "Y">
-            <cfoutput>eventtypes_user: #x.eventTypeName# added</cfoutput><br />
-        </cfif>
-    </cfif>
-</cfloop>
-
-<cfset n=0 />
-
-<cfquery result="result" datasource="#dsn#" name="x">
-    SELECT genderpronoun, genderpronounplural FROM genderpronouns where isdeleted = <cfqueryparam value="0" cfsqltype="CF_SQL_BIT">
-</cfquery>
-
-<cfloop query="x">
-    <cfquery result="result" datasource="#dsn#" name="find">
-        Select * from genderpronouns_users
-        where genderpronoun = '#x.genderpronoun#' and userid = <cfqueryparam value="#select_userid#" cfsqltype="CF_SQL_INTEGER">
-    </cfquery>
-
-    <cfif find.recordcount is "0">
-        <cfoutput>
-            <cfset n=n + 1 />
-            <cfif n is "1">
-                <h3>genderpronouns_users</h3>
-            </cfif>
-        </cfoutput>
-
-        <cfquery result="result" datasource="#dsn#" name="insert">
-            INSERT INTO genderpronouns_users (genderpronoun, genderpronounplural, userid)
-            VALUES ('#x.genderpronoun#','#x.genderpronounplural#',<cfqueryparam value="#select_userid#" cfsqltype="CF_SQL_INTEGER">);
-        </cfquery>
-
-        <cfif dbug is "Y">
-            <cfoutput>genderpronouns_users: #x.genderpronoun# added</cfoutput><br />
-        </cfif>
-    </cfif>
-</cfloop>
-
-<cfset n=0 />
-
-<cfquery result="result" datasource="#dsn#" name="x">
-    select typeid, valuetype, typeicon FROM itemtypes
-</cfquery>
-
-<cfloop query="x">
-    <cfquery result="result" datasource="#dsn#" name="find">
-        Select * from itemtypes_user
-        where valuetype = '#x.valuetype#' and userid = <cfqueryparam value="#select_userid#" cfsqltype="CF_SQL_INTEGER">
-    </cfquery>
-
-    <cfif find.recordcount is "0">
-        <cfoutput>
-            <cfset n=n + 1 />
-            <cfif n is "1">
-                <h3>itemtypes_user</h3>
-            </cfif>
-        </cfoutput>
-
-        <cfquery result="result" datasource="#dsn#" name="insert">
-            INSERT INTO itemtypes_user (valuetype, typeicon, userid)
-            VALUES ('#x.valuetype#', '#x.typeicon#', <cfqueryparam value="#select_userid#" cfsqltype="CF_SQL_INTEGER">);
-        </cfquery>
-
-        <cfif dbug is "Y">
-            <cfoutput>itemtypes_user: #x.valuetype# added</cfoutput><br />
-        </cfif>
-    </cfif>
-</cfloop>
-
-<cfset n=0 />
-
-<cfquery result="result" datasource="#dsn#" name="x">
-    select DISTINCT c.catid, i.valuetype
-    FROM itemcategory c
-    inner join itemcatxref x ON x.catid = c.catid
-    INNER JOIN itemtypes i ON i.typeid = x.typeid
-    WHERE c.isdeleted = <cfqueryparam value="0" cfsqltype="CF_SQL_BIT"> AND i.isdeleted = <cfqueryparam value="0" cfsqltype="CF_SQL_BIT">
-    ORDER BY c.catid, i.valuetype
-</cfquery>
-
-<cfloop query="x">
-    <cfset new_catid=x.catid />
-
-    <cfquery result="result" datasource="#dsn#" name="find">
-        Select typeid from itemtypes_user
-        where valuetype = '#x.valuetype#' and userid = <cfqueryparam value="#select_userid#" cfsqltype="CF_SQL_INTEGER">
-    </cfquery>
-
-    <cfset new_typeid=find.typeid />
-
-    <cfquery result="result" datasource="#dsn#" name="check">
-        select * from itemcatxref_user where userid = <cfqueryparam value="#select_userid#" cfsqltype="CF_SQL_INTEGER"> and typeid = #new_typeid# and catid = #new_catid#
-    </cfquery>
-
-    <cfif check.recordcount is "0">
-        <cfoutput>
-            <cfset n=n + 1 />
-            <cfif n is "1">
-                <h3>itemcatxref_user</h3>
-            </cfif>
-        </cfoutput>
-
-        <cfquery result="result" datasource="#dsn#" name="insert">
-            INSERT INTO itemcatxref_user (typeid, catid, userid)
-            VALUES (#new_typeid#, #new_catid#, <cfqueryparam value="#select_userid#" cfsqltype="CF_SQL_INTEGER">);
-        </cfquery>
-
-        <cfif dbug is "Y">
-            <cfoutput>itemcatxref_user: (#new_typeid#, #new_catid#, #select_userid# added</cfoutput><br />
-        </cfif>
-    </cfif>
-</cfloop>
-
-<cfset n=0 />
-
-<cfquery result="result" datasource="#dsn#" name="x">
-    SELECT * FROM pgpanels_master
-</cfquery>
-
-<cfloop query="x">
-    <cfquery result="result" datasource="#dsn#" name="find">
-        SELECT * FROM pgpanels_user where userid = <cfqueryparam value="#select_userid#" cfsqltype="CF_SQL_INTEGER"> and pnFilename = '#x.pnFilename#' and isdeleted = <cfqueryparam value="0" cfsqltype="CF_SQL_BIT">
-    </cfquery>
-
-    <cfif find.recordcount is "0">
-        <cfoutput>
-            <cfset n=n + 1 />
-            <cfif n is "1">
-                <h3>pgpanels_user</h3>
-            </cfif>
-        </cfoutput>
-
-        <cfquery result="result" datasource="#dsn#" name="insert">
-            INSERT INTO pgpanels_user (userid, pnTitle, pnFilename, pnOrderNo, pnColXl, pnColMd, pnDescription, IsVisible)
-            VALUES (#select_userid#, '#x.pntitle#', '#x.pnfilename#', #x.pnOrderNo#, #x.pnColXl#, #x.pnColMd#, '#x.pnDescription#', 1);
-        </cfquery>
-    </cfif>
-</cfloop>
-
-<cfset n=0 />
-
-<cfquery result="result" datasource="#dsn#" name="x">
-    SELECT * FROM tags
-</cfquery>
-
-<cfloop query="x">
-    <cfquery result="result" datasource="#dsn#" name="find">
-        Select * from tags_user
-        where tagname = '#x.tagname#' and userid = <cfqueryparam value="#select_userid#" cfsqltype="CF_SQL_INTEGER">
-    </cfquery>
-
-    <cfif find.recordcount is "0">
-        <cfoutput>
-            <cfset n=n + 1 />
-            <cfif n is "1">
-                <h3>tags_user</h3>
-            </cfif>
-        </cfoutput>
-
-        <cfquery result="result" datasource="#dsn#" name="insert">
-            INSERT INTO tags_user (tagname, userid)
-            VALUES ('#x.tagname#', <cfqueryparam value="#select_userid#" cfsqltype="CF_SQL_INTEGER">);
-        </cfquery>
-
-        <cfif dbug is "Y">
-            <cfoutput>tags_user: #x.tagname# added</cfoutput><br />
-        </cfif>
-    </cfif>
-</cfloop>
-
-<cfquery result="result" datasource="#dsn#" name="x">
-    SELECT tagname, isteam, iscasting, tagtype FROM tags
-</cfquery>
-
-<cfloop query="x">
-    <cfquery result="result" datasource="#dsn#" name="insert">
-        update tags_user
-        set isteam = #x.isteam#, iscasting = #x.iscasting#, tagtype = '#x.tagtype#'
-        where tagname = '#x.tagname#'
-    </cfquery>
-</cfloop>
-
-<Cfset n=0 />
-
-<cfquery result="result" datasource="#dsn#" name="x">
-    select sitetypename, sitetypedescription from sitetypes_master
-</cfquery>
-
-<cfloop query="x">
-    <cfquery result="result" datasource="#dsn#" name="find">
-        Select * from sitetypes_user
-        where sitetypename = '#x.sitetypename#' and userid = <cfqueryparam value="#select_userid#" cfsqltype="CF_SQL_INTEGER">
-    </cfquery>
-
-    <cfif find.recordcount is "0">
-        <cfoutput>
-            <cfset n=n + 1 />
-            <cfif n is "1">
-                <h3>sitetypes_user</h3>
-            </cfif>
-        </cfoutput>
-
-        <cfquery result="result" datasource="#dsn#" name="insert">
-            INSERT INTO sitetypes_user (siteTypeName, siteTypeDescription, userid)
-            VALUES ('#x.sitetypename#', '#x.sitetypedescription#', <cfqueryparam value="#select_userid#" cfsqltype="CF_SQL_INTEGER">);
-        </cfquery>
-
-        <cfoutput>
-            sitetypes_user added: #x.sitetypename#<br />
-        </cfoutput>
-    </cfif>
-</cfloop>
-
-<cfset n=0 />
-
-<cfquery result="result" datasource="#dsn#" name="x">
-    SELECT
-        s.id,
-        s.sitename,
-        s.siteURL,
-        s.siteicon,
-        s.sitetypeid,
-        t.sitetypename
-    FROM
-        sitelinks_master s
-        INNER JOIN sitetypes_master t ON t.sitetypeid = s.siteTypeid
-    ORDER BY
-        s.sitename
-</cfquery>
-
-<cfloop query="x">
-    <cfquery result="result" datasource="#dsn#" name="find">
-        SELECT sitetypeid
-        FROM sitetypes_user
-        WHERE sitetypename = <cfqueryparam value="#x.sitetypename#" cfsqltype="CF_SQL_VARCHAR">
-        AND userid = <cfqueryparam value="#select_userid#" cfsqltype="CF_SQL_INTEGER">
-    </cfquery>
-
-    <cfif dbug eq "Y">
-        <cfoutput>
-            SELECT sitetypeid FROM sitetypes_user
-            WHERE sitetypename = '#x.sitetypename#' AND userid = #select_userid# (#find.recordcount#)<br/>
-        </cfoutput>
-    </cfif>
-
-    <cfif find.recordcount eq 1>
-        <cfoutput>
-            <cfset n = n + 1 />
-            <cfif n eq 1>
-                <h3>sitelinks_user</h3>
-            </cfif>
-        </cfoutput>
-
-        <cfset new_sitetypeid = find.sitetypeid />
-
-        <cfif dbug eq "Y">
-            <cfoutput>
-                <h3>new_sitetypeid: #new_sitetypeid#</h3>
-            </cfoutput>
-        </cfif>
-
-        <cfquery result="result" datasource="#dsn#" name="find2">
-            SELECT *
-            FROM sitelinks_user
-            WHERE sitename = <cfqueryparam value="#x.sitename#" cfsqltype="CF_SQL_VARCHAR">
-            AND userid = <cfqueryparam value="#select_userid#" cfsqltype="CF_SQL_INTEGER">
-        </cfquery>
-
-        <cfif dbug eq "Y">
-            <cfoutput>
-                SELECT * FROM sitelinks_user WHERE sitename = '#x.sitename#' AND userid = #select_userid#<br/>
-            </cfoutput>
-        </cfif>
-
-        <cfif find2.recordcount eq 0>
-            <cfif dbug eq "Y">
-                <cfoutput>
-                    INSERT INTO sitelinks_user_tbl (siteName, siteURL, siteicon, siteTypeid, userid)
-                    VALUES ('#x.sitename#', '#x.siteurl#', '#x.siteicon#', #new_sitetypeid#, #select_userid#)<br/>
-                </cfoutput>
-            </cfif>
-
-            <cfquery result="result" datasource="#dsn#" name="insert">
-                INSERT INTO sitelinks_user_tbl (siteName, siteURL, siteicon, siteTypeid, userid)
-                VALUES (
-                    <cfqueryparam value="#x.sitename#" cfsqltype="CF_SQL_VARCHAR">,
-                    <cfqueryparam value="#x.siteurl#" cfsqltype="CF_SQL_VARCHAR">,
-                    <cfqueryparam value="#x.siteicon#" cfsqltype="CF_SQL_VARCHAR">,
-                    <cfqueryparam value="#new_sitetypeid#" cfsqltype="CF_SQL_INTEGER">,
-                    <cfqueryparam value="#select_userid#" cfsqltype="CF_SQL_INTEGER">
-                )
-            </cfquery>
-
-            <cfif dbug eq "Y">
-                <cfoutput>
-                    sitelinks_user_tbl: #x.sitename# added<br />
-                </cfoutput>
-            </cfif>
-        </cfif>
-    </cfif>
-</cfloop>
-
-<cfset n = 0 />
-
-<cfquery result="result" datasource="#dsn#" name="x">
-    SELECT sitetypeid, sitetypename, sitetypedescription from sitetypes_user where userid = <cfqueryparam value="#select_userid#" cfsqltype="CF_SQL_INTEGER">
-</cfquery>
-
-<cfloop query="x">
-    <cfoutput>
-        <cfset new_pntitle = "#x.sitetypename# Links" />
-        <cfset new_sitetypeid = x.sitetypeid />
-    </cfoutput>
-
-    <cfquery result="result" name="Findtotal" maxrows="1" datasource="#dsn#">
-        Select p.pnOrderno + 1 as new_pnOrderNo
-        from pgpanels_user p 
-        where p.userid = <cfqueryparam value="#select_userid#" cfsqltype="CF_SQL_INTEGER">
-        order by p.pnOrderno desc
-    </cfquery> 
-
-    <cfquery name="add" datasource="#dsn#" result="PN">    
-        INSERT INTO pgpanels_user (pnTitle, pnFilename, pnorderno, pncolxl, pncolMd, pnDescription, IsDeleted, IsVisible, userid)
-        VALUES ('#new_pnTitle#', 'mylinks_user.cfm', #Findtotal.new_pnOrderNo#, <cfqueryparam value="3" cfsqltype="CF_SQL_INTEGER">, <cfqueryparam value="3" cfsqltype="CF_SQL_INTEGER">, '', 0, 1, <cfqueryparam value="#select_userid#" cfsqltype="CF_SQL_INTEGER">)
-    </cfquery>
-
-    <cfset new_pnid = PN.generated_key />
-
-    <cfquery result="result" name="add" datasource="#dsn#"> 
-        update sitetypes_user
-        set pnid = <cfqueryparam value="#new_pnid#" cfsqltype="CF_SQL_INTEGER"> where sitetypeid = <cfqueryparam value="#new_sitetypeid#" cfsqltype="CF_SQL_INTEGER">
-    </cfquery>
-</cfloop>
+<cfscript>
+    // Process contact directories
+    for (contact in contactQuery) {
+        local.contactPath = session.userContactsPath & "\" & contact.contactid;
+        ensureDirectoryExists(local.contactPath);
         
-        
-        
-        <cfquery result="result" name="loginQuery" datasource="#dsn#" >
-  SELECT * FROM taousers where contactid is null
-</cfquery> 
- 
-<cfloop query="loginQuery">
-<cfif #loginQuery.contactid# is "">
-
-            <cfquery name="InsertContact"  datasource="#dsn#"  result="result">  
-                INSERT INTO contactdetails (contactfullname,userid,user_yn)
-                values ('#loginQuery.userfirstname# #loginQuery.userlastname#',#loginQuery.userid#,'Y')
-            </cfquery>
+        local.contactAvatarPath = local.contactPath & "\avatar.jpg";
+        if (!fileExists(local.contactAvatarPath) && isDefined("dir_missing_avatar_filename")) {
+            ensureFileExists(dir_missing_avatar_filename, local.contactAvatarPath);
+        }
+    }
     
-            <cfset new_contactid = result.generatedkey />
+    debugLog("Processed " & contactQuery.recordCount & " contact directories");
     
-            <cfquery result="result" name="InsertContact"  datasource="#dsn#" >  
-            update taousers
-            set contactid = #new_contactid#
-            where userid = #loginQuery.userid#
-            </cfquery>     
+    // Generic function to sync lookup tables from master to user tables
+    function syncLookupTable(masterTable, userTable, keyField, valueField, additionalFields = "", whereClause = "isdeleted = 0") {
+        var insertCount = 0;
+        var debugTitle = arguments.userTable;
         
-        </cfif> 
+        try {
+            // Get master data
+            var masterQuery = queryExecute("
+                SELECT " & arguments.keyField & 
+                (len(arguments.valueField) ? ", " & arguments.valueField : "") &
+                (len(arguments.additionalFields) ? ", " & arguments.additionalFields : "") & "
+                FROM " & arguments.masterTable & 
+                (len(arguments.whereClause) ? " WHERE " & arguments.whereClause : ""),
+                {},
+                {datasource: variables.dsn}
+            );
+            
+            for (var row in masterQuery) {
+                // Check if record exists for user
+                var checkQuery = queryExecute("
+                    SELECT COUNT(*) as recordCount 
+                    FROM " & arguments.userTable & " 
+                    WHERE " & arguments.valueField & " = ? AND userid = ?",
+                    [row[arguments.valueField], variables.userid],
+                    {datasource: variables.dsn}
+                );
+                
+                if (checkQuery.recordCount == 0) {
+                    // Build insert statement dynamically
+                    var insertFields = arguments.valueField & ", userid";
+                    var insertValues = "?, ?";
+                    var insertParams = [row[arguments.valueField], variables.userid];
+                    
+                    // Add additional fields if specified
+                    if (len(arguments.additionalFields)) {
+                        var additionalFieldList = listToArray(arguments.additionalFields);
+                        for (var field in additionalFieldList) {
+                            insertFields = listAppend(insertFields, field);
+                            insertValues = listAppend(insertValues, "?");
+                            arrayAppend(insertParams, row[field]);
+                        }
+                    }
+                    
+                    // Execute insert
+                    queryExecute("
+                        INSERT INTO " & arguments.userTable & " (" & insertFields & ") 
+                        VALUES (" & insertValues & ")",
+                        insertParams,
+                        {datasource: variables.dsn}
+                    );
+                    
+                    insertCount++;
+                    if (insertCount == 1) {
+                        debugLog("<strong>" & debugTitle & "</strong>");
+                    }
+                    debugLog("Added: " & row[arguments.valueField]);
+                }
+            }
+            
+            if (insertCount > 0) {
+                debugLog("Total " & debugTitle & " records added: " & insertCount);
+            }
+            
+        } catch (any e) {
+            debugLog("Error syncing " & arguments.masterTable & ": " & e.message);
+        }
+        
+        return insertCount;
+    }
+</cfscript>
 
-</cfloop>
+<cfscript>
+    // Update team tags first
+    try {
+        queryExecute("
+            UPDATE tags_user 
+            SET IsTeam = 1 
+            WHERE userid = ? AND tagname IN (
+                SELECT tagname FROM tags WHERE isteam = 1
+            )",
+            [variables.userid],
+            {datasource: variables.dsn}
+        );
+        debugLog("Updated team tags for user");
+    } catch (any e) {
+        debugLog("Error updating team tags: " & e.message);
+    }
+    
+    // Sync all lookup tables using the generic function
+    debugLog("<h3>Syncing Lookup Tables</h3>");
+    
+    // Audition-related tables
+    syncLookupTable("auddialects", "auddialects_user", "auddialectid", "auddialect", "audcatid");
+    syncLookupTable("audgenres", "audgenres_user", "audgenreid", "audgenre", "audcatid");
+    syncLookupTable("audnetworks", "audnetworks_user", "networkid", "network", "audcatid");
+    syncLookupTable("audopencalloptions", "audopencalloptions_user", "", "opencallname");
+    syncLookupTable("audplatforms", "audplatforms_user", "audplatformid", "audplatform");
+    syncLookupTable("audtones", "audtones_user", "toneid", "tone", "audcatid");
+    
+    // Event and gender tables
+    syncLookupTable("eventtypes", "eventtypes_user", "", "eventTypeName", "eventtypedescription, eventtypecolor");
+    syncLookupTable("genderpronouns", "genderpronouns_users", "", "genderpronoun", "genderpronounplural");
+    
+    // Item and site tables
+    syncLookupTable("itemtypes", "itemtypes_user", "typeid", "valuetype", "typeicon");
+    syncLookupTable("tags", "tags_user", "", "tagname");
+    syncLookupTable("sitetypes_master", "sitetypes_user", "", "sitetypename", "sitetypedescription");
+</cfscript>
+
+<cfscript>
+    // Special handling for audquestions (needs qorder field checking)
+    try {
+        debugLog("<strong>audquestions_user</strong>");
+        var questionsQuery = queryExecute("
+            SELECT qtypeid, qtext, qorder 
+            FROM audquestions_default 
+            WHERE isdeleted = 0",
+            {},
+            {datasource: variables.dsn}
+        );
+        
+        var questionsAdded = 0;
+        for (var question in questionsQuery) {
+            var existsQuery = queryExecute("
+                SELECT COUNT(*) as recordCount 
+                FROM audquestions_user 
+                WHERE isdeleted = 0 AND qorder = ? AND userid = ?",
+                [question.qorder, variables.userid],
+                {datasource: variables.dsn}
+            );
+            
+            if (existsQuery.recordCount == 0) {
+                queryExecute("
+                    INSERT INTO audquestions_user (qtypeid, qtext, qorder, userid) 
+                    VALUES (?, ?, ?, ?)",
+                    [question.qtypeid, question.qtext, question.qorder, variables.userid],
+                    {datasource: variables.dsn}
+                );
+                questionsAdded++;
+                debugLog("Added question: " & question.qtext);
+            }
+        }
+        if (questionsAdded > 0) {
+            debugLog("Total audquestions_user records added: " & questionsAdded);
+        }
+    } catch (any e) {
+        debugLog("Error syncing audquestions: " & e.message);
+    }
+    
+    // Special handling for audsubmitsites (has catlist field)
+    try {
+        debugLog("<strong>audsubmitsites_user</strong>");
+        var submitsitesQuery = queryExecute("
+            SELECT submitsitename, catlist 
+            FROM audsubmitsites",
+            {},
+            {datasource: variables.dsn}
+        );
+        
+        var submitsitesAdded = 0;
+        for (var site in submitsitesQuery) {
+            var existsQuery = queryExecute("
+                SELECT COUNT(*) as recordCount 
+                FROM audsubmitsites_user 
+                WHERE submitsitename = ? AND userid = ?",
+                [site.submitsitename, variables.userid],
+                {datasource: variables.dsn}
+            );
+            
+            if (existsQuery.recordCount == 0) {
+                queryExecute("
+                    INSERT INTO audsubmitsites_user (submitsitename, catlist, userid) 
+                    VALUES (?, ?, ?)",
+                    [site.submitsitename, site.catlist, variables.userid],
+                    {datasource: variables.dsn}
+                );
+                submitsitesAdded++;
+                debugLog("Added submitsite: " & site.submitsitename);
+            }
+        }
+        if (submitsitesAdded > 0) {
+            debugLog("Total audsubmitsites_user records added: " & submitsitesAdded);
+        }
+    } catch (any e) {
+        debugLog("Error syncing audsubmitsites: " & e.message);
+    }
+    
+    // Special handling for itemcatxref (complex join logic)
+    try {
+        debugLog("<strong>itemcatxref_user</strong>");
+        var categoryQuery = queryExecute("
+            SELECT DISTINCT c.catid, i.valuetype, i.typeid as master_typeid
+            FROM itemcategory c
+            INNER JOIN itemcatxref x ON x.catid = c.catid
+            INNER JOIN itemtypes i ON i.typeid = x.typeid
+            WHERE c.isdeleted = 0 AND i.isdeleted = 0
+            ORDER BY c.catid, i.valuetype",
+            {},
+            {datasource: variables.dsn}
+        );
+        
+        var categoryAdded = 0;
+        for (var category in categoryQuery) {
+            // Get user's typeid for this valuetype
+            var userTypeQuery = queryExecute("
+                SELECT typeid 
+                FROM itemtypes_user 
+                WHERE valuetype = ? AND userid = ?",
+                [category.valuetype, variables.userid],
+                {datasource: variables.dsn}
+            );
+            
+            if (userTypeQuery.recordCount > 0) {
+                var userTypeId = userTypeQuery.typeid;
+                
+                // Check if this combination already exists
+                var existsQuery = queryExecute("
+                    SELECT COUNT(*) as recordCount 
+                    FROM itemcatxref_user 
+                    WHERE userid = ? AND typeid = ? AND catid = ?",
+                    [variables.userid, userTypeId, category.catid],
+                    {datasource: variables.dsn}
+                );
+                
+                if (existsQuery.recordCount == 0) {
+                    queryExecute("
+                        INSERT INTO itemcatxref_user (typeid, catid, userid) 
+                        VALUES (?, ?, ?)",
+                        [userTypeId, category.catid, variables.userid],
+                        {datasource: variables.dsn}
+                    );
+                    categoryAdded++;
+                    debugLog("Added category xref: typeid=" & userTypeId & ", catid=" & category.catid);
+                }
+            }
+        }
+        if (categoryAdded > 0) {
+            debugLog("Total itemcatxref_user records added: " & categoryAdded);
+        }
+    } catch (any e) {
+        debugLog("Error syncing itemcatxref: " & e.message);
+    }
+    
+    // Sync panels from master
+    syncLookupTable("pgpanels_master", "pgpanels_user", "", "pnFilename", "pnTitle, pnOrderNo, pnColXl, pnColMd, pnDescription", "1=1");
+    
+    // Update tag properties after syncing
+    try {
+        var tagUpdateQuery = queryExecute("
+            SELECT tagname, isteam, iscasting, tagtype 
+            FROM tags",
+            {},
+            {datasource: variables.dsn}
+        );
+        
+        for (var tag in tagUpdateQuery) {
+            queryExecute("
+                UPDATE tags_user 
+                SET isteam = ?, iscasting = ?, tagtype = ? 
+                WHERE tagname = ? AND userid = ?",
+                [tag.isteam, tag.iscasting, tag.tagtype, tag.tagname, variables.userid],
+                {datasource: variables.dsn}
+            );
+        }
+        debugLog("Updated tag properties for " & tagUpdateQuery.recordCount & " tags");
+    } catch (any e) {
+        debugLog("Error updating tag properties: " & e.message);
+    }
+</cfscript>
+
+<cfscript>
+    // Handle sitelinks with proper relationship to sitetypes
+    try {
+        debugLog("<strong>sitelinks_user</strong>");
+        var sitelinksQuery = queryExecute("
+            SELECT s.id, s.sitename, s.siteURL, s.siteicon, s.sitetypeid, t.sitetypename
+            FROM sitelinks_master s
+            INNER JOIN sitetypes_master t ON t.sitetypeid = s.siteTypeid
+            ORDER BY s.sitename",
+            {},
+            {datasource: variables.dsn}
+        );
+        
+        var sitelinksAdded = 0;
+        for (var sitelink in sitelinksQuery) {
+            // Get user's sitetypeid for this sitetypename
+            var userSiteTypeQuery = queryExecute("
+                SELECT sitetypeid 
+                FROM sitetypes_user 
+                WHERE sitetypename = ? AND userid = ?",
+                [sitelink.sitetypename, variables.userid],
+                {datasource: variables.dsn}
+            );
+            
+            if (userSiteTypeQuery.recordCount == 1) {
+                var userSiteTypeId = userSiteTypeQuery.sitetypeid;
+                
+                // Check if this sitelink already exists for user
+                var existsQuery = queryExecute("
+                    SELECT COUNT(*) as recordCount 
+                    FROM sitelinks_user 
+                    WHERE sitename = ? AND userid = ?",
+                    [sitelink.sitename, variables.userid],
+                    {datasource: variables.dsn}
+                );
+                
+                if (existsQuery.recordCount == 0) {
+                    queryExecute("
+                        INSERT INTO sitelinks_user_tbl (siteName, siteURL, siteicon, siteTypeid, userid) 
+                        VALUES (?, ?, ?, ?, ?)",
+                        [sitelink.sitename, sitelink.siteURL, sitelink.siteicon, userSiteTypeId, variables.userid],
+                        {datasource: variables.dsn}
+                    );
+                    sitelinksAdded++;
+                    debugLog("Added sitelink: " & sitelink.sitename);
+                }
+            }
+        }
+        if (sitelinksAdded > 0) {
+            debugLog("Total sitelinks_user records added: " & sitelinksAdded);
+        }
+    } catch (any e) {
+        debugLog("Error syncing sitelinks: " & e.message);
+    }
+    
+    // Create panels for each sitetype
+    try {
+        debugLog("<strong>Creating sitetype panels</strong>");
+        var siteTypesQuery = queryExecute("
+            SELECT sitetypeid, sitetypename, sitetypedescription 
+            FROM sitetypes_user 
+            WHERE userid = ?",
+            [variables.userid],
+            {datasource: variables.dsn}
+        );
+        
+        for (var siteType in siteTypesQuery) {
+            // Get next panel order number
+            var maxOrderQuery = queryExecute("
+                SELECT COALESCE(MAX(pnOrderno), 0) + 1 as nextOrderNo
+                FROM pgpanels_user 
+                WHERE userid = ?",
+                [variables.userid],
+                {datasource: variables.dsn}
+            );
+            
+            var nextOrderNo = maxOrderQuery.nextOrderNo;
+            var panelTitle = siteType.sitetypename & " Links";
+            
+            // Insert new panel
+            var panelResult = queryExecute("
+                INSERT INTO pgpanels_user (pnTitle, pnFilename, pnorderno, pncolxl, pncolMd, pnDescription, IsDeleted, IsVisible, userid) 
+                VALUES (?, 'mylinks_user.cfm', ?, 3, 3, '', 0, 1, ?)",
+                [panelTitle, nextOrderNo, variables.userid],
+                {datasource: variables.dsn, result: "panelInsert"}
+            );
+            
+            var newPanelId = panelInsert.generatedKey;
+            
+            // Update sitetype with panel ID
+            queryExecute("
+                UPDATE sitetypes_user 
+                SET pnid = ? 
+                WHERE sitetypeid = ? AND userid = ?",
+                [newPanelId, siteType.sitetypeid, variables.userid],
+                {datasource: variables.dsn}
+            );
+            
+            debugLog("Created panel: " & panelTitle & " (ID: " & newPanelId & ")");
+        }
+    } catch (any e) {
+        debugLog("Error creating sitetype panels: " & e.message);
+    }
+    
+    // Handle users without contactid (create contact records)
+    try {
+        debugLog("<strong>Creating missing contact records</strong>");
+        var usersQuery = queryExecute("
+            SELECT userid, userfirstname, userlastname, contactid
+            FROM taousers 
+            WHERE contactid IS NULL OR contactid = ''",
+            {},
+            {datasource: variables.dsn}
+        );
+        
+        var contactsCreated = 0;
+        for (var user in usersQuery) {
+            if (!len(trim(user.contactid))) {
+                // Create contact record
+                var contactResult = queryExecute("
+                    INSERT INTO contactdetails (contactfullname, userid, user_yn) 
+                    VALUES (?, ?, 'Y')",
+                    [user.userfirstname & " " & user.userlastname, user.userid],
+                    {datasource: variables.dsn, result: "contactInsert"}
+                );
+                
+                var newContactId = contactInsert.generatedKey;
+                
+                // Update user with contact ID
+                queryExecute("
+                    UPDATE taousers 
+                    SET contactid = ? 
+                    WHERE userid = ?",
+                    [newContactId, user.userid],
+                    {datasource: variables.dsn}
+                );
+                
+                contactsCreated++;
+                debugLog("Created contact for user " & user.userid & ": " & user.userfirstname & " " & user.userlastname);
+            }
+        }
+        if (contactsCreated > 0) {
+            debugLog("Total contact records created: " & contactsCreated);
+        }
+    } catch (any e) {
+        debugLog("Error creating contact records: " & e.message);
+    }
+    
+    // Final completion message
+    var endTime = timeFormat(now(), 'HHMMSS');
+    var timeDiff = timeFormat(dateAdd("s", timeFormat(endTime, "H")*3600 + timeFormat(endTime, "m")*60 + timeFormat(endTime, "s") - (timeFormat(variables.starttime, "H")*3600 + timeFormat(variables.starttime, "m")*60 + timeFormat(variables.starttime, "s")), createDate(1970,1,1)), 'HHMMSS');
+    
+    debugLog("<hr><strong>User setup completed for userID " & variables.userid & "</strong>");
+    debugLog("Total execution time: " & timeDiff);
+</cfscript>
