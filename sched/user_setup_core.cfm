@@ -315,7 +315,34 @@
     syncLookupTable("audgenres", "audgenres_user", "audgenreid", "audgenre", "audcatid");
     syncLookupTable("audnetworks", "audnetworks_user", "networkid", "network", "audcatid");
     syncLookupTable("audopencalloptions", "audopencalloptions_user", "", "opencallname", "", "1=1");
-    syncLookupTable("audplatforms", "audplatforms_user", "audplatformid", "audplatform");
+    
+    // Special debugging for audplatforms_user
+    try {
+        debugLog("<strong>DEBUGGING audplatforms_user</strong>");
+        
+        // Count master records
+        masterCountQuery = queryExecute("SELECT COUNT(*) as countValue FROM audplatforms WHERE isdeleted = 0", {}, {datasource: variables.dsn});
+        masterCount = masterCountQuery.countValue;
+        debugLog("Master audplatforms records: " & masterCount);
+        
+        // Count existing user records
+        userCountQuery = queryExecute("SELECT COUNT(*) as countValue FROM audplatforms_user WHERE userid = ?", [variables.userid], {datasource: variables.dsn});
+        userCount = userCountQuery.countValue;
+        debugLog("Existing audplatforms_user records for user " & variables.userid & ": " & userCount);
+        
+        // Now run the sync and capture result
+        insertedCount = syncLookupTable("audplatforms", "audplatforms_user", "audplatformid", "audplatform");
+        debugLog("Records inserted: " & insertedCount);
+        
+        // Count user records after sync
+        userCountAfterQuery = queryExecute("SELECT COUNT(*) as countValue FROM audplatforms_user WHERE userid = ?", [variables.userid], {datasource: variables.dsn});
+        userCountAfter = userCountAfterQuery.countValue;
+        debugLog("Final audplatforms_user records for user " & variables.userid & ": " & userCountAfter);
+        
+    } catch (any e) {
+        debugLog("Error debugging audplatforms_user: " & e.message);
+    }
+    
     syncLookupTable("audtones", "audtones_user", "toneid", "tone", "audcatid");
     
     // Event and gender tables
