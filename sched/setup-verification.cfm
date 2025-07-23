@@ -60,15 +60,15 @@
     <!--- Check each table for this user --->
     <cfloop array="#userTables#" index="table">
         <cftry>
-            <!--- Use a simple query and get the actual COUNT value --->
+            <!--- Simple query to get the actual count --->
             <cfquery name="getTableCount" datasource="#application.dsn#">
-                SELECT COUNT(*) as recordCount 
+                SELECT COUNT(*) as countValue
                 FROM #table.name# 
                 WHERE userid = <cfqueryparam value="#getAllUsers.userid#" cfsqltype="CF_SQL_INTEGER">
             </cfquery>
             
-            <!--- Get the actual COUNT value directly --->
-            <cfset actualCount = getTableCount.recordCount>
+            <!--- Get the actual count value --->
+            <cfset actualCount = getTableCount.countValue>
             
             <cfset currentUser.tableCounts[table.name] = actualCount>
             <cfset currentUser.totalRecords += actualCount>
