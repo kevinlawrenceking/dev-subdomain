@@ -90,11 +90,11 @@
                     SQL: SELECT COUNT(*) as recordCount FROM #table.name# WHERE userid = #getAllUsers.userid#
               
             <cfquery name="x" datasource="#application.dsn#">
-                SELECT COUNT(*) as recordCount 
+                SELECT COUNT(*) as it 
                 FROM audgenres_user
-                WHERE userid = <cfqueryparam value="#getAllUsers.userid#" cfsqltype="CF_SQL_INTEGER">
+                WHERE userid = 30
             </cfquery>
-audgenres_user recordcount: #x.recordcount#
+audgenres_user recordcount: #x.it#
                 </cfoutput>
             </cfif>
             
