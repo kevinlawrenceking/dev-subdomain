@@ -24,6 +24,29 @@
         }
     }
     
+    // Enhanced error logging function
+    function logDatabaseError(operation, sql, params, error) {
+        var errorDetails = "<div style='border: 1px solid red; padding: 10px; margin: 5px; background: ##ffe6e6;'>";
+        errorDetails &= "<strong style='color: red;'>DATABASE ERROR IN: " & operation & "</strong><br>";
+        errorDetails &= "<strong>Error Message:</strong> " & htmlEditFormat(error.message) & "<br>";
+        if (structKeyExists(error, "detail") && len(error.detail)) {
+            errorDetails &= "<strong>Error Detail:</strong> " & htmlEditFormat(error.detail) & "<br>";
+        }
+        if (structKeyExists(error, "errorCode") && len(error.errorCode)) {
+            errorDetails &= "<strong>Error Code:</strong> " & error.errorCode & "<br>";
+        }
+        if (structKeyExists(error, "sqlState") && len(error.sqlState)) {
+            errorDetails &= "<strong>SQL State:</strong> " & error.sqlState & "<br>";
+        }
+        errorDetails &= "<strong>SQL Query:</strong><br><pre style='background: ##f5f5f5; padding: 5px; overflow-x: auto;'>" & htmlEditFormat(sql) & "</pre>";
+        if (isArray(params) && arrayLen(params) > 0) {
+            errorDetails &= "<strong>Parameters:</strong> " & serializeJSON(params) & "<br>";
+        }
+        errorDetails &= "<strong>Datasource:</strong> " & variables.dsn & "<br>";
+        errorDetails &= "</div>";
+        debugLog(errorDetails, true); // Always show database errors
+    }
+    
     // Validation
     if (val(select_userid) == 0) {
         writeOutput("<p style='color: red;'>Error: No valid user ID provided</p>");
@@ -35,6 +58,26 @@
     variables.starttime = timeFormat(now(), 'HHMMSS');
     
     debugLog("Starting user setup for userID: " & variables.userid);
+    
+    // Test database connectivity and log details
+    try {
+        var testQuery = queryExecute("SELECT COUNT(*) as recordCount FROM taousers WHERE userid = ?", 
+            [variables.userid], {datasource: variables.dsn});
+        debugLog("Database connection verified - User " & variables.userid & " exists: " & (testQuery.recordCount > 0 ? "YES" : "NO"));
+        
+        // Test a few critical tables for existence
+        var testTables = ["audopencalloptions", "eventtypes", "genderpronouns", "tags", "sitetypes_master"];
+        for (var tableName in testTables) {
+            try {
+                var tableTest = queryExecute("SELECT COUNT(*) as recordCount FROM " & tableName, {}, {datasource: variables.dsn});
+                debugLog("Table '" & tableName & "' accessible - " & tableTest.recordCount & " records");
+            } catch (any tableError) {
+                debugLog("<span style='color: red;'>Table '" & tableName & "' ERROR: " & tableError.message & "</span>");
+            }
+        }
+    } catch (any e) {
+        logDatabaseError("Database Connectivity Test", "SELECT COUNT(*) as recordCount FROM taousers WHERE userid = ?", [variables.userid], e);
+    }
     
     // Media path configuration - Fixed application scope pollution
     variables.baseMediaPath = "C:\home\theactorsoffice.com\media-" & variables.dsn;
@@ -151,28 +194,28 @@
     function syncLookupTable(masterTable, userTable, keyField, valueField, additionalFields = "", whereClause = "isdeleted = 0") {
         var insertCount = 0;
         var debugTitle = arguments.userTable;
+        var masterSQL = "";
+        var checkSQL = "";
+        var insertSQL = "";
         
         try {
-            // Get master data
-            var masterQuery = queryExecute("
-                SELECT " & arguments.keyField & 
+            // Build and execute master query
+            masterSQL = "SELECT " & arguments.keyField & 
                 (len(arguments.valueField) ? ", " & arguments.valueField : "") &
                 (len(arguments.additionalFields) ? ", " & arguments.additionalFields : "") & "
                 FROM " & arguments.masterTable & 
-                (len(arguments.whereClause) ? " WHERE " & arguments.whereClause : ""),
-                {},
-                {datasource: variables.dsn}
-            );
+                (len(arguments.whereClause) ? " WHERE " & arguments.whereClause : "");
+            
+            var masterQuery = queryExecute(masterSQL, {}, {datasource: variables.dsn});
             
             for (var row in masterQuery) {
                 // Check if record exists for user
-                var checkQuery = queryExecute("
-                    SELECT COUNT(*) as recordCount 
+                checkSQL = "SELECT COUNT(*) as recordCount 
                     FROM " & arguments.userTable & " 
-                    WHERE " & arguments.valueField & " = ? AND userid = ?",
-                    [row[arguments.valueField], variables.userid],
-                    {datasource: variables.dsn}
-                );
+                    WHERE " & arguments.valueField & " = ? AND userid = ?";
+                var checkParams = [row[arguments.valueField], variables.userid];
+                
+                var checkQuery = queryExecute(checkSQL, checkParams, {datasource: variables.dsn});
                 
                 if (checkQuery.recordCount == 0) {
                     // Build insert statement dynamically
@@ -191,12 +234,10 @@
                     }
                     
                     // Execute insert
-                    queryExecute("
-                        INSERT INTO " & arguments.userTable & " (" & insertFields & ") 
-                        VALUES (" & insertValues & ")",
-                        insertParams,
-                        {datasource: variables.dsn}
-                    );
+                    insertSQL = "INSERT INTO " & arguments.userTable & " (" & insertFields & ") 
+                        VALUES (" & insertValues & ")";
+                    
+                    queryExecute(insertSQL, insertParams, {datasource: variables.dsn});
                     
                     insertCount++;
                     if (insertCount == 1) {
@@ -211,7 +252,25 @@
             }
             
         } catch (any e) {
-            debugLog("Error syncing " & arguments.masterTable & ": " & e.message);
+            // Determine which operation failed and log detailed error
+            var failedSQL = "";
+            var failedParams = [];
+            
+            if (len(masterSQL) && !isDefined("masterQuery")) {
+                failedSQL = masterSQL;
+                failedParams = [];
+                logDatabaseError("syncLookupTable - Master Query (" & arguments.masterTable & ")", failedSQL, failedParams, e);
+            } else if (len(checkSQL)) {
+                failedSQL = checkSQL;
+                failedParams = checkParams;
+                logDatabaseError("syncLookupTable - Check Query (" & arguments.userTable & ")", failedSQL, failedParams, e);
+            } else if (len(insertSQL)) {
+                failedSQL = insertSQL;
+                failedParams = insertParams;
+                logDatabaseError("syncLookupTable - Insert Query (" & arguments.userTable & ")", failedSQL, failedParams, e);
+            } else {
+                logDatabaseError("syncLookupTable - Unknown (" & arguments.masterTable & " -> " & arguments.userTable & ")", "Unknown SQL", [], e);
+            }
         }
         
         return insertCount;
@@ -221,18 +280,17 @@
 <cfscript>
     // Update team tags first
     try {
-        queryExecute("
-            UPDATE tags_user 
+        var teamTagsSQL = "UPDATE tags_user 
             SET IsTeam = 1 
             WHERE userid = ? AND tagname IN (
                 SELECT tagname FROM tags WHERE isteam = 1
-            )",
-            [variables.userid],
-            {datasource: variables.dsn}
-        );
+            )";
+        var teamTagsParams = [variables.userid];
+        
+        queryExecute(teamTagsSQL, teamTagsParams, {datasource: variables.dsn});
         debugLog("Updated team tags for user");
     } catch (any e) {
-        debugLog("Error updating team tags: " & e.message);
+        logDatabaseError("Update Team Tags", teamTagsSQL, teamTagsParams, e);
     }
     
     // Sync all lookup tables using the generic function
@@ -260,31 +318,27 @@
     // Special handling for audquestions (needs qorder field checking)
     try {
         debugLog("<strong>audquestions_user</strong>");
-        questionsQuery = queryExecute("
-            SELECT qtypeid, qtext, qorder 
+        var questionsSQL = "SELECT qtypeid, qtext, qorder 
             FROM audquestions_default 
-            WHERE isdeleted = 0",
-            {},
-            {datasource: variables.dsn}
-        );
+            WHERE isdeleted = 0";
+        
+        questionsQuery = queryExecute(questionsSQL, {}, {datasource: variables.dsn});
         
         questionsAdded = 0;
         for (question in questionsQuery) {
-            existsQuery = queryExecute("
-                SELECT COUNT(*) as recordCount 
+            var existsSQL = "SELECT COUNT(*) as recordCount 
                 FROM audquestions_user 
-                WHERE isdeleted = 0 AND qorder = ? AND userid = ?",
-                [question.qorder, variables.userid],
-                {datasource: variables.dsn}
-            );
+                WHERE isdeleted = 0 AND qorder = ? AND userid = ?";
+            var existsParams = [question.qorder, variables.userid];
+            
+            existsQuery = queryExecute(existsSQL, existsParams, {datasource: variables.dsn});
             
             if (existsQuery.recordCount == 0) {
-                queryExecute("
-                    INSERT INTO audquestions_user (qtypeid, qtext, qorder, userid) 
-                    VALUES (?, ?, ?, ?)",
-                    [question.qtypeid, question.qtext, question.qorder, variables.userid],
-                    {datasource: variables.dsn}
-                );
+                var insertSQL = "INSERT INTO audquestions_user (qtypeid, qtext, qorder, userid) 
+                    VALUES (?, ?, ?, ?)";
+                var insertParams = [question.qtypeid, question.qtext, question.qorder, variables.userid];
+                
+                queryExecute(insertSQL, insertParams, {datasource: variables.dsn});
                 questionsAdded++;
                 debugLog("Added question: " & question.qtext);
             }
@@ -293,7 +347,19 @@
             debugLog("Total audquestions_user records added: " & questionsAdded);
         }
     } catch (any e) {
-        debugLog("Error syncing audquestions: " & e.message);
+        var failedSQL = "";
+        var failedParams = [];
+        if (isDefined("questionsSQL") && !isDefined("questionsQuery")) {
+            failedSQL = questionsSQL;
+            failedParams = [];
+        } else if (isDefined("existsSQL")) {
+            failedSQL = existsSQL;
+            failedParams = existsParams;
+        } else if (isDefined("insertSQL")) {
+            failedSQL = insertSQL;
+            failedParams = insertParams;
+        }
+        logDatabaseError("Special Handling - audquestions", failedSQL, failedParams, e);
     }
     
     // Special handling for audsubmitsites (has catlist field)
@@ -395,25 +461,31 @@
     
     // Update tag properties after syncing
     try {
-        tagUpdateQuery = queryExecute("
-            SELECT tagname, isteam, iscasting, tagtype 
-            FROM tags",
-            {},
-            {datasource: variables.dsn}
-        );
+        var tagUpdateSQL = "SELECT tagname, isteam, iscasting, tagtype 
+            FROM tags";
+        
+        tagUpdateQuery = queryExecute(tagUpdateSQL, {}, {datasource: variables.dsn});
         
         for (tag in tagUpdateQuery) {
-            queryExecute("
-                UPDATE tags_user 
+            var updateSQL = "UPDATE tags_user 
                 SET isteam = ?, iscasting = ?, tagtype = ? 
-                WHERE tagname = ? AND userid = ?",
-                [tag.isteam, tag.iscasting, tag.tagtype, tag.tagname, variables.userid],
-                {datasource: variables.dsn}
-            );
+                WHERE tagname = ? AND userid = ?";
+            var updateParams = [tag.isteam, tag.iscasting, tag.tagtype, tag.tagname, variables.userid];
+            
+            queryExecute(updateSQL, updateParams, {datasource: variables.dsn});
         }
         debugLog("Updated tag properties for " & tagUpdateQuery.recordCount & " tags");
     } catch (any e) {
-        debugLog("Error updating tag properties: " & e.message);
+        var failedSQL = "";
+        var failedParams = [];
+        if (isDefined("tagUpdateSQL") && !isDefined("tagUpdateQuery")) {
+            failedSQL = tagUpdateSQL;
+            failedParams = [];
+        } else if (isDefined("updateSQL")) {
+            failedSQL = updateSQL;
+            failedParams = updateParams;
+        }
+        logDatabaseError("Update Tag Properties", failedSQL, failedParams, e);
     }
 </cfscript>
 
@@ -421,45 +493,40 @@
     // Handle sitelinks with proper relationship to sitetypes
     try {
         debugLog("<strong>sitelinks_user</strong>");
-        sitelinksQuery = queryExecute("
-            SELECT s.id, s.sitename, s.siteURL, s.siteicon, s.sitetypeid, t.sitetypename
+        var sitelinksSQL = "SELECT s.id, s.sitename, s.siteURL, s.siteicon, s.sitetypeid, t.sitetypename
             FROM sitelinks_master s
             INNER JOIN sitetypes_master t ON t.sitetypeid = s.siteTypeid
-            ORDER BY s.sitename",
-            {},
-            {datasource: variables.dsn}
-        );
+            ORDER BY s.sitename";
+        
+        sitelinksQuery = queryExecute(sitelinksSQL, {}, {datasource: variables.dsn});
         
         sitelinksAdded = 0;
         for (sitelink in sitelinksQuery) {
             // Get user's sitetypeid for this sitetypename
-            userSiteTypeQuery = queryExecute("
-                SELECT sitetypeid 
+            var userSiteTypeSQL = "SELECT sitetypeid 
                 FROM sitetypes_user 
-                WHERE sitetypename = ? AND userid = ?",
-                [sitelink.sitetypename, variables.userid],
-                {datasource: variables.dsn}
-            );
+                WHERE sitetypename = ? AND userid = ?";
+            var userSiteTypeParams = [sitelink.sitetypename, variables.userid];
+            
+            userSiteTypeQuery = queryExecute(userSiteTypeSQL, userSiteTypeParams, {datasource: variables.dsn});
             
             if (userSiteTypeQuery.recordCount == 1) {
                 userSiteTypeId = userSiteTypeQuery.sitetypeid;
                 
                 // Check if this sitelink already exists for user
-                existsQuery = queryExecute("
-                    SELECT COUNT(*) as recordCount 
+                var existsSQL = "SELECT COUNT(*) as recordCount 
                     FROM sitelinks_user 
-                    WHERE sitename = ? AND userid = ?",
-                    [sitelink.sitename, variables.userid],
-                    {datasource: variables.dsn}
-                );
+                    WHERE sitename = ? AND userid = ?";
+                var existsParams = [sitelink.sitename, variables.userid];
+                
+                existsQuery = queryExecute(existsSQL, existsParams, {datasource: variables.dsn});
                 
                 if (existsQuery.recordCount == 0) {
-                    queryExecute("
-                        INSERT INTO sitelinks_user_tbl (siteName, siteURL, siteicon, siteTypeid, userid) 
-                        VALUES (?, ?, ?, ?, ?)",
-                        [sitelink.sitename, sitelink.siteURL, sitelink.siteicon, userSiteTypeId, variables.userid],
-                        {datasource: variables.dsn}
-                    );
+                    var insertSQL = "INSERT INTO sitelinks_user_tbl (siteName, siteURL, siteicon, siteTypeid, userid) 
+                        VALUES (?, ?, ?, ?, ?)";
+                    var insertParams = [sitelink.sitename, sitelink.siteURL, sitelink.siteicon, userSiteTypeId, variables.userid];
+                    
+                    queryExecute(insertSQL, insertParams, {datasource: variables.dsn});
                     sitelinksAdded++;
                     debugLog("Added sitelink: " & sitelink.sitename);
                 }
@@ -469,7 +536,22 @@
             debugLog("Total sitelinks_user records added: " & sitelinksAdded);
         }
     } catch (any e) {
-        debugLog("Error syncing sitelinks: " & e.message);
+        var failedSQL = "";
+        var failedParams = [];
+        if (isDefined("sitelinksSQL") && !isDefined("sitelinksQuery")) {
+            failedSQL = sitelinksSQL;
+            failedParams = [];
+        } else if (isDefined("userSiteTypeSQL")) {
+            failedSQL = userSiteTypeSQL;
+            failedParams = userSiteTypeParams;
+        } else if (isDefined("existsSQL")) {
+            failedSQL = existsSQL;
+            failedParams = existsParams;
+        } else if (isDefined("insertSQL")) {
+            failedSQL = insertSQL;
+            failedParams = insertParams;
+        }
+        logDatabaseError("Handle Sitelinks", failedSQL, failedParams, e);
     }
     
     // Create panels for each sitetype
