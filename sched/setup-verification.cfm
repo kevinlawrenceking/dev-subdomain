@@ -5,7 +5,7 @@
     DEPENDENCIES: Application.cfc with DSN configured
 --->
 <cfparam name = "USERROLE" default = "U" />
-<cfset userid = 30 />
+<cfset session.userid = 30 />
 <Cfset session.userrole = userrole />
 <!--- Check if user has admin access --->
 <cfif not isDefined("session.userid") or session.userrole neq "Admin">
