@@ -78,28 +78,10 @@
                 <cfset currentUser.hasIssues = true>
             </cfif>
             
-            <!--- Debug output for troubleshooting --->
-            <cfif getAllUsers.userid EQ 912>
-                <cfoutput>
-                <p style="color: red; font-size: 12px;">
-                    DEBUG User 912 - Table: #table.name# - Count: #actualCount# - Running Total: #currentUser.totalRecords#
-                </p>
-                </cfoutput>
-            </cfif>
-            
         <cfcatch type="any">
             <!--- Handle missing tables or errors --->
             <cfset currentUser.tableCounts[table.name] = "ERROR">
             <cfset currentUser.hasIssues = true>
-            
-            <!--- Debug output for errors --->
-            <cfif getAllUsers.userid EQ 912>
-                <cfoutput>
-                <p style="color: red; font-size: 12px;">
-                    DEBUG User 912 - Table: #table.name# - ERROR: #cfcatch.message#
-                </p>
-                </cfoutput>
-            </cfif>
         </cfcatch>
         </cftry>
     </cfloop>
