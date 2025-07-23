@@ -82,19 +82,22 @@
             
             <!--- Debug output for troubleshooting --->
             <cfif getAllUsers.userid EQ 912>
+                <cfquery name="debugTest" datasource="#application.dsn#">
+                    SELECT COUNT(*) as testCount 
+                    FROM #table.name#
+                    WHERE userid = <cfqueryparam value="#getAllUsers.userid#" cfsqltype="CF_SQL_INTEGER">
+                </cfquery>
+                
                 <cfoutput>
                 <p style="color: red; font-size: 12px;">
                     DEBUG User 912 - Table: #table.name# - Query: #queryName# - Count: #actualCount# - Running Total: #currentUser.totalRecords#
                 </p>
                 <p style="color: blue; font-size: 10px;">
                     SQL: SELECT COUNT(*) as recordCount FROM #table.name# WHERE userid = #getAllUsers.userid#
-              
-            <cfquery name="x" datasource="#application.dsn#">
-                SELECT COUNT(*) as it 
-                FROM audgenres_user
-                WHERE userid = 30
-            </cfquery>
-audgenres_user recordcount: #x.it#
+                </p>
+                <p style="color: green; font-size: 10px;">
+                    VERIFICATION: Direct query for #table.name# userid #getAllUsers.userid# = #debugTest.testCount#
+                </p>
                 </cfoutput>
             </cfif>
             
