@@ -4,7 +4,7 @@
     DATE: 2025-01-27
     DEPENDENCIES: Application.cfc with DSN configured
 --->
-<cfparam name = "maxrows" default = "9999" />
+<cfparam name = "xrows" default = "9999" />
 <cfparam name = "USERROLE" default = "U" />
 <cfset session.userid = 30 />
 <Cfset session.userrole = userrole />
@@ -14,7 +14,7 @@
 </cfif>
 
 <!--- Get all active users --->
-<cfquery name="getAllUsers" datasource="#application.dsn#" maxrows=#maxrows#">
+<cfquery name="getAllUsers" datasource="#application.dsn#" maxrows=#xrows#">
     SELECT userid, userfirstname, userlastname, 
            CONCAT(userfirstname, ' ', userlastname) as fullname,
            userstatus, issetup, userEmail
