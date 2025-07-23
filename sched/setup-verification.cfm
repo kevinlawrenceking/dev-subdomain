@@ -6,7 +6,7 @@
 --->
 <cfparam name = "USERROLE" default = "U" />
 
-
+<Cfset session.userrole = userrole />
 <!--- Check if user has admin access --->
 <cfif not isDefined("session.userid") or session.userrole neq "Admin">
     <cflocation url="/app/" addtoken="false">
