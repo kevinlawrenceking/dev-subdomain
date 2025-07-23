@@ -290,7 +290,7 @@
     // Update team tags first
     try {
         teamTagsSQL = "UPDATE tags_user 
-            SET IsTeam = '1' 
+            SET IsTeam = 1 
             WHERE userid = ? AND tagname IN (
                 SELECT tagname FROM tags WHERE isteam = 1
             )";
@@ -309,17 +309,17 @@
     syncLookupTable("auddialects", "auddialects_user", "auddialectid", "auddialect", "audcatid");
     syncLookupTable("audgenres", "audgenres_user", "audgenreid", "audgenre", "audcatid");
     syncLookupTable("audnetworks", "audnetworks_user", "networkid", "network", "audcatid");
-    syncLookupTable("audopencalloptions", "audopencalloptions_user", "", "opencallname");
+    syncLookupTable("audopencalloptions", "audopencalloptions_user", "", "opencallname", "", "1=1");
     syncLookupTable("audplatforms", "audplatforms_user", "audplatformid", "audplatform");
     syncLookupTable("audtones", "audtones_user", "toneid", "tone", "audcatid");
     
     // Event and gender tables
-    syncLookupTable("eventtypes", "eventtypes_user", "", "eventTypeName", "eventtypedescription, eventtypecolor");
-    syncLookupTable("genderpronouns", "genderpronouns_users", "", "genderpronoun", "genderpronounplural");
+    syncLookupTable("eventtypes", "eventtypes_user", "", "eventTypeName", "eventtypedescription, eventtypecolor", "1=1");
+    syncLookupTable("genderpronouns", "genderpronouns_users", "", "genderpronoun", "genderpronounplural", "1=1");
     
     // Item and site tables
     syncLookupTable("itemtypes", "itemtypes_user", "typeid", "valuetype", "typeicon");
-    syncLookupTable("tags", "tags_user", "", "tagname");
+    syncLookupTable("tags", "tags_user", "", "tagname", "", "1=1");
     syncLookupTable("sitetypes_master", "sitetypes_user", "", "sitetypename", "sitetypedescription");
 </cfscript>
 
@@ -480,8 +480,8 @@
                 SET isteam = ?, iscasting = ?, tagtype = ? 
                 WHERE tagname = ? AND userid = ?";
             updateParams = [
-                (tag.isteam ? "1" : "0"), 
-                (tag.iscasting ? "1" : "0"), 
+                (tag.isteam ? 1 : 0), 
+                (tag.iscasting ? 1 : 0), 
                 tag.tagtype, 
                 tag.tagname, 
                 variables.userid
