@@ -199,11 +199,20 @@
         var insertSQL = "";
         
         try {
+            // Build SELECT fields list
+            var selectFields = "";
+            if (len(arguments.keyField)) {
+                selectFields = arguments.keyField;
+            }
+            if (len(arguments.valueField)) {
+                selectFields = listAppend(selectFields, arguments.valueField);
+            }
+            if (len(arguments.additionalFields)) {
+                selectFields = listAppend(selectFields, arguments.additionalFields);
+            }
+            
             // Build and execute master query
-            masterSQL = "SELECT " & arguments.keyField & 
-                (len(arguments.valueField) ? ", " & arguments.valueField : "") &
-                (len(arguments.additionalFields) ? ", " & arguments.additionalFields : "") & "
-                FROM " & arguments.masterTable & 
+            masterSQL = "SELECT " & selectFields & " FROM " & arguments.masterTable & 
                 (len(arguments.whereClause) ? " WHERE " & arguments.whereClause : "");
             
             var masterQuery = queryExecute(masterSQL, {}, {datasource: variables.dsn});
@@ -281,7 +290,7 @@
     // Update team tags first
     try {
         teamTagsSQL = "UPDATE tags_user 
-            SET IsTeam = 1 
+            SET IsTeam = '1' 
             WHERE userid = ? AND tagname IN (
                 SELECT tagname FROM tags WHERE isteam = 1
             )";
@@ -470,7 +479,13 @@
             updateSQL = "UPDATE tags_user 
                 SET isteam = ?, iscasting = ?, tagtype = ? 
                 WHERE tagname = ? AND userid = ?";
-            updateParams = [tag.isteam, tag.iscasting, tag.tagtype, tag.tagname, variables.userid];
+            updateParams = [
+                (tag.isteam ? "1" : "0"), 
+                (tag.iscasting ? "1" : "0"), 
+                tag.tagtype, 
+                tag.tagname, 
+                variables.userid
+            ];
             
             queryExecute(updateSQL, updateParams, {datasource: variables.dsn});
         }
