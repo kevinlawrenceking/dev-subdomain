@@ -202,14 +202,17 @@
                                         <th>Setup Status</th>
                                         <th>Total Records</th>
                                         <th>Issues</th>
+                                        <cfoutput>
                                         <cfloop array="#userTables#" index="table">
                                             <th title="#table.description#" class="text-center">
                                                 #replace(table.name, "_user", "", "all")#
                                             </th>
                                         </cfloop>
+                                        </cfoutput>
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    <cfoutput>
                                     <cfloop array="#userVerificationData#" index="user">
                                         <tr class="user-row<cfif user.hasIssues> has-issues</cfif>">
                                             <td>
@@ -248,6 +251,7 @@
                                             </cfloop>
                                         </tr>
                                     </cfloop>
+                                    </cfoutput>
                                 </tbody>
                             </table>
                         </div>
