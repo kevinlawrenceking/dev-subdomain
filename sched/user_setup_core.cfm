@@ -390,6 +390,8 @@
         var insertSQL = "";
         
         try {
+            debugLog("Starting cross-reference sync for " & arguments.debugTitle & " with " & arguments.masterQuery.recordCount & " pairs");
+            
             for (var row in arguments.masterQuery) {
                 // Check if this combination already exists for user
                 checkSQL = "SELECT COUNT(*) as countValue 
@@ -398,6 +400,8 @@
                 var checkParams = [variables.userid, row[arguments.field1], row[arguments.field2]];
                 
                 var checkQuery = queryExecute(checkSQL, checkParams, {datasource: variables.dsn});
+                
+                debugLog("Checking pair: " & arguments.field1 & "=" & row[arguments.field1] & ", " & arguments.field2 & "=" & row[arguments.field2] & " -> exists: " & (checkQuery.countValue > 0 ? "YES" : "NO"));
                 
                 if (checkQuery.countValue == 0) {
                     insertSQL = "INSERT INTO " & arguments.userTable & " (" & arguments.field1 & ", " & arguments.field2 & ", userid) 
@@ -416,6 +420,8 @@
             
             if (insertCount > 0) {
                 debugLog("Total " & arguments.debugTitle & " records added: " & insertCount);
+            } else {
+                debugLog("No new " & arguments.debugTitle & " records needed");
             }
             
         } catch (any e) {
