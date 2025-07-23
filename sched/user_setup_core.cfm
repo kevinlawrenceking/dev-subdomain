@@ -544,7 +544,19 @@
     
     // Sync panels from master
     debugLog("<h5>pgpanels_master → pgpanels_user</h5>");
-    syncLookupTable("pgpanels_master", "pgpanels_user", "", "pnFilename", "pnTitle, pnOrderNo, pnColXl, pnColMd, pnDescription", "1=1");
+    try {
+        // Check what fields actually exist in pgpanels_master table first
+        debugLog("Checking pgpanels_master table structure...");
+        pgpanelsTestQuery = queryExecute("SELECT * FROM pgpanels_master LIMIT 1", {}, {datasource: variables.dsn});
+        debugLog("Available pgpanels_master fields: " & arrayToList(pgpanelsTestQuery.getColumnNames()));
+        
+        // Sync with only the fields we know exist
+        syncLookupTable("pgpanels_master", "pgpanels_user", "", "pnFilename", "pnTitle, pnDescription", "1=1");
+    } catch (any e) {
+        debugLog("Error with pgpanels sync: " & e.message);
+        // Fallback: try with just the basic field
+        syncLookupTable("pgpanels_master", "pgpanels_user", "", "pnFilename", "", "1=1");
+    }
     
     // Update tag properties after syncing
     try {
