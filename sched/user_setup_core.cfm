@@ -330,6 +330,13 @@
         userCount = userCountQuery.countValue;
         debugLog("Existing audplatforms_user records for user " & variables.userid & ": " & userCount);
         
+        // Let's check what's actually in the master table
+        debugMasterQuery = queryExecute("SELECT audplatformid, audplatform FROM audplatforms WHERE isdeleted = 0", {}, {datasource: variables.dsn});
+        debugLog("Master audplatforms records found:");
+        for (platform in debugMasterQuery) {
+            debugLog("- ID: " & platform.audplatformid & ", Name: " & platform.audplatform);
+        }
+        
         // Now run the sync and capture result
         insertedCount = syncLookupTable("audplatforms", "audplatforms_user", "audplatformid", "audplatform");
         debugLog("Records inserted: " & insertedCount);
