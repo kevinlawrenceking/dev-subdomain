@@ -165,7 +165,7 @@ WHERE r.isdeleted = 0
                                         <td>#IIF(isDefined('lasteventtype') AND len(trim(lasteventtype)), "lasteventtype", "''")#</td>
                                     </tr>
                                 <TR><TD colspan="2">
-#qGetContactDetail.noteslog#
+<strong>Notes:</strong> #qGetContactDetail.noteslog#
 
                                 </TD></TR>
                                 </tbody>
