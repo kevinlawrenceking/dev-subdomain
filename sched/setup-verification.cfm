@@ -4,7 +4,7 @@
     DATE: 2025-01-27
     DEPENDENCIES: Application.cfc with DSN configured
 --->
-<cfparam name = "usserrole" default = "U" />
+<cfparam name = "USERROLE" default = "U" />
 
 
 <!--- Check if user has admin access --->
