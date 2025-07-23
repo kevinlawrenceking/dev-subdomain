@@ -294,12 +294,15 @@
             WHERE userid = ? AND tagname IN (
                 SELECT tagname FROM tags WHERE IsTeam = 1
             )";
-        teamTagsParams = [1, variables.userid];
         
-        queryExecute(teamTagsSQL, teamTagsParams, {datasource: variables.dsn});
+        queryExecute(teamTagsSQL, {
+            isteam: {value: 1, cfsqltype: "CF_SQL_BIT"},
+            userid: {value: variables.userid, cfsqltype: "CF_SQL_INTEGER"}
+        }, {datasource: variables.dsn});
+        
         debugLog("Updated team tags for user");
     } catch (any e) {
-        logDatabaseError("Update Team Tags", teamTagsSQL, teamTagsParams, e);
+        logDatabaseError("Update Team Tags", teamTagsSQL, "cfqueryparam used", e);
     }
     
     // Sync all lookup tables using the generic function
@@ -484,15 +487,14 @@
             updateSQL = "UPDATE tags_user 
                 SET IsTeam = ?, IsCasting = ?, tagtype = ? 
                 WHERE tagname = ? AND userid = ?";
-            updateParams = [
-                (tag.IsTeam ? 1 : 0), 
-                (tag.IsCasting ? 1 : 0), 
-                tag.tagtype, 
-                tag.tagname, 
-                variables.userid
-            ];
             
-            queryExecute(updateSQL, updateParams, {datasource: variables.dsn});
+            queryExecute(updateSQL, {
+                isteam: {value: (tag.IsTeam ? 1 : 0), cfsqltype: "CF_SQL_BIT"},
+                iscasting: {value: (tag.IsCasting ? 1 : 0), cfsqltype: "CF_SQL_BIT"},
+                tagtype: {value: tag.tagtype, cfsqltype: "CF_SQL_VARCHAR"},
+                tagname: {value: tag.tagname, cfsqltype: "CF_SQL_VARCHAR"},
+                userid: {value: variables.userid, cfsqltype: "CF_SQL_INTEGER"}
+            }, {datasource: variables.dsn});
         }
         debugLog("Updated tag properties for " & tagUpdateQuery.recordCount & " tags");
     } catch (any e) {
