@@ -164,6 +164,10 @@ WHERE r.isdeleted = 0
                                         <th style="width:40%">Last Mtg. Type</th>
                                         <td>#IIF(isDefined('lasteventtype') AND len(trim(lasteventtype)), "lasteventtype", "''")#</td>
                                     </tr>
+                                <TR><TD colspan="2">
+#qGetContactDetail.noteslog#
+
+                                </TD></TR>
                                 </tbody>
                             </table>
                         </div>
