@@ -624,46 +624,81 @@
     try {
         debugLog("<strong>Creating sitetype panels</strong>");
         siteTypesQuery = queryExecute("
-            SELECT sitetypeid, sitetypename, sitetypedescription 
+            SELECT sitetypeid, sitetypename, sitetypedescription, pnid
             FROM sitetypes_user 
             WHERE userid = ?",
             [variables.userid],
             {datasource: variables.dsn}
         );
         
+        panelsCreated = 0;
         for (siteType in siteTypesQuery) {
-            // Get next panel order number
-            maxOrderQuery = queryExecute("
-                SELECT COALESCE(MAX(pnOrderno), 0) + 1 as nextOrderNo
-                FROM pgpanels_user 
-                WHERE userid = ?",
-                [variables.userid],
-                {datasource: variables.dsn}
-            );
-            
-            nextOrderNo = maxOrderQuery.nextOrderNo;
             panelTitle = siteType.sitetypename & " Links";
             
-            // Insert new panel
-            panelResult = queryExecute("
-                INSERT INTO pgpanels_user (pnTitle, pnFilename, pnorderno, pncolxl, pncolMd, pnDescription, IsDeleted, IsVisible, userid) 
-                VALUES (?, 'mylinks_user.cfm', ?, 3, 3, '', 0, 1, ?)",
-                [panelTitle, nextOrderNo, variables.userid],
-                {datasource: variables.dsn, result: "panelInsert"}
-            );
-            
-            newPanelId = panelInsert.generatedKey;
-            
-            // Update sitetype with panel ID
-            queryExecute("
-                UPDATE sitetypes_user 
-                SET pnid = ? 
-                WHERE sitetypeid = ? AND userid = ?",
-                [newPanelId, siteType.sitetypeid, variables.userid],
-                {datasource: variables.dsn}
-            );
-            
-            debugLog("Created panel: " & panelTitle & " (ID: " & newPanelId & ")");
+            // Check if this sitetype already has a panel assigned
+            if (len(trim(siteType.pnid)) == 0 || val(siteType.pnid) == 0) {
+                // Check if a panel with this title already exists for this user
+                existingPanelQuery = queryExecute("
+                    SELECT pnid 
+                    FROM pgpanels_user 
+                    WHERE pnTitle = ? AND userid = ? AND IsDeleted = 0",
+                    [panelTitle, variables.userid],
+                    {datasource: variables.dsn}
+                );
+                
+                if (existingPanelQuery.recordCount > 0) {
+                    // Use existing panel
+                    existingPanelId = existingPanelQuery.pnid;
+                    queryExecute("
+                        UPDATE sitetypes_user 
+                        SET pnid = ? 
+                        WHERE sitetypeid = ? AND userid = ?",
+                        [existingPanelId, siteType.sitetypeid, variables.userid],
+                        {datasource: variables.dsn}
+                    );
+                    debugLog("Linked existing panel: " & panelTitle & " (ID: " & existingPanelId & ")");
+                } else {
+                    // Create new panel
+                    // Get next panel order number
+                    maxOrderQuery = queryExecute("
+                        SELECT COALESCE(MAX(pnOrderno), 0) + 1 as nextOrderNo
+                        FROM pgpanels_user 
+                        WHERE userid = ?",
+                        [variables.userid],
+                        {datasource: variables.dsn}
+                    );
+                    
+                    nextOrderNo = maxOrderQuery.nextOrderNo;
+                    
+                    // Insert new panel
+                    panelResult = queryExecute("
+                        INSERT INTO pgpanels_user (pnTitle, pnFilename, pnorderno, pncolxl, pncolMd, pnDescription, IsDeleted, IsVisible, userid) 
+                        VALUES (?, 'mylinks_user.cfm', ?, 3, 3, '', 0, 1, ?)",
+                        [panelTitle, nextOrderNo, variables.userid],
+                        {datasource: variables.dsn, result: "panelInsert"}
+                    );
+                    
+                    newPanelId = panelInsert.generatedKey;
+                    
+                    // Update sitetype with panel ID
+                    queryExecute("
+                        UPDATE sitetypes_user 
+                        SET pnid = ? 
+                        WHERE sitetypeid = ? AND userid = ?",
+                        [newPanelId, siteType.sitetypeid, variables.userid],
+                        {datasource: variables.dsn}
+                    );
+                    
+                    panelsCreated++;
+                    debugLog("Created panel: " & panelTitle & " (ID: " & newPanelId & ")");
+                }
+            } else {
+                debugLog("Panel already exists for " & siteType.sitetypename & " (ID: " & siteType.pnid & ")");
+            }
+        }
+        
+        if (panelsCreated > 0) {
+            debugLog("Total new panels created: " & panelsCreated);
         }
     } catch (any e) {
         debugLog("Error creating sitetype panels: " & e.message);
