@@ -12,7 +12,7 @@
     </cfloop>
 
     <!--- Insert into thrivecart_tbl --->
-    <cfquery datasource="#application.dsn#">
+    <cfquery datasource="abo">
         INSERT INTO thrivecart_tbl (
             CustomerFirst,
             CustomerLast,
