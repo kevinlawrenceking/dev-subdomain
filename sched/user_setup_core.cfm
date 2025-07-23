@@ -290,11 +290,11 @@
     // Update team tags first
     try {
         teamTagsSQL = "UPDATE tags_user 
-            SET IsTeam = 1 
+            SET IsTeam = ? 
             WHERE userid = ? AND tagname IN (
-                SELECT tagname FROM tags WHERE isteam = 1
+                SELECT tagname FROM tags WHERE IsTeam = 1
             )";
-        teamTagsParams = [variables.userid];
+        teamTagsParams = [true, variables.userid];
         
         queryExecute(teamTagsSQL, teamTagsParams, {datasource: variables.dsn});
         debugLog("Updated team tags for user");
@@ -470,18 +470,23 @@
     
     // Update tag properties after syncing
     try {
-        tagUpdateSQL = "SELECT tagname, isteam, iscasting, tagtype 
+        tagUpdateSQL = "SELECT tagname, IsTeam, IsCasting, tagtype 
             FROM tags";
         
         tagUpdateQuery = queryExecute(tagUpdateSQL, {}, {datasource: variables.dsn});
         
+        debugLog("Updating " & tagUpdateQuery.recordCount & " tag properties...");
+        
         for (tag in tagUpdateQuery) {
+            // Debug the source values
+            debugLog("Processing tag '" & tag.tagname & "': IsTeam=" & tag.IsTeam & " IsCasting=" & tag.IsCasting & " tagtype=" & tag.tagtype);
+            
             updateSQL = "UPDATE tags_user 
-                SET isteam = ?, iscasting = ?, tagtype = ? 
+                SET IsTeam = ?, IsCasting = ?, tagtype = ? 
                 WHERE tagname = ? AND userid = ?";
             updateParams = [
-                (tag.isteam ? 1 : 0), 
-                (tag.iscasting ? 1 : 0), 
+                (tag.IsTeam ? true : false), 
+                (tag.IsCasting ? true : false), 
                 tag.tagtype, 
                 tag.tagname, 
                 variables.userid
