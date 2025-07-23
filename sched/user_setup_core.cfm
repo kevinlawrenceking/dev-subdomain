@@ -7,8 +7,7 @@
 --->
 
 <cfscript>
-    // Use datasource from Application.cfc
-    variables.dsn = application.dsn;
+    
     
     // Parameters with validation
     param name="dbugz" default="N";
