@@ -219,14 +219,20 @@
             
             for (var row in masterQuery) {
                 // Check if record exists for user
-                checkSQL = "SELECT COUNT(*) as recordCount 
+                checkSQL = "SELECT COUNT(*) as countValue 
                     FROM " & arguments.userTable & " 
                     WHERE " & arguments.valueField & " = ? AND userid = ?";
                 var checkParams = [row[arguments.valueField], variables.userid];
                 
                 var checkQuery = queryExecute(checkSQL, checkParams, {datasource: variables.dsn});
                 
-                if (checkQuery.recordCount == 0) {
+                // Debug for audplatforms_user specifically
+                if (arguments.userTable == "audplatforms_user") {
+                    debugLog("Checking if '" & row[arguments.valueField] & "' exists for user " & variables.userid);
+                    debugLog("Check query result: actual count=" & checkQuery.countValue);
+                }
+                
+                if (checkQuery.countValue == 0) {
                     // Build insert statement dynamically
                     var insertFields = arguments.valueField & ", userid";
                     var insertValues = "?, ?";
