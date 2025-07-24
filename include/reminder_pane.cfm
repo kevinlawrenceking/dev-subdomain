@@ -126,6 +126,10 @@
         if (!enableFiltering) return;
 
         const api = this.api();
+        
+        // Check if filter row already exists, if so remove it first
+        $('#filterRow').remove();
+        
         let filterRow = '<tr id="filterRow">';
         this.api().columns().every(function () {
           filterRow += '<th></th>';
