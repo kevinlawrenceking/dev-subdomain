@@ -605,7 +605,7 @@ Key Features:
     </div>
 </div>
 <!--- Results display container --->
-<div class="container p-3" style="margin-bottom: 6px;">
+<div class="container p-3" style="margin-top: 6px;">
     <div class="row">
         <!--- Gallery view --->
         <cfif view eq "glry">
