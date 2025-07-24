@@ -50,8 +50,99 @@ Key Features:
 <!--- Parameter definitions --->
 <cfparam name="isexport" default="N"/>
 <cfparam name="sel_audcatid" default="%"/>
+<!--- Pagination parameters --->
+<cfparam name="page" default="1"/>
+<cfparam name="pageSize" default="12"/>
+<cfparam name="totalRecords" default="0"/>
 
 <!--- JavaScript for modal functionality --->
+<style>
+    /* Enhanced pagination styling */
+    .pagination-rounded .page-link {
+        border-radius: 50px;
+        margin: 0 2px;
+        border: 1px solid #dee2e6;
+        color: #6c757d;
+        font-weight: 500;
+        transition: all 0.15s ease-in-out;
+    }
+    
+    .pagination-rounded .page-item.active .page-link {
+        background-color: #007bff;
+        border-color: #007bff;
+        color: white;
+        font-weight: 600;
+    }
+    
+    .pagination-rounded .page-link:hover:not(.disabled) {
+        background-color: #e9ecef;
+        border-color: #adb5bd;
+        color: #495057;
+        transform: translateY(-1px);
+    }
+    
+    .pagination-rounded .page-item.disabled .page-link {
+        color: #adb5bd;
+        background-color: transparent;
+        border-color: #dee2e6;
+    }
+    
+    /* Gallery pagination specific styling */
+    .gallery-pagination {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-radius: 10px;
+        padding: 20px;
+        margin-top: 30px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    /* Card animation for page transitions */
+    .tao-card-row .col {
+        animation: fadeInUp 0.6s ease-out;
+    }
+    
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Page size selector styling */
+    .form-select-sm {
+        font-size: 0.875rem;
+        padding: 0.25rem 0.5rem;
+    }
+    
+    /* Quick jump input styling */
+    #jumpToPage {
+        text-align: center;
+    }
+    
+    /* Loading state for pagination */
+    .pagination-loading {
+        pointer-events: none;
+        opacity: 0.6;
+    }
+    
+    /* Responsive pagination adjustments */
+    @media (max-width: 768px) {
+        .pagination-rounded {
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .pagination-rounded .page-link {
+            margin: 1px;
+            padding: 0.375rem 0.75rem;
+        }
+    }
+</style>
+
 <script>
     $(document).ready(function () {
         <!--- Remote audition add modal --->
@@ -122,6 +213,40 @@ Key Features:
 <cfinclude template="/include/qry/audtypes_sel_31_3.cfm" />
 <cfinclude template="/include/qry/auditions.cfm" />
 
+<!--- Pagination logic for gallery view --->
+<cfscript>
+    // Calculate pagination variables
+    totalRecords = results.recordCount;
+    currentPage = val(page);
+    if (currentPage lt 1) currentPage = 1;
+    
+    // Calculate total pages
+    totalPages = ceiling(totalRecords / pageSize);
+    if (currentPage gt totalPages and totalPages gt 0) currentPage = totalPages;
+    
+    // Calculate start and end row for current page
+    startRow = ((currentPage - 1) * pageSize) + 1;
+    endRow = min(startRow + pageSize - 1, totalRecords);
+    
+    // Build pagination URL parameters
+    urlParams = "";
+    if (isDefined('sel_audstepid') and sel_audstepid neq "%") urlParams = listAppend(urlParams, "sel_audstepid=" & sel_audstepid, "&");
+    if (isDefined('sel_audcatid') and sel_audcatid neq "%") urlParams = listAppend(urlParams, "sel_audcatid=" & sel_audcatid, "&");
+    if (isDefined('sel_contactid') and sel_contactid neq "%") urlParams = listAppend(urlParams, "sel_contactid=" & sel_contactid, "&");
+    if (isDefined('sel_coname') and sel_coname neq "%") urlParams = listAppend(urlParams, "sel_coname=" & urlEncodeForURL(sel_coname), "&");
+    if (isDefined('audsearch') and len(trim(audsearch))) urlParams = listAppend(urlParams, "audsearch=" & urlEncodeForURL(audsearch), "&");
+    if (isDefined('view')) urlParams = listAppend(urlParams, "view=" & view, "&");
+    if (isDefined('materials')) urlParams = listAppend(urlParams, "materials=" & materials, "&");
+    
+    // Add pagination parameter placeholder
+    baseUrl = "/app/auditions/?" & urlParams;
+    if (len(urlParams)) {
+        baseUrl = baseUrl & "&page=";
+    } else {
+        baseUrl = baseUrl & "page=";
+    }
+</cfscript>
+
 <!--- Main interface container --->
 <div class="container px-1">
     <div class="row">
@@ -133,6 +258,8 @@ Key Features:
                         <cfoutput>
                             <input type="hidden" name="view" value="#view#"/>
                             <input type="hidden" name="auddate" value="%"/>
+                            <input type="hidden" name="page" value="1"/>
+                            <input type="hidden" name="pageSize" value="#pageSize#"/>
                         </cfoutput>
 
                         <div class="row">
@@ -260,16 +387,35 @@ Key Features:
             <cfif results.recordcount eq 0>
                 <p>No events found</p>
             <cfelse>
-                <p>
-                    <cfoutput>
-                        <strong>#results.recordcount#</strong> audition<cfif results.recordcount neq 1>s</cfif> found
-                    </cfoutput>
-                </p>
+                <!--- Results summary with pagination info --->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <p class="mb-0">
+                        <cfoutput>
+                            <strong>#totalRecords#</strong> audition<cfif totalRecords neq 1>s</cfif> found
+                            <cfif totalPages gt 1>
+                                (Page #currentPage# of #totalPages#, showing #startRow#-#endRow#)
+                            </cfif>
+                        </cfoutput>
+                    </p>
+                    
+                    <!--- Page size selector --->
+                    <cfif totalRecords gt 12>
+                        <div class="d-flex align-items-center">
+                            <label for="pageSize" class="form-label me-2 mb-0">Show:</label>
+                            <select id="pageSize" class="form-select form-select-sm" style="width: auto;" onchange="changePageSize(this.value)">
+                                <option value="12" <cfif pageSize eq 12>selected</cfif>>12</option>
+                                <option value="24" <cfif pageSize eq 24>selected</cfif>>24</option>
+                                <option value="48" <cfif pageSize eq 48>selected</cfif>>48</option>
+                                <option value="96" <cfif pageSize eq 96>selected</cfif>>96</option>
+                            </select>
+                        </div>
+                    </cfif>
+                </div>
 
                 <!--- Audition gallery container --->
                 <div class="container">
                     <div class="row tao-card-row row-cols-1 row-cols-sm-2 row-cols-md-2 row-cols-lg-2 row-cols-xl-3 g-3">
-                        <cfloop query="results">
+                        <cfloop query="results" startrow="#startRow#" endrow="#endRow#">
                             <!--- Card variable setup --->
                             <cfset card_id = results.recid/>
                             <cfset aud_cat_icon = ""/>
@@ -369,10 +515,102 @@ Key Features:
                     </div>
                 </div>
 
-                <!--- Pagination placeholder --->
-                <div class="pagination-container text-center mt-4">
-                    <!--- Pagination will be added dynamically --->
-                </div>
+                <!--- Professional Bootstrap 5 Pagination --->
+                <cfif totalPages gt 1>
+                    <div class="d-flex justify-content-center mt-4">
+                        <nav aria-label="Auditions pagination">
+                            <ul class="pagination pagination-rounded mb-0">
+                                <cfoutput>
+                                    <!--- Previous button --->
+                                    <li class="page-item <cfif currentPage eq 1>disabled</cfif>">
+                                        <cfif currentPage eq 1>
+                                            <span class="page-link">
+                                                <i class="mdi mdi-chevron-left"></i>
+                                            </span>
+                                        <cfelse>
+                                            <a class="page-link" href="#baseUrl##currentPage-1#" aria-label="Previous">
+                                                <i class="mdi mdi-chevron-left"></i>
+                                            </a>
+                                        </cfif>
+                                    </li>
+
+                                    <!--- Page numbers with smart truncation --->
+                                    <cfset startPage = max(1, currentPage - 2) />
+                                    <cfset endPage = min(totalPages, currentPage + 2) />
+                                    
+                                    <!--- First page if not in range --->
+                                    <cfif startPage gt 1>
+                                        <li class="page-item">
+                                            <a class="page-link" href="#baseUrl#1">1</a>
+                                        </li>
+                                        <cfif startPage gt 2>
+                                            <li class="page-item disabled">
+                                                <span class="page-link">...</span>
+                                            </li>
+                                        </cfif>
+                                    </cfif>
+                                    
+                                    <!--- Current range of pages --->
+                                    <cfloop from="#startPage#" to="#endPage#" index="i">
+                                        <li class="page-item <cfif i eq currentPage>active</cfif>">
+                                            <cfif i eq currentPage>
+                                                <span class="page-link">#i#</span>
+                                            <cfelse>
+                                                <a class="page-link" href="#baseUrl##i#">#i#</a>
+                                            </cfif>
+                                        </li>
+                                    </cfloop>
+                                    
+                                    <!--- Last page if not in range --->
+                                    <cfif endPage lt totalPages>
+                                        <cfif endPage lt totalPages - 1>
+                                            <li class="page-item disabled">
+                                                <span class="page-link">...</span>
+                                            </li>
+                                        </cfif>
+                                        <li class="page-item">
+                                            <a class="page-link" href="#baseUrl##totalPages#">#totalPages#</a>
+                                        </li>
+                                    </cfif>
+
+                                    <!--- Next button --->
+                                    <li class="page-item <cfif currentPage eq totalPages>disabled</cfif>">
+                                        <cfif currentPage eq totalPages>
+                                            <span class="page-link">
+                                                <i class="mdi mdi-chevron-right"></i>
+                                            </span>
+                                        <cfelse>
+                                            <a class="page-link" href="#baseUrl##currentPage+1#" aria-label="Next">
+                                                <i class="mdi mdi-chevron-right"></i>
+                                            </a>
+                                        </cfif>
+                                    </li>
+                                </cfoutput>
+                            </ul>
+                        </nav>
+                    </div>
+
+                    <!--- Pagination info and quick jump --->
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <div class="text-muted small">
+                            <cfoutput>
+                                Showing #startRow# to #endRow# of #totalRecords# results
+                            </cfoutput>
+                        </div>
+                        
+                        <cfif totalPages gt 10>
+                            <div class="d-flex align-items-center">
+                                <label for="jumpToPage" class="form-label me-2 mb-0 small">Go to page:</label>
+                                <input type="number" id="jumpToPage" class="form-control form-control-sm" 
+                                       style="width: 80px;" min="1" max="<cfoutput>#totalPages#</cfoutput>" 
+                                       placeholder="<cfoutput>#currentPage#</cfoutput>"
+                                       onkeypress="if(event.key==='Enter') jumpToPage(this.value)">
+                                <button type="button" class="btn btn-sm btn-outline-secondary ms-1" 
+                                        onclick="jumpToPage(document.getElementById('jumpToPage').value)">Go</button>
+                            </div>
+                        </cfif>
+                    </div>
+                </cfif>
             </cfif>
         </cfif>
         <!--- Table view --->
@@ -512,6 +750,43 @@ Key Features:
                 $(".dataTables_paginate > .pagination").addClass("pagination-rounded")
             }
         });
+    });
+
+    // Gallery pagination functions
+    function changePageSize(newSize) {
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.set('pageSize', newSize);
+        currentUrl.searchParams.set('page', '1'); // Reset to first page
+        window.location.href = currentUrl.toString();
+    }
+
+    function jumpToPage(pageNum) {
+        const page = parseInt(pageNum);
+        const maxPages = <cfoutput>#totalPages#</cfoutput>;
+        
+        if (isNaN(page) || page < 1 || page > maxPages) {
+            alert('Please enter a valid page number between 1 and ' + maxPages);
+            return;
+        }
+        
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.set('page', page);
+        window.location.href = currentUrl.toString();
+    }
+
+    // Smooth scroll to top when pagination links are clicked
+    $(document).on('click', '.pagination .page-link', function(e) {
+        if ($(this).closest('.page-item').hasClass('disabled') || $(this).closest('.page-item').hasClass('active')) {
+            e.preventDefault();
+            return false;
+        }
+        
+        // Add a small delay to allow the page to load, then scroll to top
+        setTimeout(function() {
+            $('html, body').animate({
+                scrollTop: $('.tao-card-row').offset().top - 100
+            }, 600);
+        }, 100);
     });
 </script>
 
