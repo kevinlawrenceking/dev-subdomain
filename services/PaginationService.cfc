@@ -15,18 +15,26 @@
     <cffunction name="calculatePagination" access="public" returntype="struct" output="false">
         <cfargument name="totalRecords" type="numeric" required="true">
         <cfargument name="currentPage" type="numeric" required="false" default="1">
-        <cfargument name="pageSize" type="numeric" required="false" default="12">
+        <cfargument name="pageSize" type="any" required="false" default="12">
         
         <cfscript>
             var result = structNew();
             
+            // Handle "All" pageSize string or convert to numeric
+            var numericPageSize = arguments.pageSize;
+            if (isSimpleValue(arguments.pageSize) and arguments.pageSize eq "All") {
+                numericPageSize = 999999;
+            } else {
+                numericPageSize = val(arguments.pageSize);
+            }
+            
             // Validate and sanitize inputs
             result.totalRecords = max(0, arguments.totalRecords);
-            result.pageSize = max(1, arguments.pageSize);
+            result.pageSize = max(1, numericPageSize);
             result.currentPage = max(1, arguments.currentPage);
             
             // Check if "Show All" is selected (999999 or any large number)
-            result.showAll = arguments.pageSize >= 999999;
+            result.showAll = result.pageSize >= 999999;
             
             if (result.showAll) {
                 // Show all records on one page
@@ -200,20 +208,23 @@
         <cfreturn html />
     </cffunction>
 
-    <cffunction name="getPageSizeOptions" access="public" returntype="array" output="false">
-        <cfargument name="currentPageSize" type="numeric" required="false" default="12">
+    <cffunction name="getPageSizeOptions" access="public" returntype="string" output="false">
+        <cfargument name="currentPageSize" type="any" required="false" default="12">
         
-        <cfscript>
-            var options = [
-                {value: 12, label: "12", selected: arguments.currentPageSize eq 12},
-                {value: 24, label: "24", selected: arguments.currentPageSize eq 24},
-                {value: 48, label: "48", selected: arguments.currentPageSize eq 48},
-                {value: 96, label: "96", selected: arguments.currentPageSize eq 96},
-                 {value: 999999, label: "All", selected: arguments.currentPageSize eq 999999}
-            ];
-            
-            return options;
-        </cfscript>
+        <cfset var html = "" />
+        <cfset var currentSize = arguments.currentPageSize />
+        
+        <cfsavecontent variable="html">
+            <cfoutput>
+                <option value="12"<cfif currentSize eq 12> selected</cfif>>12</option>
+                <option value="24"<cfif currentSize eq 24> selected</cfif>>24</option>
+                <option value="48"<cfif currentSize eq 48> selected</cfif>>48</option>
+                <option value="96"<cfif currentSize eq 96> selected</cfif>>96</option>
+                <option value="999999"<cfif currentSize eq "All" or currentSize eq 999999> selected</cfif>>All</option>
+            </cfoutput>
+        </cfsavecontent>
+        
+        <cfreturn html />
     </cffunction>
 
 </cfcomponent>
