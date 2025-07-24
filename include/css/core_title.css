@@ -1,0 +1,125 @@
+/* 
+   Core Title Component Styles
+   Author: Kevin King
+   Date: 2025-07-24
+   Purpose: Enhanced styling for page title and breadcrumb components
+*/
+
+/* Breadcrumb enhancements */
+.breadcrumb {
+    background: transparent;
+    padding: 0;
+    margin: 0;
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+    content: "›";
+    color: #6c757d;
+    font-weight: bold;
+}
+
+.breadcrumb-item a {
+    color: #495057;
+    text-decoration: none;
+    transition: color 0.15s ease-in-out;
+}
+
+.breadcrumb-item a:hover {
+    color: #007bff;
+    text-decoration: underline;
+}
+
+.breadcrumb-item.active {
+    color: #6c757d;
+    font-weight: 500;
+}
+
+/* Page title actions */
+.page-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.page-title a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    transition: all 0.15s ease-in-out;
+    text-decoration: none;
+}
+
+.page-title a:hover {
+    background-color: rgba(0, 123, 255, 0.1);
+    transform: translateY(-1px);
+}
+
+.page-title a i {
+    font-size: 16px;
+    color: #6c757d;
+}
+
+.page-title a:hover i {
+    color: #007bff;
+}
+
+/* Danger actions (delete buttons) */
+.page-title a.btn-danger-outline:hover {
+    background-color: rgba(220, 53, 69, 0.1);
+}
+
+.page-title a.btn-danger-outline:hover i {
+    color: #dc3545;
+}
+
+/* Configuration notice styling */
+.config-notice {
+    color: #28a745;
+    margin-left: 1.25rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .page-title-box {
+        text-align: center;
+    }
+    
+    .page-title-right {
+        margin-bottom: 1rem;
+    }
+    
+    .page-title {
+        justify-content: center;
+        font-size: 1.25rem;
+    }
+    
+    .config-notice {
+        display: block;
+        margin-left: 0;
+        margin-top: 0.5rem;
+        text-align: center;
+    }
+}
+
+/* Accessibility improvements */
+.page-title a:focus {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
+}
+
+/* Print styles */
+@media print {
+    .page-title a {
+        display: none;
+    }
+    
+    .config-notice {
+        display: none;
+    }
+}
