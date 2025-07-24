@@ -3,9 +3,10 @@
 
 <cfparam name="url.currentid" default="0" type="numeric">
 <cfparam name="url.showInactive" default="0" type="numeric">
-<cfparam name="url.showInactive" default="0" type="numeric">
+<cfparam name="url.limit" default="0" type="numeric">
 <cfset contactID = url.currentid>
 <cfset showInactive = url.showInactive>
+<cfset reminderLimit = url.limit>
 
   <cfset host=ListFirst(cgi.server_name, ".")/>
  
@@ -21,7 +22,7 @@
     </cfif>
 
 <cfquery name="getReminders" datasource="#dsn#">
-  SELECT
+  SELECT <cfif reminderLimit GT 0>TOP #reminderLimit#</cfif>
     n.notID,
     s.systemType,
     n.actionID,
