@@ -140,6 +140,14 @@ Key Features:
         padding: 4px 12px;
     }
     
+    /* Bottom pagination styling */
+    .pagination-sm .page-link {
+        padding: 4px 8px;
+        font-size: 12px;
+        border-radius: 4px;
+        margin: 0 1px;
+    }
+    
     /* Card animation for page transitions */
     .tao-card-row .col {
         animation: fadeInUp 0.6s ease-out;
@@ -496,6 +504,105 @@ Key Features:
                     </cfif>
                 </div>
 
+                <!--- Top Pagination Controls (Primary) --->
+                <cfif totalPages gt 1 and not showAll>
+                    <div class="gallery-pagination-container mb-4">
+                        <div class="pagination-nav">
+                            <nav aria-label="Auditions pagination">
+                                <ul class="pagination pagination-rounded mb-0">
+                                    <cfoutput>
+                                        <!--- Previous button --->
+                                        <li class="page-item <cfif currentPage eq 1>disabled</cfif>">
+                                            <cfif currentPage eq 1>
+                                                <span class="page-link">
+                                                    <i class="mdi mdi-chevron-left"></i>
+                                                </span>
+                                            <cfelse>
+                                                <a class="page-link" href="#baseUrl##currentPage-1#" aria-label="Previous">
+                                                    <i class="mdi mdi-chevron-left"></i>
+                                                </a>
+                                            </cfif>
+                                        </li>
+
+                                        <!--- Page numbers with smart truncation --->
+                                        <cfset startPage = max(1, currentPage - 2) />
+                                        <cfset endPage = min(totalPages, currentPage + 2) />
+                                        
+                                        <!--- First page if not in range --->
+                                        <cfif startPage gt 1>
+                                            <li class="page-item">
+                                                <a class="page-link" href="#baseUrl#1">1</a>
+                                            </li>
+                                            <cfif startPage gt 2>
+                                                <li class="page-item disabled">
+                                                    <span class="page-link">...</span>
+                                                </li>
+                                            </cfif>
+                                        </cfif>
+                                        
+                                        <!--- Current range of pages --->
+                                        <cfloop from="#startPage#" to="#endPage#" index="i">
+                                            <li class="page-item <cfif i eq currentPage>active</cfif>">
+                                                <cfif i eq currentPage>
+                                                    <span class="page-link">#i#</span>
+                                                <cfelse>
+                                                    <a class="page-link" href="#baseUrl##i#">#i#</a>
+                                                </cfif>
+                                            </li>
+                                        </cfloop>
+                                        
+                                        <!--- Last page if not in range --->
+                                        <cfif endPage lt totalPages>
+                                            <cfif endPage lt totalPages - 1>
+                                                <li class="page-item disabled">
+                                                    <span class="page-link">...</span>
+                                                </li>
+                                            </cfif>
+                                            <li class="page-item">
+                                                <a class="page-link" href="#baseUrl##totalPages#">#totalPages#</a>
+                                            </li>
+                                        </cfif>
+
+                                        <!--- Next button --->
+                                        <li class="page-item <cfif currentPage eq totalPages>disabled</cfif>">
+                                            <cfif currentPage eq totalPages>
+                                                <span class="page-link">
+                                                    <i class="mdi mdi-chevron-right"></i>
+                                                </span>
+                                            <cfelse>
+                                                <a class="page-link" href="#baseUrl##currentPage+1#" aria-label="Next">
+                                                    <i class="mdi mdi-chevron-right"></i>
+                                                </a>
+                                            </cfif>
+                                        </li>
+                                    </cfoutput>
+                                </ul>
+                            </nav>
+                        </div>
+
+                        <!--- Pagination info and quick jump --->
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="pagination-info">
+                                <cfoutput>
+                                    Page #currentPage# of #totalPages#
+                                </cfoutput>
+                            </div>
+                            
+                            <cfif totalPages gt 10>
+                                <div class="quick-jump-container">
+                                    <label for="jumpToPage" class="form-label mb-0 small">Go to page:</label>
+                                    <input type="number" id="jumpToPage" class="form-control form-control-sm" 
+                                           style="width: 80px;" min="1" max="<cfoutput>#totalPages#</cfoutput>" 
+                                           placeholder="<cfoutput>#currentPage#</cfoutput>"
+                                           onkeypress="if(event.key==='Enter') jumpToPage(this.value)">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" 
+                                            onclick="jumpToPage(document.getElementById('jumpToPage').value)">Go</button>
+                                </div>
+                            </cfif>
+                        </div>
+                    </div>
+                </cfif>
+
                 <!--- Audition gallery container --->
                 <div class="container">
                     <div class="row tao-card-row row-cols-1 row-cols-sm-2 row-cols-md-2 row-cols-lg-2 row-cols-xl-3 g-3">
@@ -600,101 +707,47 @@ Key Features:
                     </div>
                 </div>
 
-                <!--- Professional Bootstrap 5 Pagination (hidden when showing all) --->
+                <!--- Bottom Pagination (Minimal) --->
                 <cfif totalPages gt 1 and not showAll>
-                    <div class="gallery-pagination-container">
-                        <div class="pagination-nav">
-                            <nav aria-label="Auditions pagination">
-                                <ul class="pagination pagination-rounded mb-0">
-                                    <cfoutput>
-                                        <!--- Previous button --->
-                                        <li class="page-item <cfif currentPage eq 1>disabled</cfif>">
-                                            <cfif currentPage eq 1>
-                                                <span class="page-link">
-                                                    <i class="mdi mdi-chevron-left"></i>
-                                                </span>
-                                            <cfelse>
-                                                <a class="page-link" href="#baseUrl##currentPage-1#" aria-label="Previous">
-                                                    <i class="mdi mdi-chevron-left"></i>
-                                                </a>
-                                            </cfif>
-                                        </li>
-
-                                        <!--- Page numbers with smart truncation --->
-                                        <cfset startPage = max(1, currentPage - 2) />
-                                        <cfset endPage = min(totalPages, currentPage + 2) />
-                                        
-                                        <!--- First page if not in range --->
-                                        <cfif startPage gt 1>
-                                            <li class="page-item">
-                                                <a class="page-link" href="#baseUrl#1">1</a>
-                                            </li>
-                                            <cfif startPage gt 2>
-                                                <li class="page-item disabled">
-                                                    <span class="page-link">...</span>
-                                                </li>
-                                            </cfif>
-                                        </cfif>
-                                        
-                                        <!--- Current range of pages --->
-                                        <cfloop from="#startPage#" to="#endPage#" index="i">
-                                            <li class="page-item <cfif i eq currentPage>active</cfif>">
-                                                <cfif i eq currentPage>
-                                                    <span class="page-link">#i#</span>
-                                                <cfelse>
-                                                    <a class="page-link" href="#baseUrl##i#">#i#</a>
-                                                </cfif>
-                                            </li>
-                                        </cfloop>
-                                        
-                                        <!--- Last page if not in range --->
-                                        <cfif endPage lt totalPages>
-                                            <cfif endPage lt totalPages - 1>
-                                                <li class="page-item disabled">
-                                                    <span class="page-link">...</span>
-                                                </li>
-                                            </cfif>
-                                            <li class="page-item">
-                                                <a class="page-link" href="#baseUrl##totalPages#">#totalPages#</a>
-                                            </li>
-                                        </cfif>
-
-                                        <!--- Next button --->
-                                        <li class="page-item <cfif currentPage eq totalPages>disabled</cfif>">
-                                            <cfif currentPage eq totalPages>
-                                                <span class="page-link">
-                                                    <i class="mdi mdi-chevron-right"></i>
-                                                </span>
-                                            <cfelse>
-                                                <a class="page-link" href="#baseUrl##currentPage+1#" aria-label="Next">
-                                                    <i class="mdi mdi-chevron-right"></i>
-                                                </a>
-                                            </cfif>
-                                        </li>
-                                    </cfoutput>
-                                </ul>
-                            </nav>
-                        </div>
-
-                        <!--- Pagination info and quick jump --->
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div class="pagination-info">
+                    <div class="text-center mt-4 py-3">
+                        <nav aria-label="Bottom pagination">
+                            <ul class="pagination pagination-sm justify-content-center mb-0">
                                 <cfoutput>
-                                    Showing #startRow# to #endRow# of #totalRecords# results
+                                    <!--- Previous button --->
+                                    <li class="page-item <cfif currentPage eq 1>disabled</cfif>">
+                                        <cfif currentPage eq 1>
+                                            <span class="page-link">
+                                                <i class="mdi mdi-chevron-left"></i>
+                                            </span>
+                                        <cfelse>
+                                            <a class="page-link" href="#baseUrl##currentPage-1#" aria-label="Previous">
+                                                <i class="mdi mdi-chevron-left"></i>
+                                            </a>
+                                        </cfif>
+                                    </li>
+
+                                    <!--- Simple page display --->
+                                    <li class="page-item active">
+                                        <span class="page-link">#currentPage#</span>
+                                    </li>
+                                    
+                                    <!--- Next button --->
+                                    <li class="page-item <cfif currentPage eq totalPages>disabled</cfif>">
+                                        <cfif currentPage eq totalPages>
+                                            <span class="page-link">
+                                                <i class="mdi mdi-chevron-right"></i>
+                                            </span>
+                                        <cfelse>
+                                            <a class="page-link" href="#baseUrl##currentPage+1#" aria-label="Next">
+                                                <i class="mdi mdi-chevron-right"></i>
+                                            </a>
+                                        </cfif>
+                                    </li>
                                 </cfoutput>
-                            </div>
-                            
-                            <cfif totalPages gt 10>
-                                <div class="quick-jump-container">
-                                    <label for="jumpToPage" class="form-label mb-0 small">Go to page:</label>
-                                    <input type="number" id="jumpToPage" class="form-control form-control-sm" 
-                                           style="width: 80px;" min="1" max="<cfoutput>#totalPages#</cfoutput>" 
-                                           placeholder="<cfoutput>#currentPage#</cfoutput>"
-                                           onkeypress="if(event.key==='Enter') jumpToPage(this.value)">
-                                    <button type="button" class="btn btn-sm btn-outline-secondary" 
-                                            onclick="jumpToPage(document.getElementById('jumpToPage').value)">Go</button>
-                                </div>
-                            </cfif>
+                            </ul>
+                        </nav>
+                        <div class="text-muted small mt-2">
+                            <cfoutput>Page #currentPage# of #totalPages#</cfoutput>
                         </div>
                     </div>
                 </cfif>
