@@ -192,7 +192,8 @@
                 {value: 12, label: "12", selected: arguments.currentPageSize eq 12},
                 {value: 24, label: "24", selected: arguments.currentPageSize eq 24},
                 {value: 48, label: "48", selected: arguments.currentPageSize eq 48},
-                {value: 96, label: "96", selected: arguments.currentPageSize eq 96}
+                {value: 96, label: "96", selected: arguments.currentPageSize eq 96},
+                 {value: 96, label: "All", selected: arguments.currentPageSize eq 999999}
             ];
             
             return options;
