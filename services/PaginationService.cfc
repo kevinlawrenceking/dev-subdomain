@@ -25,28 +25,40 @@
             result.pageSize = max(1, arguments.pageSize);
             result.currentPage = max(1, arguments.currentPage);
             
-            // Calculate total pages
-            result.totalPages = ceiling(result.totalRecords / result.pageSize);
-            if (result.totalPages eq 0) result.totalPages = 1;
+            // Check if "Show All" is selected (999999 or any large number)
+            result.showAll = arguments.pageSize >= 999999;
             
-            // Ensure current page is within valid range
-            if (result.currentPage gt result.totalPages) result.currentPage = result.totalPages;
+            if (result.showAll) {
+                // Show all records on one page
+                result.pageSize = result.totalRecords;
+                result.totalPages = result.totalRecords > 0 ? 1 : 1;
+                result.currentPage = 1;
+                result.startRow = 1;
+                result.endRow = result.totalRecords;
+            } else {
+                // Normal pagination logic
+                result.totalPages = ceiling(result.totalRecords / result.pageSize);
+                if (result.totalPages eq 0) result.totalPages = 1;
+                
+                // Ensure current page is within valid range
+                if (result.currentPage gt result.totalPages) result.currentPage = result.totalPages;
+                
+                // Calculate start and end rows
+                result.startRow = ((result.currentPage - 1) * result.pageSize) + 1;
+                result.endRow = min(result.startRow + result.pageSize - 1, result.totalRecords);
+            }
             
-            // Calculate start and end rows
-            result.startRow = ((result.currentPage - 1) * result.pageSize) + 1;
-            result.endRow = min(result.startRow + result.pageSize - 1, result.totalRecords);
-            
-            // Calculate pagination range for display
+            // Calculate pagination range for display (only relevant when not showing all)
             result.startPage = max(1, result.currentPage - 2);
             result.endPage = min(result.totalPages, result.currentPage + 2);
             
             // Flags for pagination controls
-            result.hasPrevious = result.currentPage gt 1;
-            result.hasNext = result.currentPage lt result.totalPages;
-            result.showFirstPage = result.startPage gt 1;
-            result.showLastPage = result.endPage lt result.totalPages;
-            result.showFirstEllipsis = result.startPage gt 2;
-            result.showLastEllipsis = result.endPage lt result.totalPages - 1;
+            result.hasPrevious = result.currentPage gt 1 and not result.showAll;
+            result.hasNext = result.currentPage lt result.totalPages and not result.showAll;
+            result.showFirstPage = result.startPage gt 1 and not result.showAll;
+            result.showLastPage = result.endPage lt result.totalPages and not result.showAll;
+            result.showFirstEllipsis = result.startPage gt 2 and not result.showAll;
+            result.showLastEllipsis = result.endPage lt result.totalPages - 1 and not result.showAll;
             
             return result;
         </cfscript>
@@ -172,9 +184,13 @@
                     <span class="text-muted">No results found</span>
                 <cfelse>
                     <span class="text-muted">
-                        Showing #info.startRow# to #info.endRow# of #info.totalRecords# results
-                        <cfif info.totalPages gt 1>
-                            (Page #info.currentPage# of #info.totalPages#)
+                        <cfif info.showAll>
+                            Showing all #info.totalRecords# results
+                        <cfelse>
+                            Showing #info.startRow# to #info.endRow# of #info.totalRecords# results
+                            <cfif info.totalPages gt 1>
+                                (Page #info.currentPage# of #info.totalPages#)
+                            </cfif>
                         </cfif>
                     </span>
                 </cfif>

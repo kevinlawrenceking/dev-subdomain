@@ -27,9 +27,11 @@ This document outlines the professional pagination system implemented for the au
 - **Empty state messaging** - Proper "No results found" display
 
 #### Page Size Selector
-- **Dropdown selector** for items per page
+- **Dropdown selector** for items per page (12, 24, 48, 96, All)
+- **"Show All" option** - Displays all records without pagination
 - **Automatic page reset** when changing page size
 - **Persistent selection** through URL parameters
+- **Smart hiding** - Pagination controls hidden when "All" is selected
 
 #### Quick Jump Feature
 - **Direct page input** for large result sets (10+ pages)
@@ -170,6 +172,7 @@ pageSize = 12  // Default
 pageSize = 24  // Medium
 pageSize = 48  // Large  
 pageSize = 96  // Extra large
+pageSize = "All"  // Show all records (no pagination)
 ```
 
 ### Display Thresholds

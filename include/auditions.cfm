@@ -215,18 +215,23 @@ Key Features:
 
 <!--- Pagination logic for gallery view --->
 <cfscript>
-    // Calculate pagination variables
-    totalRecords = results.recordCount;
-    currentPage = val(page);
-    if (currentPage lt 1) currentPage = 1;
+    // Initialize pagination service
+    paginationService = createObject("component", "services.PaginationService").init();
     
-    // Calculate total pages
-    totalPages = ceiling(totalRecords / pageSize);
-    if (currentPage gt totalPages and totalPages gt 0) currentPage = totalPages;
+    // Calculate pagination using service
+    paginationInfo = paginationService.calculatePagination(
+        totalRecords = results.recordCount,
+        currentPage = val(page),
+        pageSize = val(pageSize)
+    );
     
-    // Calculate start and end row for current page
-    startRow = ((currentPage - 1) * pageSize) + 1;
-    endRow = min(startRow + pageSize - 1, totalRecords);
+    // Extract commonly used variables for backward compatibility
+    totalRecords = paginationInfo.totalRecords;
+    currentPage = paginationInfo.currentPage;
+    totalPages = paginationInfo.totalPages;
+    startRow = paginationInfo.startRow;
+    endRow = paginationInfo.endRow;
+    showAll = paginationInfo.showAll;
     
     // Build pagination URL parameters
     urlParams = "";
@@ -391,10 +396,7 @@ Key Features:
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <p class="mb-0">
                         <cfoutput>
-                            <strong>#totalRecords#</strong> audition<cfif totalRecords neq 1>s</cfif> found
-                            <cfif totalPages gt 1>
-                                (Page #currentPage# of #totalPages#, showing #startRow#-#endRow#)
-                            </cfif>
+                            #paginationService.renderPageInfo(paginationInfo)#
                         </cfoutput>
                     </p>
                     
@@ -403,10 +405,7 @@ Key Features:
                         <div class="d-flex align-items-center">
                             <label for="pageSize" class="form-label me-2 mb-0">Show:</label>
                             <select id="pageSize" class="form-select form-select-sm" style="width: auto;" onchange="changePageSize(this.value)">
-                                <option value="12" <cfif pageSize eq 12>selected</cfif>>12</option>
-                                <option value="24" <cfif pageSize eq 24>selected</cfif>>24</option>
-                                <option value="48" <cfif pageSize eq 48>selected</cfif>>48</option>
-                                <option value="96" <cfif pageSize eq 96>selected</cfif>>96</option>
+                                <cfoutput>#paginationService.getPageSizeOptions(pageSize)#</cfoutput>
                             </select>
                         </div>
                     </cfif>
@@ -415,7 +414,8 @@ Key Features:
                 <!--- Audition gallery container --->
                 <div class="container">
                     <div class="row tao-card-row row-cols-1 row-cols-sm-2 row-cols-md-2 row-cols-lg-2 row-cols-xl-3 g-3">
-                        <cfloop query="results" startrow="#startRow#" endrow="#endRow#">
+                        <!--- Gallery view loop --->
+<cfloop query="results" startrow="#startRow#" endrow="#endRow#">
                             <!--- Card variable setup --->
                             <cfset card_id = results.recid/>
                             <cfset aud_cat_icon = ""/>
@@ -515,8 +515,8 @@ Key Features:
                     </div>
                 </div>
 
-                <!--- Professional Bootstrap 5 Pagination --->
-                <cfif totalPages gt 1>
+                <!--- Professional Bootstrap 5 Pagination (hidden when showing all) --->
+                <cfif totalPages gt 1 and not showAll>
                     <div class="d-flex justify-content-center mt-4">
                         <nav aria-label="Auditions pagination">
                             <ul class="pagination pagination-rounded mb-0">
@@ -590,7 +590,7 @@ Key Features:
                         </nav>
                     </div>
 
-                    <!--- Pagination info and quick jump --->
+                    <!--- Pagination info and quick jump (hidden when showing all) --->
                     <div class="d-flex justify-content-between align-items-center mt-3">
                         <div class="text-muted small">
                             <cfoutput>
