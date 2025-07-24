@@ -37,6 +37,10 @@
     font-size: 12px;
     margin-top: 2px;
     line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 200px;
 }
 
 .reminder-actions .btn {
@@ -64,13 +68,42 @@
 }
 
 #dashboardRemindersContainer {
-    max-height: 400px;
+    max-height: 300px;
     overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Ensure card body constrains content */
+.dashboard-reminder-card .card-body {
+    padding: 1rem;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Ensure reminders don't break out of container */
+.reminder-row {
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin-bottom: 8px;
+    background-color: #ffffff;
+    transition: all 0.2s ease;
+    word-wrap: break-word;
+    overflow: hidden;
+    position: relative;
+    z-index: 1;
+}
+
+/* Additional containment for the entire card */
+.dashboard-reminder-card {
+    overflow: hidden;
+    position: relative;
+    z-index: auto;
 }
 </style>
 
 <cfoutput>
-    <div class="card grid-item loaded" data-id="#dashboards.pnid#">
+    <div class="card grid-item loaded dashboard-reminder-card" data-id="#dashboards.pnid#">
         <div class="card-header" id="heading_system_#dashboards.currentrow#">
             <h5 class="m-0">
                 <a class="text-dark collapsed" data-bs-toggle="collapse" href="##collapse_system_#dashboards.currentrow#">
