@@ -22,7 +22,7 @@
     </cfif>
 
 <cfquery name="getReminders" datasource="#dsn#">
-  SELECT <cfif reminderLimit GT 0>TOP #reminderLimit#</cfif>
+  SELECT
     n.notID,
     s.systemType,
     n.actionID,
@@ -75,6 +75,10 @@ ORDER BY
     ELSE 0 
   END,
   n.notStartDate
+
+<cfif reminderLimit GT 0>
+LIMIT <cfqueryparam value="#reminderLimit#" cfsqltype="cf_sql_integer">
+</cfif>
   </cfquery>
 
 <cfset results = []>
