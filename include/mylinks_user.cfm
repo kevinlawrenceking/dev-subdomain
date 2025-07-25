@@ -75,7 +75,7 @@
                         <!--- Check if there are any active links --->
                         <cfif mylinks_user.recordcount gt 0>
                             <button onclick="openAllUrls('#siteurl_list#')" style="border: 1px solid ##406E8E!important; outline: none!important; color: ##406E8E!important;" class="badge badge-light text-dark">
-                                <i class="mdi mdi-book-plus-multiple"></i> Open All
+                                <i class="mdi mdi-book-plus-multiple"></i> Open Allz
                             </button>
                         <cfelse>
                             <center>No active links</center>
