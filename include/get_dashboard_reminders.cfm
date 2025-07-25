@@ -3,7 +3,7 @@
 
 <cfparam name="url.currentid" default="0" type="numeric">
 <cfparam name="url.showInactive" default="0" type="numeric">
-<cfparam name="url.limit" default="5" type="numeric">
+<cfparam name="url.limit" default="7" type="numeric">
 <cfset contactID = url.currentid>
 <cfset showInactive = url.showInactive>
 <cfset reminderLimit = url.limit>
