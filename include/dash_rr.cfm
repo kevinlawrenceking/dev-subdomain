@@ -167,12 +167,12 @@ let dashboardSelectedReminder = {};
 
 function loadDashboardReminders() {
     $.ajax({
-        url: "/include/get_reminders.cfm",
+        url: "/include/get_dashboard_reminders.cfm",
         data: {
             showInactive: 0,
             currentid: 0,
             userid: <cfoutput>#userid#</cfoutput>,
-            limit: 5  // Dashboard limit to 5 reminders
+            limit: 5  // Dashboard limit to 5 reminders (5 contacts)
         },
         dataType: 'json',
         success: function(data) {
@@ -188,9 +188,9 @@ function loadDashboardReminders() {
 }
 
 function loadNewReminder() {
-    // Load more reminders to find a truly new one
+    // Load more reminders to find a truly new one (grouped by contact)
     $.ajax({
-        url: "/include/get_reminders.cfm",
+        url: "/include/get_dashboard_reminders.cfm",
         data: {
             showInactive: 0,
             currentid: 0,
