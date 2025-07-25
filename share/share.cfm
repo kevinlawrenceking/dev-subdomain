@@ -146,12 +146,7 @@ SELECT DISTINCT
                         <!--- Name with Event Badge --->
                         <td style="white-space: nowrap;">
                           <span class="fw-medium">#HTMLEditFormat(sharesWithEvents.Name)#</span>
-                          <cfif sharesWithEvents.no_mtgs GT 0>
-                            <span class="badge badge-primary badge-pill ml-1" 
-                                  title="#sharesWithEvents.no_mtgs# events">
-                              #sharesWithEvents.no_mtgs#
-                            </span>
-                          </cfif>
+                       
                         </td>
 
                         <!--- Optional Events Column --->
@@ -242,10 +237,11 @@ SELECT DISTINCT
                         </td>
      <!--- no_mtgs --->
                         <td>
-                          <cfif len(trim(sharesWithEvents.no_mtgs))>
-                            #sharesWithEvents.no_mtgs#
-                          <cfelse>
-                            <span class="text-muted">-</span>
+                          <cfif sharesWithEvents.no_mtgs GT 0>
+                            <span class="badge badge-primary badge-pill ml-1" 
+                                  title="#sharesWithEvents.no_mtgs# events">
+                              #sharesWithEvents.no_mtgs#
+                            </span>
                           </cfif>
                         </td>
 
@@ -340,6 +336,13 @@ SELECT DISTINCT
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
+}
+
+/* Custom badge-primary color override */
+.badge-primary {
+    background-color: #406e8e !important;
+    color: #fff !important;
+    border: 1px solid #406e8e !important;
 }
 </style>
 <script>
