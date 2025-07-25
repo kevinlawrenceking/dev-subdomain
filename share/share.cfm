@@ -344,7 +344,17 @@ SELECT DISTINCT
     color: #fff !important;
     border: 1px solid #406e8e !important;
 }
+.text-primary {
+    color: #406e8e !important;
+}
+.btn-outline-primary:hover {
+    color: #fff;
+    background-color:  #406e8e !important;
+    border-color:  #406e8e !important;
+}
+
 </style>
+
 <script>
 $(document).ready(function() {
   // Remove loading spinner from body

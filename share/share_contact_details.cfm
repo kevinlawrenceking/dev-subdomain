@@ -9,7 +9,11 @@
 .text-primary {
     color: #406e8e !important;
 }
-
+.btn-outline-primary:hover {
+    color: #fff;
+    background-color:  #406e8e !important;
+    border-color:  #406e8e !important;
+}
 
 </style>
 <!--- Include common settings if not already included --->
