@@ -8,7 +8,7 @@
     border-radius: 6px;
     padding: 8px 12px;
     margin-bottom: 8px;
-    background-color: #FFFFF0;
+    background-color: #FDFDFD;
     transition: all 0.3s ease;
     word-wrap: break-word;
     overflow: hidden;
@@ -81,7 +81,7 @@
 
 #linksContainer {
     overflow: hidden;
-    background-color: #FFFFF0;
+    background-color: #FDFDFD;
     padding: 12px;
     border-radius: 6px;
 }
