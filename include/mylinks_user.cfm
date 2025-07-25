@@ -177,7 +177,7 @@
                 <div class="mt-3">
                     <button onclick="openAllUrls('#siteurl_list#')" 
                             class="badge badge-light text-dark" 
-                            style="border: 1px solid #406E8E; outline: none; color: #406E8E; display: inline-block; padding: 6px 12px; text-decoration: none;">
+                            style="border: 1px solid ##406E8E; outline: none; color: ##406E8E; display: inline-block; padding: 6px 12px; text-decoration: none;">
                         <i class="mdi mdi-book-plus-multiple"></i> Open All
                     </button>
                 </div>
