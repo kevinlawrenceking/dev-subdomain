@@ -14,11 +14,21 @@
     overflow: hidden;
     position: relative;
     min-height: 48px;
+    color: inherit;
 }
 
 .link-row:hover {
     border-color: #adb5bd;
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    text-decoration: none;
+    color: inherit;
+}
+
+.link-row:focus {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
+    text-decoration: none;
+    color: inherit;
 }
 
 .link-icon-container {
@@ -131,8 +141,12 @@
                         <cfset modaltitle = "#siteTypeDetails.sitetypename# Link Delete" />
                         <cfinclude template="/include/modal.cfm" />
 
-                        <!--- Link card row --->
-                        <div class="link-row d-flex align-items-center" data-link-id="#mylinks_user.id#">
+                        <!--- Link card row - entire card is clickable --->
+                        <a href="#mylinks_user.siteurl#" 
+                           target="_blank" 
+                           class="link-row d-flex align-items-center text-decoration-none" 
+                           data-link-id="#mylinks_user.id#"
+                           title="Visit #mylinks_user.sitename#">
                             <!--- Icon on the left (full height) --->
                             <div class="link-icon-container">
                                 <img class="link-icon" 
@@ -148,22 +162,18 @@
                             
                             <!--- Action buttons on the right --->
                             <div class="link-actions">
-                                <!--- Link button --->
-                                <a href="#mylinks_user.siteurl#" 
-                                   target="_blank" 
-                                   class="btn btn-primary btn-xs" 
-                                   title="Visit #mylinks_user.sitename#">
-                                    <i class="fas fa-external-link-alt"></i>
-                                </a>
-                                <!--- Edit button 
+                                <!--- Edit button --->
                                 <button class="btn btn-secondary btn-xs edit-link" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="##updatelink_#mylinks_user.id#"
                                         data-id="#mylinks_user.id#" 
                                         data-sitename="#mylinks_user.sitename#" 
-                                        title="Edit Link">
+                                        title="Edit Link"
+                                        onclick="event.preventDefault(); event.stopPropagation();">
                                     <i class="fas fa-edit"></i>
-                                </button> --->
+                                </button>
                             </div>
-                        </div>
+                        </a>
                     </cfoutput>
                 </cfloop>
                 
