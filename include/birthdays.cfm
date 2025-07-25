@@ -1,9 +1,8 @@
 <!--- This ColdFusion page displays a dashboard card for upcoming birthdays, fetching data from the BirthdayService and rendering it in a structured format. --->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 <style>
-/* Birthday Styles - matching reminder format */
-.birthday-row {
+/* Birthday Styles - scoped to birthday container only */
+#birthdaysContainer .birthday-row {
     border: 1px solid #e9ecef;
     border-radius: 6px;
     padding: 8px 12px;
@@ -16,12 +15,12 @@
     min-height: 48px;
 }
 
-.birthday-row:hover {
+#birthdaysContainer .birthday-row:hover {
     border-color: #adb5bd;
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
-.birthday-avatar-container {
+#birthdaysContainer .birthday-avatar-container {
     display: flex;
     align-items: center;
     margin-right: 12px;
@@ -29,7 +28,7 @@
     height: 32px;
 }
 
-.birthday-avatar {
+#birthdaysContainer .birthday-avatar {
     max-width: 32px;
     max-height: 32px;
     width: 32px;
@@ -38,39 +37,39 @@
     object-fit: cover;
 }
 
-.birthday-content {
+#birthdaysContainer .birthday-content {
     display: flex;
     flex-direction: column;
     justify-content: center;
     min-height: 32px;
 }
 
-.birthday-name {
+#birthdaysContainer .birthday-name {
     font-weight: 600;
     color: #495057;
     font-size: 14px;
     line-height: 1.3;
 }
 
-.birthday-date {
+#birthdaysContainer .birthday-date {
     color: #6c757d;
     font-size: 12px;
     margin-top: 2px;
     line-height: 1.3;
 }
 
-.birthday-actions .btn {
+#birthdaysContainer .birthday-actions .btn {
     padding: 2px 6px;
     font-size: 11px;
     border-radius: 3px;
     margin-left: 4px;
 }
 
-.birthday-actions .btn i {
+#birthdaysContainer .birthday-actions .btn i {
     font-size: 10px;
 }
 
-.birthdays-empty {
+#birthdaysContainer .birthdays-empty {
     text-align: center;
     padding: 20px;
     color: #6c757d;
