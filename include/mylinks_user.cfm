@@ -71,7 +71,7 @@
 
 #linksContainer {
     overflow: hidden;
-    background-color: #f8f9fa;
+    background-color: #ffffff;
     padding: 12px;
     border-radius: 6px;
 }
