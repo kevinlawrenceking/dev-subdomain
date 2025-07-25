@@ -164,6 +164,7 @@
                     </cfloop>
                 </cfif>
             </div>
+        </div><!--- card-body end --->
     </div><!--- end card --->
 
     <!--- Include script name --->
