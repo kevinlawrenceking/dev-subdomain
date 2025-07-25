@@ -23,11 +23,54 @@
     overflow: hidden;
     position: relative;
     z-index: 1;
+    opacity: 1;
+    transform: translateY(0);
 }
 
 .reminder-row:hover {
     border-color: #adb5bd;
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+/* Animation for new reminders */
+.reminder-row.fade-in {
+    animation: fadeInSlide 0.6s ease-out;
+}
+
+@keyframes fadeInSlide {
+    0% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Animation for completing reminders */
+.reminder-row.completing {
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+    animation: pulseComplete 0.5s ease-in-out;
+}
+
+.reminder-row.skipping {
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+    animation: pulseSkip 0.5s ease-in-out;
+}
+
+@keyframes pulseComplete {
+    0% { background-color: #ffffff; }
+    50% { background-color: #d4edda; }
+    100% { background-color: #d4edda; }
+}
+
+@keyframes pulseSkip {
+    0% { background-color: #ffffff; }
+    50% { background-color: #f8d7da; }
+    100% { background-color: #f8d7da; }
 }
 
 .reminder-contact {
@@ -144,6 +187,80 @@ function loadDashboardReminders() {
     });
 }
 
+function loadNewReminder() {
+    // Load just one new reminder to fill a gap
+    $.ajax({
+        url: "/include/get_reminders.cfm",
+        data: {
+            showInactive: 0,
+            currentid: 0,
+            userid: <cfoutput>#userid#</cfoutput>,
+            limit: 1  // Get just one new reminder
+        },
+        dataType: 'json',
+        success: function(data) {
+            if (data.length > 0) {
+                // Check if this reminder is already displayed
+                const existingIds = $('#dashboardRemindersContainer .reminder-row').map(function() {
+                    return $(this).data('reminder-id');
+                }).get();
+                
+                const newReminder = data.find(reminder => !existingIds.includes(reminder.id));
+                if (newReminder) {
+                    addSingleReminder(newReminder);
+                }
+            }
+        }
+    });
+}
+
+function addSingleReminder(reminder) {
+    const container = $('#dashboardRemindersContainer');
+    const newRow = $(`
+        <div class="reminder-row d-flex justify-content-between align-items-center fade-in" 
+             data-reminder-id="${reminder.id}" 
+             style="opacity: 0; transform: translateY(20px);">
+            <div class="flex-grow-1">
+                <div class="reminder-contact">
+                    ${reminder.contactfullname}
+                    <a href="/app/contact?contactid=${reminder.contactid}&t4=1" class="ms-1">
+                        <i class="mdi mdi-eye-outline" style="font-size: 12px;"></i>
+                    </a>
+                </div>
+                <div class="reminder-text">${reminder.reminder_text}</div>
+            </div>
+            <div class="reminder-actions">
+                <button class="btn btn-success btn-xs mark-complete" 
+                        data-id="${reminder.id}" 
+                        data-status="Completed" 
+                        data-text="${reminder.reminder_text}" 
+                        title="Mark Complete">
+                    <i class="fas fa-check"></i>
+                </button>
+                <button class="btn btn-secondary btn-xs mark-skip" 
+                        data-id="${reminder.id}" 
+                        data-status="Skipped" 
+                        data-text="${reminder.reminder_text}" 
+                        title="Skip">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+    `);
+    
+    container.append(newRow);
+    
+    // Trigger the fade-in animation
+    setTimeout(() => {
+        newRow.css({
+            'opacity': '1',
+            'transform': 'translateY(0)'
+        });
+    }, 50);
+    
+    updateReminderCount($('#dashboardRemindersContainer .reminder-row').length);
+}
+
 function renderDashboardReminders(reminders) {
     const container = $('#dashboardRemindersContainer');
     
@@ -153,9 +270,11 @@ function renderDashboardReminders(reminders) {
     }
     
     let html = '';
-    reminders.forEach(reminder => {
+    reminders.forEach((reminder, index) => {
         html += `
-            <div class="reminder-row d-flex justify-content-between align-items-center" data-reminder-id="${reminder.id}">
+            <div class="reminder-row d-flex justify-content-between align-items-center fade-in" 
+                 data-reminder-id="${reminder.id}" 
+                 style="animation-delay: ${index * 0.1}s;">
                 <div class="flex-grow-1">
                     <div class="reminder-contact">
                         ${reminder.contactfullname}
@@ -197,18 +316,32 @@ function updateReminderCount(count) {
     }
 }
 
-function removeReminderFromDashboard(reminderId) {
-    // Remove the completed reminder with animation
+function removeReminderFromDashboard(reminderId, status) {
+    // Add visual feedback first
     const reminderRow = $(`[data-reminder-id="${reminderId}"]`);
-    reminderRow.fadeOut(300, function() {
-        $(this).remove();
-        
-        // Check if we need to load more reminders to maintain 5 visible
-        const remainingCount = $('#dashboardRemindersContainer .reminder-row').length;
-        if (remainingCount < 5) {
-            loadDashboardReminders(); // Reload to potentially fill gaps
-        }
-    });
+    
+    // Add completion/skip animation class
+    if (status === 'Completed') {
+        reminderRow.addClass('completing');
+    } else {
+        reminderRow.addClass('skipping');
+    }
+    
+    // Wait for the pulse animation, then fade out
+    setTimeout(() => {
+        reminderRow.fadeOut(600, function() {
+            $(this).remove();
+            
+            // Check if we need to load more reminders to maintain 5 visible
+            const remainingCount = $('#dashboardRemindersContainer .reminder-row').length;
+            if (remainingCount < 5) {
+                // Add a slight delay before loading new reminder for better UX
+                setTimeout(() => {
+                    loadNewReminder();
+                }, 300);
+            }
+        });
+    }, 500); // Wait for pulse animation to complete
 }
 
 $(document).ready(function () {
@@ -237,8 +370,8 @@ $(document).ready(function () {
             notid: dashboardSelectedReminder.id,
             notstatus: dashboardSelectedReminder.status
         }, function () {
-            // Remove the reminder from dashboard and potentially backfill
-            removeReminderFromDashboard(dashboardSelectedReminder.id);
+            // Remove the reminder from dashboard with visual feedback
+            removeReminderFromDashboard(dashboardSelectedReminder.id, dashboardSelectedReminder.status);
             bootstrap.Modal.getInstance(document.getElementById('confirmReminderModal')).hide();
         });
     });
