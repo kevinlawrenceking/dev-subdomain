@@ -348,25 +348,17 @@ function removeReminderFromDashboard(reminderId, status) {
         reminderRow.addClass('skipping');
     }
     
-    // Wait for the pulse animation, then fade out
+    // Wait for the pulse animation, then slide up
     setTimeout(() => {
-        reminderRow.fadeOut(600, function() {
-            // Get the height of the element being removed for smooth animation
-            const removedHeight = $(this).outerHeight(true);
-            
-            // Remove the element
+        // First, slide up and fade the completed reminder
+        reminderRow.animate({
+            height: 0,
+            marginBottom: 0,
+            paddingTop: 0,
+            paddingBottom: 0,
+            opacity: 0
+        }, 800, 'swing', function() {
             $(this).remove();
-            
-            // Animate the container height to create slide-up effect
-            const container = $('#dashboardRemindersContainer');
-            const currentHeight = container.height();
-            
-            // Temporarily reduce container height, then animate back
-            container.animate({
-                height: currentHeight - removedHeight
-            }, 0).animate({
-                height: currentHeight
-            }, 600, 'swing');
             
             // Check if we need to load more reminders to maintain 5 visible
             const remainingCount = $('#dashboardRemindersContainer .reminder-row').length;
@@ -377,7 +369,7 @@ function removeReminderFromDashboard(reminderId, status) {
                 // Add a slight delay before loading new reminder for better UX
                 setTimeout(() => {
                     loadNewReminder();
-                }, 700); // Wait for slide animation to complete
+                }, 200);
             } else {
                 console.log('No need to load new reminder, still have 5');
             }
