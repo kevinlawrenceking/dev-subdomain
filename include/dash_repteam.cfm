@@ -180,4 +180,6 @@
         <i class="mdi mdi-square-edit-outline"></i> Edit Team
     </a>
   </div>
-</div><!--- end card --->
+</div>
+
+<!--- end card --->
