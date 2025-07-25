@@ -100,7 +100,7 @@
     z-index: auto;
 }
 </style>
-
+<!---
 <cfoutput>
     <div class="card grid-item loaded dashboard-reminder-card" data-id="#dashboards.pnid#">
         <div class="card-header" id="heading_system_#dashboards.currentrow#">
@@ -111,7 +111,7 @@
                 </a>
             </h5>
         </div>
-</cfoutput>
+</cfoutput> --->
 
         <div class="card-body">
             <div id="dashboardRemindersContainer">
