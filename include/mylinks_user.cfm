@@ -152,13 +152,13 @@
                                    title="Visit #mylinks_user.sitename#">
                                     <i class="fas fa-external-link-alt"></i>
                                 </a>
-                                <!--- Edit button --->
+                                <!--- Edit button 
                                 <button class="btn btn-secondary btn-xs edit-link" 
                                         data-id="#mylinks_user.id#" 
                                         data-sitename="#mylinks_user.sitename#" 
                                         title="Edit Link">
                                     <i class="fas fa-edit"></i>
-                                </button>
+                                </button> --->
                             </div>
                         </div>
                     </cfoutput>
@@ -178,7 +178,7 @@
             <div>
                 <cfif mylinks_user.recordcount gt 0>
                     <button onclick="openAllUrls('#siteurl_list#')" 
-                            class="btn btn-sm btn-outline-primary">
+                            class="btn btn-sm btn-outline-secondary">
                         <i class="mdi mdi-open-in-new"></i> Open All
                     </button>
                 <cfelse>
