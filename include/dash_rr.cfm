@@ -114,7 +114,7 @@
 }
 
 #dashboardRemindersContainer {
-    height: 420px;
+    height: 425px;
     overflow: hidden;
 }
 
