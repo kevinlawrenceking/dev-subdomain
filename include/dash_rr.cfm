@@ -172,7 +172,7 @@ function loadDashboardReminders() {
             showInactive: 0,
             currentid: 0,
             userid: <cfoutput>#userid#</cfoutput>,
-            limit: 5  // Dashboard limit to 5 reminders (5 contacts)
+            limit: 7  // Dashboard limit to 7 reminders (7 contacts)
         },
         dataType: 'json',
         success: function(data) {

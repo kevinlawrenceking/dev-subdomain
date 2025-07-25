@@ -20,7 +20,7 @@
     <cfset suffix="_1.5"/>
 </cfif>
 
-<!--- Dashboard-specific query: Get oldest reminder per contact, limited to 5 contacts --->
+<!--- Dashboard-specific query: Get oldest reminder per contact, limited to 7 contacts --->
 <cfquery name="getDashboardReminders" datasource="#dsn#">
   SELECT * FROM (
     SELECT
