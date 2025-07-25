@@ -163,4 +163,41 @@
     <cfreturn siteTypeDetails>
 </cffunction>
 
+<cffunction name="getPanelData" access="public" returntype="struct" hint="Gets all links, a concatenated URL list, and panel details in a single query.">
+    <cfargument name="panelId" type="numeric" required="true">
+
+    <cfset var local = {}>
+
+    <cfquery name="local.panelQuery" datasource="#variables.dsn#">
+        SELECT 
+            s.id,
+            s.id as new_id,
+            s.sitetypeid,
+            s.sitename,
+            s.siteurl,
+            s.siteicon,
+            t.sitetypename,
+            t.pntitle,
+            (SELECT GROUP_CONCAT(s_inner.siteurl ORDER BY s_inner.sitename ASC SEPARATOR ', ')
+             FROM sitelinks_user s_inner
+             WHERE s_inner.siteTypeid = t.sitetypeid) AS siteurl_list
+        FROM sitetypes_user t
+        LEFT JOIN sitelinks_user s ON t.sitetypeid = s.siteTypeid
+        WHERE t.pnid = <cfqueryparam value="#arguments.panelId#" cfsqltype="cf_sql_integer">
+        ORDER BY s.sitename
+    </cfquery>
+
+    <cfset var result = {
+        "links": queryExecute("SELECT * FROM local.panelQuery", [], {dbtype="query"}),
+        "details": {
+            "sitetypeid": local.panelQuery.recordCount > 0 ? local.panelQuery.sitetypeid[1] : 0,
+            "sitetypename": local.panelQuery.recordCount > 0 ? local.panelQuery.sitetypename[1] : "",
+            "pntitle": local.panelQuery.recordCount > 0 ? local.panelQuery.pntitle[1] : ""
+        },
+        "urlList": local.panelQuery.recordCount > 0 ? local.panelQuery.siteurl_list[1] : ""
+    }>
+
+    <cfreturn result>
+</cffunction>
+
 </cfcomponent>

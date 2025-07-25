@@ -176,7 +176,7 @@
   </div><!--- card-body end --->
 
   <div class="card-footer bg-light d-flex justify-content-left">
-    <a href="/app/myaccount/?t2=1" class="btn btn-sm btn-outline-secondary">
+    <a href="/app/myaccount/?t2=1" class="btn btn-sm btn-light border">
         <i class="mdi mdi-square-edit-outline"></i> Edit Team
     </a>
   </div>

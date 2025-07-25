@@ -191,7 +191,7 @@
             <div>
                 <cfif mylinks_user.recordcount gt 0>
                     <button onclick="openAllUrls('#siteurl_list#')" 
-                            class="btn btn-sm btn-outline-secondary">
+                            class="btn btn-sm btn-light border">
                         <i class="mdi mdi-open-in-new"></i> Open All
                     </button>
                 <cfelse>
@@ -201,7 +201,7 @@
             
             <!--- Add Link button on the right --->
             <div>
-                <a class="btn btn-sm btn-primary" 
+                <a class="btn btn-sm btn-light border" 
                    href="addlink.cfm" 
                    data-bs-remote="true" 
                    data-bs-toggle="modal" 

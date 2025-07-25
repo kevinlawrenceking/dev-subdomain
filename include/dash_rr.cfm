@@ -154,8 +154,7 @@
             
             <div class="mt-3">
                 <a href="/app/reminders/" 
-                   class="badge badge-light text-dark" 
-                   style="border: 1px solid #406E8E; outline: none; color: #406E8E; display: inline-block; padding: 6px 12px; text-decoration: none;">
+                   class="btn btn-sm btn-light border">
                     <i class="mdi mdi-book-plus-multiple"></i> View All
                 </a>
             </div>
