@@ -31,7 +31,6 @@
     color: #495057;
     font-size: 14px;
 }
-
 .reminder-text {
     color: #6c757d;
     font-size: 12px;
