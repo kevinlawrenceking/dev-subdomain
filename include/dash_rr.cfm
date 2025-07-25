@@ -140,7 +140,7 @@ function loadDashboardReminders() {
             showInactive: 0,
             currentid: 0,
             userid: <cfoutput>#userid#</cfoutput>,
-            limit: 10  // Dashboard limit to 10 reminders
+            limit: 5  // Dashboard limit to 5 reminders
         },
         dataType: 'json',
         success: function(data) {
@@ -214,9 +214,9 @@ function removeReminderFromDashboard(reminderId) {
     reminderRow.fadeOut(300, function() {
         $(this).remove();
         
-        // Check if we need to load more reminders to maintain 10 visible
+        // Check if we need to load more reminders to maintain 5 visible
         const remainingCount = $('#dashboardRemindersContainer .reminder-row').length;
-        if (remainingCount < 10) {
+        if (remainingCount < 5) {
             loadDashboardReminders(); // Reload to potentially fill gaps
         }
     });
