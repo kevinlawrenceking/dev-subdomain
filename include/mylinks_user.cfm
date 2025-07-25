@@ -8,7 +8,7 @@
     border-radius: 6px;
     padding: 8px 12px;
     margin-bottom: 8px;
-    background-color: #ffffff;
+    background-color: #FCFCFC;
     transition: all 0.3s ease;
     word-wrap: break-word;
     overflow: hidden;
