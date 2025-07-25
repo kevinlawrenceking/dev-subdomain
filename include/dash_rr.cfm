@@ -188,38 +188,53 @@ function loadDashboardReminders() {
 }
 
 function loadNewReminder() {
-    // Load just one new reminder to fill a gap
+    // Load more reminders to find a truly new one
     $.ajax({
         url: "/include/get_reminders.cfm",
         data: {
             showInactive: 0,
             currentid: 0,
             userid: <cfoutput>#userid#</cfoutput>,
-            limit: 1  // Get just one new reminder
+            limit: 10  // Get more reminders to find new ones
         },
         dataType: 'json',
         success: function(data) {
             if (data.length > 0) {
-                // Check if this reminder is already displayed
+                // Get currently displayed reminder IDs
                 const existingIds = $('#dashboardRemindersContainer .reminder-row').map(function() {
-                    return $(this).data('reminder-id');
+                    return parseInt($(this).data('reminder-id'));
                 }).get();
                 
-                const newReminder = data.find(reminder => !existingIds.includes(reminder.id));
+                // Find the first reminder that's not already displayed
+                const newReminder = data.find(reminder => !existingIds.includes(parseInt(reminder.id)));
+                
                 if (newReminder) {
+                    console.log('Adding new reminder:', newReminder.reminder_text);
                     addSingleReminder(newReminder);
+                } else {
+                    console.log('No new reminders available to add');
                 }
+            } else {
+                console.log('No reminders returned from server');
             }
+        },
+        error: function() {
+            console.log('Error loading new reminder');
         }
     });
 }
 
 function addSingleReminder(reminder) {
     const container = $('#dashboardRemindersContainer');
+    const currentCount = container.find('.reminder-row').length;
+    
+    console.log('Current reminder count:', currentCount);
+    console.log('Adding reminder for:', reminder.contactfullname);
+    
     const newRow = $(`
-        <div class="reminder-row d-flex justify-content-between align-items-center fade-in" 
+        <div class="reminder-row d-flex justify-content-between align-items-center" 
              data-reminder-id="${reminder.id}" 
-             style="opacity: 0; transform: translateY(20px);">
+             style="opacity: 0; transform: translateY(20px); transition: all 0.6s ease-out;">
             <div class="flex-grow-1">
                 <div class="reminder-contact">
                     ${reminder.contactfullname}
@@ -256,9 +271,13 @@ function addSingleReminder(reminder) {
             'opacity': '1',
             'transform': 'translateY(0)'
         });
-    }, 50);
+        console.log('Animation triggered for new reminder');
+    }, 100);
     
-    updateReminderCount($('#dashboardRemindersContainer .reminder-row').length);
+    // Update count
+    const newCount = container.find('.reminder-row').length;
+    console.log('New reminder count:', newCount);
+    updateReminderCount(newCount);
 }
 
 function renderDashboardReminders(reminders) {
@@ -320,6 +339,8 @@ function removeReminderFromDashboard(reminderId, status) {
     // Add visual feedback first
     const reminderRow = $(`[data-reminder-id="${reminderId}"]`);
     
+    console.log('Removing reminder:', reminderId, 'Status:', status);
+    
     // Add completion/skip animation class
     if (status === 'Completed') {
         reminderRow.addClass('completing');
@@ -334,11 +355,16 @@ function removeReminderFromDashboard(reminderId, status) {
             
             // Check if we need to load more reminders to maintain 5 visible
             const remainingCount = $('#dashboardRemindersContainer .reminder-row').length;
+            console.log('Remaining count after removal:', remainingCount);
+            
             if (remainingCount < 5) {
+                console.log('Loading new reminder to fill gap...');
                 // Add a slight delay before loading new reminder for better UX
                 setTimeout(() => {
                     loadNewReminder();
                 }, 300);
+            } else {
+                console.log('No need to load new reminder, still have 5');
             }
         });
     }, 500); // Wait for pulse animation to complete
