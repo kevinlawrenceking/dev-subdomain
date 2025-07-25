@@ -1,4 +1,79 @@
 <!--- This ColdFusion page handles the display and management of site links for a specific dashboard panel. --->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+/* Link Styles - matching reminder format */
+.link-row {
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin-bottom: 8px;
+    background-color: #ffffff;
+    transition: all 0.3s ease;
+    word-wrap: break-word;
+    overflow: hidden;
+    position: relative;
+    min-height: 48px;
+}
+
+.link-row:hover {
+    border-color: #adb5bd;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.link-icon-container {
+    display: flex;
+    align-items: center;
+    margin-right: 12px;
+    min-width: 32px;
+    height: 32px;
+}
+
+.link-icon {
+    max-width: 32px;
+    max-height: 32px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+}
+
+.link-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 32px;
+}
+
+.link-sitename {
+    font-weight: 600;
+    color: #495057;
+    font-size: 14px;
+    line-height: 1.3;
+}
+
+.link-actions .btn {
+    padding: 2px 6px;
+    font-size: 11px;
+    border-radius: 3px;
+    margin-left: 4px;
+}
+
+.link-actions .btn i {
+    font-size: 10px;
+}
+
+.links-empty {
+    text-align: center;
+    padding: 20px;
+    color: #6c757d;
+    font-style: italic;
+}
+
+#linksContainer {
+    overflow: hidden;
+}
+</style>
+
 <cfset siteLinksService = createObject("component", "services.SiteLinksService")>
 <cfset mylinks_user = siteLinksService.getSiteLinksByPanelId(dashboards.pnid)>
 <cfset siteurl_list = siteLinksService.getAllUrlsByPanelId(dashboards.pnid)>
@@ -38,11 +113,11 @@
             </h5>
         </div>
         <div class="card-body">
-            <div class="row">
+            <!--- Container for links with similar styling to reminders --->
+            <div id="linksContainer">
                 <!--- Loop through site links --->
                 <cfloop query="mylinks_user">
                     <cfoutput>
-
                         <!--- Set modal ID and title for updating a link --->
                         <cfset modalid = "updatelink_#mylinks_user.id#" />
                         <cfset modaltitle = "#siteTypeDetails.sitetypename# Link Update" />
@@ -53,46 +128,65 @@
                         <cfset modaltitle = "#siteTypeDetails.sitetypename# Link Delete" />
                         <cfinclude template="/include/modal.cfm" />
 
-                        <div class="col-md-12">
-                            <a href="#mylinks_user.siteurl#" class="text-reset font-14 py-1 px-1 d-inline-block" target="#mylinks_user.sitename#" title="#mylinks_user.sitename#">
-                                <img class="site-icon" id="icon_#mylinks_user.id#" src="#application.retinaIcons14Url#/#mylinks_user.siteicon#" style="width:14px;" />
-                                #mylinks_user.sitename#
-                            </a> 
-
-                            <span id="edit_#mylinks_user.id#" class="hide-edit-icon" data-card-id="#dashboards.pnid#">
-                                <a title="Edit" href="" data-bs-remote="true" data-bs-toggle="modal" data-bs-target="##updatelink_#mylinks_user.id#">
-                                    <i class="mdi mdi-square-edit-outline"></i>
+                        <!--- Link card row --->
+                        <div class="link-row d-flex align-items-center" data-link-id="#mylinks_user.id#">
+                            <!--- Icon on the left (full height) --->
+                            <div class="link-icon-container">
+                                <img class="link-icon" 
+                                     id="icon_#mylinks_user.id#" 
+                                     src="#application.retinaIcons14Url#/#mylinks_user.siteicon#" 
+                                     alt="#mylinks_user.sitename#" />
+                            </div>
+                            
+                            <!--- Site name in the middle --->
+                            <div class="flex-grow-1 link-content">
+                                <div class="link-sitename">#mylinks_user.sitename#</div>
+                            </div>
+                            
+                            <!--- Action buttons on the right --->
+                            <div class="link-actions">
+                                <!--- Link button --->
+                                <a href="#mylinks_user.siteurl#" 
+                                   target="_blank" 
+                                   class="btn btn-primary btn-xs" 
+                                   title="Visit #mylinks_user.sitename#">
+                                    <i class="fas fa-external-link-alt"></i>
                                 </a>
-                                <a class="pt-0" data-bs-remote="true" data-bs-toggle="modal" data-bs-target="##remoteDeleteLink_#mylinks_user.id#" data-bs-placement="top" data-bs-original-title="Delete link" title="Remove #mylinks_user.sitename#" class="pl-1" style="color:red;">
-                                    <i class="mdi mdi-trash-can-outline"></i>
-                                </a>
-                            </span>
+                                <!--- Edit button --->
+                                <button class="btn btn-secondary btn-xs edit-link" 
+                                        data-id="#mylinks_user.id#" 
+                                        data-sitename="#mylinks_user.sitename#" 
+                                        title="Edit Link">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </div>
                         </div>
                     </cfoutput>
                 </cfloop>
-                <cfoutput>
-                    <div class="col-md-12 col-lg-12">
-                        <!--- Check if there are any active links --->
-                        <cfif mylinks_user.recordcount gt 0>
-                            <button onclick="openAllUrls('#siteurl_list#')" style="border: 1px solid ##406E8E!important; outline: none!important; color: ##406E8E!important;" class="badge badge-light text-dark">
-                                <i class="mdi mdi-book-plus-multiple"></i> Open All
-                            </button>
-                        <cfelse>
-                            <center>No active links</center>
-                        </cfif>
+                
+                <!--- Show message if no links --->
+                <cfif mylinks_user.recordcount EQ 0>
+                    <div class="links-empty">
+                        <center>No active links</center>
                     </div>
-                </cfoutput>
+                </cfif>
             </div>
+            
+            <!--- Open All button --->
+            <cfif mylinks_user.recordcount gt 0>
+                <div class="mt-3">
+                    <button onclick="openAllUrls('#siteurl_list#')" 
+                            class="badge badge-light text-dark" 
+                            style="border: 1px solid #406E8E; outline: none; color: #406E8E; display: inline-block; padding: 6px 12px; text-decoration: none;">
+                        <i class="mdi mdi-book-plus-multiple"></i> Open All
+                    </button>
+                </div>
+            </cfif>
         </div><!--- card-body end --->
         
-        <div class="card-footer bg-light d-flex justify-content-between">
-            <cfif mylinks_user.recordcount gt 0>
-                <button class="btn btn-link toggle_edit_mode" data-card-id="#dashboards.pnid#">
-                    <i class="mdi mdi-square-edit-outline"></i>
-                </button>
-            </cfif>
+        <div class="card-footer bg-light d-flex justify-content-end">
             <a class="btn btn-link" href="addlink.cfm" data-bs-remote="true" data-bs-toggle="modal" data-bs-target="##addlink_#siteTypeDetails.sitetypeid#">
-                <i class="fe-plus-circle"></i>
+                <i class="fe-plus-circle"></i> Add Link
             </a>
         </div><!--- end card footer --->
     </div><!--- end card --->
