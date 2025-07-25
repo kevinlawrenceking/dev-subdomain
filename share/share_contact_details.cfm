@@ -5,7 +5,13 @@
     PARAMETERS: contactid (from the parent loop)
     DEPENDENCIES: remote_load_common.cfm
 --->
+<style>
+.text-primary {
+    color: #406e8e !important;
+}
 
+
+</style>
 <!--- Include common settings if not already included --->
 <cfif NOT isDefined('dsn')>
     <cfinclude template="remote_load_common.cfm">
