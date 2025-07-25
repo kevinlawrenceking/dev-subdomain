@@ -171,23 +171,31 @@
                     </div>
                 </cfif>
             </div>
-            
-            <!--- Open All button --->
-            <cfif mylinks_user.recordcount gt 0>
-                <div class="mt-3">
-                    <button onclick="openAllUrls('#siteurl_list#')" 
-                            class="badge badge-light text-dark" 
-                            style="border: 1px solid ##406E8E; outline: none; color: ##406E8E; display: inline-block; padding: 6px 12px; text-decoration: none;">
-                        <i class="mdi mdi-book-plus-multiple"></i> Open All
-                    </button>
-                </div>
-            </cfif>
         </div><!--- card-body end --->
         
-        <div class="card-footer bg-light d-flex justify-content-end">
-            <a class="btn btn-link" href="addlink.cfm" data-bs-remote="true" data-bs-toggle="modal" data-bs-target="##addlink_#siteTypeDetails.sitetypeid#">
-                <i class="fe-plus-circle"></i> Add Link
-            </a>
+        <div class="card-footer bg-light d-flex justify-content-between align-items-center">
+            <!--- Open All button on the left --->
+            <div>
+                <cfif mylinks_user.recordcount gt 0>
+                    <button onclick="openAllUrls('#siteurl_list#')" 
+                            class="btn btn-sm btn-outline-primary">
+                        <i class="mdi mdi-open-in-new"></i> Open All
+                    </button>
+                <cfelse>
+                    <span class="text-muted small">No links available</span>
+                </cfif>
+            </div>
+            
+            <!--- Add Link button on the right --->
+            <div>
+                <a class="btn btn-sm btn-primary" 
+                   href="addlink.cfm" 
+                   data-bs-remote="true" 
+                   data-bs-toggle="modal" 
+                   data-bs-target="##addlink_#siteTypeDetails.sitetypeid#">
+                    <i class="fe-plus-circle"></i> Add Link
+                </a>
+            </div>
         </div><!--- end card footer --->
     </div><!--- end card --->
 </cfoutput>
