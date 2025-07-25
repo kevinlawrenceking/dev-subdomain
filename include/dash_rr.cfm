@@ -19,6 +19,10 @@
     margin-bottom: 8px;
     background-color: #ffffff;
     transition: all 0.2s ease;
+    word-wrap: break-word;
+    overflow: hidden;
+    position: relative;
+    z-index: 1;
 }
 
 .reminder-row:hover {
@@ -67,9 +71,8 @@
 }
 
 #dashboardRemindersContainer {
-    max-height: 300px;
-    overflow-y: auto;
-    overflow-x: hidden;
+    height: 312px;
+    overflow: hidden;
 }
 
 /* Ensure card body constrains content */
@@ -77,20 +80,6 @@
     padding: 1rem;
     overflow: hidden;
     position: relative;
-}
-
-/* Ensure reminders don't break out of container */
-.reminder-row {
-    border: 1px solid #e9ecef;
-    border-radius: 6px;
-    padding: 8px 12px;
-    margin-bottom: 8px;
-    background-color: #ffffff;
-    transition: all 0.2s ease;
-    word-wrap: break-word;
-    overflow: hidden;
-    position: relative;
-    z-index: 1;
 }
 
 /* Additional containment for the entire card */
