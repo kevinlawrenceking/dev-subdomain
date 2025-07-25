@@ -32,11 +32,6 @@
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
-/* Animation for cards sliding up when one is removed */
-.reminder-row.slide-up {
-    transition: all 0.6s ease-out;
-}
-
 /* Animation for new reminders */
 .reminder-row.fade-in {
     animation: fadeInSlide 0.6s ease-out;
@@ -161,7 +156,7 @@
                 <a href="/app/reminders/" 
                    class="badge badge-light text-dark" 
                    style="border: 1px solid #406E8E; outline: none; color: #406E8E; display: inline-block; padding: 6px 12px; text-decoration: none;">
-                    <i class="mdi mdi-book-plus-multiple"></i> Open All
+                    <i class="mdi mdi-book-plus-multiple"></i> View All
                 </a>
             </div>
         </div><!--- card-body end --->
@@ -355,16 +350,23 @@ function removeReminderFromDashboard(reminderId, status) {
     
     // Wait for the pulse animation, then fade out
     setTimeout(() => {
-        // Add slide-up class to all remaining cards for smooth repositioning
-        $('#dashboardRemindersContainer .reminder-row').not(reminderRow).addClass('slide-up');
-        
         reminderRow.fadeOut(600, function() {
+            // Get the height of the element being removed for smooth animation
+            const removedHeight = $(this).outerHeight(true);
+            
+            // Remove the element
             $(this).remove();
             
-            // Remove slide-up class after the repositioning is complete
-            setTimeout(() => {
-                $('#dashboardRemindersContainer .reminder-row').removeClass('slide-up');
-            }, 100);
+            // Animate the container height to create slide-up effect
+            const container = $('#dashboardRemindersContainer');
+            const currentHeight = container.height();
+            
+            // Temporarily reduce container height, then animate back
+            container.animate({
+                height: currentHeight - removedHeight
+            }, 0).animate({
+                height: currentHeight
+            }, 600, 'swing');
             
             // Check if we need to load more reminders to maintain 5 visible
             const remainingCount = $('#dashboardRemindersContainer .reminder-row').length;
@@ -375,7 +377,7 @@ function removeReminderFromDashboard(reminderId, status) {
                 // Add a slight delay before loading new reminder for better UX
                 setTimeout(() => {
                     loadNewReminder();
-                }, 400); // Slightly longer delay to let the slide-up animation complete
+                }, 700); // Wait for slide animation to complete
             } else {
                 console.log('No need to load new reminder, still have 5');
             }
