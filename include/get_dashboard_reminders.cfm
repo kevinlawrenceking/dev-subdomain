@@ -6,7 +6,7 @@
 <cfparam name="url.limit" default="7" type="numeric">
 <cfset contactID = url.currentid>
 <cfset showInactive = url.showInactive>
-<cfset reminderLimit = url.limit>
+<cfset reminderLimit = 7>
 
 <cfset host=ListFirst(cgi.server_name, ".")/>
 
