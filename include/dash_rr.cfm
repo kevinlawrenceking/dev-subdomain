@@ -360,18 +360,18 @@ function removeReminderFromDashboard(reminderId, status) {
         }, 800, 'swing', function() {
             $(this).remove();
             
-            // Check if we need to load more reminders to maintain 5 visible
+            // Check if we need to load more reminders to maintain 7 visible
             const remainingCount = $('#dashboardRemindersContainer .reminder-row').length;
             console.log('Remaining count after removal:', remainingCount);
             
-            if (remainingCount < 5) {
+            if (remainingCount < 7) {
                 console.log('Loading new reminder to fill gap...');
                 // Add a slight delay before loading new reminder for better UX
                 setTimeout(() => {
                     loadNewReminder();
                 }, 200);
             } else {
-                console.log('No need to load new reminder, still have 5');
+                console.log('No need to load new reminder, still have 7');
             }
         });
     }, 500); // Wait for pulse animation to complete
