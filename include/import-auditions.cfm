@@ -3,39 +3,174 @@
 <cfparam name="step" default="1" />
 
 <script>
-    <!--- Function to enable the submit button when a file is selected --->
+    <!--- Enhanced functions for better user experience --->
     function unlock() {
-        document.getElementById('buttonSubmit').removeAttribute("disabled");
+        const fileInput = document.getElementById('fileInput');
+        const submitButton = document.getElementById('buttonSubmit');
+        const file = fileInput.files[0];
+        
+        if (file) {
+            // Validate file type
+            const allowedTypes = ['.xlsx', '.xls'];
+            const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+            
+            if (allowedTypes.includes(fileExtension)) {
+                // Validate file size (10MB limit)
+                const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+                
+                if (file.size <= maxSize) {
+                    submitButton.removeAttribute("disabled");
+                    submitButton.innerHTML = '<i class="fe-upload me-2"></i>Import ' + file.name;
+                    fileInput.classList.remove('is-invalid');
+                    fileInput.classList.add('is-valid');
+                } else {
+                    submitButton.setAttribute("disabled", "disabled");
+                    fileInput.classList.remove('is-valid');
+                    fileInput.classList.add('is-invalid');
+                    alert('File size must be less than 10MB. Please choose a smaller file.');
+                }
+            } else {
+                submitButton.setAttribute("disabled", "disabled");
+                fileInput.classList.remove('is-valid');
+                fileInput.classList.add('is-invalid');
+                alert('Please select a valid Excel file (.xlsx or .xls)');
+            }
+        } else {
+            submitButton.setAttribute("disabled", "disabled");
+            submitButton.innerHTML = '<i class="fe-upload me-2"></i>Import Auditions';
+            fileInput.classList.remove('is-valid', 'is-invalid');
+        }
     }
+    
+    function resetForm() {
+        const form = document.getElementById('upload');
+        const fileInput = document.getElementById('fileInput');
+        const submitButton = document.getElementById('buttonSubmit');
+        
+        form.reset();
+        submitButton.setAttribute("disabled", "disabled");
+        submitButton.innerHTML = '<i class="fe-upload me-2"></i>Import Auditions';
+        fileInput.classList.remove('is-valid', 'is-invalid');
+        document.getElementById('uploadProgress').style.display = 'none';
+    }
+    
+    // Show progress when form is submitted
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('upload');
+        form.addEventListener('submit', function() {
+            document.getElementById('uploadProgress').style.display = 'block';
+            document.getElementById('buttonSubmit').setAttribute('disabled', 'disabled');
+        });
+    });
 </script>
 
-<!--- Form for uploading the template --->
+<!--- Improved Import Interface --->
 <div class="row">
     <div class="col-12">
-        <div class="card mb-3">
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h4 class="card-title mb-0">
+                    <i class="fe-upload me-2"></i>Import Auditions
+                </h4>
+                <p class="mb-0 mt-1 opacity-75">Follow these simple steps to import your audition data</p>
+            </div>
             <div class="card-body">
-                <h5>Step One: Import Template</h5>
-                <cfoutput>
-                <p>
-                    Download the 
-                    <a href="#application.auditionimporttemplate#" download target="new">
-                        <strong><i class="fe-upload"></i> Import Template</strong>
-                    </a> 
-                    to copy and paste all the events you'd like to import. 
-                    <strong>Imports must be in this format.</strong>
-                </p>
-                </cfoutput>
-                <h5>Step Two: Upload Template</h5>
-                <p>Once you've populated and saved the Import Template as an .xlsx file, select the file and upload.</p>
+                
+                <!--- Step 1: Download Template --->
+                <div class="d-flex align-items-start mb-4">
+                    <div class="flex-shrink-0 me-3">
+                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                            <strong>1</strong>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h5 class="mb-2">Download Import Template</h5>
+                        <p class="text-muted mb-3">
+                            Get the Excel template with the correct format for importing your audition data.
+                        </p>
+                        <cfoutput>
+                            <a href="#application.auditionimporttemplate#" download target="_blank" 
+                               class="btn btn-outline-primary btn-lg">
+                                <i class="fe-download me-2"></i>Download Template
+                            </a>
+                        </cfoutput>
+                        <div class="mt-2">
+                            <small class="text-warning">
+                                <i class="fe-alert-triangle me-1"></i>
+                                <strong>Important:</strong> Data must be in this exact format to import successfully.
+                            </small>
+                        </div>
+                    </div>
+                </div>
 
-                <form action="/include/upload_audition.cfm" method="post" enctype="multipart/form-data" id="upload">
-                    <cfoutput>
-                        <input type="hidden" name="userid" value="#userid#" />
-                    </cfoutput>
-                    <input name="file" onchange="unlock();" type="file" />
-                    <p></p>
-                    <input type="submit" value="Upload" class="btn btn-xs btn-primary waves-effect mb-2 waves-light" style="background-color: #406e8e; border: #406e8e" id="buttonSubmit" disabled />
-                </form>
+                <hr class="my-4">
+
+                <!--- Step 2: Upload File --->
+                <div class="d-flex align-items-start">
+                    <div class="flex-shrink-0 me-3">
+                        <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                            <strong>2</strong>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h5 class="mb-2">Upload Your File</h5>
+                        <p class="text-muted mb-3">
+                            Once you've filled out the template and saved it as an Excel file (.xlsx), upload it here.
+                        </p>
+
+                        <form action="/include/upload_audition.cfm" method="post" enctype="multipart/form-data" id="upload" class="needs-validation" novalidate>
+                            <cfoutput>
+                                <input type="hidden" name="userid" value="#userid#" />
+                            </cfoutput>
+                            
+                            <div class="mb-3">
+                                <div class="input-group input-group-lg">
+                                    <input type="file" 
+                                           class="form-control form-control-lg" 
+                                           name="file" 
+                                           id="fileInput"
+                                           accept=".xlsx,.xls"
+                                           onchange="unlock();" 
+                                           required>
+                                    <label class="input-group-text" for="fileInput">
+                                        <i class="fe-file-text"></i>
+                                    </label>
+                                </div>
+                                <div class="invalid-feedback">
+                                    Please select an Excel file to upload.
+                                </div>
+                                <small class="form-text text-muted">
+                                    <i class="fe-info me-1"></i>
+                                    Accepted formats: .xlsx, .xls (Max file size: 10MB)
+                                </small>
+                            </div>
+
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-start">
+                                <button type="submit" 
+                                        class="btn btn-success btn-lg me-2" 
+                                        id="buttonSubmit" 
+                                        disabled>
+                                    <i class="fe-upload me-2"></i>Import Auditions
+                                </button>
+                                <button type="button" 
+                                        class="btn btn-outline-secondary btn-lg" 
+                                        onclick="resetForm()">
+                                    <i class="fe-refresh-cw me-2"></i>Reset
+                                </button>
+                            </div>
+                        </form>
+
+                        <!--- Progress indicator (hidden by default) --->
+                        <div id="uploadProgress" class="mt-3" style="display: none;">
+                            <div class="d-flex align-items-center">
+                                <div class="spinner-border spinner-border-sm text-primary me-2" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <span class="text-primary">Processing your import...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -49,73 +184,113 @@
 
     <div class="row">
         <div class="col-12">
-            <div class="card mb-3">
-                <div class="card-body">
-                    <h4 class="header-title">Events imported <span class="small right"></span></h4>
-                    <div class="d-flex justify-content-between">
-                        <div class="float-left">
+            <div class="card mb-4 shadow-sm border-success">
+                <div class="card-header bg-success text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="card-title mb-0">
+                                <i class="fe-check-circle me-2"></i>Import Results
+                            </h4>
                             <cfoutput>
-                                <p>#results.recordcount# events were imported. Click on a name to view details.</p>
+                                <p class="mb-0 mt-1 opacity-75">
+                                    Successfully processed #results.recordcount# audition<cfif results.recordcount NEQ 1>s</cfif>
+                                </p>
+                            </cfoutput>
+                        </div>
+                        <div class="text-end">
+                            <cfoutput>
+                                <div class="badge bg-light text-success fs-6 px-3 py-2">
+                                    #results.recordcount# Records
+                                </div>
                             </cfoutput>
                         </div>
                     </div>
-                    <table id="basic-datatable" class="table display dt-responsive nowrap w-100 table-striped" role="grid">
-                        <thead>
-                            <cfoutput query="results" maxrows="1">
-                                <tr>
-                                    <th>#head1#</th>
-                                    <th>#head2#</th>
-                                    <th>#head3#</th>
-                                    <th>#head4#</th>
-                                    <th>#head5#</th>
-                                    <th>#head6#</th>
-                                </tr>
-                            </cfoutput>
-                        </thead>
-                        <tbody>
-                            <cfloop query="results">
-                                <!--- Include error details for each result --->
-                                <cfinclude template="/include/qry/errs_125_2.cfm" />
-                                <cfset err_list = valuelist(errs.error_msg)>
-                                <cfoutput>
-                                    <cfif results.currentrow MOD 2 EQ 1>
-                                        <cfset newclass="odd">
-                                    <cfelse>
-                                        <cfset newclass="even">
-                                    </cfif>
-                                    <tr class="#newclass#" role="row" id="row-#results.id#">
-                                        <td>
-                                            <a href="/app/audition/?audprojectid=#results.audprojectid#" class="text-body font-weight-semibold">
-                                                <cfset myDateTime = results.col1b>
-                                                <cfset myFormattedDateTime = this.formatDate(myDateTime)>
-                                                #myFormattedDateTime#
-                                            </a>
-                                        </td>
-                                        <td>
-                                            <cfif len(results.audprojectid)>
-                                                <a href="/app/audition/?audprojectid=#results.audprojectid#">#col2#</a>
-                                            <cfelse>
-                                                #col2#
-                                            </cfif>
-                                        </td>
-                                        <td>#col3#</td>
-                                        <td>#col4#</td>
-                                        <td>#col5#</td>
-                                        <td>
-                                            <cfif col6 EQ "invalid">
-                                                <a href="javascript:void(0);" data-toggle="modal" data-target="##fixModal" onclick="loadForm(#results.id#)" title="#err_list#">
-                                                    <font color="red">Invalid <i class="fe-search"></i></font>
-                                                    <button type="button" class="btn btn-sm btn-warning" onclick="loadForm(#results.id#)">Fix</button>
-                                                </a>
-                                            <cfelse>
-                                                #col6#
-                                            </cfif>
-                                        </td>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info d-flex align-items-center mb-4" role="alert">
+                        <i class="fe-info me-2"></i>
+                        <div>
+                            Click on any project name to view its details. Items marked as "Invalid" can be fixed using the Fix button.
+                        </div>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table id="basic-datatable" class="table table-hover table-striped" role="grid">
+                            <thead class="table-dark">
+                                <cfoutput query="results" maxrows="1">
+                                    <tr>
+                                        <th><i class="fe-calendar me-1"></i>#head1#</th>
+                                        <th><i class="fe-film me-1"></i>#head2#</th>
+                                        <th><i class="fe-user me-1"></i>#head3#</th>
+                                        <th><i class="fe-tag me-1"></i>#head4#</th>
+                                        <th><i class="fe-users me-1"></i>#head5#</th>
+                                        <th><i class="fe-check-circle me-1"></i>#head6#</th>
                                     </tr>
                                 </cfoutput>
-                            </cfloop>
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                <cfloop query="results">
+                                    <!--- Include error details for each result --->
+                                    <cfinclude template="/include/qry/errs_125_2.cfm" />
+                                    <cfset err_list = valuelist(errs.error_msg)>
+                                    <cfoutput>
+                                        <tr id="row-#results.id#">
+                                            <td>
+                                                <cfif len(results.audprojectid)>
+                                                    <a href="/app/audition/?audprojectid=#results.audprojectid#" class="text-decoration-none">
+                                                        <cfset myDateTime = results.col1b>
+                                                        <cfset myFormattedDateTime = this.formatDate(myDateTime)>
+                                                        <i class="fe-calendar me-1 text-muted"></i>#myFormattedDateTime#
+                                                    </a>
+                                                <cfelse>
+                                                    <cfset myDateTime = results.col1b>
+                                                    <cfset myFormattedDateTime = this.formatDate(myDateTime)>
+                                                    <i class="fe-calendar me-1 text-muted"></i>#myFormattedDateTime#
+                                                </cfif>
+                                            </td>
+                                            <td>
+                                                <cfif len(results.audprojectid)>
+                                                    <a href="/app/audition/?audprojectid=#results.audprojectid#" class="fw-semibold text-decoration-none">
+                                                        #col2#
+                                                    </a>
+                                                <cfelse>
+                                                    <span class="text-muted">#col2#</span>
+                                                </cfif>
+                                            </td>
+                                            <td>#col3#</td>
+                                            <td>
+                                                <cfif col4 NEQ "">
+                                                    <span class="badge bg-secondary">#col4#</span>
+                                                <cfelse>
+                                                    <span class="text-muted">—</span>
+                                                </cfif>
+                                            </td>
+                                            <td>#col5#</td>
+                                            <td>
+                                                <cfif col6 EQ "invalid">
+                                                    <div class="d-flex align-items-center">
+                                                        <span class="badge bg-danger me-2">
+                                                            <i class="fe-alert-circle me-1"></i>Invalid
+                                                        </span>
+                                                        <button type="button" 
+                                                                class="btn btn-sm btn-warning" 
+                                                                onclick="loadForm(#results.id#)"
+                                                                title="#err_list#">
+                                                            <i class="fe-tool me-1"></i>Fix
+                                                        </button>
+                                                    </div>
+                                                <cfelse>
+                                                    <span class="badge bg-success">
+                                                        <i class="fe-check me-1"></i>#col6#
+                                                    </span>
+                                                </cfif>
+                                            </td>
+                                        </tr>
+                                    </cfoutput>
+                                </cfloop>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -128,36 +303,71 @@
 <cfif imports.recordcount GT 0>
     <div class="row">
         <div class="col-12">
-            <div class="card mb-3">
-                <div class="card-body">
-                    <h4 class="header-title">Import History <span class="small right"></span></h4>
-                    <div class="d-flex justify-content-between">
-                        <div class="float-left">
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-light border-bottom">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title mb-0">
+                                <i class="fe-clock me-2 text-muted"></i>Import History
+                            </h5>
                             <cfoutput>
-                                <p>You have <strong>#imports.recordcount#</strong> imports</p>
+                                <small class="text-muted">You have <strong>#imports.recordcount#</strong> previous import<cfif imports.recordcount NEQ 1>s</cfif></small>
                             </cfoutput>
                         </div>
+                        <div>
+                            <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="##importHistoryCollapse" aria-expanded="false">
+                                <i class="fe-chevron-down"></i>
+                            </button>
+                        </div>
                     </div>
-                    <table id="basic-datatable-history" class="table dt-responsive nowrap w-100 table-striped" role="grid">
-                        <thead>
-                            <tr>
-                                <th width="50">Batch ID</th>
-                                <th>Date</th>
-                                <th>Time</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <cfloop query="imports">
-                                <cfoutput>
+                </div>
+                <div class="collapse" id="importHistoryCollapse">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover table-striped" id="basic-datatable-history">
+                                <thead class="table-light">
                                     <tr>
-                                        <td><a title="View" href="/app/auditions/?byimport=#imports.uploadid#">#imports.uploadid#</a></td>
-                                        <td>#this.formatDate(imports.timestamp)#</td>
-                                        <td>#timeformat(imports.timestamp)#</td>
+                                        <th width="80">
+                                            <i class="fe-hash me-1"></i>Batch ID
+                                        </th>
+                                        <th>
+                                            <i class="fe-calendar me-1"></i>Date
+                                        </th>
+                                        <th>
+                                            <i class="fe-clock me-1"></i>Time
+                                        </th>
+                                        <th width="100">
+                                            <i class="fe-eye me-1"></i>Actions
+                                        </th>
                                     </tr>
-                                </cfoutput>
-                            </cfloop>
-                        </tbody>
-                    </table>
+                                </thead>
+                                <tbody>
+                                    <cfloop query="imports">
+                                        <cfoutput>
+                                            <tr>
+                                                <td>
+                                                    <span class="badge bg-primary">#imports.uploadid#</span>
+                                                </td>
+                                                <td>
+                                                    <span class="text-body">#this.formatDate(imports.timestamp)#</span>
+                                                </td>
+                                                <td>
+                                                    <span class="text-muted">#timeformat(imports.timestamp, "h:mm tt")#</span>
+                                                </td>
+                                                <td>
+                                                    <a href="/app/auditions/?byimport=#imports.uploadid#" 
+                                                       class="btn btn-sm btn-outline-primary" 
+                                                       title="View imported auditions">
+                                                        <i class="fe-eye"></i>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        </cfoutput>
+                                    </cfloop>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
