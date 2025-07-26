@@ -132,18 +132,16 @@
         <div class="card-body">
             <div id="linksContainer_#siteTypeDetails.sitetypeid#">
                 <cfloop query="mylinks_user">
-                    <a href="#mylinks_user.siteurl#" 
-                       target="_blank" 
-                       class="link-row d-flex align-items-center text-decoration-none" 
-                       data-link-id="#mylinks_user.id#"
-                       title="Visit #mylinks_user.sitename#">
+                    <div class="link-row d-flex align-items-center" data-link-id="#mylinks_user.id#">
                         
                         <div class="link-icon-container">
                             <img class="link-icon" src="#application.retinaIcons14Url#/#mylinks_user.siteicon#" alt="#mylinks_user.sitename#">
                         </div>
                         
                         <div class="flex-grow-1 link-content">
-                            <div class="link-sitename">#mylinks_user.sitename#</div>
+                            <a href="#mylinks_user.siteurl#" target="_blank" class="link-sitename text-decoration-none" title="Visit #mylinks_user.sitename#">
+                                #mylinks_user.sitename#
+                            </a>
                         </div>
                         
                         <div class="link-actions">
@@ -160,7 +158,7 @@
                                 <i class="fas fa-trash-alt"></i>
                             </button>
                         </div>
-                    </a>
+                    </div>
                 </cfloop>
                 
                 <cfif mylinks_user.recordcount EQ 0>
