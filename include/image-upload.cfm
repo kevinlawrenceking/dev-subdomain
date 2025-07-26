@@ -28,39 +28,53 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.css">
 <link rel="stylesheet" href="/app/assets/css/croppie.css">
 
-<!-- Load Croppie JS with fallback -->
-<script>
-    // Check if jQuery is loaded
-    if (typeof jQuery === 'undefined') {
-        console.error('jQuery is required for image upload functionality');
-    }
-</script>
+<!-- Load Croppie JS with simple fallback -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.js"></script>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.js" 
-        onerror="console.warn('CDN Croppie failed, loading fallback'); loadCroppieFallback();"></script>
-        
+<!-- Main Upload Script -->
 <script>
-    // Fallback function to load local Croppie
-    function loadCroppieFallback() {
-        const script = document.createElement('script');
-        script.src = '/app/assets/js/croppie.min.js';
-        script.onerror = function() {
-            console.error('Both CDN and local Croppie failed to load');
-            // Enable basic upload without cropping
-            window.croppieUnavailable = true;
-        };
-        document.head.appendChild(script);
-    }
-    
-    // Additional check after document ready
-    $(document).ready(function() {
+// Simple approach - just check periodically if everything is ready
+function checkAndInitialize() {
+    if (typeof $ !== 'undefined' && document.readyState === 'complete') {
+        // Wait a bit more for Croppie to be available
         setTimeout(function() {
-            if (typeof $.fn.croppie === 'undefined') {
-                console.warn('Croppie still not available, enabling basic mode');
-                window.croppieUnavailable = true;
-            }
+            initializeUploadApp();
         }, 500);
-    });
+        return true;
+    }
+    return false;
+}
+
+// Try to initialize when DOM is ready
+$(document).ready(function() {
+    if (!checkAndInitialize()) {
+        // If not ready, keep trying
+        const checkInterval = setInterval(function() {
+            if (checkAndInitialize()) {
+                clearInterval(checkInterval);
+            }
+        }, 200);
+        
+        // Give up after 10 seconds
+        setTimeout(function() {
+            clearInterval(checkInterval);
+            if (!window.uploadInterfaceInitialized) {
+                console.warn('Timeout reached, initializing in basic mode');
+                window.croppieUnavailable = true;
+                initializeUploadApp();
+            }
+        }, 10000);
+    }
+});
+
+// Also try when window loads
+$(window).on('load', function() {
+    setTimeout(function() {
+        if (!window.uploadInterfaceInitialized) {
+            initializeUploadApp();
+        }
+    }, 1000);
+});
 </script>
 
 <!-- Custom Styles for Modern Look -->
@@ -355,8 +369,27 @@
 
 <!-- Enhanced JavaScript with Modern Features -->
 <script>
-// Wait for document ready and ensure Croppie is loaded
-$(document).ready(function () {
+// Main initialization function
+function initializeUploadApp() {
+    // Prevent multiple initializations
+    if (window.uploadInterfaceInitialized) return;
+    window.uploadInterfaceInitialized = true;
+    
+    console.log('Initializing upload interface...');
+    
+    // Check if Croppie is available
+    const useCroppie = typeof $ !== 'undefined' && 
+                      typeof $.fn !== 'undefined' && 
+                      typeof $.fn.croppie !== 'undefined' && 
+                      !window.croppieUnavailable;
+    
+    console.log('Croppie available:', useCroppie);
+    
+    if (!useCroppie) {
+        console.warn('Using basic upload mode');
+        $('#crop-section h5').html('<i class="fe-image me-2"></i>Preview Your Image');
+    }
+    
     // Modern file validation
     const maxFileSize = 5 * 1024 * 1024; // 5MB
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
@@ -364,14 +397,6 @@ $(document).ready(function () {
     let $uploadCrop;
     let currentStep = 1;
     let selectedImageData = null;
-    
-    // Check if Croppie is available or use basic mode
-    const useCroppie = typeof $.fn.croppie !== 'undefined' && !window.croppieUnavailable;
-    
-    if (!useCroppie) {
-        console.warn('Croppie not available, using basic upload mode');
-        $('#crop-section h5').html('<i class="fe-image me-2"></i>Preview Your Image');
-    }
     
     // Initialize croppie with error handling
     function initializeCroppie() {
@@ -413,7 +438,9 @@ $(document).ready(function () {
             console.error('Error initializing Croppie:', error);
             showErrorMessage('Failed to initialize image cropper. Using basic preview mode.');
             window.croppieUnavailable = true;
-            initializeCroppie(); // Retry in basic mode
+            // Retry in basic mode by updating the flag and calling again
+            useCroppie = false;
+            initializeCroppie();
         }
     }
     
@@ -662,9 +689,9 @@ $(document).ready(function () {
         });
     }
     
-    // Initialize with delay to ensure all scripts are loaded
+    // Initialize on load
     setTimeout(function() {
         initializeCroppie();
     }, 100);
-});
+}
 </script>
