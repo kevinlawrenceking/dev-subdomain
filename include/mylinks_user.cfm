@@ -379,4 +379,3 @@ $(document).ready(function() {
 <cfelse>
     <!--- No JavaScript needed if panel details are not available --->
 </cfif>
-</cfoutput>
