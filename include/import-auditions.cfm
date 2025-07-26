@@ -64,22 +64,70 @@
     });
 </script>
 
+<!--- Custom styles for improved appearance --->
+<style>
+    .import-section .card {
+        border: none;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        transition: box-shadow 0.15s ease-in-out;
+    }
+    
+    .import-section .card:hover {
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+    
+    .step-number {
+        width: 40px;
+        height: 40px;
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+    
+    .table th {
+        border-top: none;
+        font-weight: 600;
+        font-size: 0.875rem;
+        letter-spacing: 0.025em;
+        text-transform: uppercase;
+    }
+    
+    .badge.bg-primary {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+    }
+    
+    @media (max-width: 768px) {
+        .card-body.p-4 {
+            padding: 1.5rem !important;
+        }
+        
+        .d-flex.align-items-start {
+            flex-direction: column !important;
+        }
+        
+        .step-number {
+            margin-bottom: 1rem;
+        }
+    }
+</style>
+
 <!--- Improved Import Interface --->
-<div class="row">
-    <div class="col-12">
-        <div class="card mb-4 shadow-sm">
-            <div class="card-header bg-primary text-white">
-                <h4 class="card-title mb-0">
-                    <i class="fe-upload me-2"></i>Import Auditions
-                </h4>
-                <p class="mb-0 mt-1 opacity-75">Follow these simple steps to import your audition data</p>
-            </div>
-            <div class="card-body">
+<div class="container-fluid import-section">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="card-title mb-0">
+                        <i class="fe-upload me-2"></i>Import Auditions
+                    </h4>
+                    <p class="mb-0 mt-1 opacity-75">Follow these simple steps to import your audition data</p>
+                </div>
+                <div class="card-body p-4">
                 
                 <!--- Step 1: Download Template --->
                 <div class="d-flex align-items-start mb-4">
                     <div class="flex-shrink-0 me-3">
-                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center step-number">
                             <strong>1</strong>
                         </div>
                     </div>
@@ -108,7 +156,7 @@
                 <!--- Step 2: Upload File --->
                 <div class="d-flex align-items-start">
                     <div class="flex-shrink-0 me-3">
-                        <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                        <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center step-number">
                             <strong>2</strong>
                         </div>
                     </div>
@@ -124,30 +172,26 @@
                             </cfoutput>
                             
                             <div class="mb-3">
-                                <div class="input-group input-group-lg">
-                                    <input type="file" 
-                                           class="form-control form-control-lg" 
-                                           name="file" 
-                                           id="fileInput"
-                                           accept=".xlsx,.xls"
-                                           onchange="unlock();" 
-                                           required>
-                                    <label class="input-group-text" for="fileInput">
-                                        <i class="fe-file-text"></i>
-                                    </label>
-                                </div>
+                                <label for="fileInput" class="form-label fw-semibold">Select Excel File</label>
+                                <input type="file" 
+                                       class="form-control form-control-lg" 
+                                       name="file" 
+                                       id="fileInput"
+                                       accept=".xlsx,.xls"
+                                       onchange="unlock();" 
+                                       required>
                                 <div class="invalid-feedback">
                                     Please select an Excel file to upload.
                                 </div>
-                                <small class="form-text text-muted">
+                                <small class="form-text text-muted mt-1">
                                     <i class="fe-info me-1"></i>
                                     Accepted formats: .xlsx, .xls (Max file size: 10MB)
                                 </small>
                             </div>
 
-                            <div class="d-grid gap-2 d-md-flex justify-content-md-start">
+                            <div class="d-flex gap-2 flex-wrap">
                                 <button type="submit" 
-                                        class="btn btn-success btn-lg me-2" 
+                                        class="btn btn-success btn-lg" 
                                         id="buttonSubmit" 
                                         disabled>
                                     <i class="fe-upload me-2"></i>Import Auditions
@@ -215,16 +259,16 @@
                     </div>
                     
                     <div class="table-responsive">
-                        <table id="basic-datatable" class="table table-hover table-striped" role="grid">
+                        <table id="basic-datatable" class="table table-hover table-striped mb-0" role="grid">
                             <thead class="table-dark">
                                 <cfoutput query="results" maxrows="1">
                                     <tr>
-                                        <th><i class="fe-calendar me-1"></i>#head1#</th>
-                                        <th><i class="fe-film me-1"></i>#head2#</th>
-                                        <th><i class="fe-user me-1"></i>#head3#</th>
-                                        <th><i class="fe-tag me-1"></i>#head4#</th>
-                                        <th><i class="fe-users me-1"></i>#head5#</th>
-                                        <th><i class="fe-check-circle me-1"></i>#head6#</th>
+                                        <th class="text-nowrap"><i class="fe-calendar me-1"></i>Date/Time</th>
+                                        <th class="text-nowrap"><i class="fe-film me-1"></i>Project</th>
+                                        <th class="text-nowrap"><i class="fe-user me-1"></i>Role</th>
+                                        <th class="text-nowrap"><i class="fe-tag me-1"></i>Category</th>
+                                        <th class="text-nowrap"><i class="fe-users me-1"></i>Source</th>
+                                        <th class="text-nowrap text-center"><i class="fe-check-circle me-1"></i>Import Status</th>
                                     </tr>
                                 </cfoutput>
                             </thead>
@@ -239,12 +283,12 @@
                                                 <cfif len(results.audprojectid)>
                                                     <a href="/app/audition/?audprojectid=#results.audprojectid#" class="text-decoration-none">
                                                         <cfset myDateTime = results.col1b>
-                                                        <cfset myFormattedDateTime = this.formatDate(myDateTime)>
+                                                        <cfset myFormattedDateTime = dateformat(myDateTime, "mm/dd/yyyy")>
                                                         <i class="fe-calendar me-1 text-muted"></i>#myFormattedDateTime#
                                                     </a>
                                                 <cfelse>
                                                     <cfset myDateTime = results.col1b>
-                                                    <cfset myFormattedDateTime = this.formatDate(myDateTime)>
+                                                    <cfset myFormattedDateTime = dateformat(myDateTime, "mm/dd/yyyy")>
                                                     <i class="fe-calendar me-1 text-muted"></i>#myFormattedDateTime#
                                                 </cfif>
                                             </td>
@@ -260,16 +304,16 @@
                                             <td>#col3#</td>
                                             <td>
                                                 <cfif col4 NEQ "">
-                                                    <span class="badge bg-secondary">#col4#</span>
+                                                    <span class="badge bg-light text-dark border">#col4#</span>
                                                 <cfelse>
                                                     <span class="text-muted">—</span>
                                                 </cfif>
                                             </td>
                                             <td>#col5#</td>
-                                            <td>
+                                            <td class="text-center">
                                                 <cfif col6 EQ "invalid">
-                                                    <div class="d-flex align-items-center">
-                                                        <span class="badge bg-danger me-2">
+                                                    <div class="d-flex align-items-center justify-content-center gap-2">
+                                                        <span class="badge bg-danger">
                                                             <i class="fe-alert-circle me-1"></i>Invalid
                                                         </span>
                                                         <button type="button" 
@@ -322,22 +366,22 @@
                     </div>
                 </div>
                 <div class="collapse" id="importHistoryCollapse">
-                    <div class="card-body">
+                    <div class="card-body p-0">
                         <div class="table-responsive">
-                            <table class="table table-hover table-striped" id="basic-datatable-history">
+                            <table class="table table-hover mb-0" id="basic-datatable-history">
                                 <thead class="table-light">
                                     <tr>
-                                        <th width="80">
-                                            <i class="fe-hash me-1"></i>Batch ID
+                                        <th class="px-3 py-3" style="width: 90px;">
+                                            <i class="fe-hash me-1 text-muted"></i>Batch ID
                                         </th>
-                                        <th>
-                                            <i class="fe-calendar me-1"></i>Date
+                                        <th class="px-3 py-3">
+                                            <i class="fe-calendar me-1 text-muted"></i>Date
                                         </th>
-                                        <th>
-                                            <i class="fe-clock me-1"></i>Time
+                                        <th class="px-3 py-3">
+                                            <i class="fe-clock me-1 text-muted"></i>Time
                                         </th>
-                                        <th width="100">
-                                            <i class="fe-eye me-1"></i>Actions
+                                        <th class="px-3 py-3 text-center" style="width: 100px;">
+                                            <i class="fe-eye me-1 text-muted"></i>Actions
                                         </th>
                                     </tr>
                                 </thead>
@@ -345,16 +389,16 @@
                                     <cfloop query="imports">
                                         <cfoutput>
                                             <tr>
-                                                <td>
-                                                    <span class="badge bg-primary">#imports.uploadid#</span>
+                                                <td class="px-3 py-3">
+                                                    <span class="badge bg-primary fs-6">#imports.uploadid#</span>
                                                 </td>
-                                                <td>
-                                                    <span class="text-body">#this.formatDate(imports.timestamp)#</span>
+                                                <td class="px-3 py-3">
+                                                    <span class="text-body fw-medium">#dateformat(imports.timestamp, "mm/dd/yyyy")#</span>
                                                 </td>
-                                                <td>
+                                                <td class="px-3 py-3">
                                                     <span class="text-muted">#timeformat(imports.timestamp, "h:mm tt")#</span>
                                                 </td>
-                                                <td>
+                                                <td class="px-3 py-3 text-center">
                                                     <a href="/app/auditions/?byimport=#imports.uploadid#" 
                                                        class="btn btn-sm btn-outline-primary" 
                                                        title="View imported auditions">
@@ -373,6 +417,9 @@
         </div>
     </div>
 </cfif>
+
+<!--- Close main container --->
+</div>
 
 <!--- Toast Container for success messages --->
 <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
