@@ -240,7 +240,9 @@
     </div>
     </cfoutput>
 <cfelse>
-    <div class="alert alert-warning">Link panel could not be loaded. Panel details not found for PNID: #dashboards.pnid#</div>
+    <cfoutput>
+        <div class="alert alert-warning">Link panel could not be loaded. Panel details not found for PNID: #dashboards.pnid#</div>
+    </cfoutput>
 </cfif>
 <cfif structKeyExists(siteTypeDetails, "sitetypeid")>
 <cfoutput>
