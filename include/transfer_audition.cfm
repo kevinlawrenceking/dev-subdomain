@@ -1,3 +1,11 @@
+<!---
+    PURPOSE: Transfer imported audition data from auditionsimport to permanent tables with validation
+    AUTHOR: Kevin King
+    DATE: 2025-07-26
+    PARAMETERS: new_uploadid, userid
+    DEPENDENCIES: services.AuditionImportErrorService
+--->
+
 <cfparam name="new_isDeleted" default="0"/>
 
 <cfparam name="new_projName" default=""/>
@@ -24,6 +32,9 @@
 
 <cfparam name="ispin" default="0"/>
 
+<!--- Initialize service layer --->
+<cfset auditionImportErrorService = createObject("component", "services.AuditionImportErrorService")>
+
 <cfinclude template="/include/remote_load.cfm"/>
 
 
@@ -34,10 +45,10 @@
 
 
 
-<cfquery  name="y">
-    Select *
-    from auditionsimport
-    where uploadid = #new_uploadid#
+<cfquery name="y">
+    SELECT *
+    FROM auditionsimport
+    WHERE uploadid = <cfqueryparam value="#new_uploadid#" cfsqltype="cf_sql_integer">
 </cfquery>
 
 <cfloop query="y">
@@ -46,34 +57,31 @@
 
 
 
-    <cfquery  name="find" maxrows="1">
-        select * from audprojects where projname = '#y.projname#' and userid = #session.userid# and isdeleted = 0
+    <cfquery name="find" maxrows="1">
+        SELECT * FROM audprojects 
+        WHERE projname = <cfqueryparam value="#y.projname#" cfsqltype="cf_sql_varchar"> 
+        AND userid = <cfqueryparam value="#session.userid#" cfsqltype="cf_sql_integer"> 
+        AND isdeleted = <cfqueryparam value="0" cfsqltype="cf_sql_bit">
     </cfquery>
 
     <cfif #find.recordcount# is not "0">
 
         <cfset new_status="Invalid" />
 
-      <cfquery  name="err" >
-    insert into auditionsimport_error (id, error_msg) values (#y.id#,'Duplicate project')
-    </cfquery>
+        <cfset auditionImportErrorService.INSauditionsimport_error(id=y.id, errorMsg="Duplicate project")>
 
     </cfif>
 
 
 <cfif #y.projname# is "">
- <cfset new_status="Invalid" />
-    <cfquery  name="err" >
-    insert into auditionsimport_error (id, error_msg) values (#y.id#,'Missing project name')
-    </cfquery>
+    <cfset new_status="Invalid" />
+    <cfset auditionImportErrorService.INSauditionsimport_error_24355(id=y.id, errorMsg="Missing project name")>
 </cfif>
 
 
 <cfif #y.audrolename# is "">
- <cfset new_status="Invalid" />
-    <cfquery  name="err" >
-    insert into auditionsimport_error (id, error_msg) values (#y.id#,'Missing Role name')
-    </cfquery>
+    <cfset new_status="Invalid" />
+    <cfset auditionImportErrorService.INSauditionsimport_error_24356(id=y.id, errorMsg="Missing Role name")>
 </cfif>
 
 
@@ -81,36 +89,30 @@
 
 
 
-    <cfquery  name="findcat" >
-        SELECT audcatid FROM audcategories WHERE audcatname = '#y.audcatname#'
+    <cfquery name="findcat">
+        SELECT audcatid FROM audcategories 
+        WHERE audcatname = <cfqueryparam value="#y.audcatname#" cfsqltype="cf_sql_varchar">
     </cfquery>
 
 
 <cfif #findcat.recordcount# is not "1">
- <cfset new_status="Invalid" />
-    <cfquery  name="err" >
-    insert into auditionsimport_error (id, error_msg) values (#y.id#,'Invalid Category')
-    </cfquery>
-
-
-
+    <cfset new_status="Invalid" />
+    <cfset auditionImportErrorService.INSauditionsimport_error_24358(id=y.id, errorMsg="Invalid Category")>
 </cfif>
 
 
 
 
-    <cfquery  name="findsource" >
-SELECT * FROM audsources WHERE isdeleted = 0 AND audsource = '#y.audsource#'
-</cfquery>
+    <cfquery name="findsource">
+        SELECT * FROM audsources 
+        WHERE isdeleted = <cfqueryparam value="0" cfsqltype="cf_sql_bit"> 
+        AND audsource = <cfqueryparam value="#y.audsource#" cfsqltype="cf_sql_varchar">
+    </cfquery>
 
 
 <cfif #findsource.recordcount# is not "1">
- <cfset new_status="Invalid" />
-    <cfquery  name="err" >
-    insert into auditionsimport_error (id, error_msg) values (#y.id#,'Invalid Source')
-    </cfquery>
-
-
+    <cfset new_status="Invalid" />
+    <cfset auditionImportErrorService.INSauditionsimport_error_24360(id=y.id, errorMsg="Invalid Source")>
 </cfif>
 
 
@@ -118,9 +120,10 @@ SELECT * FROM audsources WHERE isdeleted = 0 AND audsource = '#y.audsource#'
 
 
 
-             <cfquery  name="update">
+        <cfquery name="update">
             UPDATE auditionsimport
-            SET status = '#new_status#' where id = #y.id#
+            SET status = <cfqueryparam value="#new_status#" cfsqltype="cf_sql_varchar"> 
+            WHERE id = <cfqueryparam value="#y.id#" cfsqltype="cf_sql_integer">
         </cfquery>
 
         </cfloop>
@@ -142,10 +145,11 @@ SELECT * FROM audsources WHERE isdeleted = 0 AND audsource = '#y.audsource#'
 
 
 
-<cfquery  name="x">
-    Select *
-    from auditionsimport
-    where uploadid = #new_uploadid# and status = 'Valid'
+<cfquery name="x">
+    SELECT *
+    FROM auditionsimport
+    WHERE uploadid = <cfqueryparam value="#new_uploadid#" cfsqltype="cf_sql_integer"> 
+    AND status = <cfqueryparam value="Valid" cfsqltype="cf_sql_varchar">
 </cfquery>
 
 
@@ -162,18 +166,22 @@ SELECT * FROM audsources WHERE isdeleted = 0 AND audsource = '#y.audsource#'
 
 <cfset cdfullname = x.cdfirstname & " " & x.cdlastname />
 
-            <cfquery  name="findcd">
-                select * from contactdetails where contactfullname = '#cdfullname#'
-                and userid = #userid#
+            <cfquery name="findcd">
+                SELECT * FROM contactdetails 
+                WHERE contactfullname = <cfqueryparam value="#cdfullname#" cfsqltype="cf_sql_varchar">
+                AND userid = <cfqueryparam value="#userid#" cfsqltype="cf_sql_integer">
             </cfquery>
             
        
 
-            <cfif #findcd.recordcount# is "0" and #cdfirstname# is not "">
-<cfoutput>contact not found, adding...<BR></cfoutput>
-                <cfquery  name="add" result="result">
+            <cfif #findcd.recordcount# is "0" and #x.cdfirstname# is not "">
+                <cfoutput>contact not found, adding...<BR></cfoutput>
+                <cfquery name="add" result="result">
                     INSERT INTO contactdetails (userid,contactFullName)
-                    VALUES (#userid#,'#cdfullname#');
+                    VALUES (
+                        <cfqueryparam value="#userid#" cfsqltype="cf_sql_integer">,
+                        <cfqueryparam value="#cdfullname#" cfsqltype="cf_sql_varchar">
+                    );
                 </cfquery>
 
                 <cfset new_contactid=result.generatedkey />
@@ -266,18 +274,22 @@ subcat found<BR>
 
     <cfif #x.audcatname# is not "">
 
-        <cfquery  name="find_cat">
-            SELECT * FROM audcategories WHERE audcatname = '#x.audcatname#' and isdeleted is false
+        <cfquery name="find_cat">
+            SELECT * FROM audcategories 
+            WHERE audcatname = <cfqueryparam value="#x.audcatname#" cfsqltype="cf_sql_varchar"> 
+            AND isdeleted = <cfqueryparam value="0" cfsqltype="cf_sql_bit">
         </cfquery>
-<cfoutput>   SELECT * FROM audcategories WHERE audcatname = '#x.audcatname#' and isdeleted is false<BR></cfoutput>
+        <cfoutput>   SELECT * FROM audcategories WHERE audcatname = '#x.audcatname#' and isdeleted is false<BR></cfoutput>
         <cfif find_cat.recordcount eq 1>
 
             <cfset new_audcatid=find_cat.audcatid />
 
-            <cfquery  name="find_subcat" maxrows="1">
-                SELECT * FROM audsubcategories WHERE audcatid = #new_audcatid# and audsubcatname = '#x.audsubcatname#'
+            <cfquery name="find_subcat" maxrows="1">
+                SELECT * FROM audsubcategories 
+                WHERE audcatid = <cfqueryparam value="#new_audcatid#" cfsqltype="cf_sql_integer"> 
+                AND audsubcatname = <cfqueryparam value="#x.audsubcatname#" cfsqltype="cf_sql_varchar">
             </cfquery>
-            <Cfoutput>           SELECT * FROM audsubcategories WHERE audcatid = #new_audcatid# and audsubcatname = '#x.audsubcatname#'<BR /></cfoutput>
+            <cfoutput>           SELECT * FROM audsubcategories WHERE audcatid = #new_audcatid# and audsubcatname = '#x.audsubcatname#'<BR /></cfoutput>
             <cfif #find_subcat.recordcount# is "1">
 
                 <cfset new_audsubcatid=find_subcat.audsubcatid />
@@ -332,8 +344,10 @@ subcat found<BR>
 
     <cfif #x.audsource# is not "">
 
-        <cfquery  name="find_source">
-            SELECT * FROM audsources WHERE audsource = '#x.audsource#' and isdeleted is false
+        <cfquery name="find_source">
+            SELECT * FROM audsources 
+            WHERE audsource = <cfqueryparam value="#x.audsource#" cfsqltype="cf_sql_varchar"> 
+            AND isdeleted = <cfqueryparam value="0" cfsqltype="cf_sql_bit">
         </cfquery>
 
         <cfif find_source.recordcount eq 1>
@@ -416,9 +430,11 @@ subcat found<BR>
 
 </cfif>
 
-    <cfquery  name="update_contact">
-        Update auditionsimport
-        set status='#new_status#', audprojectid = #new_audprojectid# where id = #x.id#
+    <cfquery name="update_contact">
+        UPDATE auditionsimport
+        SET status = <cfqueryparam value="#new_status#" cfsqltype="cf_sql_varchar">, 
+            audprojectid = <cfqueryparam value="#new_audprojectid#" cfsqltype="cf_sql_integer"> 
+        WHERE id = <cfqueryparam value="#x.id#" cfsqltype="cf_sql_integer">
     </cfquery>
 
 </cfloop>
