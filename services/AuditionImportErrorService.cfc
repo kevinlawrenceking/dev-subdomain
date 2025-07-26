@@ -23,7 +23,7 @@
             <cfqueryparam value="#arguments.errorMsg#" cfsqltype="CF_SQL_VARCHAR">
         )
     </cfquery>
-    <cfreturn result.generatedKey>
+    <cfreturn arguments.id>
 </cffunction>
 
 <cffunction output="false" name="INSauditionsimport_error_24355" access="public" returntype="numeric">
