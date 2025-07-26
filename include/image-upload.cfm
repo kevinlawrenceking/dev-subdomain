@@ -1,16 +1,18 @@
-<!--- This ColdFusion page handles the uploading and cropping of user avatars. --->
+<!--- 
+    PURPOSE: Modern avatar upload and cropping interface
+    AUTHOR: Kevin King
+    DATE: 2025-07-26
+    FEATURES: Drag & drop, file validation, responsive design, modern UI
+--->
 
 <cfinclude template="/include/qry/FindRefPage_136_1.cfm"/>
 <cfinclude template="/include/qry/FindRefcontacts_135_2.cfm"/>
 
 <cfoutput>
-
   <cfset subtitle="#userFirstName# #userLastName#"/>
   <cfset image_url="#session.userAvatarUrl#"/>
   <cfset cookie.uploadDir="#session.userAvatarPath#"/>
   <cfset cookie.return_url="/app/myaccount/"/>
-
-
 </cfoutput>
 
 <!--- Set picture size based on reference page ID --->
@@ -22,108 +24,518 @@
 <cfset inputsize=300/>
 </cfif>
 
+<!-- Modern CSS and JS Dependencies -->
 <link rel="stylesheet" href="/app/assets/css/croppie.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.js"></script>
 
-<h4>
-  <cfoutput>#subtitle#</cfoutput>
-</h4>
-<div class="row">
-  <div id="cont">
-    <h5 class="col-md-12" style="padding-bottom:20px;">Avatar has been updated!</h5>
-  </div>
-  <div id="selectfile">
-    <h5 class="col-md-12" style="padding-bottom:20px;">Select an image on your computer and upload image. Then click Continue.</h5>
-    <div class="col-md-12" style="padding-bottom:20px;">
-      <div style="padding-bottom:10px;">
-        <strong>Select a file:</strong>
-      </div>
-      <input type="file" id="upload" /></div>
+<!-- Custom Styles for Modern Look -->
+<style>
+    .avatar-upload-container {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    .upload-card {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        transition: all 0.3s ease;
+    }
+    
+    .upload-card:hover {
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+    
+    .upload-zone {
+        border: 2px dashed ##e2e8f0;
+        border-radius: 12px;
+        background: ##f8fafc;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .upload-zone:hover, .upload-zone.dragover {
+        border-color: ##3b82f6;
+        background: ##eff6ff;
+    }
+    
+    .upload-zone.has-file {
+        border-color: ##10b981;
+        background: ##f0fdf4;
+    }
+    
+    .upload-icon {
+        font-size: 3rem;
+        color: ##94a3b8;
+        transition: color 0.3s ease;
+    }
+    
+    .upload-zone:hover .upload-icon {
+        color: ##3b82f6;
+    }
+    
+    .current-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        border: 3px solid ##e2e8f0;
+        object-fit: cover;
+    }
+    
+    .crop-container {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin: 1rem 0;
+    }
+    
+    .step-indicator {
+        display: flex;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+    
+    .step {
+        display: flex;
+        align-items: center;
+        color: ##94a3b8;
+        font-weight: 500;
+    }
+    
+    .step.active {
+        color: ##3b82f6;
+    }
+    
+    .step.completed {
+        color: ##10b981;
+    }
+    
+    .step-number {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: ##e2e8f0;
+        color: ##64748b;
+        display: flex;
+        align-items: center;
+        justify-content-center;
+        font-weight: 600;
+        margin-right: 0.75rem;
+        font-size: 0.875rem;
+    }
+    
+    .step.active .step-number {
+        background: ##3b82f6;
+        color: white;
+    }
+    
+    .step.completed .step-number {
+        background: ##10b981;
+        color: white;
+    }
+    
+    .step-divider {
+        flex: 1;
+        height: 2px;
+        background: ##e2e8f0;
+        margin: 0 1rem;
+    }
+    
+    .btn-modern {
+        border-radius: 8px;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        border: none;
+    }
+    
+    .btn-primary-modern {
+        background: linear-gradient(135deg, ##3b82f6 0%, ##1d4ed8 100%);
+        color: white;
+    }
+    
+    .btn-primary-modern:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.4);
+    }
+    
+    .file-info {
+        background: ##f1f5f9;
+        border-radius: 8px;
+        padding: 1rem;
+        margin: 1rem 0;
+    }
+    
+    .success-animation {
+        animation: successPulse 0.6s ease-out;
+    }
+    
+    @keyframes successPulse {
+        0% { transform: scale(0.95); opacity: 0; }
+        50% { transform: scale(1.02); }
+        100% { transform: scale(1); opacity: 1; }
+    }
+    
+    @media (max-width: 768px) {
+        .avatar-upload-container {
+            margin: 0 1rem;
+        }
+        
+        .step-indicator {
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .step-divider {
+            width: 2px;
+            height: 20px;
+            margin: 0;
+        }
+    }
+</style>
+
+<!-- Modern Avatar Upload Interface -->
+<div class="avatar-upload-container">
+    <!-- Header Section -->
+    <div class="text-center mb-4">
+        <h2 class="text-dark mb-2">
+            <i class="fe-user me-2"></i>Update Avatar
+        </h2>
+        <p class="text-muted">
+            <cfoutput>Upload a new profile picture for #subtitle#</cfoutput>
+        </p>
     </div>
-    <input type="hidden" name="picturebase" id="picturebase" value="" />
-      <div class="col-md-12">
-        <div id="upload-input" style="width:<cfoutput>#inputsize#</cfoutput>px; height: <cfoutput>#inputsize#</cfoutput>px;"></div>
-      </div>
-      <div class="col-md-12">
-        <br>
-          <button id="uploadbutton" class="btn upload-result btn-primary">Update</button>
+
+    <!-- Step Indicator -->
+    <div class="step-indicator">
+        <div class="step active" id="step1">
+            <div class="step-number">1</div>
+            <span>Select Image</span>
         </div>
-      </div>
+        <div class="step-divider"></div>
+        <div class="step" id="step2">
+            <div class="step-number">2</div>
+            <span>Crop & Adjust</span>
+        </div>
+        <div class="step-divider"></div>
+        <div class="step" id="step3">
+            <div class="step-number">3</div>
+            <span>Save Changes</span>
+        </div>
+    </div>
 
-      <script>
-        $(document).ready(function () {
-          $('#cont').hide();
-          $('#uploadbutton').hide();
+    <!-- Main Upload Card -->
+    <div class="card upload-card" id="upload-section">
+        <div class="card-body p-4">
+            <!-- Current Avatar Display -->
+            <div class="text-center mb-4">
+                <h5 class="card-title mb-3">Current Avatar</h5>
+                <cfoutput>
+                    <img src="#image_url#?ver=#rand()#" alt="Current Avatar" class="current-avatar" id="current-avatar-img">
+                </cfoutput>
+            </div>
 
-          //--- Function to show the upload button ---//
-          function showButton() {
-            $('#uploadbutton')
-              .attr('disabled', false)
-              .show();
-          }
+            <!-- Upload Zone -->
+            <div class="upload-zone text-center p-5" id="upload-zone">
+                <div class="upload-content">
+                    <i class="fe-upload upload-icon"></i>
+                    <h4 class="mt-3 mb-2">Choose a New Image</h4>
+                    <p class="text-muted mb-3">
+                        Drag and drop an image here, or click to browse
+                    </p>
+                    <div class="mb-3">
+                        <span class="badge bg-light text-dark me-2">JPG</span>
+                        <span class="badge bg-light text-dark me-2">PNG</span>
+                        <span class="badge bg-light text-dark">GIF</span>
+                    </div>
+                    <p class="small text-muted">
+                        Maximum file size: 5MB<br>
+                        Recommended: Square images work best
+                    </p>
+                </div>
+                <input type="file" id="upload" accept="image/*" style="display: none;" />
+            </div>
 
-          //--- Change event for file input ---//
-          $('input:file').change(function () {
-            if ($(this).val()) {
-              showButton();
+            <!-- File Info Display -->
+            <div class="file-info" id="file-info" style="display: none;">
+                <div class="d-flex align-items-center">
+                    <i class="fe-image text-success me-3"></i>
+                    <div class="flex-grow-1">
+                        <div class="fw-semibold" id="file-name"></div>
+                        <div class="small text-muted" id="file-details"></div>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="change-file">
+                        Change
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cropping Section -->
+    <div class="card upload-card mt-4" id="crop-section" style="display: none;">
+        <div class="card-body p-4">
+            <h5 class="card-title text-center mb-4">
+                <i class="fe-crop me-2"></i>Crop Your Image
+            </h5>
+            <div class="text-center">
+                <div class="crop-container">
+                    <div id="upload-input" style="width:<cfoutput>#inputsize#</cfoutput>px; height: <cfoutput>#inputsize#</cfoutput>px; margin: 0 auto;"></div>
+                </div>
+                <div class="mt-4">
+                    <button type="button" class="btn btn-outline-secondary btn-modern me-3" id="back-button">
+                        <i class="fe-arrow-left me-2"></i>Back
+                    </button>
+                    <button type="button" class="btn btn-primary-modern" id="crop-save-button">
+                        <i class="fe-check me-2"></i>Save Avatar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Section -->
+    <div class="card upload-card mt-4 success-animation" id="success-section" style="display: none;">
+        <div class="card-body p-4 text-center">
+            <div class="mb-4">
+                <i class="fe-check-circle text-success" style="font-size: 4rem;"></i>
+            </div>
+            <h3 class="text-success mb-3">Avatar Updated Successfully!</h3>
+            <p class="text-muted mb-4">Your profile picture has been updated and is now visible across the platform.</p>
+            <div class="mb-4">
+                <img id="final-avatar" src="" alt="New Avatar" class="current-avatar">
+            </div>
+            <cfoutput>
+                <a href="#cookie.return_url#" class="btn btn-primary-modern">
+                    <i class="fe-arrow-right me-2"></i>Continue to Profile
+                </a>
+            </cfoutput>
+        </div>
+    </div>
+</div>
+
+<input type="hidden" name="picturebase" id="picturebase" value="" />
+
+<!-- Enhanced JavaScript with Modern Features -->
+<script>
+$(document).ready(function () {
+    // Modern file validation
+    const maxFileSize = 5 * 1024 * 1024; // 5MB
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+    
+    let $uploadCrop;
+    let currentStep = 1;
+    
+    // Initialize croppie
+    function initializeCroppie() {
+        $uploadCrop = $('#upload-input').croppie({
+            enableExif: true,
+            url: '<cfoutput>#image_url#</cfoutput>?ver=<cfoutput>#rand()#</cfoutput>',
+            viewport: {
+                width: <cfoutput>#picsize#</cfoutput>,
+                height: <cfoutput>#picsize#</cfoutput>,
+                type: 'circle'
+            },
+            boundary: {
+                width: <cfoutput>#picsize#</cfoutput>,
+                height: <cfoutput>#picsize#</cfoutput>
+            },
+            showZoomer: true,
+            enableOrientation: true
+        });
+    }
+    
+    // Step management
+    function updateStep(step) {
+        currentStep = step;
+        $('.step').removeClass('active completed');
+        
+        for (let i = 1; i <= 3; i++) {
+            if (i < step) {
+                $(`##step${i}`).addClass('completed');
+            } else if (i === step) {
+                $(`##step${i}`).addClass('active');
             }
-          });
-
-          var existingImage = '<cfoutput>#image_url#</cfoutput>?ver=<cfoutput>#rand()#</cfoutput>';
-          if (existingImage) {
-            showButton();
-          }
-        });
-
-        var $uploadCrop = $('#upload-input').croppie({
-          enableExif: true,
-          url: '<cfoutput>#image_url#</cfoutput>?ver=<cfoutput>#rand()#</cfoutput>',
-          viewport: {
-            width: <cfoutput>#picsize#</cfoutput>,
-            height: <cfoutput>#picsize#</cfoutput>,
-            type: 'circle'
-          },
-          boundary: {
-            width: <cfoutput>#picsize#</cfoutput>,
-            height: <cfoutput>#picsize#</cfoutput>
-          }
-        });
-
-        //--- Change event for the upload input ---//
-        $('#upload').on('change', function () {
-          var reader = new FileReader();
-          reader.onload = function (e) {
-            $uploadCrop
-              .croppie('bind', {url: e.target.result})
-              .then(function () {
-                console.log('jQuery bind complete');
-              });
-          }
-          reader.readAsDataURL(this.files[0]);
-        });
-
-        //--- Click event for the upload result button ---//
-        $('.upload-result').on('click', function (ev) {
-          $uploadCrop
-            .croppie('result', {
-              type: 'canvas',
-              size: 'viewport'
-            })
-            .then(function (resp) {
-              $.ajax({
+        }
+    }
+    
+    // File validation
+    function validateFile(file) {
+        const errors = [];
+        
+        if (!allowedTypes.includes(file.type)) {
+            errors.push('Please select a valid image file (JPG, PNG, or GIF)');
+        }
+        
+        if (file.size > maxFileSize) {
+            errors.push('File size must be less than 5MB');
+        }
+        
+        return errors;
+    }
+    
+    // Show file information
+    function showFileInfo(file) {
+        const sizeInMB = (file.size / (1024 * 1024)).toFixed(2);
+        $('#file-name').text(file.name);
+        $('#file-details').text(`${sizeInMB}MB • ${file.type.split('/')[1].toUpperCase()}`);
+        $('#file-info').show();
+        $('#upload-zone').addClass('has-file');
+    }
+    
+    // Handle file selection
+    function handleFileSelect(file) {
+        const errors = validateFile(file);
+        
+        if (errors.length > 0) {
+            showErrorMessage(errors.join('<br>'));
+            return;
+        }
+        
+        showFileInfo(file);
+        
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            // Show cropping section
+            $('#crop-section').show();
+            updateStep(2);
+            
+            // Scroll to crop section
+            $('html, body').animate({
+                scrollTop: $('#crop-section').offset().top - 20
+            }, 500);
+            
+            // Initialize croppie with new image
+            if ($uploadCrop) {
+                $uploadCrop.croppie('destroy');
+            }
+            initializeCroppie();
+            
+            $uploadCrop.croppie('bind', {
+                url: e.target.result
+            }).then(function () {
+                console.log('Image loaded for cropping');
+            });
+        };
+        reader.readAsDataURL(file);
+    }
+    
+    // Show error message
+    function showErrorMessage(message) {
+        // Create toast notification
+        const toast = `
+            <div class="toast align-items-center text-bg-danger border-0 position-fixed" 
+                 style="top: 20px; right: 20px; z-index: 9999;" role="alert">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <i class="fe-alert-triangle me-2"></i>${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" 
+                            data-bs-dismiss="toast"></button>
+                </div>
+            </div>
+        `;
+        
+        $('body').append(toast);
+        $('.toast').toast('show');
+        
+        // Remove after 5 seconds
+        setTimeout(() => $('.toast').remove(), 5000);
+    }
+    
+    // Drag and drop functionality
+    $('#upload-zone').on('dragover', function(e) {
+        e.preventDefault();
+        $(this).addClass('dragover');
+    });
+    
+    $('#upload-zone').on('dragleave', function(e) {
+        e.preventDefault();
+        $(this).removeClass('dragover');
+    });
+    
+    $('#upload-zone').on('drop', function(e) {
+        e.preventDefault();
+        $(this).removeClass('dragover');
+        
+        const files = e.originalEvent.dataTransfer.files;
+        if (files.length > 0) {
+            handleFileSelect(files[0]);
+        }
+    });
+    
+    // Click to browse
+    $('#upload-zone').on('click', function() {
+        $('#upload').click();
+    });
+    
+    // File input change
+    $('#upload').on('change', function() {
+        if (this.files && this.files[0]) {
+            handleFileSelect(this.files[0]);
+        }
+    });
+    
+    // Change file button
+    $('#change-file').on('click', function() {
+        $('#upload').click();
+    });
+    
+    // Back button
+    $('#back-button').on('click', function() {
+        $('#crop-section').hide();
+        updateStep(1);
+        
+        $('html, body').animate({
+            scrollTop: $('#upload-section').offset().top - 20
+        }, 500);
+    });
+    
+    // Save cropped image
+    $('#crop-save-button').on('click', function() {
+        const $button = $(this);
+        const originalText = $button.html();
+        
+        // Show loading state
+        $button.html('<i class="spinner-border spinner-border-sm me-2"></i>Saving...').prop('disabled', true);
+        
+        $uploadCrop.croppie('result', {
+            type: 'canvas',
+            size: 'viewport',
+            quality: 0.9
+        }).then(function(resp) {
+            $.ajax({
                 url: "/include/image_upload2.cfm",
                 type: "POST",
                 data: {
-                  "picturebase": resp
+                    "picturebase": resp
                 },
-                success: function (data) {
-                  var html = '<img style="margin: 20px;" src="' + resp + '" /><br><a href="<cfoutput>#cookie.return_url#</cfoutput>"><button type="button" class="btn btn-primary waves-effect mb-2 waves-light">Continue</button></a>';
-                  $("#upload-input").html(html);
-                  $('#uploadbutton').hide();
-                  $('#selectfile').hide();
-                  $('#cont').show();
+                success: function(data) {
+                    // Show success section
+                    updateStep(3);
+                    $('#crop-section').hide();
+                    $('#success-section').show();
+                    $('#final-avatar').attr('src', resp);
+                    
+                    // Update current avatar in header if it exists
+                    $('#current-avatar-img').attr('src', resp);
+                    
+                    // Scroll to success section
+                    $('html, body').animate({
+                        scrollTop: $('#success-section').offset().top - 20
+                    }, 500);
+                },
+                error: function() {
+                    showErrorMessage('Failed to save avatar. Please try again.');
+                    $button.html(originalText).prop('disabled', false);
                 }
-              });
             });
         });
-      </script>
+    });
+    
+    // Initialize
+    initializeCroppie();
+});
+</script>
