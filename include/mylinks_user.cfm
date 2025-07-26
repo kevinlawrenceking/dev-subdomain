@@ -242,6 +242,7 @@
 <cfelse>
     <div class="alert alert-warning">Link panel could not be loaded. Panel details not found for PNID: #dashboards.pnid#</div>
 </cfif>
+<cfif structKeyExists(siteTypeDetails, "sitetypeid")>
 <cfoutput>
 <script>
 $(document).ready(function() {
@@ -374,4 +375,8 @@ $(document).ready(function() {
     };
 });
 </script>
+</cfoutput>
+<cfelse>
+    <!--- No JavaScript needed if panel details are not available --->
+</cfif>
 </cfoutput>
