@@ -206,7 +206,7 @@
 <cfelse>
     <div class="alert alert-warning">Link panel could not be loaded. Panel details not found for PNID: #dashboards.pnid#</div>
 </cfif>
-<Cfoutput>
+<cfoutput>
 <script>
 $(document).ready(function() {
     var container = $('##linksContainer_#siteTypeDetails.sitetypeid#').closest('.card');
@@ -225,7 +225,7 @@ $(document).ready(function() {
         var linkId = $(this).data('link-id');
         var sitetypeId = $(this).data('sitetype-id');
         var modalTarget = `##updateLinkModal_${sitetypeId}`;
-        var url = `/include/remotelinkUpdate.cfm?userid=#userid#&new_id=${linkId}&target=dashboard_new`;
+        var url = `/include/remotelinkUpdate.cfm?userid=#session.userid#&new_id=${linkId}&target=dashboard_new`;
         handleModalLoad(e, url, modalTarget);
     });
 
@@ -234,7 +234,7 @@ $(document).ready(function() {
         var linkId = $(this).data('link-id');
         var sitetypeId = $(this).data('sitetype-id');
         var modalTarget = `##deleteLinkModal_${sitetypeId}`;
-        var url = `/include/remoteDeleteFormLink.cfm?userid=#userid#&new_id=${linkId}&target=dashboard_new`;
+        var url = `/include/remoteDeleteFormLink.cfm?userid=#session.userid#&new_id=${linkId}&target=dashboard_new`;
         handleModalLoad(e, url, modalTarget);
     });
 
@@ -242,7 +242,7 @@ $(document).ready(function() {
     container.on('click', '.add-link-btn', function(e) {
         var sitetypeId = $(this).data('sitetype-id');
         var modalTarget = `##addLinkModal_${sitetypeId}`;
-        var url = `/include/remotelinkAdd.cfm?new_sitetypeid=${sitetypeId}&userid=#userid#&target=dashboard_new`;
+        var url = `/include/remotelinkAdd.cfm?new_sitetypeid=${sitetypeId}&userid=#session.userid#&target=dashboard_new`;
         handleModalLoad(e, url, modalTarget);
     });
 
@@ -259,4 +259,4 @@ $(document).ready(function() {
     };
 });
 </script>
-</Cfoutput>
+</cfoutput>
