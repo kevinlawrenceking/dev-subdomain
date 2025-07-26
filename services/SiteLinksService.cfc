@@ -140,6 +140,7 @@
 <!--- Function to get sitetypeid and sitetypename for a specific panel ID (pnid) --->
 <cffunction output="false" name="getSiteTypeDetailsByPanelId" access="public" returntype="struct"  hint="Retrieve the sitetypeid and sitetypename for a specific panel ID (pnid).">
     <cfargument name="new_pnid" type="numeric" required="true" hint="The panel ID (pnid) for which to retrieve sitetypeid and sitetypename.">
+    <cfargument name="userId" type="numeric" required="true" hint="The user ID to filter results by.">
 
 <!--- Query to retrieve sitetypeid and sitetypename --->
     <cfquery result="result" name="siteTypeQuery">
@@ -147,6 +148,8 @@
         FROM sitetypes_user su
         INNER JOIN pgpanels_user p ON su.pnid = p.pnid
         WHERE su.pnid = <cfqueryparam value="#arguments.new_pnid#" cfsqltype="cf_sql_integer">
+          AND su.userid = <cfqueryparam value="#arguments.userId#" cfsqltype="cf_sql_integer">
+          AND p.userid = <cfqueryparam value="#arguments.userId#" cfsqltype="cf_sql_integer">
         LIMIT 1
     </cfquery>
 

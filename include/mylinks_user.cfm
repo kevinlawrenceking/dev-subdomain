@@ -88,9 +88,9 @@
 </style>
 
 <cfset siteLinksService = createObject("component", "services.SiteLinksService")>
-<cfset mylinks_user = siteLinksService.getSiteLinksByPanelId(dashboards.pnid)>
-<cfset siteurl_list = siteLinksService.getAllUrlsByPanelId(dashboards.pnid)>
-<cfset siteTypeDetails = siteLinksService.getSiteTypeDetailsByPanelId(dashboards.pnid)>
+<cfset mylinks_user = siteLinksService.getSiteLinksByPanelId(dashboards.pnid, userid)>
+<cfset siteurl_list = siteLinksService.getAllUrlsByPanelId(dashboards.pnid, userid)>
+<cfset siteTypeDetails = siteLinksService.getSiteTypeDetailsByPanelId(dashboards.pnid, userid)>
 <cfoutput>
 
     <!--- Set modal ID and title for adding a link --->
