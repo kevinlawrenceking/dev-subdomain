@@ -123,7 +123,6 @@
                     <p class="mb-0 mt-1 opacity-75">Follow these simple steps to import your audition data</p>
                 </div>
                 <div class="card-body p-4">
-                
                 <!--- Step 1: Download Template --->
                 <div class="d-flex align-items-start mb-4">
                     <div class="flex-shrink-0 me-3">
