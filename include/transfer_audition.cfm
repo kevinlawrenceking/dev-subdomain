@@ -68,20 +68,38 @@
 
         <cfset new_status="Invalid" />
 
-        <cfset auditionImportErrorService.INSauditionsimport_error(id=y.id, errorMsg="Duplicate project")>
+        <cftry>
+            <cfset auditionImportErrorService.INSauditionsimport_error(id=y.id, errorMsg="Duplicate project")>
+            <cfcatch type="any">
+                <!--- Log error but continue processing --->
+                <cflog text="Error logging duplicate project for ID #y.id#: #cfcatch.message#" file="audition_import">
+            </cfcatch>
+        </cftry>
 
     </cfif>
 
 
 <cfif #y.projname# is "">
     <cfset new_status="Invalid" />
-    <cfset auditionImportErrorService.INSauditionsimport_error_24355(id=y.id, errorMsg="Missing project name")>
+    <cftry>
+        <cfset auditionImportErrorService.INSauditionsimport_error_24355(id=y.id, errorMsg="Missing project name")>
+        <cfcatch type="any">
+            <!--- Log error but continue processing --->
+            <cflog text="Error logging missing project name for ID #y.id#: #cfcatch.message#" file="audition_import">
+        </cfcatch>
+    </cftry>
 </cfif>
 
 
 <cfif #y.audrolename# is "">
     <cfset new_status="Invalid" />
-    <cfset auditionImportErrorService.INSauditionsimport_error_24356(id=y.id, errorMsg="Missing Role name")>
+    <cftry>
+        <cfset auditionImportErrorService.INSauditionsimport_error_24356(id=y.id, errorMsg="Missing Role name")>
+        <cfcatch type="any">
+            <!--- Log error but continue processing --->
+            <cflog text="Error logging missing role name for ID #y.id#: #cfcatch.message#" file="audition_import">
+        </cfcatch>
+    </cftry>
 </cfif>
 
 
@@ -97,7 +115,13 @@
 
 <cfif #findcat.recordcount# is not "1">
     <cfset new_status="Invalid" />
-    <cfset auditionImportErrorService.INSauditionsimport_error_24358(id=y.id, errorMsg="Invalid Category")>
+    <cftry>
+        <cfset auditionImportErrorService.INSauditionsimport_error_24358(id=y.id, errorMsg="Invalid Category")>
+        <cfcatch type="any">
+            <!--- Log error but continue processing --->
+            <cflog text="Error logging invalid category for ID #y.id#: #cfcatch.message#" file="audition_import">
+        </cfcatch>
+    </cftry>
 </cfif>
 
 
@@ -112,7 +136,13 @@
 
 <cfif #findsource.recordcount# is not "1">
     <cfset new_status="Invalid" />
-    <cfset auditionImportErrorService.INSauditionsimport_error_24360(id=y.id, errorMsg="Invalid Source")>
+    <cftry>
+        <cfset auditionImportErrorService.INSauditionsimport_error_24360(id=y.id, errorMsg="Invalid Source")>
+        <cfcatch type="any">
+            <!--- Log error but continue processing --->
+            <cflog text="Error logging invalid source for ID #y.id#: #cfcatch.message#" file="audition_import">
+        </cfcatch>
+    </cftry>
 </cfif>
 
 
@@ -196,9 +226,15 @@
 <cfset currentid = new_contactid />
                 <cfinclude template="/include/folder_setup.cfm" />
 
-                <cfquery  name="insert">
+                <cfquery name="insert">
                     INSERT INTO CONTACTITEMS (CONTACTID,VALUETYPE,VALUECATEGORY,VALUETEXT,ITEMSTATUS)
-                    VALUES (#new_contactid#,'Tags','Tag','#cdtype#','Active')
+                    VALUES (
+                        <cfqueryparam value="#new_contactid#" cfsqltype="cf_sql_integer">,
+                        <cfqueryparam value="Tags" cfsqltype="cf_sql_varchar">,
+                        <cfqueryparam value="Tag" cfsqltype="cf_sql_varchar">,
+                        <cfqueryparam value="#cdtype#" cfsqltype="cf_sql_varchar">,
+                        <cfqueryparam value="Active" cfsqltype="cf_sql_varchar">
+                    )
                 </cfquery>
 
                 <cfelse>
@@ -225,12 +261,12 @@
     <cfif #x.audcatname# is not "">
 
 
-            <cfquery  name="find_subcat" maxrows="1">
-SELECT s.audsubcatid
-FROM audcategories c INNER JOIN audsubcategories s ON s.audcatid = c.audcatid 
-
-WHERE c.isdeleted = 0 AND s.isdeleted = 0 
-AND CONCAT(c.audcatname,"-",s.audSubCatName) = '#x.audcatname#'
+            <cfquery name="find_subcat" maxrows="1">
+                SELECT s.audsubcatid
+                FROM audcategories c INNER JOIN audsubcategories s ON s.audcatid = c.audcatid 
+                WHERE c.isdeleted = <cfqueryparam value="0" cfsqltype="cf_sql_bit"> 
+                AND s.isdeleted = <cfqueryparam value="0" cfsqltype="cf_sql_bit">
+                AND CONCAT(c.audcatname,"-",s.audSubCatName) = <cfqueryparam value="#x.audcatname#" cfsqltype="cf_sql_varchar">
             </cfquery>
         
         

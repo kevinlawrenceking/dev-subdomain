@@ -37,7 +37,7 @@
             <cfqueryparam value="#arguments.errorMsg#" cfsqltype="CF_SQL_VARCHAR">
         )
     </cfquery>
-    <cfreturn result.generatedKey>
+    <cfreturn arguments.id>
 </cffunction>
 
 <cffunction output="false" name="INSauditionsimport_error_24356" access="public" returntype="numeric">
@@ -51,7 +51,7 @@
             <cfqueryparam value="#arguments.errorMsg#" cfsqltype="CF_SQL_VARCHAR">
         )
     </cfquery>
-    <cfreturn result.generatedKey>
+    <cfreturn arguments.id>
 </cffunction>
 
 <cffunction output="false" name="INSauditionsimport_error_24358" access="public" returntype="numeric">
@@ -65,7 +65,7 @@
             <cfqueryparam value="#arguments.errorMsg#" cfsqltype="CF_SQL_VARCHAR">
         )
     </cfquery>
-    <cfreturn result.generatedKey>
+    <cfreturn arguments.id>
 </cffunction>
 
 <cffunction output="false" name="INSauditionsimport_error_24360" access="public" returntype="numeric">
@@ -79,7 +79,7 @@
             <cfqueryparam value="#arguments.errorMsg#" cfsqltype="CF_SQL_VARCHAR">
         )
     </cfquery>
-    <cfreturn result.generatedKey>
+    <cfreturn arguments.id>
 </cffunction>
 
 </cfcomponent>
