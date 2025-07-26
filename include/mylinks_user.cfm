@@ -104,25 +104,31 @@
     <cfoutput>
         <!--- Add Link Modal --->
         <cfsavecontent variable="addModalHTML">
-            <cfset modalid = "addLinkModal_#siteTypeDetails.sitetypeid#">
-            <cfset modaltitle = "Add #siteTypeDetails.sitetypename# Link">
-            <cfinclude template="/include/modal_generic.cfm">
+            <cfoutput>
+                <cfset modalid = "addLinkModal_#siteTypeDetails.sitetypeid#">
+                <cfset modaltitle = "Add #siteTypeDetails.sitetypename# Link">
+                <cfinclude template="/include/modal_generic.cfm">
+            </cfoutput>
         </cfsavecontent>
         #addModalHTML#
         
         <!--- Update Link Modal --->
         <cfsavecontent variable="updateModalHTML">
-            <cfset modalid = "updateLinkModal_#siteTypeDetails.sitetypeid#">
-            <cfset modaltitle = "Update #siteTypeDetails.sitetypename# Link">
-            <cfinclude template="/include/modal_generic.cfm">
+            <cfoutput>
+                <cfset modalid = "updateLinkModal_#siteTypeDetails.sitetypeid#">
+                <cfset modaltitle = "Update #siteTypeDetails.sitetypename# Link">
+                <cfinclude template="/include/modal_generic.cfm">
+            </cfoutput>
         </cfsavecontent>
         #updateModalHTML#
 
         <!--- Delete Link Modal --->
         <cfsavecontent variable="deleteModalHTML">
-            <cfset modalid = "deleteLinkModal_#siteTypeDetails.sitetypeid#">
-            <cfset modaltitle = "Delete #siteTypeDetails.sitetypename# Link">
-            <cfinclude template="/include/modal_generic.cfm">
+            <cfoutput>
+                <cfset modalid = "deleteLinkModal_#siteTypeDetails.sitetypeid#">
+                <cfset modaltitle = "Delete #siteTypeDetails.sitetypename# Link">
+                <cfinclude template="/include/modal_generic.cfm">
+            </cfoutput>
         </cfsavecontent>
         #deleteModalHTML#
     </cfoutput>
