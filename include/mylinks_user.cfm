@@ -253,7 +253,34 @@ $(document).ready(function() {
         
         $(modalTarget).find('.modal-body').html('<div class="text-center p-4"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>');
         $(modalTarget).modal('show');
-        $(modalTarget).find('.modal-body').load(url);
+        $(modalTarget).find('.modal-body').load(url, function() {
+            // Handle form submission for update forms
+            $(modalTarget).find('form').on('submit', function(e) {
+                e.preventDefault();
+                var form = $(this);
+                var formData = form.serialize();
+                
+                $.ajax({
+                    url: form.attr('action'),
+                    type: 'POST',
+                    data: formData,
+                    success: function(response) {
+                        $(modalTarget).modal('hide');
+                        // Refresh the entire links container
+                        refreshLinksPanel();
+                    },
+                    error: function() {
+                        alert('Error updating link. Please try again.');
+                    }
+                });
+            });
+        });
+    }
+
+    function refreshLinksPanel() {
+        // Simply reload the current page to refresh all panels
+        // This is the safest approach since the panels are tightly integrated with the dashboard loop
+        window.location.reload();
     }
 
     // EDIT LINK
@@ -271,7 +298,33 @@ $(document).ready(function() {
         var sitetypeId = $(this).data('sitetype-id');
         var modalTarget = `##deleteLinkModal_${sitetypeId}`;
         var url = `/include/remoteDeleteFormLink.cfm?userid=#session.userid#&new_id=${linkId}&target=dashboard_new`;
-        handleModalLoad(e, url, modalTarget);
+        
+        e.preventDefault();
+        e.stopPropagation();
+        
+        $(modalTarget).find('.modal-body').html('<div class="text-center p-4"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>');
+        $(modalTarget).modal('show');
+        $(modalTarget).find('.modal-body').load(url, function() {
+            // Handle delete form submission
+            $(modalTarget).find('form').on('submit', function(e) {
+                e.preventDefault();
+                var form = $(this);
+                var formData = form.serialize();
+                
+                $.ajax({
+                    url: form.attr('action'),
+                    type: 'POST',
+                    data: formData,
+                    success: function(response) {
+                        $(modalTarget).modal('hide');
+                        refreshLinksPanel();
+                    },
+                    error: function() {
+                        alert('Error deleting link. Please try again.');
+                    }
+                });
+            });
+        });
     });
 
     // ADD LINK
@@ -279,7 +332,33 @@ $(document).ready(function() {
         var sitetypeId = $(this).data('sitetype-id');
         var modalTarget = `##addLinkModal_${sitetypeId}`;
         var url = `/include/remotelinkAdd.cfm?new_sitetypeid=${sitetypeId}&userid=#session.userid#&target=dashboard_new`;
-        handleModalLoad(e, url, modalTarget);
+        
+        e.preventDefault();
+        e.stopPropagation();
+        
+        $(modalTarget).find('.modal-body').html('<div class="text-center p-4"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>');
+        $(modalTarget).modal('show');
+        $(modalTarget).find('.modal-body').load(url, function() {
+            // Handle add form submission
+            $(modalTarget).find('form').on('submit', function(e) {
+                e.preventDefault();
+                var form = $(this);
+                var formData = form.serialize();
+                
+                $.ajax({
+                    url: form.attr('action'),
+                    type: 'POST',
+                    data: formData,
+                    success: function(response) {
+                        $(modalTarget).modal('hide');
+                        refreshLinksPanel();
+                    },
+                    error: function() {
+                        alert('Error adding link. Please try again.');
+                    }
+                });
+            });
+        });
     });
 
     // Function to open all URLs
