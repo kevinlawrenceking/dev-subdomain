@@ -79,6 +79,19 @@
     font-style: italic;
 }
 
+/* Animation for successful link updates */
+.link-row.updating {
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+    animation: pulseUpdate 0.5s ease-in-out;
+}
+
+@keyframes pulseUpdate {
+    0% { background-color: #ffffff; }
+    50% { background-color: #d4edda; }
+    100% { background-color: #d4edda; }
+}
+
 #linksContainer {
     overflow: hidden;
     background-color: #FFFFFF;
@@ -244,11 +257,8 @@
                     // Close the modal
                     modal.modal('hide');
                     
-                    // Update the link in the DOM
+                    // Update the link in the DOM with green flash
                     updateLinkInDOM(linkId, formData);
-                    
-                    // Show success message (optional)
-                    showSuccessMessage('Link updated successfully!');
                 },
                 error: function() {
                     alert('Error updating link. Please try again.');
@@ -267,6 +277,9 @@
             var newSiteURL = params.get('new_siteurl');
             
             if (linkRow.length > 0) {
+                // Add visual feedback with green flash
+                linkRow.addClass('updating');
+                
                 // Update the link URL
                 if (newSiteURL) {
                     // Add https:// if not present
@@ -282,26 +295,17 @@
                 if (newSiteName) {
                     linkRow.find('.link-sitename').text(newSiteName);
                 }
+                
+                // Remove the updating class after animation completes
+                setTimeout(function() {
+                    linkRow.removeClass('updating');
+                }, 1000);
             }
         }
 
-        // Function to show success message
+        // Function to show success message (REMOVED - using green flash instead)
         function showSuccessMessage(message) {
-            // Create a temporary success alert
-            var alert = $('<div class="alert alert-success alert-dismissible fade show" role="alert">' +
-                         message +
-                         '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>' +
-                         '</div>');
-            
-            // Add to top of the links container
-            $('#linksContainer').prepend(alert);
-            
-            // Auto-remove after 3 seconds
-            setTimeout(function() {
-                alert.fadeOut(function() {
-                    $(this).remove();
-                });
-            }, 3000);
+            // No longer needed - using green flash animation instead
         }
 
         // Open all URLs function
