@@ -25,8 +25,43 @@
 </cfif>
 
 <!-- Modern CSS and JS Dependencies -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.css">
 <link rel="stylesheet" href="/app/assets/css/croppie.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.js"></script>
+
+<!-- Load Croppie JS with fallback -->
+<script>
+    // Check if jQuery is loaded
+    if (typeof jQuery === 'undefined') {
+        console.error('jQuery is required for image upload functionality');
+    }
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.js" 
+        onerror="console.warn('CDN Croppie failed, loading fallback'); loadCroppieFallback();"></script>
+        
+<script>
+    // Fallback function to load local Croppie
+    function loadCroppieFallback() {
+        const script = document.createElement('script');
+        script.src = '/app/assets/js/croppie.min.js';
+        script.onerror = function() {
+            console.error('Both CDN and local Croppie failed to load');
+            // Enable basic upload without cropping
+            window.croppieUnavailable = true;
+        };
+        document.head.appendChild(script);
+    }
+    
+    // Additional check after document ready
+    $(document).ready(function() {
+        setTimeout(function() {
+            if (typeof $.fn.croppie === 'undefined') {
+                console.warn('Croppie still not available, enabling basic mode');
+                window.croppieUnavailable = true;
+            }
+        }, 500);
+    });
+</script>
 
 <!-- Custom Styles for Modern Look -->
 <style>
@@ -320,6 +355,7 @@
 
 <!-- Enhanced JavaScript with Modern Features -->
 <script>
+// Wait for document ready and ensure Croppie is loaded
 $(document).ready(function () {
     // Modern file validation
     const maxFileSize = 5 * 1024 * 1024; // 5MB
@@ -327,24 +363,58 @@ $(document).ready(function () {
     
     let $uploadCrop;
     let currentStep = 1;
+    let selectedImageData = null;
     
-    // Initialize croppie
+    // Check if Croppie is available or use basic mode
+    const useCroppie = typeof $.fn.croppie !== 'undefined' && !window.croppieUnavailable;
+    
+    if (!useCroppie) {
+        console.warn('Croppie not available, using basic upload mode');
+        $('#crop-section h5').html('<i class="fe-image me-2"></i>Preview Your Image');
+    }
+    
+    // Initialize croppie with error handling
     function initializeCroppie() {
-        $uploadCrop = $('#upload-input').croppie({
-            enableExif: true,
-            url: '<cfoutput>#image_url#</cfoutput>?ver=<cfoutput>#rand()#</cfoutput>',
-            viewport: {
-                width: <cfoutput>#picsize#</cfoutput>,
-                height: <cfoutput>#picsize#</cfoutput>,
-                type: 'circle'
-            },
-            boundary: {
-                width: <cfoutput>#picsize#</cfoutput>,
-                height: <cfoutput>#picsize#</cfoutput>
-            },
-            showZoomer: true,
-            enableOrientation: true
-        });
+        if (!useCroppie) {
+            // Basic preview mode
+            $('#upload-input').html(`
+                <div style="width: <cfoutput>#picsize#</cfoutput>px; height: <cfoutput>#picsize#</cfoutput>px; 
+                     border: 2px dashed ##ddd; border-radius: 50%; margin: 0 auto; 
+                     display: flex; align-items: center; justify-content: center; 
+                     background-size: cover; background-position: center; 
+                     background-image: url('<cfoutput>#image_url#</cfoutput>?ver=<cfoutput>#rand()#</cfoutput>');">
+                    <span style="color: ##999; text-align: center;">Current Avatar</span>
+                </div>
+            `);
+            return;
+        }
+        
+        try {
+            if ($uploadCrop) {
+                $uploadCrop.croppie('destroy');
+            }
+            
+            $uploadCrop = $('#upload-input').croppie({
+                enableExif: true,
+                url: '<cfoutput>#image_url#</cfoutput>?ver=<cfoutput>#rand()#</cfoutput>',
+                viewport: {
+                    width: <cfoutput>#picsize#</cfoutput>,
+                    height: <cfoutput>#picsize#</cfoutput>,
+                    type: 'circle'
+                },
+                boundary: {
+                    width: <cfoutput>#picsize#</cfoutput>,
+                    height: <cfoutput>#picsize#</cfoutput>
+                },
+                showZoomer: true,
+                enableOrientation: true
+            });
+        } catch (error) {
+            console.error('Error initializing Croppie:', error);
+            showErrorMessage('Failed to initialize image cropper. Using basic preview mode.');
+            window.croppieUnavailable = true;
+            initializeCroppie(); // Retry in basic mode
+        }
     }
     
     // Step management
@@ -398,6 +468,8 @@ $(document).ready(function () {
         
         const reader = new FileReader();
         reader.onload = function (e) {
+            selectedImageData = e.target.result;
+            
             // Show cropping section
             $('#crop-section').show();
             updateStep(2);
@@ -407,42 +479,72 @@ $(document).ready(function () {
                 scrollTop: $('#crop-section').offset().top - 20
             }, 500);
             
-            // Initialize croppie with new image
-            if ($uploadCrop) {
-                $uploadCrop.croppie('destroy');
+            if (useCroppie) {
+                // Initialize croppie with new image
+                if ($uploadCrop) {
+                    try {
+                        $uploadCrop.croppie('destroy');
+                    } catch (error) {
+                        console.warn('Error destroying previous croppie instance:', error);
+                    }
+                }
+                
+                try {
+                    initializeCroppie();
+                    
+                    $uploadCrop.croppie('bind', {
+                        url: e.target.result
+                    }).then(function () {
+                        console.log('Image loaded for cropping');
+                    }).catch(function(error) {
+                        console.error('Error binding image to croppie:', error);
+                        showErrorMessage('Failed to load image for cropping. Please try a different image.');
+                    });
+                } catch (error) {
+                    console.error('Error initializing croppie for new image:', error);
+                    showErrorMessage('Failed to prepare image for cropping. Please try again.');
+                }
+            } else {
+                // Basic preview mode
+                $('#upload-input').html(`
+                    <div style="width: <cfoutput>#picsize#</cfoutput>px; height: <cfoutput>#picsize#</cfoutput>px; 
+                         border: 2px solid ##007bff; border-radius: 50%; margin: 0 auto; 
+                         background-size: cover; background-position: center; 
+                         background-image: url('${e.target.result}');">
+                    </div>
+                    <p class="mt-3 text-muted">Preview of your new avatar</p>
+                `);
             }
-            initializeCroppie();
-            
-            $uploadCrop.croppie('bind', {
-                url: e.target.result
-            }).then(function () {
-                console.log('Image loaded for cropping');
-            });
         };
         reader.readAsDataURL(file);
     }
     
     // Show error message
     function showErrorMessage(message) {
-        // Create toast notification
-        const toast = `
-            <div class="toast align-items-center text-bg-danger border-0 position-fixed" 
-                 style="top: 20px; right: 20px; z-index: 9999;" role="alert">
-                <div class="d-flex">
-                    <div class="toast-body">
-                        <i class="fe-alert-triangle me-2"></i>${message}
+        // Create toast notification or simple alert if Bootstrap toast isn't available
+        if (typeof bootstrap !== 'undefined' && bootstrap.Toast) {
+            const toast = `
+                <div class="toast align-items-center text-bg-danger border-0 position-fixed" 
+                     style="top: 20px; right: 20px; z-index: 9999;" role="alert">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <i class="fe-alert-triangle me-2"></i>${message}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" 
+                                data-bs-dismiss="toast"></button>
                     </div>
-                    <button type="button" class="btn-close btn-close-white me-2 m-auto" 
-                            data-bs-dismiss="toast"></button>
                 </div>
-            </div>
-        `;
-        
-        $('body').append(toast);
-        $('.toast').toast('show');
-        
-        // Remove after 5 seconds
-        setTimeout(() => $('.toast').remove(), 5000);
+            `;
+            
+            $('body').append(toast);
+            $('.toast').toast('show');
+            
+            // Remove after 5 seconds
+            setTimeout(() => $('.toast').remove(), 5000);
+        } else {
+            // Fallback to alert
+            alert(message);
+        }
     }
     
     // Drag and drop functionality
@@ -501,41 +603,68 @@ $(document).ready(function () {
         // Show loading state
         $button.html('<i class="spinner-border spinner-border-sm me-2"></i>Saving...').prop('disabled', true);
         
-        $uploadCrop.croppie('result', {
-            type: 'canvas',
-            size: 'viewport',
-            quality: 0.9
-        }).then(function(resp) {
-            $.ajax({
-                url: "/include/image_upload2.cfm",
-                type: "POST",
-                data: {
-                    "picturebase": resp
-                },
-                success: function(data) {
-                    // Show success section
-                    updateStep(3);
-                    $('#crop-section').hide();
-                    $('#success-section').show();
-                    $('#final-avatar').attr('src', resp);
-                    
-                    // Update current avatar in header if it exists
-                    $('#current-avatar-img').attr('src', resp);
-                    
-                    // Scroll to success section
-                    $('html, body').animate({
-                        scrollTop: $('#success-section').offset().top - 20
-                    }, 500);
-                },
-                error: function() {
-                    showErrorMessage('Failed to save avatar. Please try again.');
+        if (useCroppie && $uploadCrop) {
+            // Use Croppie to get cropped result
+            try {
+                $uploadCrop.croppie('result', {
+                    type: 'canvas',
+                    size: 'viewport',
+                    quality: 0.9
+                }).then(function(resp) {
+                    saveImageData(resp, $button, originalText);
+                }).catch(function(error) {
+                    console.error('Error getting cropped result:', error);
+                    showErrorMessage('Failed to process cropped image. Please try again.');
                     $button.html(originalText).prop('disabled', false);
-                }
-            });
-        });
+                });
+            } catch (error) {
+                console.error('Error in crop save process:', error);
+                showErrorMessage('Failed to save cropped image. Please try again.');
+                $button.html(originalText).prop('disabled', false);
+            }
+        } else if (selectedImageData) {
+            // Use original image data in basic mode
+            saveImageData(selectedImageData, $button, originalText);
+        } else {
+            showErrorMessage('No image selected. Please choose an image first.');
+            $button.html(originalText).prop('disabled', false);
+        }
     });
     
-    // Initialize
-    initializeCroppie();
+    // Function to save image data
+    function saveImageData(imageData, $button, originalText) {
+        $.ajax({
+            url: "/include/image_upload2.cfm",
+            type: "POST",
+            data: {
+                "picturebase": imageData
+            },
+            success: function(data) {
+                // Show success section
+                updateStep(3);
+                $('#crop-section').hide();
+                $('#success-section').show();
+                $('#final-avatar').attr('src', imageData);
+                
+                // Update current avatar in header if it exists
+                $('#current-avatar-img').attr('src', imageData);
+                
+                // Scroll to success section
+                $('html, body').animate({
+                    scrollTop: $('#success-section').offset().top - 20
+                }, 500);
+            },
+            error: function(xhr, status, error) {
+                console.error('Ajax error:', xhr, status, error);
+                showErrorMessage('Failed to save avatar. Please try again.');
+                $button.html(originalText).prop('disabled', false);
+            }
+        });
+    }
+    
+    // Initialize with delay to ensure all scripts are loaded
+    setTimeout(function() {
+        initializeCroppie();
+    }, 100);
 });
 </script>
