@@ -223,5 +223,97 @@
             </cfloop>
             setupModalLoading("addlink_#siteTypeDetails.sitetypeid#", "/include/remotelinkAdd.cfm", "application.retinaIcons14Path=#URLEncodedFormat(application.retinaIcons14Path)#&new_sitetypeid=#siteTypeDetails.sitetypeid#&userid=#userid#&target=dashboard_new");
         </cfoutput>
+
+        // Handle form submission for link updates via AJAX
+        $(document).on('submit', '[id^="updatelink_"] form', function(e) {
+            e.preventDefault();
+            
+            var form = $(this);
+            var formData = form.serialize();
+            var modal = form.closest('.modal');
+            var linkId = modal.attr('id').replace('updatelink_', '');
+            
+            // Show loading state
+            form.find('button[type="submit"]').prop('disabled', true).text('Updating...');
+            
+            $.ajax({
+                url: '/include/remotelinkUpdateUpdate.cfm',
+                type: 'POST',
+                data: formData,
+                success: function(response) {
+                    // Close the modal
+                    modal.modal('hide');
+                    
+                    // Update the link in the DOM
+                    updateLinkInDOM(linkId, formData);
+                    
+                    // Show success message (optional)
+                    showSuccessMessage('Link updated successfully!');
+                },
+                error: function() {
+                    alert('Error updating link. Please try again.');
+                    form.find('button[type="submit"]').prop('disabled', false).text('Update');
+                }
+            });
+        });
+
+        // Function to update the specific link in the DOM
+        function updateLinkInDOM(linkId, formData) {
+            var linkRow = $('a[data-link-id="' + linkId + '"]');
+            
+            // Parse form data to get new values
+            var params = new URLSearchParams(formData);
+            var newSiteName = params.get('new_siteName');
+            var newSiteURL = params.get('new_siteurl');
+            
+            if (linkRow.length > 0) {
+                // Update the link URL
+                if (newSiteURL) {
+                    // Add https:// if not present
+                    var correctedURL = newSiteURL;
+                    if (!newSiteURL.startsWith('http://') && !newSiteURL.startsWith('https://')) {
+                        correctedURL = 'https://' + newSiteURL;
+                    }
+                    linkRow.attr('href', correctedURL);
+                    linkRow.attr('title', 'Visit ' + (newSiteName || linkRow.find('.link-sitename').text()));
+                }
+                
+                // Update the site name if it's a custom link
+                if (newSiteName) {
+                    linkRow.find('.link-sitename').text(newSiteName);
+                }
+            }
+        }
+
+        // Function to show success message
+        function showSuccessMessage(message) {
+            // Create a temporary success alert
+            var alert = $('<div class="alert alert-success alert-dismissible fade show" role="alert">' +
+                         message +
+                         '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>' +
+                         '</div>');
+            
+            // Add to top of the links container
+            $('#linksContainer').prepend(alert);
+            
+            // Auto-remove after 3 seconds
+            setTimeout(function() {
+                alert.fadeOut(function() {
+                    $(this).remove();
+                });
+            }, 3000);
+        }
+
+        // Open all URLs function
+        window.openAllUrls = function(urls) {
+            if (urls) {
+                urls.split(',').forEach(function(url) {
+                    var trimmedUrl = url.trim();
+                    if (trimmedUrl) {
+                        window.open(trimmedUrl, '_blank');
+                    }
+                });
+            }
+        };
     });
 </script>
