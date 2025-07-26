@@ -98,7 +98,7 @@
 <cfset mylinks_user = panelData.links>
 <cfset siteTypeDetails = panelData.details>
 <cfset siteurl_list = panelData.urlList>
-<h2><cfoutput>siteurl_list: #siteurl_list#</cfoutput></h2>
+
 <cfif structKeyExists(siteTypeDetails, "sitetypeid")>
     <!--- MODALS (Defined directly) --->
     <cfoutput>
