@@ -1,10 +1,4 @@
-<!--- 
-    PURPOSE: Display and manage a specific user link panel on the dashboard.
-    AUTHOR: Kevin King
-    DATE: 2025-07-26
-    PARAMETERS: dashboards (query object containing panel info like pnid), userid
-    DEPENDENCIES: services.SiteLinksService, /include/modal_generic.cfm
---->
+<!--- This ColdFusion page handles the display and management of site links for a specific dashboard panel. --->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 <style>
@@ -14,7 +8,7 @@
     border-radius: 6px;
     padding: 8px 12px;
     margin-bottom: 8px;
-    background-color: #FFFFFF !important;
+    background-color: #FFFFFF;
     transition: all 0.3s ease;
     word-wrap: break-word;
     overflow: hidden;
@@ -94,83 +88,35 @@
 </style>
 
 <cfset siteLinksService = createObject("component", "services.SiteLinksService")>
-<cfset panelData = siteLinksService.getPanelData(dashboards.pnid, userid)>
-<cfset mylinks_user = panelData.links>
-<cfset siteTypeDetails = panelData.details>
-<cfset siteurl_list = panelData.urlList>
+<cfset mylinks_user = siteLinksService.getSiteLinksByPanelId(dashboards.pnid)>
+<cfset siteurl_list = siteLinksService.getAllUrlsByPanelId(dashboards.pnid)>
+<cfset siteTypeDetails = siteLinksService.getSiteTypeDetailsByPanelId(dashboards.pnid)>
+<cfoutput>
 
-<cfif structKeyExists(siteTypeDetails, "sitetypeid")>
-    <!--- MODALS (Defined directly) --->
-    <cfoutput>
-        <!--- Add Link Modal --->
-        <div class="modal fade" id="addLinkModal_#siteTypeDetails.sitetypeid#" tabindex="-1" aria-labelledby="addLinkModal_#siteTypeDetails.sitetypeid#Label" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="addLinkModal_#siteTypeDetails.sitetypeid#Label">Add #siteTypeDetails.sitetypename# Link</h5>
-                        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                             <i class="mdi mdi-close-thick"></i>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <!-- Content will be loaded here via JavaScript -->
-                        <div class="text-center p-4">
-                            <div class="spinner-border" role="status">
-                                <span class="visually-hidden">Loading...</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!--- Update Link Modal --->
-        <div class="modal fade" id="updateLinkModal_#siteTypeDetails.sitetypeid#" tabindex="-1" aria-labelledby="updateLinkModal_#siteTypeDetails.sitetypeid#Label" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="updateLinkModal_#siteTypeDetails.sitetypeid#Label">Update #siteTypeDetails.sitetypename# Link</h5>
-                        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                             <i class="mdi mdi-close-thick"></i>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <!-- Content will be loaded here via JavaScript -->
-                        <div class="text-center p-4">
-                            <div class="spinner-border" role="status">
-                                <span class="visually-hidden">Loading...</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <!--- Set modal ID and title for adding a link --->
+    <cfset modalid = "addlink_#siteTypeDetails.sitetypeid#" />
+    <cfset modaltitle = "Add #mylinks_user.pntitle#" />
+    
+    <cfinclude template="/include/modal.cfm" />
 
-        <!--- Delete Link Modal --->
-        <div class="modal fade" id="deleteLinkModal_#siteTypeDetails.sitetypeid#" tabindex="-1" aria-labelledby="deleteLinkModal_#siteTypeDetails.sitetypeid#Label" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="deleteLinkModal_#siteTypeDetails.sitetypeid#Label">Delete #siteTypeDetails.sitetypename# Link</h5>
-                        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                             <i class="mdi mdi-close-thick"></i>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <!-- Content will be loaded here via JavaScript -->
-                        <div class="text-center p-4">
-                            <div class="spinner-border" role="status">
-                                <span class="visually-hidden">Loading...</span>
-                            </div>
-                        </div>
-                    </div>
+    <!--- Modal for adding a link --->
+    <div id="addlink_#siteTypeDetails.sitetypeid#" class="modal fade" tabindex="-1" aria-labelledby="standard-modalLabel" >
+
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header" >
+                    <h4 class="modal-title" id="standard-modalLabel">Add #mylinks_user.pntitle#</h4>
+                    <button type="button" class="close" data-bs-dismiss="modal" >
+
+                        <i class="mdi mdi-close-thick"></i>
+                    </button>
                 </div>
+                <div class="modal-body"></div>
             </div>
         </div>
-    </cfoutput>
+    </div>
 
     <!--- Dashboard Card --->
-    <cfoutput>
     <div class="card grid-item loaded" data-id="#dashboards.pnid#">
         <div class="card-header" id="heading_system_#dashboards.currentrow#">
             <h5 class="m-0">
@@ -180,49 +126,72 @@
             </h5>
         </div>
         <div class="card-body">
-            <div id="linksContainer_#siteTypeDetails.sitetypeid#">
+            <!--- Container for links with similar styling to reminders --->
+            <div id="linksContainer">
+                <!--- Loop through site links --->
                 <cfloop query="mylinks_user">
-                    <div class="link-row d-flex align-items-center" data-link-id="#mylinks_user.id#">
-                        
-                        <div class="link-icon-container">
-                            <img class="link-icon" src="#application.retinaIcons14Url#/#mylinks_user.siteicon#" alt="#mylinks_user.sitename#">
-                        </div>
-                        
-                        <div class="flex-grow-1 link-content">
-                            <a href="#mylinks_user.siteurl#" target="_blank" class="link-sitename text-decoration-none" title="Visit #mylinks_user.sitename#">
-                                #mylinks_user.sitename#
-                            </a>
-                        </div>
-                        
-                        <div class="link-actions">
-                            <button class="btn btn-light border btn-xs edit-link-btn" 
-                                    data-link-id="#mylinks_user.id#"
-                                    data-sitetype-id="#siteTypeDetails.sitetypeid#"
-                                    title="Edit Link">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="btn btn-light border btn-xs delete-link-btn" 
-                                    data-link-id="#mylinks_user.id#"
-                                    data-sitetype-id="#siteTypeDetails.sitetypeid#"
-                                    title="Delete Link">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
-                        </div>
-                    </div>
+                    <cfoutput>
+                        <!--- Set modal ID and title for updating a link --->
+                        <cfset modalid = "updatelink_#mylinks_user.id#" />
+                        <cfset modaltitle = "#siteTypeDetails.sitetypename# Link Update" />
+                        <cfinclude template="/include/modal.cfm" />
+
+                        <!--- Set modal ID and title for deleting a link --->
+                        <cfset modalid = "remoteDeleteLink_#mylinks_user.id#" />
+                        <cfset modaltitle = "#siteTypeDetails.sitetypename# Link Delete" />
+                        <cfinclude template="/include/modal.cfm" />
+
+                        <!--- Link card row - entire card is clickable --->
+                        <a href="#mylinks_user.siteurl#" 
+                           target="_blank" 
+                           class="link-row d-flex align-items-center text-decoration-none" 
+                           data-link-id="#mylinks_user.id#"
+                           title="Visit #mylinks_user.sitename#">
+                            <!--- Icon on the left (full height) --->
+                            <div class="link-icon-container">
+                                <img class="link-icon" 
+                                     id="icon_#mylinks_user.id#" 
+                                     src="#application.retinaIcons14Url#/#mylinks_user.siteicon#" 
+                                     alt="#mylinks_user.sitename#" />
+                            </div>
+                            
+                            <!--- Site name in the middle --->
+                            <div class="flex-grow-1 link-content">
+                                <div class="link-sitename">#mylinks_user.sitename#</div>
+                            </div>
+                            
+                            <!--- Action buttons on the right --->
+                            <div class="link-actions">
+                                <!--- Edit button --->
+                                <button class="btn btn-secondary btn-xs edit-link" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="##updatelink_#mylinks_user.id#"
+                                        data-id="#mylinks_user.id#" 
+                                        data-sitename="#mylinks_user.sitename#" 
+                                        title="Edit Link"
+                                        onclick="event.preventDefault(); event.stopPropagation();">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </div>
+                        </a>
+                    </cfoutput>
                 </cfloop>
                 
+                <!--- Show message if no links --->
                 <cfif mylinks_user.recordcount EQ 0>
                     <div class="links-empty">
                         <center>No active links</center>
                     </div>
                 </cfif>
             </div>
-        </div>
+        </div><!--- card-body end --->
         
         <div class="card-footer bg-light d-flex justify-content-between align-items-center">
+            <!--- Open All button on the left --->
             <div>
                 <cfif mylinks_user.recordcount gt 0>
-                    <button onclick="openAllUrls('#siteurl_list#')" class="btn btn-sm btn-light border">
+                    <button onclick="openAllUrls('#siteurl_list#')" 
+                            class="btn btn-sm btn-light border">
                         <i class="mdi mdi-open-in-new"></i> Open All
                     </button>
                 <cfelse>
@@ -230,154 +199,29 @@
                 </cfif>
             </div>
             
+            <!--- Add Link button on the right --->
             <div>
-                <button class="btn btn-sm btn-light border add-link-btn" 
-                   data-sitetype-id="#siteTypeDetails.sitetypeid#">
+                <a class="btn btn-sm btn-light border" 
+                   href="addlink.cfm" 
+                   data-bs-remote="true" 
+                   data-bs-toggle="modal" 
+                   data-bs-target="##addlink_#siteTypeDetails.sitetypeid#">
                     <i class="fe-plus-circle"></i> Add Link
-                </button>
+                </a>
             </div>
-        </div>
-    </div>
-    </cfoutput>
-<cfelse>
-    <cfoutput>
-        <div class="alert alert-warning">Link panel could not be loaded. Panel details not found for PNID: #dashboards.pnid#</div>
-    </cfoutput>
-</cfif>
-<cfif structKeyExists(siteTypeDetails, "sitetypeid")>
-<cfoutput>
-<script>
-$(document).ready(function() {
-    var container = $('##linksContainer_#siteTypeDetails.sitetypeid#').closest('.card');
-
-    function handleModalLoad(e, url, modalTarget) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        $(modalTarget).find('.modal-body').html('<div class="text-center p-4"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>');
-        $(modalTarget).modal('show');
-        $(modalTarget).find('.modal-body').load(url, function() {
-            // Handle form submission for update forms
-            $(modalTarget).find('form').on('submit', function(e) {
-                e.preventDefault();
-                var form = $(this);
-                var formData = form.serialize();
-                
-                $.ajax({
-                    url: form.attr('action'),
-                    type: 'POST',
-                    data: formData,
-                    success: function(response) {
-                        $(modalTarget).modal('hide');
-                        // Refresh the entire links container
-                        refreshLinksPanel();
-                    },
-                    error: function() {
-                        alert('Error updating link. Please try again.');
-                    }
-                });
-            });
-        });
-    }
-
-    function refreshLinksPanel() {
-        // Simply reload the current page to refresh all panels
-        // This is the safest approach since the panels are tightly integrated with the dashboard loop
-        window.location.reload();
-    }
-
-    // EDIT LINK
-    container.on('click', '.edit-link-btn', function(e) {
-        var linkId = $(this).data('link-id');
-        var sitetypeId = $(this).data('sitetype-id');
-        var modalTarget = `##updateLinkModal_${sitetypeId}`;
-        var url = `/include/remotelinkUpdate.cfm?userid=#session.userid#&new_id=${linkId}&target=dashboard_new`;
-        handleModalLoad(e, url, modalTarget);
-    });
-
-    // DELETE LINK
-    container.on('click', '.delete-link-btn', function(e) {
-        var linkId = $(this).data('link-id');
-        var sitetypeId = $(this).data('sitetype-id');
-        var modalTarget = `##deleteLinkModal_${sitetypeId}`;
-        var url = `/include/remoteDeleteFormLink.cfm?userid=#session.userid#&new_id=${linkId}&target=dashboard_new`;
-        
-        e.preventDefault();
-        e.stopPropagation();
-        
-        $(modalTarget).find('.modal-body').html('<div class="text-center p-4"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>');
-        $(modalTarget).modal('show');
-        $(modalTarget).find('.modal-body').load(url, function() {
-            // Handle delete form submission
-            $(modalTarget).find('form').on('submit', function(e) {
-                e.preventDefault();
-                var form = $(this);
-                var formData = form.serialize();
-                
-                $.ajax({
-                    url: form.attr('action'),
-                    type: 'POST',
-                    data: formData,
-                    success: function(response) {
-                        $(modalTarget).modal('hide');
-                        refreshLinksPanel();
-                    },
-                    error: function() {
-                        alert('Error deleting link. Please try again.');
-                    }
-                });
-            });
-        });
-    });
-
-    // ADD LINK
-    container.on('click', '.add-link-btn', function(e) {
-        var sitetypeId = $(this).data('sitetype-id');
-        var modalTarget = `##addLinkModal_${sitetypeId}`;
-        var url = `/include/remotelinkAdd.cfm?new_sitetypeid=${sitetypeId}&userid=#session.userid#&target=dashboard_new`;
-        
-        e.preventDefault();
-        e.stopPropagation();
-        
-        $(modalTarget).find('.modal-body').html('<div class="text-center p-4"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>');
-        $(modalTarget).modal('show');
-        $(modalTarget).find('.modal-body').load(url, function() {
-            // Handle add form submission
-            $(modalTarget).find('form').on('submit', function(e) {
-                e.preventDefault();
-                var form = $(this);
-                var formData = form.serialize();
-                
-                $.ajax({
-                    url: form.attr('action'),
-                    type: 'POST',
-                    data: formData,
-                    success: function(response) {
-                        $(modalTarget).modal('hide');
-                        refreshLinksPanel();
-                    },
-                    error: function() {
-                        alert('Error adding link. Please try again.');
-                    }
-                });
-            });
-        });
-    });
-
-    // Function to open all URLs
-    window.openAllUrls = function(urls) {
-        if (urls) {
-            urls.split(',').forEach(function(url) {
-                var trimmedUrl = url.trim();
-                if (trimmedUrl) {
-                    window.open(trimmedUrl, '_blank');
-                }
-            });
-        }
-    };
-});
-</script>
+        </div><!--- end card footer --->
+    </div><!--- end card --->
 </cfoutput>
-<cfelse>
-    <!--- No JavaScript needed if panel details are not available --->
-</cfif>
+
+<script>
+    $(document).ready(function () {
+        <cfoutput>
+            <!--- Loop through site links to setup modals for update and delete actions --->
+            <cfloop query="mylinks_user">
+                setupModalLoading("updatelink_#mylinks_user.id#", "/include/remotelinkUpdate.cfm", "userid=#userid#&new_id=#mylinks_user.new_id#&target=dashboard_new");
+                setupModalLoading("remoteDeleteLink_#mylinks_user.id#", "/include/remoteDeleteFormLink.cfm", "userid=#userid#&new_id=#mylinks_user.new_id#&target=dashboard_new");
+            </cfloop>
+            setupModalLoading("addlink_#siteTypeDetails.sitetypeid#", "/include/remotelinkAdd.cfm", "application.retinaIcons14Path=#URLEncodedFormat(application.retinaIcons14Path)#&new_sitetypeid=#siteTypeDetails.sitetypeid#&userid=#userid#&target=dashboard_new");
+        </cfoutput>
+    });
+</script>
