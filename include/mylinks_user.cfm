@@ -1,4 +1,10 @@
-<!--- This ColdFusion page handles the display and management of site links for a specific dashboard panel. --->
+<!--- 
+    PURPOSE: Display and manage a specific user link panel on the dashboard.
+    AUTHOR: Kevin King
+    DATE: 2025-07-26
+    PARAMETERS: dashboards (query object containing panel info like pnid), userid
+    DEPENDENCIES: services.SiteLinksService, /include/modal_generic.cfm
+--->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 <style>
@@ -97,28 +103,28 @@
 <cfoutput>
     <!--- MODALS (Defined once) --->
     <!--- Add Link Modal --->
-    <cfsavecontent variable="modalContent">
+    <cfsavecontent variable="addModalHTML">
         <cfset modalid = "addLinkModal_#siteTypeDetails.sitetypeid#">
         <cfset modaltitle = "Add #siteTypeDetails.sitetypename# Link">
         <cfinclude template="/include/modal_generic.cfm">
     </cfsavecontent>
-    <cfoutput>#modalContent#</cfoutput>
+    #addModalHTML#
     
     <!--- Update Link Modal --->
-    <cfsavecontent variable="modalContent">
+    <cfsavecontent variable="updateModalHTML">
         <cfset modalid = "updateLinkModal_#siteTypeDetails.sitetypeid#">
         <cfset modaltitle = "Update #siteTypeDetails.sitetypename# Link">
         <cfinclude template="/include/modal_generic.cfm">
     </cfsavecontent>
-    <cfoutput>#modalContent#</cfoutput>
+    #updateModalHTML#
 
     <!--- Delete Link Modal --->
-    <cfsavecontent variable="modalContent">
+    <cfsavecontent variable="deleteModalHTML">
         <cfset modalid = "deleteLinkModal_#siteTypeDetails.sitetypeid#">
         <cfset modaltitle = "Delete #siteTypeDetails.sitetypename# Link">
         <cfinclude template="/include/modal_generic.cfm">
     </cfsavecontent>
-    <cfoutput>#modalContent#</cfoutput>
+    #deleteModalHTML#
 
     <!--- Dashboard Card --->
     <div class="card grid-item loaded" data-id="#dashboards.pnid#">
