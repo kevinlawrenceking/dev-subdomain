@@ -97,13 +97,28 @@
 <cfoutput>
     <!--- MODALS (Defined once) --->
     <!--- Add Link Modal --->
-    <cfinclude template="/include/modal_generic.cfm" modalId="addLinkModal_#siteTypeDetails.sitetypeid#" modalTitle="Add #siteTypeDetails.sitetypename# Link">
+    <cfsavecontent variable="modalContent">
+        <cfset modalid = "addLinkModal_#siteTypeDetails.sitetypeid#">
+        <cfset modaltitle = "Add #siteTypeDetails.sitetypename# Link">
+        <cfinclude template="/include/modal_generic.cfm">
+    </cfsavecontent>
+    <cfoutput>#modalContent#</cfoutput>
     
     <!--- Update Link Modal --->
-    <cfinclude template="/include/modal_generic.cfm" modalId="updateLinkModal_#siteTypeDetails.sitetypeid#" modalTitle="Update #siteTypeDetails.sitetypename# Link">
+    <cfsavecontent variable="modalContent">
+        <cfset modalid = "updateLinkModal_#siteTypeDetails.sitetypeid#">
+        <cfset modaltitle = "Update #siteTypeDetails.sitetypename# Link">
+        <cfinclude template="/include/modal_generic.cfm">
+    </cfsavecontent>
+    <cfoutput>#modalContent#</cfoutput>
 
     <!--- Delete Link Modal --->
-    <cfinclude template="/include/modal_generic.cfm" modalId="deleteLinkModal_#siteTypeDetails.sitetypeid#" modalTitle="Delete #siteTypeDetails.sitetypename# Link">
+    <cfsavecontent variable="modalContent">
+        <cfset modalid = "deleteLinkModal_#siteTypeDetails.sitetypeid#">
+        <cfset modaltitle = "Delete #siteTypeDetails.sitetypename# Link">
+        <cfinclude template="/include/modal_generic.cfm">
+    </cfsavecontent>
+    <cfoutput>#modalContent#</cfoutput>
 
     <!--- Dashboard Card --->
     <div class="card grid-item loaded" data-id="#dashboards.pnid#">
