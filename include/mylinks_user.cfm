@@ -194,7 +194,7 @@
 <cfelse>
     <div class="alert alert-warning">Link panel could not be loaded. Panel details not found for PNID: #dashboards.pnid#</div>
 </cfif>
-
+<Cfoutput>
 <script>
 $(document).ready(function() {
     var container = $('##linksContainer_#siteTypeDetails.sitetypeid#').closest('.card');
@@ -247,3 +247,4 @@ $(document).ready(function() {
     };
 });
 </script>
+</Cfoutput>
