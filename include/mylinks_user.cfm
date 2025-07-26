@@ -94,7 +94,7 @@
 </style>
 
 <cfset siteLinksService = createObject("component", "services.SiteLinksService")>
-<cfset panelData = siteLinksService.getPanelData(dashboards.pnid)>
+<cfset panelData = siteLinksService.getPanelData(dashboards.pnid, userid)>
 <cfset mylinks_user = panelData.links>
 <cfset siteTypeDetails = panelData.details>
 <cfset siteurl_list = panelData.urlList>

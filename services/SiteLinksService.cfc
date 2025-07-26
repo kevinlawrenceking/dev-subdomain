@@ -2,6 +2,7 @@
 
 <cffunction output="false" name="getSiteLinksByPanelId" access="public" returntype="query"  hint="Retrieve site links for a specific panel ID.">
         <cfargument name="panelId" type="numeric" required="true" hint="The panel ID (pnid) for which to retrieve site links.">
+        <cfargument name="userId" type="numeric" required="true" hint="The user ID to filter results by.">
 
 <cfquery result="result" name="mylinks_user">
             SELECT 
@@ -16,6 +17,8 @@
             FROM sitetypes_user t
             INNER JOIN sitelinks_user s ON t.sitetypeid = s.siteTypeid
             WHERE t.pnid = <cfqueryparam value="#arguments.panelId#" cfsqltype="cf_sql_integer">
+              AND t.userid = <cfqueryparam value="#arguments.userId#" cfsqltype="cf_sql_integer">
+              AND s.userid = <cfqueryparam value="#arguments.userId#" cfsqltype="cf_sql_integer">
             ORDER BY s.sitename
         </cfquery>
 
@@ -24,12 +27,15 @@
 
 <cffunction output="false" name="getAllUrlsByPanelId" access="public" returntype="string"  hint="Retrieve all URLs for a specific panel for the 'Open All' button.">
         <cfargument name="panelId" type="numeric" required="true" hint="The panel ID for which to retrieve all URLs.">
+        <cfargument name="userId" type="numeric" required="true" hint="The user ID to filter results by.">
 
 <cfquery result="result" name="allUrls">
             SELECT GROUP_CONCAT(s.siteurl ORDER BY s.siteurl ASC SEPARATOR ', ') AS siteurl_list
             FROM sitetypes_user t
             INNER JOIN sitelinks_user s ON t.sitetypeid = s.siteTypeid
             WHERE t.pnid = <cfqueryparam value="#arguments.panelId#" cfsqltype="cf_sql_integer">
+              AND t.userid = <cfqueryparam value="#arguments.userId#" cfsqltype="cf_sql_integer">
+              AND s.userid = <cfqueryparam value="#arguments.userId#" cfsqltype="cf_sql_integer">
         </cfquery>
 
 <cfreturn allUrls.siteurl_list>
@@ -165,6 +171,7 @@
 
 <cffunction name="getPanelData" access="public" returntype="struct" hint="Retrieves all necessary data for a links panel in a single call.">
     <cfargument name="panelId" type="numeric" required="true">
+    <cfargument name="userId" type="numeric" required="true">
 
     <cfset var local = {}>
     <cfset var response = {}>
@@ -174,6 +181,7 @@
         SELECT sitetypeid, sitetypename, pntitle
         FROM sitetypes_user
         WHERE pnid = <cfqueryparam value="#arguments.panelId#" cfsqltype="cf_sql_integer">
+          AND userid = <cfqueryparam value="#arguments.userId#" cfsqltype="cf_sql_integer">
     </cfquery>
 
     <cfif local.panelDetails.recordCount>
@@ -188,6 +196,7 @@
             SELECT id, id as new_id, sitename, siteurl, siteicon
             FROM sitelinks_user
             WHERE siteTypeid = <cfqueryparam value="#local.panelDetails.sitetypeid#" cfsqltype="cf_sql_integer">
+              AND userid = <cfqueryparam value="#arguments.userId#" cfsqltype="cf_sql_integer">
               AND isdeleted = 0
             ORDER BY sitename
         </cfquery>
