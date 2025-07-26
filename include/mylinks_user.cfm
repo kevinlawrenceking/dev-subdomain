@@ -100,37 +100,73 @@
 <cfset siteurl_list = panelData.urlList>
 
 <cfif structKeyExists(siteTypeDetails, "sitetypeid")>
-    <!--- MODALS (Defined once) --->
+    <!--- MODALS (Defined directly) --->
     <cfoutput>
         <!--- Add Link Modal --->
-        <cfsavecontent variable="addModalHTML">
-            <cfoutput>
-                <cfset modalid = "addLinkModal_#siteTypeDetails.sitetypeid#">
-                <cfset modaltitle = "Add #siteTypeDetails.sitetypename# Link">
-                <cfinclude template="/include/modal_generic.cfm">
-            </cfoutput>
-        </cfsavecontent>
-        #addModalHTML#
+        <div class="modal fade" id="addLinkModal_#siteTypeDetails.sitetypeid#" tabindex="-1" aria-labelledby="addLinkModal_#siteTypeDetails.sitetypeid#Label" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addLinkModal_#siteTypeDetails.sitetypeid#Label">Add #siteTypeDetails.sitetypename# Link</h5>
+                        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                             <i class="mdi mdi-close-thick"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Content will be loaded here via JavaScript -->
+                        <div class="text-center p-4">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
         
         <!--- Update Link Modal --->
-        <cfsavecontent variable="updateModalHTML">
-            <cfoutput>
-                <cfset modalid = "updateLinkModal_#siteTypeDetails.sitetypeid#">
-                <cfset modaltitle = "Update #siteTypeDetails.sitetypename# Link">
-                <cfinclude template="/include/modal_generic.cfm">
-            </cfoutput>
-        </cfsavecontent>
-        #updateModalHTML#
+        <div class="modal fade" id="updateLinkModal_#siteTypeDetails.sitetypeid#" tabindex="-1" aria-labelledby="updateLinkModal_#siteTypeDetails.sitetypeid#Label" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="updateLinkModal_#siteTypeDetails.sitetypeid#Label">Update #siteTypeDetails.sitetypename# Link</h5>
+                        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                             <i class="mdi mdi-close-thick"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Content will be loaded here via JavaScript -->
+                        <div class="text-center p-4">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!--- Delete Link Modal --->
-        <cfsavecontent variable="deleteModalHTML">
-            <cfoutput>
-                <cfset modalid = "deleteLinkModal_#siteTypeDetails.sitetypeid#">
-                <cfset modaltitle = "Delete #siteTypeDetails.sitetypename# Link">
-                <cfinclude template="/include/modal_generic.cfm">
-            </cfoutput>
-        </cfsavecontent>
-        #deleteModalHTML#
+        <div class="modal fade" id="deleteLinkModal_#siteTypeDetails.sitetypeid#" tabindex="-1" aria-labelledby="deleteLinkModal_#siteTypeDetails.sitetypeid#Label" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="deleteLinkModal_#siteTypeDetails.sitetypeid#Label">Delete #siteTypeDetails.sitetypename# Link</h5>
+                        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                             <i class="mdi mdi-close-thick"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Content will be loaded here via JavaScript -->
+                        <div class="text-center p-4">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </cfoutput>
 
     <!--- Dashboard Card --->
