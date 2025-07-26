@@ -100,33 +100,35 @@
 <cfset siteurl_list = panelData.urlList>
 
 <cfif structKeyExists(siteTypeDetails, "sitetypeid")>
-<cfoutput>
     <!--- MODALS (Defined once) --->
-    <!--- Add Link Modal --->
-    <cfsavecontent variable="addModalHTML">
-        <cfset modalid = "addLinkModal_#siteTypeDetails.sitetypeid#">
-        <cfset modaltitle = "Add #siteTypeDetails.sitetypename# Link">
-        <cfinclude template="/include/modal_generic.cfm">
-    </cfsavecontent>
-    #addModalHTML#
-    
-    <!--- Update Link Modal --->
-    <cfsavecontent variable="updateModalHTML">
-        <cfset modalid = "updateLinkModal_#siteTypeDetails.sitetypeid#">
-        <cfset modaltitle = "Update #siteTypeDetails.sitetypename# Link">
-        <cfinclude template="/include/modal_generic.cfm">
-    </cfsavecontent>
-    #updateModalHTML#
+    <cfoutput>
+        <!--- Add Link Modal --->
+        <cfsavecontent variable="addModalHTML">
+            <cfset modalid = "addLinkModal_#siteTypeDetails.sitetypeid#">
+            <cfset modaltitle = "Add #siteTypeDetails.sitetypename# Link">
+            <cfinclude template="/include/modal_generic.cfm">
+        </cfsavecontent>
+        #addModalHTML#
+        
+        <!--- Update Link Modal --->
+        <cfsavecontent variable="updateModalHTML">
+            <cfset modalid = "updateLinkModal_#siteTypeDetails.sitetypeid#">
+            <cfset modaltitle = "Update #siteTypeDetails.sitetypename# Link">
+            <cfinclude template="/include/modal_generic.cfm">
+        </cfsavecontent>
+        #updateModalHTML#
 
-    <!--- Delete Link Modal --->
-    <cfsavecontent variable="deleteModalHTML">
-        <cfset modalid = "deleteLinkModal_#siteTypeDetails.sitetypeid#">
-        <cfset modaltitle = "Delete #siteTypeDetails.sitetypename# Link">
-        <cfinclude template="/include/modal_generic.cfm">
-    </cfsavecontent>
-    #deleteModalHTML#
+        <!--- Delete Link Modal --->
+        <cfsavecontent variable="deleteModalHTML">
+            <cfset modalid = "deleteLinkModal_#siteTypeDetails.sitetypeid#">
+            <cfset modaltitle = "Delete #siteTypeDetails.sitetypename# Link">
+            <cfinclude template="/include/modal_generic.cfm">
+        </cfsavecontent>
+        #deleteModalHTML#
+    </cfoutput>
 
     <!--- Dashboard Card --->
+    <cfoutput>
     <div class="card grid-item loaded" data-id="#dashboards.pnid#">
         <div class="card-header" id="heading_system_#dashboards.currentrow#">
             <h5 class="m-0">
@@ -194,7 +196,7 @@
             </div>
         </div>
     </div>
-</cfoutput>
+    </cfoutput>
 <cfelse>
     <div class="alert alert-warning">Link panel could not be loaded. Panel details not found for PNID: #dashboards.pnid#</div>
 </cfif>
