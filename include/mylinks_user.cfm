@@ -148,21 +148,15 @@
                         
                         <div class="link-actions">
                             <button class="btn btn-light border btn-xs edit-link-btn" 
-                                    data-bs-toggle="modal" 
-                                    data-bs-target="##updateLinkModal_#siteTypeDetails.sitetypeid#"
                                     data-link-id="#mylinks_user.id#"
                                     data-sitetype-id="#siteTypeDetails.sitetypeid#"
-                                    title="Edit Link"
-                                    onclick="event.preventDefault(); event.stopPropagation();">
+                                    title="Edit Link">
                                 <i class="fas fa-edit"></i>
                             </button>
                             <button class="btn btn-light border btn-xs delete-link-btn" 
-                                    data-bs-toggle="modal" 
-                                    data-bs-target="##deleteLinkModal_#siteTypeDetails.sitetypeid#"
                                     data-link-id="#mylinks_user.id#"
                                     data-sitetype-id="#siteTypeDetails.sitetypeid#"
-                                    title="Delete Link"
-                                    onclick="event.preventDefault(); event.stopPropagation();">
+                                    title="Delete Link">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
                         </div>
@@ -190,8 +184,6 @@
             
             <div>
                 <button class="btn btn-sm btn-light border add-link-btn" 
-                   data-bs-toggle="modal" 
-                   data-bs-target="##addLinkModal_#siteTypeDetails.sitetypeid#"
                    data-sitetype-id="#siteTypeDetails.sitetypeid#">
                     <i class="fe-plus-circle"></i> Add Link
                 </button>
@@ -205,46 +197,41 @@
 
 <script>
 $(document).ready(function() {
-    // Use a more specific container if possible, otherwise document is fine.
-    var container = $('#linksContainer_#siteTypeDetails.sitetypeid#').closest('.card');
+    var container = $('##linksContainer_#siteTypeDetails.sitetypeid#').closest('.card');
+
+    function handleModalLoad(e, url, modalTarget) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        $(modalTarget).find('.modal-body').html('<div class="text-center p-4"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>');
+        $(modalTarget).modal('show');
+        $(modalTarget).find('.modal-body').load(url);
+    }
 
     // EDIT LINK
     container.on('click', '.edit-link-btn', function(e) {
-        e.preventDefault();
         var linkId = $(this).data('link-id');
         var sitetypeId = $(this).data('sitetype-id');
-        var modalTarget = `#updateLinkModal_${sitetypeId}`;
+        var modalTarget = `##updateLinkModal_${sitetypeId}`;
         var url = `/include/remotelinkUpdate.cfm?userid=#userid#&new_id=${linkId}&target=dashboard_new`;
-        
-        // Load content into the modal body
-        $(modalTarget).find('.modal-body').load(url, function() {
-            $(modalTarget).modal('show');
-        });
+        handleModalLoad(e, url, modalTarget);
     });
 
     // DELETE LINK
     container.on('click', '.delete-link-btn', function(e) {
-        e.preventDefault();
         var linkId = $(this).data('link-id');
         var sitetypeId = $(this).data('sitetype-id');
-        var modalTarget = `#deleteLinkModal_${sitetypeId}`;
+        var modalTarget = `##deleteLinkModal_${sitetypeId}`;
         var url = `/include/remoteDeleteFormLink.cfm?userid=#userid#&new_id=${linkId}&target=dashboard_new`;
-
-        $(modalTarget).find('.modal-body').load(url, function() {
-            $(modalTarget).modal('show');
-        });
+        handleModalLoad(e, url, modalTarget);
     });
 
     // ADD LINK
     container.on('click', '.add-link-btn', function(e) {
-        e.preventDefault();
         var sitetypeId = $(this).data('sitetype-id');
-        var modalTarget = `#addLinkModal_${sitetypeId}`;
+        var modalTarget = `##addLinkModal_${sitetypeId}`;
         var url = `/include/remotelinkAdd.cfm?new_sitetypeid=${sitetypeId}&userid=#userid#&target=dashboard_new`;
-
-        $(modalTarget).find('.modal-body').load(url, function() {
-            $(modalTarget).modal('show');
-        });
+        handleModalLoad(e, url, modalTarget);
     });
 
     // Function to open all URLs
