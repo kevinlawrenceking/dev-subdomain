@@ -138,6 +138,13 @@ $(window).on('load', function() {
         margin: 0 auto !important;
     }
     
+    .avatar-center {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+    }
+    
     .current-avatar:hover {
         transform: scale(1.05);
         box-shadow: 0 4px 8px rgba(0,0,0,0.15);
@@ -358,7 +365,9 @@ $(window).on('load', function() {
             <div class="text-center mb-4">
                 <h5 class="card-title mb-3">Current Avatar</h5>
                 <cfoutput>
-                    <img src="#image_url#?ver=#rand()#" alt="Current Avatar" class="current-avatar" id="current-avatar-img">
+                    <div class="avatar-center">
+                        <img src="#image_url#?ver=#rand()#" alt="Current Avatar" class="current-avatar" id="current-avatar-img">
+                    </div>
                 </cfoutput>
             </div>
 
