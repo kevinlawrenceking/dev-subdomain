@@ -33,47 +33,67 @@
 
 <!-- Main Upload Script -->
 <script>
-// Simple approach - just check periodically if everything is ready
-function checkAndInitialize() {
+// Enhanced Croppie detection and initialization
+function checkCroppieAvailability() {
+    return typeof $ !== 'undefined' && 
+           typeof $.fn !== 'undefined' && 
+           typeof $.fn.croppie !== 'undefined';
+}
+
+function initializeWhenReady() {
+    // Check if already initialized
+    if (window.uploadInterfaceInitialized) return;
+    
+    console.log('Checking readiness...');
+    console.log('jQuery available:', typeof $ !== 'undefined');
+    console.log('Croppie available:', checkCroppieAvailability());
+    
+    // Wait for both jQuery and DOM to be ready
     if (typeof $ !== 'undefined' && document.readyState === 'complete') {
-        // Wait a bit more for Croppie to be available
+        // Give Croppie a moment to load if it hasn't yet
         setTimeout(function() {
             initializeUploadApp();
-        }, 500);
+        }, 100);
         return true;
     }
     return false;
 }
 
-// Try to initialize when DOM is ready
+// Try multiple initialization strategies
 $(document).ready(function() {
-    if (!checkAndInitialize()) {
-        // If not ready, keep trying
-        const checkInterval = setInterval(function() {
-            if (checkAndInitialize()) {
-                clearInterval(checkInterval);
-            }
-        }, 200);
+    console.log('DOM ready, attempting initialization...');
+    
+    // Try immediate initialization
+    if (initializeWhenReady()) {
+        return;
+    }
+    
+    // If not ready, check periodically
+    let attempts = 0;
+    const maxAttempts = 50; // 10 seconds total
+    
+    const checkInterval = setInterval(function() {
+        attempts++;
         
-        // Give up after 10 seconds
-        setTimeout(function() {
+        if (initializeWhenReady() || attempts >= maxAttempts) {
             clearInterval(checkInterval);
-            if (!window.uploadInterfaceInitialized) {
-                console.warn('Timeout reached, initializing in basic mode');
-                window.croppieUnavailable = true;
+            
+            if (attempts >= maxAttempts && !window.uploadInterfaceInitialized) {
+                console.warn('Max attempts reached, forcing initialization...');
                 initializeUploadApp();
             }
-        }, 10000);
-    }
+        }
+    }, 200);
 });
 
-// Also try when window loads
+// Backup initialization on window load
 $(window).on('load', function() {
     setTimeout(function() {
         if (!window.uploadInterfaceInitialized) {
+            console.log('Window load backup initialization...');
             initializeUploadApp();
         }
-    }, 1000);
+    }, 500);
 });
 </script>
 
@@ -461,17 +481,24 @@ function initializeUploadApp() {
     
     console.log('Initializing upload interface...');
     
-    // Check if Croppie is available
-    const useCroppie = typeof $ !== 'undefined' && 
-                      typeof $.fn !== 'undefined' && 
-                      typeof $.fn.croppie !== 'undefined' && 
-                      !window.croppieUnavailable;
+    // Enhanced Croppie detection
+    const jQueryAvailable = typeof $ !== 'undefined' && typeof $.fn !== 'undefined';
+    const croppieAvailable = jQueryAvailable && typeof $.fn.croppie !== 'undefined';
     
-    console.log('Croppie available:', useCroppie);
+    console.log('jQuery available:', jQueryAvailable);
+    console.log('Croppie plugin available:', croppieAvailable);
+    
+    // Use Croppie unless explicitly disabled or unavailable
+    const useCroppie = croppieAvailable && !window.croppieUnavailable;
+    
+    console.log('Will use Croppie:', useCroppie);
     
     if (!useCroppie) {
-        console.warn('Using basic upload mode');
+        console.warn('Using basic upload mode - Croppie not available');
         $('#crop-section h5').html('<i class="fe-image me-2"></i>Preview Your Image');
+    } else {
+        console.log('Croppie mode enabled - full cropping functionality available');
+        $('#crop-section h5').html('<i class="fe-crop me-2"></i>Crop Your Image');
     }
     
     // Modern file validation
@@ -482,9 +509,12 @@ function initializeUploadApp() {
     let currentStep = 1;
     let selectedImageData = null;
     
-    // Initialize croppie with error handling
+    // Initialize croppie with enhanced error handling
     function initializeCroppie() {
+        console.log('Initializing Croppie...');
+        
         if (!useCroppie) {
+            console.log('Using basic preview mode');
             // Basic preview mode
             $('#upload-input').html(`
                 <div style="width: <cfoutput>#picsize#</cfoutput>px; height: <cfoutput>#picsize#</cfoutput>px; 
@@ -499,10 +529,21 @@ function initializeUploadApp() {
         }
         
         try {
+            console.log('Creating Croppie instance...');
+            
+            // Clean up any existing instance
             if ($uploadCrop) {
-                $uploadCrop.croppie('destroy');
+                try {
+                    $uploadCrop.croppie('destroy');
+                } catch (e) {
+                    console.log('Note: Previous Croppie instance cleanup:', e.message);
+                }
             }
             
+            // Clear the container
+            $('#upload-input').empty();
+            
+            // Create new Croppie instance
             $uploadCrop = $('#upload-input').croppie({
                 enableExif: true,
                 url: '<cfoutput>#image_url#</cfoutput>?ver=<cfoutput>#rand()#</cfoutput>',
@@ -518,13 +559,27 @@ function initializeUploadApp() {
                 showZoomer: true,
                 enableOrientation: true
             });
+            
+            console.log('Croppie instance created successfully');
+            
         } catch (error) {
             console.error('Error initializing Croppie:', error);
             showErrorMessage('Failed to initialize image cropper. Using basic preview mode.');
+            
+            // Fall back to basic mode
             window.croppieUnavailable = true;
-            // Retry in basic mode by updating the flag and calling again
-            useCroppie = false;
-            initializeCroppie();
+            $('#crop-section h5').html('<i class="fe-image me-2"></i>Preview Your Image');
+            
+            // Retry in basic mode
+            $('#upload-input').html(`
+                <div style="width: <cfoutput>#picsize#</cfoutput>px; height: <cfoutput>#picsize#</cfoutput>px; 
+                     border: 2px dashed ##ddd; border-radius: 50%; margin: 0 auto; 
+                     display: flex; align-items: center; justify-content: center; 
+                     background-size: cover; background-position: center; 
+                     background-image: url('<cfoutput>#image_url#</cfoutput>?ver=<cfoutput>#rand()#</cfoutput>');">
+                    <span style="color: ##999; text-align: center;">Current Avatar</span>
+                </div>
+            `);
         }
     }
     
@@ -818,12 +873,23 @@ function initializeUploadApp() {
                     showErrorMessage('Failed to save avatar. Please try again.');
                 }
             }
-        });
     }
     
-    // Initialize on load
+    // Initialize Croppie on load with debugging
+    console.log('About to initialize Croppie...');
+    console.log('Current useCroppie value:', useCroppie);
+    
     setTimeout(function() {
+        console.log('Running delayed Croppie initialization...');
         initializeCroppie();
+        
+        // Log the final state
+        console.log('Upload interface fully initialized');
+        console.log('Croppie mode active:', useCroppie && !window.croppieUnavailable);
+        
+        if (useCroppie && $uploadCrop) {
+            console.log('Croppie instance created successfully');
+        }
     }, 100);
 }
 </script>
