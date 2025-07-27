@@ -28,8 +28,28 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.css">
 <link rel="stylesheet" href="/app/assets/css/croppie.css">
 
-<!-- Load Croppie JS with simple fallback -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.js"></script>
+<!-- Load Croppie JS with fallback -->
+<script>
+// Check if Croppie loaded from CDN, if not try alternative
+function loadCroppie() {
+    if (typeof Croppie === 'undefined') {
+        console.log('Loading Croppie from alternative source...');
+        const script = document.createElement('script');
+        script.src = 'https://unpkg.com/croppie@2.6.5/croppie.min.js';
+        script.onload = function() {
+            console.log('Croppie loaded from unpkg');
+        };
+        script.onerror = function() {
+            console.warn('Croppie failed to load from all sources');
+            window.croppieUnavailable = true;
+        };
+        document.head.appendChild(script);
+    } else {
+        console.log('Croppie available from primary CDN');
+    }
+}
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.js" onload="console.log('Croppie loaded from cdnjs')" onerror="loadCroppie()"></script>
 
 <!-- Main Upload Script -->
 <script>
