@@ -55,15 +55,9 @@ $(document).ready(function() {
 
 // Simplified Croppie detection
 function checkCroppieAvailability() {
-    const hasGlobalCroppie = typeof Croppie !== 'undefined';
-    const hasJQueryCroppie = typeof $ !== 'undefined' && 
-                           typeof $.fn !== 'undefined' && 
-                           typeof $.fn.croppie !== 'undefined';
-    
+    const hasGlobalCroppie = typeof Croppie === 'function';
     console.log('Global Croppie available:', hasGlobalCroppie);
-    console.log('jQuery Croppie plugin available:', hasJQueryCroppie);
-    
-    return hasJQueryCroppie || hasGlobalCroppie;
+    return hasGlobalCroppie;
 }
 </script>
 
