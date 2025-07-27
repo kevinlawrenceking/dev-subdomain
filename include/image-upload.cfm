@@ -135,6 +135,7 @@ $(window).on('load', function() {
         object-fit: cover;
         overflow: hidden;
         display: block;
+        margin: 0 auto !important;
     }
     
     .current-avatar:hover {
