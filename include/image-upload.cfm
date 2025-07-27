@@ -55,9 +55,16 @@ function loadCroppie() {
 <script>
 // Enhanced Croppie detection and initialization
 function checkCroppieAvailability() {
-    return typeof $ !== 'undefined' && 
-           typeof $.fn !== 'undefined' && 
-           typeof $.fn.croppie !== 'undefined';
+    // Check multiple ways Croppie might be available
+    const hasGlobalCroppie = typeof Croppie !== 'undefined';
+    const hasJQueryCroppie = typeof $ !== 'undefined' && 
+                           typeof $.fn !== 'undefined' && 
+                           typeof $.fn.croppie !== 'undefined';
+    
+    console.log('Global Croppie available:', hasGlobalCroppie);
+    console.log('jQuery Croppie plugin available:', hasJQueryCroppie);
+    
+    return hasJQueryCroppie || hasGlobalCroppie;
 }
 
 function initializeWhenReady() {
@@ -66,7 +73,10 @@ function initializeWhenReady() {
     
     console.log('Checking readiness...');
     console.log('jQuery available:', typeof $ !== 'undefined');
-    console.log('Croppie available:', checkCroppieAvailability());
+    console.log('Document ready state:', document.readyState);
+    
+    const croppieAvailable = checkCroppieAvailability();
+    console.log('Croppie available:', croppieAvailable);
     
     // Wait for both jQuery and DOM to be ready
     if (typeof $ !== 'undefined' && document.readyState === 'complete') {
@@ -512,12 +522,16 @@ function initializeUploadApp() {
     
     console.log('Initializing upload interface...');
     
-    // Enhanced Croppie detection
+    // Enhanced Croppie detection with multiple fallbacks
     const jQueryAvailable = typeof $ !== 'undefined' && typeof $.fn !== 'undefined';
-    const croppieAvailable = jQueryAvailable && typeof $.fn.croppie !== 'undefined';
+    const globalCroppieAvailable = typeof Croppie !== 'undefined';
+    const jQueryCroppieAvailable = jQueryAvailable && typeof $.fn.croppie !== 'undefined';
+    const croppieAvailable = globalCroppieAvailable || jQueryCroppieAvailable;
     
     console.log('jQuery available:', jQueryAvailable);
-    console.log('Croppie plugin available:', croppieAvailable);
+    console.log('Global Croppie available:', globalCroppieAvailable);
+    console.log('jQuery Croppie plugin available:', jQueryCroppieAvailable);
+    console.log('Overall Croppie available:', croppieAvailable);
     
     // Use Croppie unless explicitly disabled or unavailable
     const useCroppie = croppieAvailable && !window.croppieUnavailable;
@@ -526,6 +540,7 @@ function initializeUploadApp() {
     
     if (!useCroppie) {
         console.warn('Using basic upload mode - Croppie not available');
+        console.warn('Croppie unavailable flag:', window.croppieUnavailable);
         $('#crop-section h5').html('<i class="fe-image me-2"></i>Preview Your Image');
     } else {
         console.log('Croppie mode enabled - full cropping functionality available');
@@ -939,6 +954,25 @@ function initializeUploadApp() {
         if (useCroppie && $uploadCrop) {
             console.log('Croppie instance created successfully');
         }
+        
+        // Add debug function to window for manual testing
+        window.debugCroppie = function() {
+            console.log('=== CROPPIE DEBUG INFO ===');
+            console.log('typeof Croppie:', typeof Croppie);
+            console.log('typeof $:', typeof $);
+            console.log('typeof $.fn:', typeof $ !== 'undefined' ? typeof $.fn : 'undefined');
+            console.log('typeof $.fn.croppie:', typeof $ !== 'undefined' && typeof $.fn !== 'undefined' ? typeof $.fn.croppie : 'undefined');
+            console.log('window.croppieUnavailable:', window.croppieUnavailable);
+            console.log('Upload interface initialized:', window.uploadInterfaceInitialized);
+            console.log('Current useCroppie value:', useCroppie);
+            console.log('=== END DEBUG INFO ===');
+        };
+        
+        // Auto-run debug after a delay
+        setTimeout(function() {
+            console.log('Running automatic Croppie debug check...');
+            window.debugCroppie();
+        }, 2000);
     }, 100);
 }
 </script>
