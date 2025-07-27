@@ -79,15 +79,6 @@ $(window).on('load', function() {
 
 <!-- Custom Styles for Modern Look -->
 <style>
-    .avatar-upload-container {
-        max-width: 900px;
-        margin: 2rem auto;
-        padding: 3rem;
-        background: #fff;
-        border: 1px solid rgba(0,0,0,0.1);
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }
-    
     .upload-card {
         border: 1px solid #dee2e6;
         background: #ffffff;
@@ -137,11 +128,13 @@ $(window).on('load', function() {
     .current-avatar {
         width: 100px;
         height: 100px;
-        border-radius: 50%;
+        border-radius: 50% !important;
         border: 3px solid #406e8e;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         transition: all 0.3s ease;
         object-fit: cover;
+        overflow: hidden;
+        display: block;
     }
     
     .current-avatar:hover {
@@ -326,22 +319,21 @@ $(window).on('load', function() {
 </style>
 
 <!-- Modern Avatar Upload Interface -->
-<div class="avatar-upload-container">
-    <!-- Header Section -->
-    <div class="text-center mb-4 fade-in">
-        <p class="text-muted fs-5 mb-0">
-            <cfoutput>Upload a new profile picture for <strong>#subtitle#</strong></cfoutput>
-        </p>
-        <div class="mt-3">
-            <small class="text-muted">
-                <i class="fe-info me-1"></i>
-                Supported formats: JPG, PNG, GIF (Max 5MB)
-            </small>
-        </div>
+<!-- Header Section -->
+<div class="text-center mb-4 fade-in">
+    <p class="text-muted fs-5 mb-0">
+        <cfoutput>Upload a new profile picture for <strong>#subtitle#</strong></cfoutput>
+    </p>
+    <div class="mt-3">
+        <small class="text-muted">
+            <i class="fe-info me-1"></i>
+            Supported formats: JPG, PNG, GIF (Max 5MB)
+        </small>
     </div>
+</div>
 
-    <!-- Step Indicator -->
-    <div class="step-indicator">
+<!-- Step Indicator -->
+<div class="step-indicator">
         <div class="step active" id="step1">
             <div class="step-number">1</div>
             <span>Select Image</span>
@@ -446,7 +438,6 @@ $(window).on('load', function() {
             </cfoutput>
         </div>
     </div>
-</div>
 
 <input type="hidden" name="picturebase" id="picturebase" value="" />
 
