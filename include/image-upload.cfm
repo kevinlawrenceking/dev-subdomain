@@ -29,73 +29,16 @@
 <link rel="stylesheet" href="/app/assets/css/croppie.css">
 
 <!-- Load Croppie JS with fallback -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.js"></script>
 <script>
-// Enhanced Croppie loading with jQuery plugin initialization
-function initializeCroppiePlugin() {
-    // Ensure Croppie and jQuery are loaded before initializing plugin
-    if (typeof Croppie === 'undefined') {
-        // Croppie library not loaded yet, retry shortly
-        setTimeout(initializeCroppiePlugin, 100);
-        return;
-    }
-    if (typeof $ === 'undefined' || typeof $.fn === 'undefined') {
-        // jQuery not ready yet, retry shortly
-        setTimeout(initializeCroppiePlugin, 100);
-        return;
-    }
-    if (!$.fn.croppie) {
-        console.log('Manually initializing Croppie jQuery plugin...');
-        
-        // This is the standard boilerplate for creating a jQuery plugin from a constructor
-        $.fn.croppie = function(options) {
-            var args = Array.prototype.slice.call(arguments, 1);
-            
-            if (typeof options === 'string') {
-                var ret;
-                this.each(function() {
-                    var instance = $(this).data('croppie');
-                    if (instance) {
-                        var method = instance[options];
-                        if ($.isFunction(method)) {
-                            var result = method.apply(instance, args);
-                            if (result !== undefined) {
-                                ret = result;
-                            }
-                        }
-                    }
-                });
-                return ret !== undefined ? ret : this;
-            } else {
-                return this.each(function() {
-                    var instance = new Croppie(this, options);
-                    $(this).data('croppie', instance);
-                });
-            }
-        };
-        console.log('Croppie jQuery plugin initialized manually.');
-    }
-}
-
-function loadCroppie() {
-    if (typeof Croppie === 'undefined') {
-        console.log('Loading Croppie from alternative source...');
-        const script = document.createElement('script');
-        script.src = 'https://unpkg.com/croppie@2.6.5/croppie.min.js';
-        script.onload = function() {
-            console.log('Croppie loaded from unpkg');
-            initializeCroppiePlugin();
-        };
-        script.onerror = function() {
-            console.warn('Croppie failed to load from all sources');
-            window.croppieUnavailable = true;
-        };
-        document.head.appendChild(script);
-    } else {
-        console.log('Croppie available from primary CDN');
-    }
+// Fallback loader if Croppie fails
+if (typeof Croppie === 'undefined') {
+    console.log('Croppie missing, loading from unpkg');
+    var _c = document.createElement('script');
+    _c.src = 'https://unpkg.com/croppie@2.6.5/croppie.min.js';
+    document.head.appendChild(_c);
 }
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.js" onload="console.log('Croppie loaded from cdnjs'); initializeCroppiePlugin();" onerror="loadCroppie()"></script>
 
 <!-- Main Upload Script -->
 <script>
