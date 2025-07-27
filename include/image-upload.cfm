@@ -83,38 +83,20 @@ $(window).on('load', function() {
         max-width: 900px;
         margin: 2rem auto;
         padding: 3rem;
-        background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
-        border-radius: 20px;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.12);
-        border: 1px solid rgba(0,0,0,0.05);
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .avatar-upload-container::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 4px;
-        background: linear-gradient(90deg, #007bff, #6f42c1, #e83e8c);
+        background: #fff;
+        border: 1px solid rgba(0,0,0,0.1);
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
     
     .upload-card {
-        border: none;
-        border-radius: 20px;
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
-        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-        overflow: hidden;
+        border: 1px solid #dee2e6;
+        background: #ffffff;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         transition: all 0.3s ease;
-        border: 2px solid rgba(0,123,255,0.1);
     }
     
     .upload-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
-        border-color: rgba(0,123,255,0.2);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
     }
     
     .upload-card:hover {
@@ -122,91 +104,57 @@ $(window).on('load', function() {
     }
     
     .upload-zone {
-        border: 3px dashed rgba(0,123,255,0.3);
-        border-radius: 20px;
-        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 2px dashed #406e8e;
+        background: #f8f9fa;
+        transition: all 0.3s ease;
         cursor: pointer;
-        position: relative;
-        overflow: hidden;
         min-height: 200px;
         display: flex;
         align-items: center;
         justify-content: center;
     }
     
-    .upload-zone::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: linear-gradient(45deg, transparent 30%, rgba(0,123,255,0.05) 50%, transparent 70%);
-        opacity: 0;
-        transition: opacity 0.3s ease;
-    }
-    
-    .upload-zone:hover::before {
-        opacity: 1;
-    }
-    
     .upload-zone:hover, .upload-zone.dragover {
-        border-color: #007bff;
-        background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-        transform: scale(1.02);
-        box-shadow: 0 8px 25px rgba(0,123,255,0.2);
+        border-color: #406e8e;
+        background: #e6f3ff;
     }
     
     .upload-zone.has-file {
         border-color: #28a745;
-        background: linear-gradient(135deg, #e8f5e8 0%, #d4edda 100%);
-        transform: scale(1.02);
-        box-shadow: 0 8px 25px rgba(40,167,69,0.2);
+        background: #d4edda;
     }
     
     .upload-icon {
-        font-size: 4rem;
-        color: rgba(0,123,255,0.6);
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        font-size: 3rem;
+        color: #406e8e;
+        transition: color 0.3s ease;
     }
     
     .upload-zone:hover .upload-icon {
-        color: #007bff;
-        transform: scale(1.1) translateY(-5px);
-        text-shadow: 0 4px 8px rgba(0,123,255,0.3);
+        color: #2d4a5f;
     }
     
     .current-avatar {
         width: 100px;
         height: 100px;
         border-radius: 50%;
-        border: 4px solid rgba(0,123,255,0.2);
-        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        border: 3px solid #406e8e;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         transition: all 0.3s ease;
         object-fit: cover;
     }
     
     .current-avatar:hover {
         transform: scale(1.05);
-        border-color: #007bff;
-        box-shadow: 0 12px 30px rgba(0,123,255,0.3);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
     }
     
     .crop-container {
-        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-        border-radius: 20px;
-        padding: 2.5rem;
-        margin: 2rem 0;
-        border: 2px solid rgba(0,123,255,0.1);
-        box-shadow: 0 8px 30px rgba(0,0,0,0.1);
-        transition: all 0.3s ease;
-    }
-    
-    .crop-container:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+        background: #ffffff;
+        border: 1px solid #dee2e6;
+        padding: 2rem;
+        margin: 1.5rem 0;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
     
     .step-indicator {
@@ -215,9 +163,8 @@ $(window).on('load', function() {
         justify-content: center;
         margin-bottom: 3rem;
         padding: 1.5rem;
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-        border-radius: 15px;
-        border: 1px solid rgba(0,0,0,0.05);
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
     }
     
     .step {
@@ -227,12 +174,10 @@ $(window).on('load', function() {
         font-weight: 600;
         font-size: 1.1rem;
         transition: all 0.3s ease;
-        position: relative;
     }
     
     .step.active {
-        color: #007bff;
-        transform: scale(1.05);
+        color: #406e8e;
     }
     
     .step.completed {
@@ -243,112 +188,59 @@ $(window).on('load', function() {
         width: 40px;
         height: 40px;
         border-radius: 50%;
-        background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+        background: #e9ecef;
         color: #495057;
         display: flex;
         align-items: center;
-        justify-content-center;
+        justify-content: center;
         font-weight: 700;
         margin-right: 1rem;
         font-size: 1rem;
-        border: 2px solid transparent;
         transition: all 0.3s ease;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        text-align: center;
+        line-height: 1;
     }
     
     .step.active .step-number {
-        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+        background: #406e8e;
         color: white;
-        border-color: rgba(0,123,255,0.3);
-        transform: scale(1.1);
-        box-shadow: 0 4px 15px rgba(0,123,255,0.4);
     }
     
     .step.completed .step-number {
-        background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+        background: #28a745;
         color: white;
-        border-color: rgba(40,167,69,0.3);
-        box-shadow: 0 4px 15px rgba(40,167,69,0.4);
     }
     
     .step-divider {
         flex: 1;
-        height: 3px;
-        background: linear-gradient(90deg, #dee2e6 0%, #adb5bd 50%, #dee2e6 100%);
+        height: 2px;
+        background: #dee2e6;
         margin: 0 1.5rem;
-        border-radius: 2px;
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .step-divider::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent 0%, rgba(0,123,255,0.6) 50%, transparent 100%);
-        transition: left 0.5s ease;
-    }
-    
-    .step.completed + .step-divider::before {
-        left: 0;
     }
     
     .btn-modern {
-        border-radius: 12px;
-        padding: 1rem 2rem;
-        font-weight: 700;
-        font-size: 1.1rem;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
         border: none;
-        position: relative;
-        overflow: hidden;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-    
-    .btn-modern::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-        transition: left 0.5s ease;
-    }
-    
-    .btn-modern:hover::before {
-        left: 100%;
     }
     
     .btn-primary-modern {
-        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+        background: #406e8e;
         color: white;
-        box-shadow: 0 4px 15px rgba(0,123,255,0.3);
+        border: 1px solid #406e8e;
     }
     
     .btn-primary-modern:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 15px 25px rgba(0,123,255,0.4);
-        background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
+        background: #2d4a5f;
+        border-color: #2d4a5f;
     }
     
     .file-info {
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-        border-radius: 15px;
-        padding: 1.5rem;
-        margin: 1.5rem 0;
-        border: 2px solid rgba(0,123,255,0.1);
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        transition: all 0.3s ease;
-    }
-    
-    .file-info:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        padding: 1rem;
+        margin: 1rem 0;
     }
     
     .success-animation {
@@ -436,10 +328,7 @@ $(window).on('load', function() {
 <!-- Modern Avatar Upload Interface -->
 <div class="avatar-upload-container">
     <!-- Header Section -->
-    <div class="text-center mb-5 fade-in">
-        <h2 class="text-gradient mb-3 fw-bold" style="font-size: 2.5rem;">
-            <i class="fe-user me-3"></i>Update Avatar
-        </h2>
+    <div class="text-center mb-4 fade-in">
         <p class="text-muted fs-5 mb-0">
             <cfoutput>Upload a new profile picture for <strong>#subtitle#</strong></cfoutput>
         </p>
