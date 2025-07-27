@@ -461,11 +461,22 @@ $(window).on('load', function() {
             <div class="mb-4">
                 <img id="final-avatar" src="" alt="New Avatar" class="current-avatar">
             </div>
-            <cfoutput>
-                <a href="#cookie.return_url#" class="btn btn-primary-modern">
-                    <i class="fe-arrow-right me-2"></i>Continue to Profile
-                </a>
-            </cfoutput>
+            <div class="d-flex justify-content-center gap-3">
+                <cfoutput>
+                    <a href="#cookie.return_url#" class="btn btn-primary-modern">
+                        <i class="fe-arrow-right me-2"></i>Continue to Profile
+                    </a>
+                </cfoutput>
+                <button type="button" class="btn btn-outline-secondary btn-modern" onclick="window.location.reload();">
+                    <i class="fe-refresh-cw me-2"></i>Refresh Page
+                </button>
+            </div>
+            <div class="mt-3">
+                <small class="text-muted">
+                    <i class="fe-info me-1"></i>
+                    If you don't see the updated avatar immediately, try refreshing the page
+                </small>
+            </div>
         </div>
     </div>
 
@@ -650,21 +661,16 @@ function initializeUploadApp() {
             
             if (useCroppie) {
                 // Initialize croppie with new image
-                if ($uploadCrop) {
-                    try {
-                        $uploadCrop.croppie('destroy');
-                    } catch (error) {
-                        console.warn('Error destroying previous croppie instance:', error);
-                    }
-                }
-                
                 try {
-                    // Destroy previous instance
+                    // Clean up any existing instance
                     if ($uploadCrop) {
                         $uploadCrop.croppie('destroy');
                     }
                     
-                    // Create fresh croppie instance
+                    // Clear the container completely
+                    $('#upload-input').empty();
+                    
+                    // Create fresh croppie instance WITHOUT the old image URL
                     $uploadCrop = $('#upload-input').croppie({
                         enableExif: true,
                         viewport: {
@@ -680,11 +686,14 @@ function initializeUploadApp() {
                         enableOrientation: true
                     });
                     
-                    // Bind the new image
+                    // Bind ONLY the new image
                     $uploadCrop.croppie('bind', {
                         url: e.target.result
                     }).then(function () {
                         console.log('New image loaded for cropping');
+                    }).catch(function (error) {
+                        console.error('Error binding new image:', error);
+                        showErrorMessage('Failed to load image for cropping. Please try again.');
                     });
                 } catch (error) {
                     console.error('Error initializing croppie for new image:', error);
@@ -864,8 +873,18 @@ function initializeUploadApp() {
                 $('#success-section').show();
                 $('#final-avatar').attr('src', imageData);
                 
-                // Update current avatar in header if it exists
-                $('#current-avatar-img').attr('src', imageData + '?v=' + new Date().getTime());
+                // Update current avatar with a cache-busting timestamp
+                const newTimestamp = new Date().getTime();
+                const currentAvatarUrl = '<cfoutput>#image_url#</cfoutput>' + '?v=' + newTimestamp;
+                $('#current-avatar-img').attr('src', currentAvatarUrl);
+                
+                // Update the session avatar if possible by forcing a small delay
+                setTimeout(function() {
+                    // Try to reload the avatar from server to ensure it's updated
+                    const serverAvatarUrl = '<cfoutput>#image_url#</cfoutput>' + '?v=' + (newTimestamp + 1000);
+                    $('#current-avatar-img').attr('src', serverAvatarUrl);
+                    $('#final-avatar').attr('src', serverAvatarUrl);
+                }, 2000);
                 
                 // Scroll to success section
                 $('html, body').animate({
