@@ -601,9 +601,9 @@ function initializeUploadApp() {
         
         for (let i = 1; i <= 3; i++) {
             if (i < step) {
-                $(`##step${i}`).addClass('completed');
+                $(`#step${i}`).addClass('completed');
             } else if (i === step) {
-                $(`##step${i}`).addClass('active');
+                $(`#step${i}`).addClass('active');
             }
         }
     }
