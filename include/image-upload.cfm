@@ -30,7 +30,7 @@
 
 <!-- Load Croppie JS with fallback -->
 <script>
-// Enhanced Croppie loading with jQuery plugin initialization
+// Simple Croppie loading
 function loadCroppie() {
     if (typeof Croppie === 'undefined') {
         console.log('Loading Croppie from alternative source...');
@@ -38,7 +38,6 @@ function loadCroppie() {
         script.src = 'https://unpkg.com/croppie@2.6.5/croppie.min.js';
         script.onload = function() {
             console.log('Croppie loaded from unpkg');
-            initializeCroppiePlugin();
         };
         script.onerror = function() {
             console.warn('Croppie failed to load from all sources');
@@ -47,84 +46,24 @@ function loadCroppie() {
         document.head.appendChild(script);
     } else {
         console.log('Croppie available from primary CDN');
-        initializeCroppiePlugin();
-    }
-}
-
-// Initialize Croppie jQuery plugin
-function initializeCroppiePlugin() {
-    if (typeof $ !== 'undefined' && typeof Croppie !== 'undefined' && !$.fn.croppie) {
-        console.log('Manually initializing Croppie jQuery plugin...');
-        
-        // Manual jQuery plugin initialization for Croppie
-        $.fn.croppie = function(method) {
-            var args = Array.prototype.slice.call(arguments, 1);
-            
-            return this.each(function() {
-                var element = this;
-                var $element = $(element);
-                var instance = $element.data('croppie');
-                
-                if (typeof method === 'string') {
-                    if (instance && typeof instance[method] === 'function') {
-                        var result = instance[method].apply(instance, args);
-                        if (method === 'result' || method === 'get') {
-                            return result;
-                        }
-                    }
-                } else {
-                    // Initialize new instance
-                    if (!instance) {
-                        var options = method || {};
-                        instance = new Croppie(element, options);
-                        $element.data('croppie', instance);
-                    }
-                }
-            });
-        };
-        
-        console.log('Croppie jQuery plugin initialized manually');
-        console.log('$.fn.croppie available:', typeof $.fn.croppie !== 'undefined');
-    } else if (typeof $.fn.croppie !== 'undefined') {
-        console.log('Croppie jQuery plugin already available');
     }
 }
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.js" onload="console.log('Croppie loaded from cdnjs'); initializeCroppiePlugin();" onerror="loadCroppie()"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.js" onload="console.log('Croppie loaded from cdnjs')" onerror="loadCroppie()"></script>
 
 <!-- Main Upload Script -->
 <script>
-// Enhanced Croppie detection and initialization
+// Simplified Croppie detection
 function checkCroppieAvailability() {
-    // Wait a bit for plugin initialization if needed
-    const maxWait = 50; // 50 attempts = ~5 seconds
-    let attempts = 0;
+    const hasGlobalCroppie = typeof Croppie !== 'undefined';
+    const hasJQueryCroppie = typeof $ !== 'undefined' && 
+                           typeof $.fn !== 'undefined' && 
+                           typeof $.fn.croppie !== 'undefined';
     
-    function checkNow() {
-        // Check multiple ways Croppie might be available
-        const hasGlobalCroppie = typeof Croppie !== 'undefined';
-        const hasJQueryCroppie = typeof $ !== 'undefined' && 
-                               typeof $.fn !== 'undefined' && 
-                               typeof $.fn.croppie !== 'undefined';
-        
-        console.log('Global Croppie available:', hasGlobalCroppie);
-        console.log('jQuery Croppie plugin available:', hasJQueryCroppie);
-        
-        // If we have global Croppie but not jQuery plugin, try to initialize
-        if (hasGlobalCroppie && !hasJQueryCroppie && attempts < maxWait) {
-            attempts++;
-            console.log(`Attempting to initialize Croppie plugin (attempt ${attempts}/${maxWait})`);
-            initializeCroppiePlugin();
-            
-            // Check again after a brief delay
-            setTimeout(checkNow, 100);
-            return false;
-        }
-        
-        return hasJQueryCroppie || hasGlobalCroppie;
-    }
+    console.log('Global Croppie available:', hasGlobalCroppie);
+    console.log('jQuery Croppie plugin available:', hasJQueryCroppie);
     
-    return checkNow();
+    return hasJQueryCroppie || hasGlobalCroppie;
 }
 
 function initializeWhenReady() {
@@ -821,15 +760,14 @@ function initializeUploadApp() {
                         enableOrientation: true
                     });
                     
-                    // Bind ONLY the new image
+                    // Bind ONLY the new image - simplified without promise handling
+                    console.log('Binding new image to Croppie...');
                     $uploadCrop.croppie('bind', {
                         url: e.target.result
-                    }).then(function () {
-                        console.log('New image loaded for cropping');
-                    }).catch(function (error) {
-                        console.error('Error binding new image:', error);
-                        showErrorMessage('Failed to load image for cropping. Please try again.');
                     });
+                    
+                    console.log('New image loaded for cropping');
+                    
                 } catch (error) {
                     console.error('Error initializing croppie for new image:', error);
                     showErrorMessage('Failed to prepare image for cropping. Please try again.');
@@ -962,17 +900,29 @@ function initializeUploadApp() {
         if (useCroppie && $uploadCrop) {
             // Use Croppie to get cropped result
             try {
-                $uploadCrop.croppie('result', {
+                console.log('Getting cropped result...');
+                var croppieResult = $uploadCrop.croppie('result', {
                     type: 'canvas',
                     size: 'viewport',
                     quality: 0.9
-                }).then(function(resp) {
-                    saveImageData(resp, $button, originalText);
-                }).catch(function(error) {
-                    console.error('Error getting cropped result:', error);
-                    showErrorMessage('Failed to process cropped image. Please try again.');
-                    $button.html(originalText).prop('disabled', false);
                 });
+                
+                // Handle both promise and direct return scenarios
+                if (croppieResult && typeof croppieResult.then === 'function') {
+                    // It's a promise
+                    croppieResult.then(function(resp) {
+                        console.log('Cropped result received via promise');
+                        saveImageData(resp, $button, originalText);
+                    }).catch(function(error) {
+                        console.error('Error getting cropped result via promise:', error);
+                        showErrorMessage('Failed to process cropped image. Please try again.');
+                        $button.html(originalText).prop('disabled', false);
+                    });
+                } else {
+                    // Direct return
+                    console.log('Cropped result received directly');
+                    saveImageData(croppieResult, $button, originalText);
+                }
             } catch (error) {
                 console.error('Error in crop save process:', error);
                 showErrorMessage('Failed to save cropped image. Please try again.');
@@ -1066,13 +1016,6 @@ function initializeUploadApp() {
             console.log('Upload interface initialized:', window.uploadInterfaceInitialized);
             console.log('Current useCroppie value:', useCroppie);
             
-            // Test manual plugin initialization
-            if (typeof Croppie !== 'undefined' && typeof $ !== 'undefined' && !$.fn.croppie) {
-                console.log('Attempting manual plugin initialization...');
-                initializeCroppiePlugin();
-                console.log('After manual init - $.fn.croppie:', typeof $.fn.croppie !== 'undefined');
-            }
-            
             // Test current avatar URL
             const avatarUrl = '<cfoutput>#image_url#</cfoutput>?ver=<cfoutput>#rand()#</cfoutput>';
             console.log('Current avatar URL:', avatarUrl);
@@ -1082,6 +1025,28 @@ function initializeUploadApp() {
             testImg.onload = () => console.log('✓ Avatar image loads successfully');
             testImg.onerror = () => console.log('✗ Avatar image failed to load');
             testImg.src = avatarUrl;
+            
+            // Test Croppie functionality
+            if (typeof $.fn.croppie !== 'undefined') {
+                console.log('✓ Croppie jQuery plugin is functional');
+                
+                // Test creating a temporary instance
+                try {
+                    const $testDiv = $('<div>').css({width: '100px', height: '100px'});
+                    $('body').append($testDiv);
+                    $testDiv.croppie({
+                        viewport: { width: 50, height: 50, type: 'circle' },
+                        boundary: { width: 100, height: 100 }
+                    });
+                    console.log('✓ Croppie instance creation test passed');
+                    $testDiv.croppie('destroy');
+                    $testDiv.remove();
+                } catch (e) {
+                    console.log('✗ Croppie instance creation test failed:', e.message);
+                }
+            } else {
+                console.log('✗ Croppie jQuery plugin not available');
+            }
             
             console.log('=== END DEBUG INFO ===');
         };
