@@ -429,7 +429,7 @@ $(window).on('load', function() {
             <h3 class="text-success mb-3">Avatar Updated Successfully!</h3>
             <p class="text-muted mb-4">Your profile picture has been updated and is now visible across the platform.</p>
             <div class="mb-4">
-                <img id="final-avatar" src="" alt="New Avatar" class="current-avatar">
+                <center><img id="final-avatar" src="" alt="New Avatar" class="current-avatar"></center>
             </div>
             <cfoutput>
                 <a href="#cookie.return_url#" class="btn btn-primary-modern">
