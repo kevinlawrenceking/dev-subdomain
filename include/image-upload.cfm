@@ -30,7 +30,41 @@
 
 <!-- Load Croppie JS with fallback -->
 <script>
-// Simple Croppie loading
+// Enhanced Croppie loading with jQuery plugin initialization
+function initializeCroppiePlugin() {
+    if (typeof $ !== 'undefined' && typeof Croppie !== 'undefined' && !$.fn.croppie) {
+        console.log('Manually initializing Croppie jQuery plugin...');
+        
+        // This is the standard boilerplate for creating a jQuery plugin from a constructor
+        $.fn.croppie = function(options) {
+            var args = Array.prototype.slice.call(arguments, 1);
+            
+            if (typeof options === 'string') {
+                var ret;
+                this.each(function() {
+                    var instance = $(this).data('croppie');
+                    if (instance) {
+                        var method = instance[options];
+                        if ($.isFunction(method)) {
+                            var result = method.apply(instance, args);
+                            if (result !== undefined) {
+                                ret = result;
+                            }
+                        }
+                    }
+                });
+                return ret !== undefined ? ret : this;
+            } else {
+                return this.each(function() {
+                    var instance = new Croppie(this, options);
+                    $(this).data('croppie', instance);
+                });
+            }
+        };
+        console.log('Croppie jQuery plugin initialized manually.');
+    }
+}
+
 function loadCroppie() {
     if (typeof Croppie === 'undefined') {
         console.log('Loading Croppie from alternative source...');
@@ -38,6 +72,7 @@ function loadCroppie() {
         script.src = 'https://unpkg.com/croppie@2.6.5/croppie.min.js';
         script.onload = function() {
             console.log('Croppie loaded from unpkg');
+            initializeCroppiePlugin();
         };
         script.onerror = function() {
             console.warn('Croppie failed to load from all sources');
@@ -49,10 +84,19 @@ function loadCroppie() {
     }
 }
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.js" onload="console.log('Croppie loaded from cdnjs')" onerror="loadCroppie()"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.js" onload="console.log('Croppie loaded from cdnjs'); initializeCroppiePlugin();" onerror="loadCroppie()"></script>
 
 <!-- Main Upload Script -->
 <script>
+// Simplified initialization flow
+$(document).ready(function() {
+    // Give scripts a moment to load and initialize
+    setTimeout(function() {
+        console.log('DOM ready, initializing upload app...');
+        initializeUploadApp();
+    }, 500); // A generous delay to ensure all scripts are ready
+});
+
 // Simplified Croppie detection
 function checkCroppieAvailability() {
     const hasGlobalCroppie = typeof Croppie !== 'undefined';
@@ -65,64 +109,6 @@ function checkCroppieAvailability() {
     
     return hasJQueryCroppie || hasGlobalCroppie;
 }
-
-function initializeWhenReady() {
-    // Check if already initialized
-    if (window.uploadInterfaceInitialized) return;
-    
-    console.log('Checking readiness...');
-    console.log('jQuery available:', typeof $ !== 'undefined');
-    console.log('Document ready state:', document.readyState);
-    
-    // Wait for both jQuery and DOM to be ready
-    if (typeof $ !== 'undefined' && (document.readyState === 'complete' || document.readyState === 'interactive')) {
-        // Give Croppie more time to initialize the jQuery plugin
-        setTimeout(function() {
-            const croppieAvailable = checkCroppieAvailability();
-            console.log('Final Croppie check result:', croppieAvailable);
-            initializeUploadApp();
-        }, 500); // Increased delay for proper plugin initialization
-        return true;
-    }
-    return false;
-}
-
-// Try multiple initialization strategies
-$(document).ready(function() {
-    console.log('DOM ready, attempting initialization...');
-    
-    // Try immediate initialization
-    if (initializeWhenReady()) {
-        return;
-    }
-    
-    // If not ready, check periodically
-    let attempts = 0;
-    const maxAttempts = 50; // 10 seconds total
-    
-    const checkInterval = setInterval(function() {
-        attempts++;
-        
-        if (initializeWhenReady() || attempts >= maxAttempts) {
-            clearInterval(checkInterval);
-            
-            if (attempts >= maxAttempts && !window.uploadInterfaceInitialized) {
-                console.warn('Max attempts reached, forcing initialization...');
-                initializeUploadApp();
-            }
-        }
-    }, 200);
-});
-
-// Backup initialization on window load
-$(window).on('load', function() {
-    setTimeout(function() {
-        if (!window.uploadInterfaceInitialized) {
-            console.log('Window load backup initialization...');
-            initializeUploadApp();
-        }
-    }, 500);
-});
 </script>
 
 <!-- Custom Styles for Modern Look -->
