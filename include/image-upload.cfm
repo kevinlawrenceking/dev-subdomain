@@ -32,7 +32,18 @@
 <script>
 // Enhanced Croppie loading with jQuery plugin initialization
 function initializeCroppiePlugin() {
-    if (typeof $ !== 'undefined' && typeof Croppie !== 'undefined' && !$.fn.croppie) {
+    // Ensure Croppie and jQuery are loaded before initializing plugin
+    if (typeof Croppie === 'undefined') {
+        // Croppie library not loaded yet, retry shortly
+        setTimeout(initializeCroppiePlugin, 100);
+        return;
+    }
+    if (typeof $ === 'undefined' || typeof $.fn === 'undefined') {
+        // jQuery not ready yet, retry shortly
+        setTimeout(initializeCroppiePlugin, 100);
+        return;
+    }
+    if (!$.fn.croppie) {
         console.log('Manually initializing Croppie jQuery plugin...');
         
         // This is the standard boilerplate for creating a jQuery plugin from a constructor
@@ -90,11 +101,13 @@ function loadCroppie() {
 <script>
 // Simplified initialization flow
 $(document).ready(function() {
-    // Give scripts a moment to load and initialize
+    // Run plugin initializer in case script loaded before jQuery
+    initializeCroppiePlugin();
+    // Give scripts a moment to load and initialize upload app
     setTimeout(function() {
         console.log('DOM ready, initializing upload app...');
         initializeUploadApp();
-    }, 500); // A generous delay to ensure all scripts are ready
+    }, 500); // Delay to ensure Croppie plugin is registered
 });
 
 // Simplified Croppie detection
@@ -595,7 +608,13 @@ function initializeUploadApp() {
             $('#upload-input').empty();
             
             // Create new Croppie instance
-            $uploadCrop = $('#upload-input').croppie({
+            // Use global Croppie constructor directly
+            var uploadInputEl = document.getElementById('upload-input');
+            // Destroy previous instance if exists
+            if ($uploadCrop && typeof $uploadCrop.destroy === 'function') {
+                $uploadCrop.destroy();
+            }
+            $uploadCrop = new Croppie(uploadInputEl, {
                 enableExif: true,
                 url: '<cfoutput>#image_url#</cfoutput>?ver=<cfoutput>#rand()#</cfoutput>',
                 viewport: {
