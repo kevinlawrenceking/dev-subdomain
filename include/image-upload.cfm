@@ -80,15 +80,41 @@ $(window).on('load', function() {
 <!-- Custom Styles for Modern Look -->
 <style>
     .avatar-upload-container {
-        max-width: 600px;
-        margin: 0 auto;
+        max-width: 900px;
+        margin: 2rem auto;
+        padding: 3rem;
+        background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.12);
+        border: 1px solid rgba(0,0,0,0.05);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .avatar-upload-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #007bff, #6f42c1, #e83e8c);
     }
     
     .upload-card {
         border: none;
-        border-radius: 16px;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        border-radius: 20px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+        overflow: hidden;
         transition: all 0.3s ease;
+        border: 2px solid rgba(0,123,255,0.1);
+    }
+    
+    .upload-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        border-color: rgba(0,123,255,0.2);
     }
     
     .upload-card:hover {
@@ -96,165 +122,333 @@ $(window).on('load', function() {
     }
     
     .upload-zone {
-        border: 2px dashed ##e2e8f0;
-        border-radius: 12px;
-        background: ##f8fafc;
-        transition: all 0.3s ease;
+        border: 3px dashed rgba(0,123,255,0.3);
+        border-radius: 20px;
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         cursor: pointer;
         position: relative;
         overflow: hidden;
+        min-height: 200px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .upload-zone::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(45deg, transparent 30%, rgba(0,123,255,0.05) 50%, transparent 70%);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .upload-zone:hover::before {
+        opacity: 1;
     }
     
     .upload-zone:hover, .upload-zone.dragover {
-        border-color: ##3b82f6;
-        background: ##eff6ff;
+        border-color: #007bff;
+        background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+        transform: scale(1.02);
+        box-shadow: 0 8px 25px rgba(0,123,255,0.2);
     }
     
     .upload-zone.has-file {
-        border-color: ##10b981;
-        background: ##f0fdf4;
+        border-color: #28a745;
+        background: linear-gradient(135deg, #e8f5e8 0%, #d4edda 100%);
+        transform: scale(1.02);
+        box-shadow: 0 8px 25px rgba(40,167,69,0.2);
     }
     
     .upload-icon {
-        font-size: 3rem;
-        color: ##94a3b8;
-        transition: color 0.3s ease;
+        font-size: 4rem;
+        color: rgba(0,123,255,0.6);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
     
     .upload-zone:hover .upload-icon {
-        color: ##3b82f6;
+        color: #007bff;
+        transform: scale(1.1) translateY(-5px);
+        text-shadow: 0 4px 8px rgba(0,123,255,0.3);
     }
     
     .current-avatar {
-        width: 80px;
-        height: 80px;
+        width: 100px;
+        height: 100px;
         border-radius: 50%;
-        border: 3px solid ##e2e8f0;
+        border: 4px solid rgba(0,123,255,0.2);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        transition: all 0.3s ease;
         object-fit: cover;
     }
     
+    .current-avatar:hover {
+        transform: scale(1.05);
+        border-color: #007bff;
+        box-shadow: 0 12px 30px rgba(0,123,255,0.3);
+    }
+    
     .crop-container {
-        background: white;
-        border-radius: 12px;
-        padding: 1.5rem;
-        margin: 1rem 0;
+        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+        border-radius: 20px;
+        padding: 2.5rem;
+        margin: 2rem 0;
+        border: 2px solid rgba(0,123,255,0.1);
+        box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+    
+    .crop-container:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 40px rgba(0,0,0,0.15);
     }
     
     .step-indicator {
         display: flex;
         align-items: center;
-        margin-bottom: 2rem;
+        justify-content: center;
+        margin-bottom: 3rem;
+        padding: 1.5rem;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-radius: 15px;
+        border: 1px solid rgba(0,0,0,0.05);
     }
     
     .step {
         display: flex;
         align-items: center;
-        color: ##94a3b8;
-        font-weight: 500;
+        color: #6c757d;
+        font-weight: 600;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+        position: relative;
     }
     
     .step.active {
-        color: ##3b82f6;
+        color: #007bff;
+        transform: scale(1.05);
     }
     
     .step.completed {
-        color: ##10b981;
+        color: #28a745;
     }
     
     .step-number {
-        width: 32px;
-        height: 32px;
+        width: 40px;
+        height: 40px;
         border-radius: 50%;
-        background: ##e2e8f0;
-        color: ##64748b;
+        background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+        color: #495057;
         display: flex;
         align-items: center;
         justify-content-center;
-        font-weight: 600;
-        margin-right: 0.75rem;
-        font-size: 0.875rem;
+        font-weight: 700;
+        margin-right: 1rem;
+        font-size: 1rem;
+        border: 2px solid transparent;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
     
     .step.active .step-number {
-        background: ##3b82f6;
+        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
         color: white;
+        border-color: rgba(0,123,255,0.3);
+        transform: scale(1.1);
+        box-shadow: 0 4px 15px rgba(0,123,255,0.4);
     }
     
     .step.completed .step-number {
-        background: ##10b981;
+        background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
         color: white;
+        border-color: rgba(40,167,69,0.3);
+        box-shadow: 0 4px 15px rgba(40,167,69,0.4);
     }
     
     .step-divider {
         flex: 1;
-        height: 2px;
-        background: ##e2e8f0;
-        margin: 0 1rem;
+        height: 3px;
+        background: linear-gradient(90deg, #dee2e6 0%, #adb5bd 50%, #dee2e6 100%);
+        margin: 0 1.5rem;
+        border-radius: 2px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .step-divider::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent 0%, rgba(0,123,255,0.6) 50%, transparent 100%);
+        transition: left 0.5s ease;
+    }
+    
+    .step.completed + .step-divider::before {
+        left: 0;
     }
     
     .btn-modern {
-        border-radius: 8px;
-        padding: 0.75rem 1.5rem;
-        font-weight: 600;
-        transition: all 0.2s ease;
+        border-radius: 12px;
+        padding: 1rem 2rem;
+        font-weight: 700;
+        font-size: 1.1rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         border: none;
+        position: relative;
+        overflow: hidden;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .btn-modern::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        transition: left 0.5s ease;
+    }
+    
+    .btn-modern:hover::before {
+        left: 100%;
     }
     
     .btn-primary-modern {
-        background: linear-gradient(135deg, ##3b82f6 0%, ##1d4ed8 100%);
+        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
         color: white;
+        box-shadow: 0 4px 15px rgba(0,123,255,0.3);
     }
     
     .btn-primary-modern:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.4);
+        transform: translateY(-3px);
+        box-shadow: 0 15px 25px rgba(0,123,255,0.4);
+        background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
     }
     
     .file-info {
-        background: ##f1f5f9;
-        border-radius: 8px;
-        padding: 1rem;
-        margin: 1rem 0;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+        border: 2px solid rgba(0,123,255,0.1);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+    
+    .file-info:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
     }
     
     .success-animation {
-        animation: successPulse 0.6s ease-out;
+        animation: successPulse 0.8s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
     @keyframes successPulse {
-        0% { transform: scale(0.95); opacity: 0; }
-        50% { transform: scale(1.02); }
-        100% { transform: scale(1); opacity: 1; }
+        0% { 
+            transform: scale(0.9) rotate(-5deg); 
+            opacity: 0; 
+            filter: blur(2px);
+        }
+        30% { 
+            transform: scale(1.05) rotate(2deg); 
+            filter: blur(0px);
+        }
+        60% { 
+            transform: scale(0.98) rotate(-1deg); 
+        }
+        100% { 
+            transform: scale(1) rotate(0deg); 
+            opacity: 1; 
+        }
     }
     
     @media (max-width: 768px) {
         .avatar-upload-container {
-            margin: 0 1rem;
+            margin: 1rem;
+            padding: 2rem;
         }
         
         .step-indicator {
             flex-direction: column;
             gap: 1rem;
+            padding: 1rem;
         }
         
         .step-divider {
-            width: 2px;
-            height: 20px;
+            width: 3px;
+            height: 25px;
             margin: 0;
         }
+        
+        .upload-zone {
+            min-height: 150px;
+        }
+        
+        .btn-modern {
+            padding: 0.8rem 1.5rem;
+            font-size: 1rem;
+        }
+    }
+    
+    /* Additional Modern Utilities */
+    .fade-in {
+        animation: fadeIn 0.5s ease-in;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .loading-spinner {
+        width: 24px;
+        height: 24px;
+        border: 2px solid rgba(255,255,255,0.3);
+        border-radius: 50%;
+        border-top-color: #fff;
+        animation: spin 1s ease-in-out infinite;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    
+    .text-gradient {
+        background: linear-gradient(135deg, #007bff, #6f42c1);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
     }
 </style>
 
 <!-- Modern Avatar Upload Interface -->
 <div class="avatar-upload-container">
     <!-- Header Section -->
-    <div class="text-center mb-4">
-        <h2 class="text-dark mb-2">
-            <i class="fe-user me-2"></i>Update Avatar
+    <div class="text-center mb-5 fade-in">
+        <h2 class="text-gradient mb-3 fw-bold" style="font-size: 2.5rem;">
+            <i class="fe-user me-3"></i>Update Avatar
         </h2>
-        <p class="text-muted">
-            <cfoutput>Upload a new profile picture for #subtitle#</cfoutput>
+        <p class="text-muted fs-5 mb-0">
+            <cfoutput>Upload a new profile picture for <strong>#subtitle#</strong></cfoutput>
         </p>
+        <div class="mt-3">
+            <small class="text-muted">
+                <i class="fe-info me-1"></i>
+                Supported formats: JPG, PNG, GIF (Max 5MB)
+            </small>
+        </div>
     </div>
 
     <!-- Step Indicator -->
