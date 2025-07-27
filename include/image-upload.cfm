@@ -560,8 +560,11 @@ function initializeUploadApp() {
     // Show file information
     function showFileInfo(file) {
         const sizeInMB = (file.size / (1024 * 1024)).toFixed(2);
-        $('#file-name').text(file.name);
-        $('#file-details').text(`${sizeInMB}MB • ${file.type.split('/')[1].toUpperCase()}`);
+        const fileName = file.name.replace(/[^\w\s.-]/gi, ''); // Remove special characters
+        const fileType = file.type.split('/')[1].toUpperCase();
+        
+        $('#file-name').text(fileName);
+        $('#file-details').text(`${sizeInMB}MB • ${fileType}`);
         $('#file-info').show();
         $('#upload-zone').addClass('has-file');
     }
@@ -601,15 +604,32 @@ function initializeUploadApp() {
                 }
                 
                 try {
-                    initializeCroppie();
+                    // Destroy previous instance
+                    if ($uploadCrop) {
+                        $uploadCrop.croppie('destroy');
+                    }
                     
+                    // Create fresh croppie instance
+                    $uploadCrop = $('#upload-input').croppie({
+                        enableExif: true,
+                        viewport: {
+                            width: <cfoutput>#picsize#</cfoutput>,
+                            height: <cfoutput>#picsize#</cfoutput>,
+                            type: 'circle'
+                        },
+                        boundary: {
+                            width: <cfoutput>#inputsize#</cfoutput>,
+                            height: <cfoutput>#inputsize#</cfoutput>
+                        },
+                        showZoomer: true,
+                        enableOrientation: true
+                    });
+                    
+                    // Bind the new image
                     $uploadCrop.croppie('bind', {
                         url: e.target.result
                     }).then(function () {
-                        console.log('Image loaded for cropping');
-                    }).catch(function(error) {
-                        console.error('Error binding image to croppie:', error);
-                        showErrorMessage('Failed to load image for cropping. Please try a different image.');
+                        console.log('New image loaded for cropping');
                     });
                 } catch (error) {
                     console.error('Error initializing croppie for new image:', error);
@@ -680,25 +700,42 @@ function initializeUploadApp() {
     });
     
     // Click to browse
-    $('#upload-zone').on('click', function() {
-        $('#upload').click();
+    $('#upload-zone').on('click', function(e) {
+        // Prevent event bubbling
+        e.preventDefault();
+        e.stopPropagation();
+        $('#upload').trigger('click');
     });
     
     // File input change
-    $('#upload').on('change', function() {
+    $('#upload').on('change', function(e) {
         if (this.files && this.files[0]) {
             handleFileSelect(this.files[0]);
         }
     });
     
     // Change file button
-    $('#change-file').on('click', function() {
-        $('#upload').click();
+    $('#change-file').on('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // Reset state
+        $('#file-info').hide();
+        $('#upload-zone').removeClass('has-file');
+        $('#upload').val(''); // Clear file input
+        selectedImageData = null;
+        
+        // Trigger file browser
+        $('#upload').trigger('click');
     });
     
     // Back button
     $('#back-button').on('click', function() {
         $('#crop-section').hide();
+        $('#file-info').hide();
+        $('#upload-zone').removeClass('has-file');
+        $('#upload').val(''); // Clear file input
+        selectedImageData = null;
         updateStep(1);
         
         $('html, body').animate({
@@ -750,7 +787,13 @@ function initializeUploadApp() {
             data: {
                 "picturebase": imageData
             },
+            timeout: 30000, // 30 second timeout
             success: function(data) {
+                console.log('Upload successful:', data);
+                
+                // Reset button
+                $button.html(originalText).prop('disabled', false);
+                
                 // Show success section
                 updateStep(3);
                 $('#crop-section').hide();
@@ -758,7 +801,7 @@ function initializeUploadApp() {
                 $('#final-avatar').attr('src', imageData);
                 
                 // Update current avatar in header if it exists
-                $('#current-avatar-img').attr('src', imageData);
+                $('#current-avatar-img').attr('src', imageData + '?v=' + new Date().getTime());
                 
                 // Scroll to success section
                 $('html, body').animate({
@@ -767,8 +810,13 @@ function initializeUploadApp() {
             },
             error: function(xhr, status, error) {
                 console.error('Ajax error:', xhr, status, error);
-                showErrorMessage('Failed to save avatar. Please try again.');
                 $button.html(originalText).prop('disabled', false);
+                
+                if (status === 'timeout') {
+                    showErrorMessage('Upload timed out. Please try again with a smaller image.');
+                } else {
+                    showErrorMessage('Failed to save avatar. Please try again.');
+                }
             }
         });
     }
