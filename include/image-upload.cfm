@@ -553,8 +553,8 @@ function initializeUploadApp() {
                     type: 'circle'
                 },
                 boundary: {
-                    width: <cfoutput>#picsize#</cfoutput>,
-                    height: <cfoutput>#picsize#</cfoutput>
+                    width: <cfoutput>#inputsize#</cfoutput>,
+                    height: <cfoutput>#inputsize#</cfoutput>
                 },
                 showZoomer: true,
                 enableOrientation: true
@@ -873,6 +873,7 @@ function initializeUploadApp() {
                     showErrorMessage('Failed to save avatar. Please try again.');
                 }
             }
+        });
     }
     
     // Initialize Croppie on load with debugging
