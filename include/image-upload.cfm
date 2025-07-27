@@ -754,16 +754,25 @@ function initializeUploadApp() {
         }
     });
     
-    // Click to browse
+    // Click to browse - use more specific targeting to avoid infinite loop
     $('#upload-zone').on('click', function(e) {
-        // Prevent event bubbling
-        e.preventDefault();
+        // Only trigger if we're not clicking on the file input itself
+        if (e.target.id !== 'upload') {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Upload zone clicked, opening file browser...');
+            $('#upload')[0].click(); // Use native click instead of jQuery trigger
+        }
+    });
+    
+    // Prevent file input from bubbling up to parent
+    $('#upload').on('click', function(e) {
         e.stopPropagation();
-        $('#upload').trigger('click');
     });
     
     // File input change
     $('#upload').on('change', function(e) {
+        console.log('File input changed...');
         if (this.files && this.files[0]) {
             handleFileSelect(this.files[0]);
         }
