@@ -636,39 +636,33 @@ function initializeUploadApp() {
             errors.push('File size must be less than 5MB');
         }
         
-        return errors;
-    }
-    
-    // Show file information
-    function showFileInfo(file) {
-        const sizeInMB = (file.size / (1024 * 1024)).toFixed(2);
-        const fileName = file.name.replace(/[^\w\s.-]/gi, ''); // Remove special characters
-        const fileType = file.type.split('/')[1].toUpperCase();
-        
-        $('#file-name').text(fileName);
-        $('#file-details').text(`${sizeInMB}MB • ${fileType}`);
-        $('#file-info').show();
-        $('#upload-zone').addClass('has-file');
-    }
-    
-    // Handle file selection
-    function handleFileSelect(file) {
-        const errors = validateFile(file);
-        
-        if (errors.length > 0) {
-            showErrorMessage(errors.join('<br>'));
-            return;
-        }
-        
-        showFileInfo(file);
-        
-        const reader = new FileReader();
-        reader.onload = function (e) {
-            selectedImageData = e.target.result;
-            
-            // Show cropping section
-            $('#crop-section').show();
-            updateStep(2);
+        try {
+            console.log('Creating Croppie instance...');
+
+            // Clean up any existing instance
+            if ($uploadCrop && typeof $uploadCrop.destroy === 'function') {
+                try {
+                    $uploadCrop.destroy();
+                } catch (e) {
+                    console.log('Note: Previous Croppie instance cleanup error:', e.message);
+                }
+            }
+
+            // Clear the container
+            var uploadEl = document.getElementById('upload-input');
+            uploadEl.innerHTML = '';
+
+            // Create new Croppie instance directly
+            $uploadCrop = new Croppie(uploadEl, {
+                enableExif: true,
+                url: '<cfoutput>#image_url#</cfoutput>?ver=<cfoutput>#rand()#</cfoutput>',
+                viewport: { width: <cfoutput>#picsize#</cfoutput>, height: <cfoutput>#picsize#</cfoutput>, type: 'circle' },
+                boundary: { width: <cfoutput>#inputsize#</cfoutput>, height: <cfoutput>#inputsize#</cfoutput> },
+                showZoomer: true,
+                enableOrientation: true
+            });
+
+            console.log('Croppie instance created successfully');
             
             // Scroll to crop section
             $('html, body').animate({
@@ -676,42 +670,28 @@ function initializeUploadApp() {
             }, 500);
             
             if (useCroppie) {
-                // Initialize croppie with new image
                 try {
                     // Clean up any existing instance
-                    if ($uploadCrop) {
-                        $uploadCrop.croppie('destroy');
+                    if ($uploadCrop && typeof $uploadCrop.destroy === 'function') {
+                        $uploadCrop.destroy();
                     }
-                    
-                    // Clear the container completely
-                    $('#upload-input').empty();
-                    
-                    // Create fresh croppie instance WITHOUT the old image URL
-                    $uploadCrop = $('#upload-input').croppie({
+                    // Clear the container
+                    var uploadEl = document.getElementById('upload-input');
+                    uploadEl.innerHTML = '';
+                    // Create new Croppie instance directly
+                    $uploadCrop = new Croppie(uploadEl, {
                         enableExif: true,
-                        viewport: {
-                            width: <cfoutput>#picsize#</cfoutput>,
-                            height: <cfoutput>#picsize#</cfoutput>,
-                            type: 'circle'
-                        },
-                        boundary: {
-                            width: <cfoutput>#inputsize#</cfoutput>,
-                            height: <cfoutput>#inputsize#</cfoutput>
-                        },
+                        viewport: { width: <cfoutput>#picsize#</cfoutput>, height: <cfoutput>#picsize#</cfoutput>, type: 'circle' },
+                        boundary: { width: <cfoutput>#inputsize#</cfoutput>, height: <cfoutput>#inputsize#</cfoutput> },
                         showZoomer: true,
                         enableOrientation: true
                     });
-                    
-                    // Bind ONLY the new image - simplified without promise handling
+                    // Bind the new image to the instance
                     console.log('Binding new image to Croppie...');
-                    $uploadCrop.croppie('bind', {
-                        url: e.target.result
-                    });
-                    
+                    $uploadCrop.bind({ url: e.target.result });
                     console.log('New image loaded for cropping');
-                    
                 } catch (error) {
-                    console.error('Error initializing croppie for new image:', error);
+                    console.error('Error initializing Croppie for new image:', error);
                     showErrorMessage('Failed to prepare image for cropping. Please try again.');
                 }
             } else {
