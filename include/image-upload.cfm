@@ -30,7 +30,7 @@
 
 <!-- Load Croppie JS with fallback -->
 <script>
-// Check if Croppie loaded from CDN, if not try alternative
+// Enhanced Croppie loading with jQuery plugin initialization
 function loadCroppie() {
     if (typeof Croppie === 'undefined') {
         console.log('Loading Croppie from alternative source...');
@@ -38,6 +38,7 @@ function loadCroppie() {
         script.src = 'https://unpkg.com/croppie@2.6.5/croppie.min.js';
         script.onload = function() {
             console.log('Croppie loaded from unpkg');
+            initializeCroppiePlugin();
         };
         script.onerror = function() {
             console.warn('Croppie failed to load from all sources');
@@ -46,25 +47,84 @@ function loadCroppie() {
         document.head.appendChild(script);
     } else {
         console.log('Croppie available from primary CDN');
+        initializeCroppiePlugin();
+    }
+}
+
+// Initialize Croppie jQuery plugin
+function initializeCroppiePlugin() {
+    if (typeof $ !== 'undefined' && typeof Croppie !== 'undefined' && !$.fn.croppie) {
+        console.log('Manually initializing Croppie jQuery plugin...');
+        
+        // Manual jQuery plugin initialization for Croppie
+        $.fn.croppie = function(method) {
+            var args = Array.prototype.slice.call(arguments, 1);
+            
+            return this.each(function() {
+                var element = this;
+                var $element = $(element);
+                var instance = $element.data('croppie');
+                
+                if (typeof method === 'string') {
+                    if (instance && typeof instance[method] === 'function') {
+                        var result = instance[method].apply(instance, args);
+                        if (method === 'result' || method === 'get') {
+                            return result;
+                        }
+                    }
+                } else {
+                    // Initialize new instance
+                    if (!instance) {
+                        var options = method || {};
+                        instance = new Croppie(element, options);
+                        $element.data('croppie', instance);
+                    }
+                }
+            });
+        };
+        
+        console.log('Croppie jQuery plugin initialized manually');
+        console.log('$.fn.croppie available:', typeof $.fn.croppie !== 'undefined');
+    } else if (typeof $.fn.croppie !== 'undefined') {
+        console.log('Croppie jQuery plugin already available');
     }
 }
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.js" onload="console.log('Croppie loaded from cdnjs')" onerror="loadCroppie()"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.js" onload="console.log('Croppie loaded from cdnjs'); initializeCroppiePlugin();" onerror="loadCroppie()"></script>
 
 <!-- Main Upload Script -->
 <script>
 // Enhanced Croppie detection and initialization
 function checkCroppieAvailability() {
-    // Check multiple ways Croppie might be available
-    const hasGlobalCroppie = typeof Croppie !== 'undefined';
-    const hasJQueryCroppie = typeof $ !== 'undefined' && 
-                           typeof $.fn !== 'undefined' && 
-                           typeof $.fn.croppie !== 'undefined';
+    // Wait a bit for plugin initialization if needed
+    const maxWait = 50; // 50 attempts = ~5 seconds
+    let attempts = 0;
     
-    console.log('Global Croppie available:', hasGlobalCroppie);
-    console.log('jQuery Croppie plugin available:', hasJQueryCroppie);
+    function checkNow() {
+        // Check multiple ways Croppie might be available
+        const hasGlobalCroppie = typeof Croppie !== 'undefined';
+        const hasJQueryCroppie = typeof $ !== 'undefined' && 
+                               typeof $.fn !== 'undefined' && 
+                               typeof $.fn.croppie !== 'undefined';
+        
+        console.log('Global Croppie available:', hasGlobalCroppie);
+        console.log('jQuery Croppie plugin available:', hasJQueryCroppie);
+        
+        // If we have global Croppie but not jQuery plugin, try to initialize
+        if (hasGlobalCroppie && !hasJQueryCroppie && attempts < maxWait) {
+            attempts++;
+            console.log(`Attempting to initialize Croppie plugin (attempt ${attempts}/${maxWait})`);
+            initializeCroppiePlugin();
+            
+            // Check again after a brief delay
+            setTimeout(checkNow, 100);
+            return false;
+        }
+        
+        return hasJQueryCroppie || hasGlobalCroppie;
+    }
     
-    return hasJQueryCroppie || hasGlobalCroppie;
+    return checkNow();
 }
 
 function initializeWhenReady() {
@@ -75,15 +135,14 @@ function initializeWhenReady() {
     console.log('jQuery available:', typeof $ !== 'undefined');
     console.log('Document ready state:', document.readyState);
     
-    const croppieAvailable = checkCroppieAvailability();
-    console.log('Croppie available:', croppieAvailable);
-    
     // Wait for both jQuery and DOM to be ready
-    if (typeof $ !== 'undefined' && document.readyState === 'complete') {
-        // Give Croppie a moment to load if it hasn't yet
+    if (typeof $ !== 'undefined' && (document.readyState === 'complete' || document.readyState === 'interactive')) {
+        // Give Croppie more time to initialize the jQuery plugin
         setTimeout(function() {
+            const croppieAvailable = checkCroppieAvailability();
+            console.log('Final Croppie check result:', croppieAvailable);
             initializeUploadApp();
-        }, 100);
+        }, 500); // Increased delay for proper plugin initialization
         return true;
     }
     return false;
@@ -561,16 +620,37 @@ function initializeUploadApp() {
         
         if (!useCroppie) {
             console.log('Using basic preview mode');
-            // Basic preview mode
+            // Basic preview mode with better error handling
+            const currentAvatarUrl = '<cfoutput>#image_url#</cfoutput>?ver=<cfoutput>#rand()#</cfoutput>';
+            console.log('Loading current avatar:', currentAvatarUrl);
+            
             $('#upload-input').html(`
-                <div style="width: <cfoutput>#picsize#</cfoutput>px; height: <cfoutput>#picsize#</cfoutput>px; 
+                <div id="basic-preview" style="width: <cfoutput>#picsize#</cfoutput>px; height: <cfoutput>#picsize#</cfoutput>px; 
                      border: 2px dashed ##ddd; border-radius: 50%; margin: 0 auto; 
                      display: flex; align-items: center; justify-content: center; 
                      background-size: cover; background-position: center; 
-                     background-image: url('<cfoutput>#image_url#</cfoutput>?ver=<cfoutput>#rand()#</cfoutput>');">
-                    <span style="color: ##999; text-align: center;">Current Avatar</span>
+                     background-image: url('${currentAvatarUrl}'); 
+                     background-color: ##f8f9fa;">
+                    <span style="color: ##999; text-align: center; background: rgba(255,255,255,0.8); 
+                                padding: 8px; border-radius: 4px; font-size: 12px;">Current Avatar</span>
                 </div>
             `);
+            
+            // Test if image loads properly
+            const testImg = new Image();
+            testImg.onload = function() {
+                console.log('Current avatar loaded successfully');
+                // Remove the overlay text since image loaded
+                $('#basic-preview span').hide();
+            };
+            testImg.onerror = function() {
+                console.warn('Current avatar failed to load');
+                $('#basic-preview').css({
+                    'background-image': 'none',
+                    'background-color': '#f8f9fa'
+                }).find('span').text('No Current Avatar').show();
+            };
+            testImg.src = currentAvatarUrl;
             return;
         }
         
@@ -616,16 +696,36 @@ function initializeUploadApp() {
             window.croppieUnavailable = true;
             $('#crop-section h5').html('<i class="fe-image me-2"></i>Preview Your Image');
             
-            // Retry in basic mode
+            // Retry in basic mode with better error handling
+            const currentAvatarUrl = '<cfoutput>#image_url#</cfoutput>?ver=<cfoutput>#rand()#</cfoutput>';
+            console.log('Fallback: Loading current avatar:', currentAvatarUrl);
+            
             $('#upload-input').html(`
-                <div style="width: <cfoutput>#picsize#</cfoutput>px; height: <cfoutput>#picsize#</cfoutput>px; 
+                <div id="fallback-preview" style="width: <cfoutput>#picsize#</cfoutput>px; height: <cfoutput>#picsize#</cfoutput>px; 
                      border: 2px dashed ##ddd; border-radius: 50%; margin: 0 auto; 
                      display: flex; align-items: center; justify-content: center; 
                      background-size: cover; background-position: center; 
-                     background-image: url('<cfoutput>#image_url#</cfoutput>?ver=<cfoutput>#rand()#</cfoutput>');">
-                    <span style="color: ##999; text-align: center;">Current Avatar</span>
+                     background-image: url('${currentAvatarUrl}'); 
+                     background-color: ##f8f9fa;">
+                    <span style="color: ##999; text-align: center; background: rgba(255,255,255,0.8); 
+                                padding: 8px; border-radius: 4px; font-size: 12px;">Current Avatar</span>
                 </div>
             `);
+            
+            // Test if image loads properly
+            const testImg = new Image();
+            testImg.onload = function() {
+                console.log('Fallback: Current avatar loaded successfully');
+                $('#fallback-preview span').hide();
+            };
+            testImg.onerror = function() {
+                console.warn('Fallback: Current avatar failed to load');
+                $('#fallback-preview').css({
+                    'background-image': 'none',
+                    'background-color': '#f8f9fa'
+                }).find('span').text('No Current Avatar').show();
+            };
+            testImg.src = currentAvatarUrl;
         }
     }
     
@@ -965,6 +1065,24 @@ function initializeUploadApp() {
             console.log('window.croppieUnavailable:', window.croppieUnavailable);
             console.log('Upload interface initialized:', window.uploadInterfaceInitialized);
             console.log('Current useCroppie value:', useCroppie);
+            
+            // Test manual plugin initialization
+            if (typeof Croppie !== 'undefined' && typeof $ !== 'undefined' && !$.fn.croppie) {
+                console.log('Attempting manual plugin initialization...');
+                initializeCroppiePlugin();
+                console.log('After manual init - $.fn.croppie:', typeof $.fn.croppie !== 'undefined');
+            }
+            
+            // Test current avatar URL
+            const avatarUrl = '<cfoutput>#image_url#</cfoutput>?ver=<cfoutput>#rand()#</cfoutput>';
+            console.log('Current avatar URL:', avatarUrl);
+            
+            // Test image loading
+            const testImg = new Image();
+            testImg.onload = () => console.log('✓ Avatar image loads successfully');
+            testImg.onerror = () => console.log('✗ Avatar image failed to load');
+            testImg.src = avatarUrl;
+            
             console.log('=== END DEBUG INFO ===');
         };
         
