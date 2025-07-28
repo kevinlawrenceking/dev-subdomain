@@ -17,7 +17,7 @@
                     title="Update calendar settings" 
                     data-bs-toggle="modal" 
                     data-bs-target="#updatecal">
-                <i class="mdi mdi-pencil me-1"></i>Edit Settings
+                <i class="mdi mdi-square-edit-outline"></i>
             </button>
         </div>
         
@@ -104,7 +104,7 @@
                     title="Update newsletter settings" 
                     data-bs-toggle="modal" 
                     data-bs-target="#updatenewsletter">
-                <i class="mdi mdi-pencil me-1"></i>Edit Newsletter
+                <i class="mdi mdi-square-edit-outline"></i>
             </button>
         </div>
         
@@ -224,9 +224,6 @@
                          data-bs-target="##remoteUpdateaudsubmitsite_#subsites.submitsiteid#"
                          title="Click to edit this submission site">
                         <div class="site-card-header">
-                            <div class="site-icon">
-                                <i class="mdi mdi-web"></i>
-                            </div>
                             <div class="site-actions">
                                 <i class="mdi mdi-square-edit-outline edit-indicator"></i>
                             </div>
