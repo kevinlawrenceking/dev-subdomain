@@ -134,18 +134,48 @@
         // Check if filter row already exists, if so remove it first
         $('#filterRow').remove();
         
+        // Create filter row with cells only for visible columns
         let filterRow = '<tr id="filterRow">';
-        this.api().columns().every(function () {
-          filterRow += '<th></th>';
-        });
+        // Action column - no filter
+        filterRow += '<th></th>';
+        // Contact column - dropdown filter (only if visible)
+        filterRow += <cfoutput>'#contactVisible#'</cfoutput> === 'none' ? '' : '<th></th>';
+        // Start Date column - no filter
+        filterRow += '<th></th>';
+        // Reminder column - dropdown filter
+        filterRow += '<th></th>';
+        // Type column - dropdown filter
+        filterRow += '<th></th>';
         filterRow += '</tr>';
+        
         $('#remindersTable thead').append(filterRow);
 
-        const dropdownColumns = [1, 4, 6]; // Contact, Reminder, Type columns
+        // Define which visible columns should have dropdowns
+        const dropdownColumns = [];
+        let visibleColIndex = 0;
+        
+        // Action column (index 0) - no filter
+        visibleColIndex++;
+        
+        // Contact column (index 1) - add filter if visible
+        if (<cfoutput>'#contactVisible#'</cfoutput> !== 'none') {
+          dropdownColumns.push({dataIndex: 1, filterIndex: visibleColIndex});
+          visibleColIndex++;
+        }
+        
+        // Start Date column (index 2) - no filter
+        visibleColIndex++;
+        
+        // Reminder column (index 4) - add filter
+        dropdownColumns.push({dataIndex: 4, filterIndex: visibleColIndex});
+        visibleColIndex++;
+        
+        // Type column (index 6) - add filter
+        dropdownColumns.push({dataIndex: 6, filterIndex: visibleColIndex});
 
-        dropdownColumns.forEach(function (colIdx) {
-          const column = api.column(colIdx);
-          const th = $('#remindersTable thead tr:eq(1) th').eq(colIdx);
+        dropdownColumns.forEach(function (col) {
+          const column = api.column(col.dataIndex);
+          const th = $('#remindersTable thead tr:eq(1) th').eq(col.filterIndex);
           const select = $('<select class="form-select form-select-sm"><option value="">All</option></select>')
             .appendTo(th.empty())
             .on('change', function () {
