@@ -530,10 +530,12 @@ function initializeUploadApp() {
         try {
             console.log('Creating Croppie instance...');
             
-            // Clean up any existing instance
+            // Clean up any existing instance using direct constructor API
             if ($uploadCrop) {
                 try {
-                    $uploadCrop.croppie('destroy');
+                    if (typeof $uploadCrop.destroy === 'function') {
+                        $uploadCrop.destroy();
+                    }
                 } catch (e) {
                     console.log('Note: Previous Croppie instance cleanup:', e.message);
                 }
@@ -702,10 +704,16 @@ function initializeUploadApp() {
                         showZoomer: true,
                         enableOrientation: true
                     });
-                    // Bind the new image to the instance
+                    // Bind the new image to the instance using direct constructor API
                     console.log('Binding new image to Croppie...');
-                    $uploadCrop.bind({ url: e.target.result });
-                    console.log('New image loaded for cropping');
+                    $uploadCrop.bind({ url: e.target.result })
+                        .then(function() {
+                            console.log('New image loaded for cropping successfully');
+                        })
+                        .catch(function(error) {
+                            console.error('Error binding image to Croppie:', error);
+                            showErrorMessage('Failed to load image for cropping. Please try again.');
+                        });
                 } catch (error) {
                     console.error('Error initializing Croppie for new image:', error);
                     showErrorMessage('Failed to prepare image for cropping. Please try again.');
@@ -836,30 +844,32 @@ function initializeUploadApp() {
         $button.html('<i class="spinner-border spinner-border-sm me-2"></i>Saving...').prop('disabled', true);
         
         if (useCroppie && $uploadCrop) {
-            // Use Croppie to get cropped result
+            // Use Croppie direct constructor API to get cropped result
             try {
-                console.log('Getting cropped result...');
-                var croppieResult = $uploadCrop.croppie('result', {
+                console.log('Getting cropped result using direct constructor API...');
+                
+                // Use the .result() method from the direct constructor API
+                var croppieResult = $uploadCrop.result({
                     type: 'canvas',
                     size: 'viewport',
                     quality: 0.9
                 });
                 
-                // Handle both promise and direct return scenarios
+                // The direct constructor API always returns a promise
                 if (croppieResult && typeof croppieResult.then === 'function') {
-                    // It's a promise
+                    console.log('Processing cropped result promise...');
                     croppieResult.then(function(resp) {
-                        console.log('Cropped result received via promise');
+                        console.log('Cropped result received:', resp ? 'success' : 'empty');
                         saveImageData(resp, $button, originalText);
                     }).catch(function(error) {
-                        console.error('Error getting cropped result via promise:', error);
+                        console.error('Error getting cropped result:', error);
                         showErrorMessage('Failed to process cropped image. Please try again.');
                         $button.html(originalText).prop('disabled', false);
                     });
                 } else {
-                    // Direct return
-                    console.log('Cropped result received directly');
-                    saveImageData(croppieResult, $button, originalText);
+                    console.error('Expected promise from Croppie result, got:', typeof croppieResult);
+                    showErrorMessage('Failed to process cropped image. Please try again.');
+                    $button.html(originalText).prop('disabled', false);
                 }
             } catch (error) {
                 console.error('Error in crop save process:', error);
@@ -964,26 +974,30 @@ function initializeUploadApp() {
             testImg.onerror = () => console.log('✗ Avatar image failed to load');
             testImg.src = avatarUrl;
             
-            // Test Croppie functionality
-            if (typeof $.fn.croppie !== 'undefined') {
-                console.log('✓ Croppie jQuery plugin is functional');
+            // Test Croppie functionality with direct constructor
+            if (typeof Croppie === 'function') {
+                console.log('✓ Croppie global constructor is available');
                 
-                // Test creating a temporary instance
+                // Test creating a temporary instance with direct constructor
                 try {
-                    const $testDiv = $('<div>').css({width: '100px', height: '100px'});
-                    $('body').append($testDiv);
-                    $testDiv.croppie({
+                    const testEl = document.createElement('div');
+                    testEl.style.width = '100px';
+                    testEl.style.height = '100px';
+                    document.body.appendChild(testEl);
+                    
+                    const testCroppie = new Croppie(testEl, {
                         viewport: { width: 50, height: 50, type: 'circle' },
                         boundary: { width: 100, height: 100 }
                     });
-                    console.log('✓ Croppie instance creation test passed');
-                    $testDiv.croppie('destroy');
-                    $testDiv.remove();
+                    
+                    console.log('✓ Croppie direct constructor test passed');
+                    testCroppie.destroy();
+                    document.body.removeChild(testEl);
                 } catch (e) {
-                    console.log('✗ Croppie instance creation test failed:', e.message);
+                    console.log('✗ Croppie direct constructor test failed:', e.message);
                 }
             } else {
-                console.log('✗ Croppie jQuery plugin not available');
+                console.log('✗ Croppie global constructor not available');
             }
             
             console.log('=== END DEBUG INFO ===');
