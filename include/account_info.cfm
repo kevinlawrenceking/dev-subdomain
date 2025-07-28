@@ -1,60 +1,9 @@
-<!---
-================================================================================
-ACCOUNT_INFO.CFM - User Account Management Interface
-================================================================================
-
-Purpose:
-This file provides a comprehensive user account management interface within the
-TAO Relationship System. It handles user profile information, preferences,
-team management, branding, materials, and system settings through a tabbed
-interface design.
-
-TAO System Integration:
-- Part of the user account management system
-- Supports user profile maintenance and customization
-- Manages user preferences and system settings
-- Handles team member management and collaboration features
-- Integrates with materials and headshots management
-
-Database Tables:
-- actionusers_tbl (team member actions)
-- taousers (main user account table)
-- contactdetails (user contact information)
-- countries (country lookup)
-- regions (region lookup)
-- timezones (timezone settings)
-- dateformats (date format preferences)
-- User preference and settings tables
-
-Key Features:
-- Tab-based interface for different account sections
-- User profile information management
-- Dashboard preferences and customization
-- Team member management
-- Brand/essence management
-- Headshots and materials management
-- System preferences and settings
-- Billing information
-- Mobile-responsive design with redirection logic
-
-Dependencies:
-- jQuery for tab navigation and modal management
-- Bootstrap for UI components
-- Parsley for form validation
-- ColdFusion for server-side processing
-
-Modal Components:
-- Dashboard update modal
-- User account update modal
-- Add contact modal
-- Calendar preferences modal
-
-Author: TAO Development Team
-Last Updated: 2025
-================================================================================
+<!--- 
+    account_info.cfm - Optimized Version
+    Provides account management functionality with tab-based interface
 --->
 
-<!--- Parameter initialization --->
+<!--- Parameter Initialization --->
 <cfparam name="ctaction" default="view"/>
 <cfparam name="teamaction" default="view"/>
 <cfparam name="t2" default="0"/>
@@ -64,16 +13,12 @@ Last Updated: 2025
 <cfparam name="currentid" default="0"/>
 <cfparam name="new_region_id" default=""/>
 <cfparam name="new_countryid" default=""/>
-<cfparam name="def_region_id" default=""/>
-<cfparam name="DEF_COUNTRYID" default=""/>
-<cfparam name="REGION" default=""/>
-<cfparam name="NLETTER_YN" default=""/>
 
-<!--- Session variable setup --->
+<!--- Set Session Variables --->
 <cfset session.pgrtn="P"/>
 <cfset pgrtn="P"/>
 
-<!--- Include required query files --->
+<!--- Include Required Query Files --->
 <cfinclude template="/include/qry/countries_457_1.cfm"/>
 <cfinclude template="/include/qry/regions_518_1.cfm"/>
 <cfinclude template="/include/qry/timezones_547_1.cfm"/>
@@ -82,7 +27,7 @@ Last Updated: 2025
 <cfinclude template="/include/qry/details_1693_1.cfm"/>
 <cfinclude template="/include/qry/FindUser_1694_2.cfm"/>
 
-<!--- Action handling logic --->
+<!--- Action Handling --->
 <cfswitch expression="#ctaction#">
     <cfcase value="includeaction">
         <cfquery name="update">
@@ -108,7 +53,7 @@ Last Updated: 2025
     </cfcase>
 </cfswitch>
 
-<!--- Default values management --->
+<!--- Default Values Management --->
 <cfif new_region_id is "" and def_region_id is not "">
     <cfset new_region_id = def_region_id/>
 </cfif>
@@ -117,7 +62,7 @@ Last Updated: 2025
     <cfset new_countryid = def_countryid/>
 </cfif>
 
-<!--- Mobile redirection logic --->
+<!--- Mobile Redirection Logic --->
 <cfif devicetype is "mobile">
     <cfif t2 is "1">
         <cflocation url="/app/contact/?contactid=#contactid#&new_pgid=122"/>
@@ -128,17 +73,15 @@ Last Updated: 2025
     </cfif>
 </cfif>
 
-<!--- Current contact ID setup --->
 <cfoutput>
+    <!--- Set Current Contact ID --->
     <cfset CURRENTID = userContactid/>
 </cfoutput>
 
-<!--- Desktop layout and tab configuration --->
+<!--- Desktop Layout --->
 <cfif devicetype is not "mobile">
-    <!--- Tab configuration setup --->
+    <!--- Tab Configuration --->
     <cfinclude template="/include/tab_check_account.cfm"/>
-    
-    <!--- Tab expansion parameters --->
     <cfparam name="tab0_expand" default="false"/>
     <cfparam name="tab1_expand" default="false"/>
     <cfparam name="tab2_expand" default="false"/>
@@ -151,7 +94,7 @@ Last Updated: 2025
     <cfparam name="tab9_expand" default="false"/>
     <cfparam name="tab10_expand" default="false"/>
     
-    <!--- Default to Info tab if none selected --->
+    <!--- Default to Info Tab if none selected --->
     <cfif tab0_expand is "false" and tab1_expand is "false" and tab2_expand is "false" 
           and tab3_expand is "false" and tab4_expand is "false" and tab7_expand is "false" 
           and tab8_expand is "false" and tab9_expand is "false" and tab10_expand is "false">
@@ -159,43 +102,41 @@ Last Updated: 2025
         <cfset t0 = 1/>
     </cfif>
 
-    <!--- Modal setup and configuration --->
+    <!--- Define and Include Modals --->
     <cfset modalStructs = [
         {id: "dashboardupdate", title: "Dashboard Preferences", include: "/include/modal.cfm"},
         {id: "remoteUserUpdate", title: "Update Account", include: "/include/modal.cfm"},
         {id: "remoteAddContact", title: "Add Contact", include: "/include/modal.cfm"}
     ]>
     
-    <!--- Create modal components --->
+    <!--- Create Modal Components --->
     <cfloop array="#modalStructs#" index="modalData">
         <cfset modalid = modalData.id>
         <cfset modaltitle = modalData.title>
         <cfinclude template="#modalData.include#">
     </cfloop>
 
-    <!--- Modal initialization JavaScript --->
-    <cfoutput>
-        <script>
-            $(document).ready(function () {
-                // Dashboard update modal handler
-                $("##dashboardupdate").on("show.bs.modal", function (event) {
-                    $(this).find(".modal-body").load("/include/dashboardupdate.cfm?userid=#userid#");
-                });
-                
-                // User update modal handler
-                $("##remoteUserUpdate").on("show.bs.modal", function (event) {
-                    $(this).find(".modal-body").load("/include/remoteUserUpdate.cfm?userid=#userid#&src=account");
-                });
-                
-                // Add contact modal handler
-                $("##remoteAddContact").on("show.bs.modal", function (event) {
-                    $(this).find(".modal-body").load("/include/remoteAddContact.cfm?userid=#userid#&src=account");
-                });
-            });
-        </script>
-    </cfoutput>
+    <!--- JavaScript for Modal Loading --->
+    <script>
+    $(document).ready(function () {
+        // Dashboard update modal handler
+        $("#dashboardupdate").on("show.bs.modal", function (event) {
+            $(this).find(".modal-body").load("<cfoutput>/include/dashboardupdate.cfm?userid=#userid#</cfoutput>");
+        });
+        
+        // User update modal handler
+        $("#remoteUserUpdate").on("show.bs.modal", function (event) {
+            $(this).find(".modal-body").load("<cfoutput>/include/remoteUserUpdate.cfm?userid=#userid#&src=account</cfoutput>");
+        });
+        
+        // Add contact modal handler
+        $("#remoteAddContact").on("show.bs.modal", function (event) {
+            $(this).find(".modal-body").load("<cfoutput>/include/remoteAddContact.cfm?userid=#userid#&src=account</cfoutput>");
+        });
+    });
+    </script>
     
-    <!--- Calendar preferences modal --->
+    <!--- Calendar Update Modal --->
     <div id="updatecal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="standard-modalLabel">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -213,15 +154,15 @@ Last Updated: 2025
                         
                         <cfoutput>
                             <input type="hidden" name="userid" value="#userid#"/>
-                            <input type="hidden" name="ctaction" value="update_cal"/>
-                            <input type="hidden" name="t4" value="1"/>
                         </cfoutput>
+                        <input type="hidden" name="ctaction" value="update_cal"/>
+                        <input type="hidden" name="t4" value="1"/>
                         
-                        <!--- Time selection configuration --->
+                        <!--- Time Selection Fields --->
                         <cfset startTime = createTime(5, 0, 0)>
                         <cfset endTime = createTime(23, 45, 0)>
                         
-                        <!--- Start time selection --->
+                        <!--- Start Time Selection --->
                         <div class="form-group col-md-6">
                             <label for="calstarttime">Start Time<span class="text-danger">*</span></label>
                             <select class="form-control" name="calstarttime" id="calstarttime">
@@ -235,7 +176,7 @@ Last Updated: 2025
                             </select>
                         </div>
                         
-                        <!--- End time selection --->
+                        <!--- End Time Selection --->
                         <div class="form-group col-md-6">
                             <label for="calendtime">End Time<span class="text-danger">*</span></label>
                             <select class="form-control" name="calendtime" id="calendtime">
@@ -249,7 +190,7 @@ Last Updated: 2025
                             </select>
                         </div>
                         
-                        <!--- Rows per page selection --->
+                        <!--- Rows Per Page Selection --->
                         <div class="form-group col-md-6">
                             <label for="defrows">Rows Per Page<span class="text-danger">*</span></label>
                             <select class="form-control" name="defrows" id="defrows">
@@ -261,7 +202,7 @@ Last Updated: 2025
                             </select>
                         </div>
                         
-                        <!--- Date format selection --->
+                        <!--- Date Format Selection --->
                         <div class="form-group col-md-12">
                             <label for="dateformatid">Date Format</label>
                             <select class="form-control" name="dateformatid" id="dateformatid">
@@ -271,7 +212,11 @@ Last Updated: 2025
                             </select>
                         </div>
                         
-                        <!--- Timezone selection --->
+                        <cfoutput>
+                            <input type="hidden" name="viewtypeid" value="#details.viewtypeid#"/>
+                        </cfoutput>
+                        
+                        <!--- Timezone Selection --->
                         <div class="form-group col-md-12">
                             <label for="tzid">Timezone<span class="text-danger">*</span></label>
                             <select class="form-control" name="tzid" id="tzid" data-parsley-required data-parsley-error-message="Timezone is required">
@@ -281,11 +226,7 @@ Last Updated: 2025
                             </select>
                         </div>
                         
-                        <cfoutput>
-                            <input type="hidden" name="viewtypeid" value="#details.viewtypeid#"/>
-                        </cfoutput>
-                        
-                        <!--- Submit button --->
+                        <!--- Submit Button --->
                         <div class="form-group text-center col-md-12">
                             <button class="btn btn-primary editable-submit btn-sm waves-effect waves-light" type="submit" style="background-color: ##406e8e; border: ##406e8e;">Update</button>
                         </div>
@@ -295,117 +236,45 @@ Last Updated: 2025
         </div>
     </div>
 
-    <!--- Main content area with tabbed interface --->
+    <!--- Main Content Area with Tabs --->
     <div class="card mb-3">
         <div class="card-body">
-            <!--- Tab navigation --->
-           <ul class="nav nav-pills navtab-bg nav-justified p-1">
-
-    <cfoutput>
-
-      <li class="nav-item">
-        <a href="##info" data-bs-toggle="tab" aria-expanded="#tab0_expand#" class="nav-link<cfif #tab0_expand# is 'true'> active</cfif>">Info
-        </a>
-      </li>
-
-      <li class="nav-item">
-        <a href="##profile" data-bs-toggle="tab" aria-expanded="#tab1_expand#" class="nav-link<cfif #tab1_expand# is 'true'> active</cfif>">Dashboard
-        </a>
-      </li>
-
-      <li class="nav-item">
-        <a href="##myteam" data-bs-toggle="tab" aria-expanded="#tab2_expand#" class="nav-link<cfif #tab2_expand# is 'true'> active</cfif>">Team</a>
-      </li>
-
-      <li class="nav-item">
-        <a href="##mybrand" data-bs-toggle="tab" aria-expanded="#tab3_expand#" class="nav-link<cfif #tab3_expand# is 'true'> active</cfif>">Essence</a>
-      </li>
-
-      <li class="nav-item">
-        <a href="##myheadshots" data-bs-toggle="tab" aria-expanded="#tab8_expand#" class="nav-link<cfif #tab8_expand# is 'true'> active</cfif>">Headshots</a>
-      </li>
-
-      <li class="nav-item">
-        <a href="##mymaterials" data-bs-toggle="tab" aria-expanded="#tab9_expand#" class="nav-link<cfif #tab9_expand# is 'true'> active</cfif>">Materials</a>
-      </li>
-
-      <li class="nav-item">
-        <a href="##pref" data-bs-toggle="tab" aria-expanded="#tab4_expand#" class="nav-link<cfif #tab4_expand# is 'true'> active</cfif>">Preferences</a>
-      </li>
-
-      <li class="nav-item">
-        <a href="##systems" data-bs-toggle="tab" aria-expanded="#tab7_expand#" class="nav-link<cfif #tab7_expand# is 'true'> active</cfif>">Systems</a>
-      </li>
-
-      <li class="nav-item">
-        <a href="##billing" data-bs-toggle="tab" aria-expanded="#tab10_expand#" class="nav-link<cfif #tab10_expand# is 'true'> active</cfif>">Billing</a>
-      </li>
-
-      <span class="ml-auto padding-bottom:11px;text-nowrap border border-top-0 !important border-left-0 !important border-right-0 !important" style="border-top:0 !important;border-left:0 !important;border-right:0 !important;"></span>
-
-    </cfoutput>
-
-  </ul>
-
+            <!--- Tab Navigation --->
+            <ul class="nav nav-pills navtab-bg nav-justified p-1">
+                <cfoutput>
+                    <cfset tabsConfig = [
+                        {id: "info", name: "Info", expand: tab0_expand},
+                        {id: "profile", name: "Dashboard", expand: tab1_expand},
+                        {id: "myteam", name: "Team", expand: tab2_expand},
+                        {id: "mybrand", name: "Essence", expand: tab3_expand},
+                        {id: "myheadshots", name: "Headshots", expand: tab8_expand},
+                        {id: "mymaterials", name: "Materials", expand: tab9_expand},
+                        {id: "pref", name: "Preferences", expand: tab4_expand},
+                        {id: "systems", name: "Systems", expand: tab7_expand},
+                        {id: "billing", name: "Billing", expand: tab10_expand}
+                    ]>
+                    
+                    <cfloop array="#tabsConfig#" index="tab">
+                        <li class="nav-item">
+                            <a href="###tab.id#" data-bs-toggle="tab" aria-expanded="#tab.expand#" 
+                               class="nav-link<cfif tab.expand is 'true'> active</cfif>">#tab.name#</a>
+                        </li>
+                    </cfloop>
+                    
+                    <span class="ml-auto" style="border-top:0 !important;border-left:0 !important;border-right:0 !important;"></span>
+                </cfoutput>
+            </ul>
             
-       
-  <div class="tab-content">
-
-    <div class="tab-pane<cfif #tab0_expand# is 'true'> show active</cfif>" id="info">
-
-      <cfinclude template="/include/myinfo_pane.cfm"/>
-
+            <!--- Tab Content --->
+            <div class="tab-content">
+                <cfoutput>
+                    <cfloop array="#tabsConfig#" index="tab">
+                        <div class="tab-pane<cfif tab.expand is 'true'> show active</cfif>" id="#tab.id#">
+                            <cfinclude template="/include/#tab.id#_pane.cfm"/>
+                        </div>
+                    </cfloop>
+                </cfoutput>
+            </div>
+        </div>
     </div>
-
-    <div class="tab-pane<cfif #tab1_expand# is 'true'> show active</cfif>" id="profile">
-
-      <cfinclude template="/include/mylinks_pane.cfm"/>
-
-    </div>
-
-    <div class="tab-pane<cfif #tab2_expand# is 'true'> show active</cfif>" id="myteam">
-
-      <cfinclude template="/include/myteam_pane.cfm"/>
-
-    </div>
-
-    <div class="tab-pane<cfif #tab3_expand# is 'true'> show active</cfif>" id="mybrand">
-
-      <cfinclude template="/include/mybrand_pane.cfm"/>
-
-    </div>
-
-    <div class="tab-pane<cfif #tab8_expand# is 'true'> show active</cfif>" id="myheadshots">
-
-      <cfinclude template="/include/myheadshots_pane.cfm"/>
-
-    </div>
-
-    <div class="tab-pane<cfif #tab9_expand# is 'true'> show active</cfif>" id="mymaterials">
-
-      <cfinclude template="/include/mymaterials_pane.cfm"/>
-
-    </div>
-
-    <div class="tab-pane<cfif #tab4_expand# is 'true'> show active</cfif>" id="pref">
-
-      <cfinclude template="/include/prefs_pane.cfm"/>
-
-    </div>
-
-    <div class="tab-pane<cfif #tab7_expand# is 'true'> show active</cfif>" id="systems">
-
-      <cfinclude template="/include/systemprefs_pane.cfm"/>
-
-    </div>
-
-    <div class="tab-pane<cfif #tab10_expand# is 'true'> show active</cfif>" id="billing">
-
-      <cfinclude template="/include/mybilling_pane.cfm"/>
-
-    </div>
-
-  </div>
-
-</div>
 </cfif>
