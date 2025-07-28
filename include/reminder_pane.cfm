@@ -25,16 +25,16 @@
     <table id="remindersTable" class="table table-striped table-bordered table-sm w-100">
       <thead>
         <tr>
-          <th>Action</th>
+          <th style="white-space: nowrap;">Action</th>
    
         
           <th style="display:<cfoutput>#contactVisible#</cfoutput>;">Contact</th>
      
-          <th>Start Date</th>
-          <th>End Date</th>
+          <th style="white-space: nowrap;">Start Date</th>
+          <th style="display: none;">End Date</th>
           <th>Reminder</th>
-          <th>Status</th>
-          <th>Type</th>
+          <th style="display: none;">Status</th>
+          <th style="white-space: nowrap;">Type</th>
         </tr>
       </thead>
     </table>
@@ -82,14 +82,18 @@
         },
         { data: "contactfullname", visible: <cfoutput>#contactVisibilty#</cfoutput> },
         { data: "notStartDatef" },
-        { data: "notEndDatef" },
+        { data: "notEndDatef", visible: false },
         { data: "reminder_text" },
-        { data: "status" },
+        { data: "status", visible: false },
         { data: "system_type" }
       ],
       columnDefs: [
         {
-          targets: 4,
+          targets: [0, 2, 6], // Action, Start Date, Type columns
+          className: "text-nowrap"
+        },
+        {
+          targets: 4, // Reminder column
           render: function (data, type, row) {
             if (type === 'display') {
               const modalId = `action${row.id}-modal`;
@@ -104,7 +108,7 @@
           }
         },
         {
-          targets: 6,
+          targets: 6, // Type column
           render: function (data, type, row) {
             if (type === 'display') {
               const systemModalId = `system${row.suid}-modal`;
