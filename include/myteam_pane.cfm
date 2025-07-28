@@ -158,7 +158,7 @@
                 https://#host#.theactorsoffice.com/share/?uid=#uid#
               </a>
             </div>
-            <button class="btn btn-outline-primary btn-copy" onclick="copyToClipboard('https://#host#.theactorsoffice.com/share/?uid=#uid#')">
+            <button class="btn btn-outline-primary btn-copy" onclick="copyToClipboard('https://#host#.theactorsoffice.com/share/?uid=#uid#', this)">
               <i class="mdi mdi-content-copy me-2"></i>Copy Link
             </button>
           </div>
@@ -198,22 +198,25 @@ function confirmRemove(contactId) {
     }
 }
 
-function copyToClipboard(text) {
+function copyToClipboard(text, buttonElement) {
+    // Store reference to the button element
+    const btn = buttonElement || event.target.closest('.btn-copy');
+    
     // Try modern clipboard API first
     if (navigator.clipboard && window.isSecureContext) {
         navigator.clipboard.writeText(text).then(function() {
-            showCopySuccess();
+            showCopySuccess(btn);
         }).catch(function(err) {
             console.warn('Clipboard API failed, using fallback:', err);
-            fallbackCopyTextToClipboard(text);
+            fallbackCopyTextToClipboard(text, btn);
         });
     } else {
         // Use fallback for older browsers or non-secure contexts
-        fallbackCopyTextToClipboard(text);
+        fallbackCopyTextToClipboard(text, btn);
     }
 }
 
-function fallbackCopyTextToClipboard(text) {
+function fallbackCopyTextToClipboard(text, btn) {
     // Create a temporary textarea element
     var textArea = document.createElement("textarea");
     textArea.value = text;
@@ -231,20 +234,19 @@ function fallbackCopyTextToClipboard(text) {
     try {
         var successful = document.execCommand('copy');
         if (successful) {
-            showCopySuccess();
+            showCopySuccess(btn);
         } else {
-            showCopyError();
+            showCopyError(btn);
         }
     } catch (err) {
         console.error('Fallback: Unable to copy', err);
-        showCopyError();
+        showCopyError(btn);
     }
     
     document.body.removeChild(textArea);
 }
 
-function showCopySuccess() {
-    const btn = event.target.closest('.btn-copy');
+function showCopySuccess(btn) {
     if (!btn) return;
     
     const originalText = btn.innerHTML;
@@ -259,8 +261,7 @@ function showCopySuccess() {
     }, 2000);
 }
 
-function showCopyError() {
-    const btn = event.target.closest('.btn-copy');
+function showCopyError(btn) {
     if (!btn) return;
     
     const originalText = btn.innerHTML;
