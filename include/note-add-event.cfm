@@ -31,13 +31,13 @@
                             <label for="noteDetails">Note Title<span class="text-danger">*</span></label>
                             <input class="form-control" type="text" name="noteDetails" id="noteDetails" data-parsley-required />
                         </div>
-                        
+                        <!---
                         <div class="form-group col-md-12">
                             <p>For more detailed notes, use the built-in text editor below:</p>
-                        </div>           
+                        </div>   --->        
                         
                         <div class="form-group col-md-12">
-                            <label for="snow-editor">Details (Optional)</label>
+                            <label for="snow-editor">Details</label>
                             <div id="snow-editor" style="height: 200px;"></div>
                             
                             <div class="form-group col-md-12">&nbsp;</div>

@@ -31,12 +31,13 @@
                             </textarea>
                         </div>
 
+                  <!---
                         <div class="form-group col-md-12">
                             <p>For more detailed notes, use the built-in text editor below:</p>
-                        </div>
+                        </div>   --->  
 
                         <div class="form-group col-md-12">
-                            <label for="snow-editor">Details (Optional)</label>
+                            <label for="snow-editor">Details</label>
                             <div id="snow-editor" style="height: 200px;">
                                 <cfoutput>#note.notedetailshtml#</cfoutput>
                             </div>
