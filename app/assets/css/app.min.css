@@ -1749,6 +1749,335 @@ summary {
     }
 }
 
+/* Preferences Styles - Professional Interface */
+.preferences-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 15px;
+}
+
+.preferences-header {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding: 1.5rem 0;
+}
+
+.preferences-title {
+    color: var(--ct-gray-900);
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    font-size: 1.75rem;
+}
+
+.preferences-description {
+    color: var(--ct-gray-600);
+    font-size: 1rem;
+    margin-bottom: 0;
+    line-height: 1.5;
+}
+
+.preferences-section {
+    background: white;
+    border: 1px solid var(--ct-border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--ct-border-color);
+}
+
+.section-title {
+    color: var(--ct-gray-900);
+    font-weight: 600;
+    margin-bottom: 0;
+    font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+}
+
+.section-title i {
+    color: var(--ct-link-color);
+}
+
+.section-subtitle {
+    color: var(--ct-gray-600);
+    font-size: 0.9rem;
+    margin-bottom: 0;
+    margin-top: 0.25rem;
+}
+
+.section-title-group {
+    flex: 1;
+}
+
+.edit-settings-btn {
+    border-color: var(--ct-link-color);
+    color: var(--ct-link-color);
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.edit-settings-btn:hover {
+    background-color: var(--ct-link-color);
+    border-color: var(--ct-link-color);
+    color: white;
+}
+
+.settings-grid,
+.newsletter-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: 1fr;
+}
+
+.setting-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: var(--ct-body-bg);
+    border: 1px solid var(--ct-border-color);
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.setting-item:hover {
+    border-color: var(--ct-link-color);
+    box-shadow: 0 2px 8px rgba(64, 110, 142, 0.1);
+}
+
+.setting-label {
+    display: flex;
+    align-items: center;
+    font-weight: 500;
+    color: var(--ct-gray-700);
+    flex: 1;
+}
+
+.setting-label i {
+    font-size: 1.1rem;
+}
+
+.setting-value {
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.setting-link {
+    color: var(--ct-link-color);
+    text-decoration: none;
+    font-weight: 500;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.setting-link:hover {
+    background-color: var(--ct-link-color);
+    color: white;
+    text-decoration: none;
+}
+
+.newsletter-link {
+    color: var(--ct-link-color);
+    text-decoration: none;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.newsletter-link:hover {
+    background-color: var(--ct-link-color);
+    color: white;
+    text-decoration: none;
+}
+
+.submission-sites-section {
+    padding: 2rem 1.5rem;
+}
+
+.add-site-btn {
+    background-color: var(--ct-link-color);
+    border-color: var(--ct-link-color);
+    color: white;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.add-site-btn:hover {
+    background-color: #2d5a7b;
+    border-color: #2d5a7b;
+    color: white;
+    transform: translateY(-1px);
+}
+
+.submission-sites-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.submission-site-card {
+    background: white;
+    border: 1px solid var(--ct-border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+}
+
+.submission-site-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    border-color: var(--ct-link-color);
+}
+
+.site-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.site-icon {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, var(--ct-link-color), #5a8db5);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.site-icon i {
+    color: white;
+    font-size: 1.1rem;
+}
+
+.site-actions .edit-indicator {
+    color: var(--ct-gray-400);
+    font-size: 1.1rem;
+    transition: color 0.3s ease;
+}
+
+.submission-site-card:hover .edit-indicator {
+    color: var(--ct-link-color);
+}
+
+.site-card-body {
+    text-align: center;
+}
+
+.site-name {
+    color: var(--ct-gray-900);
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.site-hint {
+    color: var(--ct-gray-500);
+    font-size: 0.85rem;
+    margin-bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.7;
+    transition: opacity 0.3s ease;
+}
+
+.submission-site-card:hover .site-hint {
+    opacity: 1;
+}
+
+.no-sites-message {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 3rem 1rem;
+}
+
+.empty-state {
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.empty-icon {
+    font-size: 3rem;
+    color: var(--ct-gray-300);
+    margin-bottom: 1rem;
+}
+
+.empty-title {
+    color: var(--ct-gray-600);
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.empty-description {
+    color: var(--ct-gray-500);
+    margin-bottom: 1.5rem;
+}
+
+/* Responsive adjustments for preferences */
+@media (max-width: 768px) {
+    .preferences-container {
+        padding: 0 10px;
+    }
+    
+    .preferences-section {
+        padding: 1.25rem;
+    }
+    
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .edit-settings-btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .setting-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .setting-value {
+        text-align: left;
+        width: 100%;
+    }
+    
+    .submission-sites-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .add-site-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
 /* Card removal animation */
 .removing {
     opacity: 0;
