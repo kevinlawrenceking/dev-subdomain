@@ -199,22 +199,82 @@ function confirmRemove(contactId) {
 }
 
 function copyToClipboard(text) {
-    navigator.clipboard.writeText(text).then(function() {
-        // Create temporary success message
-        const btn = event.target.closest('.btn-copy');
-        const originalText = btn.innerHTML;
-        btn.innerHTML = '<i class="mdi mdi-check me-2"></i>Copied!';
-        btn.classList.remove('btn-outline-primary');
-        btn.classList.add('btn-success');
-        
-        setTimeout(() => {
-            btn.innerHTML = originalText;
-            btn.classList.remove('btn-success');
-            btn.classList.add('btn-outline-primary');
-        }, 2000);
-    }).catch(function(err) {
-        console.error('Could not copy text: ', err);
-        alert('Failed to copy link to clipboard');
-    });
+    // Try modern clipboard API first
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(function() {
+            showCopySuccess();
+        }).catch(function(err) {
+            console.warn('Clipboard API failed, using fallback:', err);
+            fallbackCopyTextToClipboard(text);
+        });
+    } else {
+        // Use fallback for older browsers or non-secure contexts
+        fallbackCopyTextToClipboard(text);
+    }
+}
+
+function fallbackCopyTextToClipboard(text) {
+    // Create a temporary textarea element
+    var textArea = document.createElement("textarea");
+    textArea.value = text;
+    
+    // Avoid scrolling to bottom
+    textArea.style.top = "0";
+    textArea.style.left = "0";
+    textArea.style.position = "fixed";
+    textArea.style.opacity = "0";
+    
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    
+    try {
+        var successful = document.execCommand('copy');
+        if (successful) {
+            showCopySuccess();
+        } else {
+            showCopyError();
+        }
+    } catch (err) {
+        console.error('Fallback: Unable to copy', err);
+        showCopyError();
+    }
+    
+    document.body.removeChild(textArea);
+}
+
+function showCopySuccess() {
+    const btn = event.target.closest('.btn-copy');
+    if (!btn) return;
+    
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="mdi mdi-check me-2"></i>Copied!';
+    btn.classList.remove('btn-outline-primary');
+    btn.classList.add('btn-success');
+    
+    setTimeout(() => {
+        btn.innerHTML = originalText;
+        btn.classList.remove('btn-success');
+        btn.classList.add('btn-outline-primary');
+    }, 2000);
+}
+
+function showCopyError() {
+    const btn = event.target.closest('.btn-copy');
+    if (!btn) return;
+    
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="mdi mdi-alert me-2"></i>Copy Failed';
+    btn.classList.remove('btn-outline-primary');
+    btn.classList.add('btn-danger');
+    
+    setTimeout(() => {
+        btn.innerHTML = originalText;
+        btn.classList.remove('btn-danger');
+        btn.classList.add('btn-outline-primary');
+    }, 2000);
+    
+    // Show a more helpful message
+    alert('Unable to copy automatically. Please manually copy the link:\n\n' + btn.closest('.share-link-container').querySelector('.team-share-link').textContent);
 }
 </script>
