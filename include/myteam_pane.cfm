@@ -1,9 +1,34 @@
-<!--- /include/myteam_pane.cfm --->
+<!--- /incl<!--- Team Actions Section --->
+<div class="team-actions-section">
+  <div class="row g-3">
+    <!--- Add New Person Column --->
+    <div class="col-12 col-md-6">
+      <div class="action-card add-person-card">
+        <div class="action-icon">
+          <i class="fas fa-user-plus"></i>
+        </div>
+        <div class="action-content">
+          <h6 class="action-title">Add New Person</h6>
+          <p class="action-subtitle">Create a new contact and add them to your team</p>
+          <a href="remoteAddContact.cfm?src=account" 
+             data-bs-remote="true" 
+             data-bs-toggle="modal" 
+             data-bs-target="#remoteAddContact"
+             class="btn btn-primary btn-action">
+            <i class="fas fa-plus me-2"></i>Add New
+          </a>
+        </div>
+      </div>
+    </div>cfm --->
 <cfinclude template="/include/qry/getMyTeam.cfm" />
 
 <link href="https://cdn.materialdesignicons.com/6.5.95/css/materialdesignicons.min.css" rel="stylesheet">
 
-<h4>My Team</h4>
+<div class="team-management-container">
+  <div class="team-header">
+    <h4 class="team-title">My Team</h4>
+    <p class="team-description">Manage your professional team members and relationships</p>
+  </div>
 
 <!--- Single row with two columns: “Add New Person” on the left, “Select Existing Relationship” on the right --->
 <div class="row mb-3">
@@ -22,33 +47,47 @@
     </a>
   </div>
 
-  <!--- Select Existing Relationship Column --->
-  <div class="col-12 col-md-6 mb-2">
-    <p class="fw-semibold">Or select an existing relationship:</p>
-    <form class="sel_client" action="/app/myaccount/?new_pgid=122" method="POST">
-      <input type="hidden" name="ctaction" value="addmember" />
-      <div class="input-group">
-        <input type="text" 
-               class="form-control" 
-               required="required" 
-               placeholder="Search..." 
-               name="topsearch_myteam" 
-               id="autocomplete2" 
-               autocomplete="off" />
-        <button id="select_contact" 
-                type="submit" 
-                class="btn btn-xs btn-primary waves-effect waves-light"
-                style="background-color: #406e8e; border: #406e8e;">
-          <i class="fe-plus"></i> Select
-        </button>
+    <!--- Select Existing Relationship Column --->
+    <div class="col-12 col-md-6">
+      <div class="action-card select-person-card">
+        <div class="action-icon">
+          <i class="fas fa-users"></i>
+        </div>
+        <div class="action-content">
+          <h6 class="action-title">Add Existing Contact</h6>
+          <p class="action-subtitle">Select from your existing relationships</p>
+          <form class="sel_client team-search-form" action="/app/myaccount/?new_pgid=122" method="POST">
+            <input type="hidden" name="ctaction" value="addmember" />
+            <div class="search-input-group">
+              <input type="text" 
+                     class="form-control search-input" 
+                     required="required" 
+                     placeholder="Search contacts..." 
+                     name="topsearch_myteam" 
+                     id="autocomplete2" 
+                     autocomplete="off" />
+              <button id="select_contact" 
+                      type="submit" 
+                      class="btn btn-primary btn-select">
+                <i class="fas fa-arrow-right"></i>
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
-    </form>
+    </div>
   </div>
 </div>
 
-<!--- Card Grid Container (left-aligned) --->
-<div class="container">
-           <div class="row tao-card-row row-cols-1 row-cols-sm-2 row-cols-md-2 row-cols-lg-2 row-cols-xl-3 g-3">
+  <!--- Team Members Grid --->
+  <div class="team-members-section">
+    <div class="team-members-header">
+      <h5 class="section-title">Team Members</h5>
+      <p class="section-subtitle">Your current team members and their contact information</p>
+    </div>
+    
+    <div class="team-grid-container">
+      <div class="row tao-card-row row-cols-1 row-cols-sm-2 row-cols-md-2 row-cols-lg-2 row-cols-xl-3 g-3">
     
     <!--- Loop through the myteam query to display cards --->
     <cfloop query="myteam">
@@ -106,41 +145,46 @@
           <cfset card_image = application.defaultAvatarUrl />
         </cfif>
 
-        <!--- This style was in original code (for ribbon-straight) --->
-        <style>
-          .ribbon-straight {
-            bottom: 44px; /* Moves up slightly to remove extra space */
-          }
-        </style>
-
         <!--- Finally, include the actual card display template --->
         <cfinclude template="/include/card.cfm" />
 
       </div> <!--- End .col --->
     </cfloop>
-  </div> <!--- End .row --->
-</div> <!--- End .container --->
+      </div> <!--- End .row --->
+    </div> <!--- End .team-grid-container --->
+  </div> <!--- End .team-members-section --->
 
-<!--- Team Share Section with extra top margin for spacing --->
-<div class="mt-5">
-  <h4>Team Share</h4>
-  <cfoutput>
-    <p>
-      You can share with your team using the team share link:
-      <strong>
-        <a href="https://#host#.theactorsoffice.com/share/?uid=#uid#" 
-           target="U"
-           title="View Teamshare">
-          https://#host#.theactorsoffice.com/share/?uid=#uid#
-        </a>
-      </strong>
-      <br>
-      If you click on the button you will see your report.
-    </p>
-  </cfoutput>
-</div>
+  <!--- Team Share Section --->
+  <div class="team-share-section">
+    <div class="team-share-card">
+      <div class="share-icon">
+        <i class="fas fa-share-alt"></i>
+      </div>
+      <div class="share-content">
+        <h5 class="share-title">Team Share Link</h5>
+        <p class="share-description">Share your team progress and updates with this secure link</p>
+        <cfoutput>
+          <div class="share-link-container">
+            <div class="share-link">
+              <a href="https://#host#.theactorsoffice.com/share/?uid=#uid#" 
+                 target="_blank"
+                 class="team-share-link"
+                 title="View Team Share">
+                https://#host#.theactorsoffice.com/share/?uid=#uid#
+              </a>
+            </div>
+            <button class="btn btn-outline-primary btn-copy" onclick="copyToClipboard('https://#host#.theactorsoffice.com/share/?uid=#uid#')">
+              <i class="fas fa-copy me-2"></i>Copy Link
+            </button>
+          </div>
+          <p class="share-note">Click the link to preview how your team will see your progress report.</p>
+        </cfoutput>
+      </div>
+    </div>
+  </div>
+</div> <!--- End .team-management-container --->
 
-<!--- JavaScript for deleting a team member via fetch() --->
+<!--- JavaScript for deleting a team member via fetch() and copy functionality --->
 <script>
 function confirmRemove(contactId) {
     if (confirm("Are you sure you want to remove this person from your team?")) {
@@ -167,5 +211,25 @@ function confirmRemove(contactId) {
         })
         .catch(error => console.error('Error:', error));
     }
+}
+
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(function() {
+        // Create temporary success message
+        const btn = event.target.closest('.btn-copy');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check me-2"></i>Copied!';
+        btn.classList.remove('btn-outline-primary');
+        btn.classList.add('btn-success');
+        
+        setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-outline-primary');
+        }, 2000);
+    }).catch(function(err) {
+        console.error('Could not copy text: ', err);
+        alert('Failed to copy link to clipboard');
+    });
 }
 </script>

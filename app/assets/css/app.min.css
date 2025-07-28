@@ -1439,6 +1439,327 @@ summary {
         transform: translateY(0); 
     }
 }
+
+/* Team Management Styles - Modern UI Components */
+.team-management-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 15px;
+}
+
+.team-header {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding: 1.5rem 0;
+}
+
+.team-title {
+    color: var(--ct-gray-900);
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    font-size: 1.75rem;
+}
+
+.team-description {
+    color: var(--ct-gray-600);
+    font-size: 1rem;
+    margin-bottom: 0;
+    line-height: 1.5;
+}
+
+.team-actions-section {
+    margin-bottom: 3rem;
+}
+
+.action-card {
+    background: var(--ct-body-bg);
+    border: 1px solid var(--ct-border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+}
+
+.action-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    border-color: var(--ct-link-color);
+}
+
+.action-icon {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, var(--ct-link-color), #5a8db5);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+    flex-shrink: 0;
+}
+
+.action-icon i {
+    color: white;
+    font-size: 1.25rem;
+}
+
+.action-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.action-title {
+    color: var(--ct-gray-900);
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.action-subtitle {
+    color: var(--ct-gray-600);
+    font-size: 0.9rem;
+    line-height: 1.4;
+    margin-bottom: 1rem;
+    flex: 1;
+}
+
+.btn-action {
+    background-color: var(--ct-link-color);
+    border-color: var(--ct-link-color);
+    color: white;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    align-self: flex-start;
+}
+
+.btn-action:hover {
+    background-color: #2d5a7b;
+    border-color: #2d5a7b;
+    color: white;
+    transform: translateY(-1px);
+}
+
+.team-search-form {
+    margin: 0;
+}
+
+.search-input-group {
+    display: flex;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--ct-border-color);
+    transition: border-color 0.3s ease;
+}
+
+.search-input-group:focus-within {
+    border-color: var(--ct-link-color);
+    box-shadow: 0 0 0 0.2rem rgba(64, 110, 142, 0.25);
+}
+
+.search-input {
+    border: none;
+    border-radius: 0;
+    padding: 0.75rem 1rem;
+    flex: 1;
+}
+
+.search-input:focus {
+    box-shadow: none;
+    border-color: transparent;
+}
+
+.btn-select {
+    background-color: var(--ct-link-color);
+    border-color: var(--ct-link-color);
+    color: white;
+    border-radius: 0;
+    padding: 0.75rem 1rem;
+    min-width: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.btn-select:hover {
+    background-color: #2d5a7b;
+    border-color: #2d5a7b;
+    color: white;
+}
+
+.team-members-section {
+    margin-bottom: 3rem;
+}
+
+.team-members-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.section-title {
+    color: var(--ct-gray-900);
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    font-size: 1.5rem;
+}
+
+.section-subtitle {
+    color: var(--ct-gray-600);
+    font-size: 0.95rem;
+    margin-bottom: 0;
+    line-height: 1.5;
+}
+
+.team-grid-container {
+    margin: 0 auto;
+}
+
+.team-share-section {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--ct-border-color);
+}
+
+.team-share-card {
+    background: linear-gradient(135deg, #f8fafb 0%, #ffffff 100%);
+    border: 1px solid var(--ct-border-color);
+    border-radius: 16px;
+    padding: 2rem;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+.share-icon {
+    width: 64px;
+    height: 64px;
+    background: linear-gradient(135deg, var(--ct-link-color), #5a8db5);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+}
+
+.share-icon i {
+    color: white;
+    font-size: 1.5rem;
+}
+
+.share-title {
+    color: var(--ct-gray-900);
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    font-size: 1.5rem;
+}
+
+.share-description {
+    color: var(--ct-gray-600);
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+}
+
+.share-link-container {
+    background: white;
+    border: 1px solid var(--ct-border-color);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.share-link {
+    flex: 1;
+    min-width: 250px;
+}
+
+.team-share-link {
+    color: var(--ct-link-color);
+    text-decoration: none;
+    font-family: monospace;
+    font-size: 0.9rem;
+    word-break: break-all;
+    padding: 0.5rem;
+    background: #f8f9fa;
+    border-radius: 6px;
+    display: inline-block;
+    width: 100%;
+    transition: all 0.3s ease;
+}
+
+.team-share-link:hover {
+    color: #2d5a7b;
+    background: #e9ecef;
+    text-decoration: underline;
+}
+
+.btn-copy {
+    border-color: var(--ct-link-color);
+    color: var(--ct-link-color);
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.btn-copy:hover {
+    background-color: var(--ct-link-color);
+    border-color: var(--ct-link-color);
+    color: white;
+}
+
+.share-note {
+    color: var(--ct-gray-500);
+    font-size: 0.875rem;
+    margin-bottom: 0;
+    font-style: italic;
+}
+
+/* Responsive adjustments for team management */
+@media (max-width: 768px) {
+    .team-management-container {
+        padding: 0 10px;
+    }
+    
+    .action-card {
+        padding: 1.25rem;
+    }
+    
+    .team-share-card {
+        padding: 1.5rem;
+    }
+    
+    .share-link-container {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .btn-copy {
+        width: 100%;
+    }
+}
+
+/* Card removal animation */
+.removing {
+    opacity: 0;
+    transform: scale(0.8);
+    transition: all 0.3s ease;
+}
+
+/* Ribbon positioning fix */
+.ribbon-straight {
+    bottom: 44px !important;
+}
     
     .offset-md-1 {
     margin-left:8.33333%
