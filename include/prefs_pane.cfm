@@ -228,14 +228,11 @@
                                 <i class="mdi mdi-web"></i>
                             </div>
                             <div class="site-actions">
-                                <i class="mdi mdi-pencil-outline edit-indicator"></i>
+                                <i class="mdi mdi-square-edit-outline edit-indicator"></i>
                             </div>
                         </div>
                         <div class="site-card-body">
                             <h6 class="site-name">#subsites.submitsitename#</h6>
-                            <p class="site-hint">
-                                <i class="mdi mdi-cursor-pointer me-1"></i>Click to edit
-                            </p>
                         </div>
                     </div>
                 </cfoutput>
