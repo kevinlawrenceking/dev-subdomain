@@ -16,7 +16,7 @@
       <div class="col-12 col-md-6">
         <div class="action-card add-person-card">
           <div class="action-icon">
-            <i class="fas fa-user-plus"></i>
+            <i class="mdi mdi-account-plus"></i>
           </div>
           <div class="action-content">
             <h6 class="action-title">Add New Person</h6>
@@ -26,7 +26,7 @@
                data-bs-toggle="modal" 
                data-bs-target="#remoteAddContact"
                class="btn btn-primary btn-action">
-              <i class="fas fa-plus me-2"></i>Add New
+              <i class="mdi mdi-plus me-2"></i>Add New
             </a>
           </div>
         </div>
@@ -36,7 +36,7 @@
       <div class="col-12 col-md-6">
         <div class="action-card select-person-card">
           <div class="action-icon">
-            <i class="fas fa-users"></i>
+            <i class="mdi mdi-account-group"></i>
           </div>
           <div class="action-content">
             <h6 class="action-title">Add Existing Contact</h6>
@@ -54,7 +54,7 @@
                 <button id="select_contact" 
                         type="submit" 
                         class="btn btn-primary btn-select">
-                  <i class="fas fa-arrow-right"></i>
+                  <i class="mdi mdi-arrow-right"></i>
                 </button>
               </div>
             </form>
@@ -143,7 +143,7 @@
   <div class="team-share-section">
     <div class="team-share-card">
       <div class="share-icon">
-        <i class="fas fa-share-alt"></i>
+        <i class="mdi mdi-share-variant"></i>
       </div>
       <div class="share-content">
         <h5 class="share-title">Team Share Link</h5>
@@ -159,7 +159,7 @@
               </a>
             </div>
             <button class="btn btn-outline-primary btn-copy" onclick="copyToClipboard('https://#host#.theactorsoffice.com/share/?uid=#uid#')">
-              <i class="fas fa-copy me-2"></i>Copy Link
+              <i class="mdi mdi-content-copy me-2"></i>Copy Link
             </button>
           </div>
           <p class="share-note">Click the link to preview how your team will see your progress report.</p>
@@ -203,7 +203,7 @@ function copyToClipboard(text) {
         // Create temporary success message
         const btn = event.target.closest('.btn-copy');
         const originalText = btn.innerHTML;
-        btn.innerHTML = '<i class="fas fa-check me-2"></i>Copied!';
+        btn.innerHTML = '<i class="mdi mdi-check me-2"></i>Copied!';
         btn.classList.remove('btn-outline-primary');
         btn.classList.add('btn-success');
         
