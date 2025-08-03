@@ -37,7 +37,7 @@
         WHERE contactid = <cfqueryparam value="#contactid#" cfsqltype="cf_sql_integer">
         ORDER BY timestamp DESC
     </cfquery>
-    
+    <cfoutput>#qGetContactNotes.recordcount#</cfoutput>
     <cfcatch type="any">
         <cfset qGetContactNotes = QueryNew("note_id,notedetails,notedetailshtml,timestamp", "integer,varchar,varchar,timestamp")>
     </cfcatch>
