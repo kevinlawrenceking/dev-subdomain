@@ -248,7 +248,7 @@ WHERE r.isdeleted = 0
                                     <cfif isDefined('notedetailshtml') AND len(trim(notedetailshtml))>
                                         <button type="button" 
                                                 class="btn btn-sm btn-outline-primary" 
-                                                onclick="showNoteDetails(#noteid#, '#HTMLEditFormat(JSStringFormat(left(notedetails, 50)))#')"
+                                                onclick="showNoteDetails('#HTMLEditFormat(JSStringFormat(notedetails))#', '#HTMLEditFormat(JSStringFormat(notedetailshtml))#', '#dateFormat(notetimestamp, "mmm d, yyyy")# at #timeFormat(notetimestamp, "h:mm tt")#')"
                                                 title="View detailed note">
                                             <i class="fe-search"></i>
                                         </button>
@@ -336,88 +336,58 @@ WHERE r.isdeleted = 0
 
 <!--- JavaScript for note details functionality --->
 <script>
-function showNoteDetails(noteId, notePreview) {
-    // Set modal title with note preview
-    document.getElementById('noteDetailsModalLabel').textContent = 'Note Details: ' + notePreview + '...';
+function showNoteDetails(noteDetails, noteDetailsHtml, noteTimestamp) {
+    // Set modal title
+    const previewText = noteDetails.length > 50 ? noteDetails.substring(0, 50) + '...' : noteDetails;
+    document.getElementById('noteDetailsModalLabel').textContent = 'Note Details: ' + previewText;
     
-    // Show loading spinner
-    document.getElementById('noteDetailsContent').innerHTML = `
-        <div class="text-center">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
-        </div>
-    `;
+    // Create elements safely to avoid XSS issues
+    const noteDetailsDiv = document.createElement('div');
+    noteDetailsDiv.className = 'note-details';
+    
+    // Note Summary section
+    const summaryHeader = document.createElement('h6');
+    summaryHeader.className = 'text-primary';
+    summaryHeader.textContent = 'Note Summary:';
+    noteDetailsDiv.appendChild(summaryHeader);
+    
+    const summaryP = document.createElement('p');
+    summaryP.className = 'mb-3';
+    summaryP.textContent = noteDetails || 'No summary available';
+    noteDetailsDiv.appendChild(summaryP);
+    
+    // Detailed Information section
+    const detailsHeader = document.createElement('h6');
+    detailsHeader.className = 'text-primary';
+    detailsHeader.textContent = 'Detailed Information:';
+    noteDetailsDiv.appendChild(detailsHeader);
+    
+    const detailsDiv = document.createElement('div');
+    detailsDiv.className = 'border rounded p-3 bg-light';
+    if (noteDetailsHtml && noteDetailsHtml.trim()) {
+        detailsDiv.innerHTML = noteDetailsHtml;
+    } else {
+        const emptyMsg = document.createElement('em');
+        emptyMsg.className = 'text-muted';
+        emptyMsg.textContent = 'No detailed information available';
+        detailsDiv.appendChild(emptyMsg);
+    }
+    noteDetailsDiv.appendChild(detailsDiv);
+    
+    // Timestamp section
+    if (noteTimestamp) {
+        const timestampSmall = document.createElement('small');
+        timestampSmall.className = 'text-muted mt-3 d-block';
+        timestampSmall.textContent = 'Created: ' + noteTimestamp;
+        noteDetailsDiv.appendChild(timestampSmall);
+    }
+    
+    // Update modal content and show
+    document.getElementById('noteDetailsContent').innerHTML = '';
+    document.getElementById('noteDetailsContent').appendChild(noteDetailsDiv);
     
     // Show the modal
     var modal = new bootstrap.Modal(document.getElementById('noteDetailsModal'));
     modal.show();
-    
-    // Fetch note details via AJAX
-    fetch('/share/get_note_details.cfm?noteid=' + noteId)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Create elements safely to avoid XSS issues
-                const noteDetailsDiv = document.createElement('div');
-                noteDetailsDiv.className = 'note-details';
-                
-                // Note Summary section
-                const summaryHeader = document.createElement('h6');
-                summaryHeader.className = 'text-primary';
-                summaryHeader.textContent = 'Note Summary:';
-                noteDetailsDiv.appendChild(summaryHeader);
-                
-                const summaryP = document.createElement('p');
-                summaryP.className = 'mb-3';
-                summaryP.textContent = data.notedetails || 'No summary available';
-                noteDetailsDiv.appendChild(summaryP);
-                
-                // Detailed Information section
-                const detailsHeader = document.createElement('h6');
-                detailsHeader.className = 'text-primary';
-                detailsHeader.textContent = 'Detailed Information:';
-                noteDetailsDiv.appendChild(detailsHeader);
-                
-                const detailsDiv = document.createElement('div');
-                detailsDiv.className = 'border rounded p-3 bg-light';
-                if (data.notedetailshtml && data.notedetailshtml.trim()) {
-                    detailsDiv.innerHTML = data.notedetailshtml;
-                } else {
-                    const emptyMsg = document.createElement('em');
-                    emptyMsg.className = 'text-muted';
-                    emptyMsg.textContent = 'No detailed information available';
-                    detailsDiv.appendChild(emptyMsg);
-                }
-                noteDetailsDiv.appendChild(detailsDiv);
-                
-                // Timestamp section
-                if (data.timestamp) {
-                    const timestampSmall = document.createElement('small');
-                    timestampSmall.className = 'text-muted mt-3 d-block';
-                    timestampSmall.textContent = 'Created: ' + data.timestamp;
-                    noteDetailsDiv.appendChild(timestampSmall);
-                }
-                
-                document.getElementById('noteDetailsContent').innerHTML = '';
-                document.getElementById('noteDetailsContent').appendChild(noteDetailsDiv);
-            } else {
-                document.getElementById('noteDetailsContent').innerHTML = `
-                    <div class="alert alert-warning">
-                        <i class="fe-alert-triangle me-2"></i>
-                        Unable to load note details: ${data.message || 'Unknown error'}
-                    </div>
-                `;
-            }
-        })
-        .catch(error => {
-            document.getElementById('noteDetailsContent').innerHTML = `
-                <div class="alert alert-danger">
-                    <i class="fe-alert-circle me-2"></i>
-                    Error loading note details. Please try again.
-                </div>
-            `;
-            console.error('Error:', error);
-        });
 }
 </script>
