@@ -262,12 +262,12 @@
                             <thead class="table-dark">
                                 <cfoutput query="results" maxrows="1">
                                     <tr>
-                                        <th class="text-nowrap"><i class="fe-calendar me-1"></i>Date/Time</th>
-                                        <th class="text-nowrap"><i class="fe-film me-1"></i>Project</th>
-                                        <th class="text-nowrap"><i class="fe-user me-1"></i>Role</th>
-                                        <th class="text-nowrap"><i class="fe-tag me-1"></i>Category</th>
-                                        <th class="text-nowrap"><i class="fe-users me-1"></i>Source</th>
-                                        <th class="text-nowrap text-center"><i class="fe-check-circle me-1"></i>Import Status</th>
+                                        <th><i class="fe-calendar me-1"></i>Date/Time</th>
+                                        <th><i class="fe-film me-1"></i>Project</th>
+                                        <th><i class="fe-user me-1"></i>Role</th>
+                                        <th><i class="fe-tag me-1"></i>Category</th>
+                                        <th><i class="fe-users me-1"></i>Source</th>
+                                        <th class="text-center"><i class="fe-check-circle me-1"></i>Import Status</th>
                                     </tr>
                                 </cfoutput>
                             </thead>
@@ -376,7 +376,7 @@
                             <table class="table table-hover mb-0" id="basic-datatable-history">
                                 <thead class="table-light">
                                     <tr>
-                                        <th class="px-3 py-3" style="width: 90px;">
+                                        <th class="px-3 py-3">
                                             <i class="fe-hash me-1 text-muted"></i>Batch ID
                                         </th>
                                         <th class="px-3 py-3">
@@ -385,7 +385,7 @@
                                         <th class="px-3 py-3">
                                             <i class="fe-clock me-1 text-muted"></i>Time
                                         </th>
-                                        <th class="px-3 py-3 text-center" style="width: 100px;">
+                                        <th class="px-3 py-3 text-center">
                                             <i class="fe-eye me-1 text-muted"></i>Actions
                                         </th>
                                     </tr>
