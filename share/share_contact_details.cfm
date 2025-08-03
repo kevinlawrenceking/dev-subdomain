@@ -25,12 +25,23 @@
 <cfparam name="shares" default="#QueryNew('contactid', 'integer')#">
 <cfparam name="contactid" default="#IIF(isDefined('shares.contactid') AND shares.recordCount GT 0, 'shares.contactid', 0)#">
 
-<!--- Get detailed contact information
-
-SELECT `Name`,`Company`,`Title`,`WhereMet`,`WhenMet`,`NotesLog`
-FROM sharez where contactid = '#contactid#'
-
---->
+<!--- Get individual notes for this contact --->
+<cftry>
+    <cfquery name="qGetContactNotes" datasource="#dsn#">
+        SELECT 
+            note_id,
+            notedetails,
+            notedetailshtml,
+            timestamp
+        FROM noteslog 
+        WHERE contactid = <cfqueryparam value="#contactid#" cfsqltype="cf_sql_integer">
+        ORDER BY timestamp DESC
+    </cfquery>
+    
+    <cfcatch type="any">
+        <cfset qGetContactNotes = QueryNew("note_id,notedetails,notedetailshtml,timestamp", "integer,varchar,longvarchar,timestamp")>
+    </cfcatch>
+</cftry>
 <cftry>
     <cfquery name="qGetContactDetail" datasource="#dsn#">
     SELECT 
@@ -40,7 +51,6 @@ FROM sharez where contactid = '#contactid#'
     s.title, 
     s.wheremet, 
     s.last_met, 
-    s.noteslog, 
     s.lasteventtype,
     c.col3 AS phone, 
     c.col4 AS email, 
@@ -59,20 +69,15 @@ INNER JOIN contacts_ss c ON c.contactid = s.contactid
 
     <!--- If no record is found, create an empty query with the expected columns --->
     <cfif qGetContactDetail.recordCount EQ 0>
-        <cfset qGetContactDetail = QueryNew("default_share_avatar,name,company,title,wheremet,last_met,noteslog,lasteventtype,phone, email,contactid,tag,share_avatar", 
-                                          "varchar,varchar,varchar,varchar,varchar,timestamp,varchar,varchar,varchar,varchar,integer,varchar,varchar,varchar")>
+        <cfset qGetContactDetail = QueryNew("default_share_avatar,name,company,title,wheremet,last_met,lasteventtype,phone,email,contactid,tag,share_avatar", 
+                                          "varchar,varchar,varchar,varchar,varchar,timestamp,varchar,varchar,varchar,integer,varchar,varchar")>
     </cfif>
     
     <cfcatch type="any">
-         <cfset qGetContactDetail = QueryNew("default_share_avatar,name,company,title,wheremet,last_met,noteslog,lasteventtype,phone, email,contactid,tag,share_avatar", 
-                                          "varchar,varchar,varchar,varchar,varchar,timestamp,varchar,varchar,varchar,varchar,integer,varchar,varchar,varchar")>
+         <cfset qGetContactDetail = QueryNew("default_share_avatar,name,company,title,wheremet,last_met,lasteventtype,phone,email,contactid,tag,share_avatar", 
+                                          "varchar,varchar,varchar,varchar,varchar,timestamp,varchar,varchar,varchar,integer,varchar,varchar")>
     </cfcatch>
 </cftry>
-
-<!--- Get contact events --->
-
-
-
 
 
 
@@ -174,10 +179,6 @@ WHERE r.isdeleted = 0
                                         <th style="width:40%">Last Mtg. Type</th>
                                         <td>#IIF(isDefined('lasteventtype') AND len(trim(lasteventtype)), "lasteventtype", "''")#</td>
                                     </tr>
-                                <TR><TD colspan="2">
-<strong>Notes:</strong> #qGetContactDetail.noteslog#
-
-                                </TD></TR>
                                 </tbody>
                             </table>
                         </div>
@@ -199,6 +200,64 @@ WHERE r.isdeleted = 0
         </div>
     </div>
 </div>
+
+<!--- Notes Section --->
+<cfif qGetContactNotes.recordcount GT 0>
+    <div class="row mt-3">
+        <div class="col-md-12">
+            <h5 class="text-primary">Notes</h5>
+            <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                <table class="table table-sm table-striped">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Note</th>
+                            <th style="width: 50px;">Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <cfoutput query="qGetContactNotes">
+                            <tr>
+                                <td style="white-space: nowrap;">
+                                    <cfif isDefined('timestamp') AND isDate(timestamp)>
+                                        #dateFormat(timestamp, "mmm d, yyyy")#
+                                    <cfelse>
+                                        &nbsp;
+                                    </cfif>
+                                </td>
+                                <td>
+                                    <cfif isDefined('notedetails') AND len(trim(notedetails))>
+                                        #left(HTMLEditFormat(notedetails), 100)#<cfif len(notedetails) GT 100>...</cfif>
+                                    <cfelse>
+                                        <em class="text-muted">No note text</em>
+                                    </cfif>
+                                </td>
+                                <td class="text-center">
+                                    <cfif isDefined('notedetailshtml') AND len(trim(notedetailshtml))>
+                                        <button type="button" 
+                                                class="btn btn-sm btn-outline-primary" 
+                                                onclick="showNoteDetails(#note_id#, '#HTMLEditFormat(JSStringFormat(left(notedetails, 50)))#')"
+                                                title="View detailed note">
+                                            <i class="fe-search"></i>
+                                        </button>
+                                    <cfelse>
+                                        <span class="text-muted">—</span>
+                                    </cfif>
+                                </td>
+                            </tr>
+                        </cfoutput>
+                    </tbody>
+                </table>
+                
+                <cfif qGetContactNotes.recordcount GT 10>
+                    <div class="text-center mt-2">
+                        <small class="text-muted">Showing recent notes</small>
+                    </div>
+                </cfif>
+            </div>
+        </div>
+    </div>
+</cfif>
 
 <!--- Events Section --->
 <cfif qGetContactEvents.recordcount GT 0>
@@ -243,3 +302,80 @@ WHERE r.isdeleted = 0
         </div>
     </div>
 </cfif>
+
+<!--- Note Details Modal --->
+<div class="modal fade" id="noteDetailsModal" tabindex="-1" role="dialog" aria-labelledby="noteDetailsModalLabel">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="noteDetailsModalLabel">Note Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="noteDetailsContent">
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--- JavaScript for note details functionality --->
+<script>
+function showNoteDetails(noteId, notePreview) {
+    // Set modal title with note preview
+    document.getElementById('noteDetailsModalLabel').textContent = 'Note Details: ' + notePreview + '...';
+    
+    // Show loading spinner
+    document.getElementById('noteDetailsContent').innerHTML = `
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    `;
+    
+    // Show the modal
+    var modal = new bootstrap.Modal(document.getElementById('noteDetailsModal'));
+    modal.show();
+    
+    // Fetch note details via AJAX
+    fetch('/share/get_note_details.cfm?note_id=' + noteId)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('noteDetailsContent').innerHTML = `
+                    <div class="note-details">
+                        <h6 class="text-primary">Note Summary:</h6>
+                        <p class="mb-3">${data.notedetails || 'No summary available'}</p>
+                        
+                        <h6 class="text-primary">Detailed Information:</h6>
+                        <div class="border rounded p-3 bg-light">
+                            ${data.notedetailshtml || '<em class="text-muted">No detailed information available</em>'}
+                        </div>
+                        
+                        ${data.timestamp ? `<small class="text-muted mt-3 d-block">Created: ${data.timestamp}</small>` : ''}
+                    </div>
+                `;
+            } else {
+                document.getElementById('noteDetailsContent').innerHTML = `
+                    <div class="alert alert-warning">
+                        <i class="fe-alert-triangle me-2"></i>
+                        Unable to load note details: ${data.message || 'Unknown error'}
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            document.getElementById('noteDetailsContent').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fe-alert-circle me-2"></i>
+                    Error loading note details. Please try again.
+                </div>
+            `;
+            console.error('Error:', error);
+        });
+}
+</script>
