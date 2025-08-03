@@ -358,19 +358,49 @@ function showNoteDetails(noteId, notePreview) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                document.getElementById('noteDetailsContent').innerHTML = `
-                    <div class="note-details">
-                        <h6 class="text-primary">Note Summary:</h6>
-                        <p class="mb-3">${data.notedetails || 'No summary available'}</p>
-                        
-                        <h6 class="text-primary">Detailed Information:</h6>
-                        <div class="border rounded p-3 bg-light">
-                            ${data.notedetailshtml || '<em class="text-muted">No detailed information available</em>'}
-                        </div>
-                        
-                        ${data.timestamp ? `<small class="text-muted mt-3 d-block">Created: ${data.timestamp}</small>` : ''}
-                    </div>
-                `;
+                // Create elements safely to avoid XSS issues
+                const noteDetailsDiv = document.createElement('div');
+                noteDetailsDiv.className = 'note-details';
+                
+                // Note Summary section
+                const summaryHeader = document.createElement('h6');
+                summaryHeader.className = 'text-primary';
+                summaryHeader.textContent = 'Note Summary:';
+                noteDetailsDiv.appendChild(summaryHeader);
+                
+                const summaryP = document.createElement('p');
+                summaryP.className = 'mb-3';
+                summaryP.textContent = data.notedetails || 'No summary available';
+                noteDetailsDiv.appendChild(summaryP);
+                
+                // Detailed Information section
+                const detailsHeader = document.createElement('h6');
+                detailsHeader.className = 'text-primary';
+                detailsHeader.textContent = 'Detailed Information:';
+                noteDetailsDiv.appendChild(detailsHeader);
+                
+                const detailsDiv = document.createElement('div');
+                detailsDiv.className = 'border rounded p-3 bg-light';
+                if (data.notedetailshtml && data.notedetailshtml.trim()) {
+                    detailsDiv.innerHTML = data.notedetailshtml;
+                } else {
+                    const emptyMsg = document.createElement('em');
+                    emptyMsg.className = 'text-muted';
+                    emptyMsg.textContent = 'No detailed information available';
+                    detailsDiv.appendChild(emptyMsg);
+                }
+                noteDetailsDiv.appendChild(detailsDiv);
+                
+                // Timestamp section
+                if (data.timestamp) {
+                    const timestampSmall = document.createElement('small');
+                    timestampSmall.className = 'text-muted mt-3 d-block';
+                    timestampSmall.textContent = 'Created: ' + data.timestamp;
+                    noteDetailsDiv.appendChild(timestampSmall);
+                }
+                
+                document.getElementById('noteDetailsContent').innerHTML = '';
+                document.getElementById('noteDetailsContent').appendChild(noteDetailsDiv);
             } else {
                 document.getElementById('noteDetailsContent').innerHTML = `
                     <div class="alert alert-warning">

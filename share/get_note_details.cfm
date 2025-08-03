@@ -68,4 +68,4 @@
 </cftry>
 
 <!--- Output JSON response --->
-<cfoutput>#serializeJSON(response)#</cfoutput>
+<cfoutput>#serializeJSON(response, false, true)#</cfoutput>
