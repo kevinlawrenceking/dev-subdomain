@@ -26,7 +26,7 @@
 <cfparam name="contactid" default="#IIF(isDefined('shares.contactid') AND shares.recordCount GT 0, 'shares.contactid', 0)#">
 
 <!--- Get individual notes for this contact --->
-<cftry>
+ 
     <cfquery name="qGetContactNotes" datasource="#dsn#">
         SELECT 
             note_id,
@@ -38,10 +38,7 @@
         ORDER BY timestamp DESC
     </cfquery>
     <cfoutput>#qGetContactNotes.recordcount#</cfoutput>
-    <cfcatch type="any">
-        <cfset qGetContactNotes = QueryNew("note_id,notedetails,notedetailshtml,timestamp", "integer,varchar,varchar,timestamp")>
-    </cfcatch>
-</cftry>
+ 
 <cftry>
     <cfquery name="qGetContactDetail" datasource="#dsn#">
     SELECT 
