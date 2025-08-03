@@ -50,10 +50,12 @@ Key Features:
 <!--- Parameter definitions --->
 <cfparam name="isexport" default="N"/>
 <cfparam name="sel_audcatid" default="%"/>
+<cfparam name="byimport" default=""/>
 <!--- Pagination parameters --->
 <cfparam name="page" default="1"/>
 <cfparam name="pageSize" default="12"/>
 <cfparam name="totalRecords" default="0"/>
+<cfparam name="totalPages" default="1"/>
 
 <!--- JavaScript for modal functionality --->
 <style>
