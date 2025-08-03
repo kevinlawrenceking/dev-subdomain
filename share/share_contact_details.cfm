@@ -37,7 +37,7 @@
     <div class="alert alert-danger">
         <h5>Error: Invalid Contact ID</h5>
         <p>Unable to load contact details. Contact ID is missing or invalid.</p>
-        <small class="text-muted">Contact ID: #contactid#</small>
+        <cfoutput><small class="text-muted">Contact ID: #contactid#</small></cfoutput>
     </div>
     <cfabort>
 </cfif>
@@ -114,14 +114,14 @@ INNER JOIN (
     INNER JOIN audsteps s ON a.audstepid = s.audstepid
     INNER JOIN audcontacts_auditions_xref x ON x.audprojectid = p.audprojectid
     WHERE r.isdeleted = 0 AND p.isDeleted = 0
-      AND x.contactid = #contactid#
+      AND x.contactid = <cfqueryparam value="#contactid#" cfsqltype="cf_sql_integer">
     GROUP BY p.audprojectID
 ) AS max_values 
   ON p.audprojectID = max_values.audprojectID 
   AND s.audstepid = max_values.max_audstepid
 WHERE r.isdeleted = 0 
   AND p.isDeleted = 0
-  AND x.contactid = #contactid#;
+  AND x.contactid = <cfqueryparam value="#contactid#" cfsqltype="cf_sql_integer">;
     </cfquery>
     
     <cfcatch type="any">
@@ -248,7 +248,7 @@ WHERE r.isdeleted = 0
                                     <cfif isDefined('notedetailshtml') AND len(trim(notedetailshtml))>
                                         <button type="button" 
                                                 class="btn btn-sm btn-outline-primary" 
-                                                onclick="showNoteDetails('#HTMLEditFormat(JSStringFormat(notedetails))#', '#HTMLEditFormat(JSStringFormat(notedetailshtml))#', '#dateFormat(notetimestamp, "mmm d, yyyy")# at #timeFormat(notetimestamp, "h:mm tt")#')"
+                                                onclick="showNoteDetails('#HTMLEditFormat(JSStringFormat(notedetails))#', '#JSStringFormat(notedetailshtml)#', '#dateFormat(notetimestamp, "mmm d, yyyy")# at #timeFormat(notetimestamp, "h:mm tt")#')"
                                                 title="View detailed note">
                                             <i class="fe-search"></i>
                                         </button>
