@@ -326,11 +326,7 @@ WHERE r.isdeleted = 0
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body" id="noteDetailsContent">
-                <div class="text-center">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                </div>
+                <!-- Content will be populated by JavaScript -->
             </div>
         </div>
     </div>
@@ -345,6 +341,10 @@ document.addEventListener('click', function(event) {
         const noteDetails = button.getAttribute('data-note-details');
         const noteDetailsHtml = button.getAttribute('data-note-html');
         const noteTimestamp = button.getAttribute('data-note-timestamp');
+        
+        console.log('Note Details:', noteDetails);
+        console.log('Note HTML:', noteDetailsHtml);
+        console.log('Note Timestamp:', noteTimestamp);
         
         showNoteDetails(noteDetails, noteDetailsHtml, noteTimestamp);
     }
