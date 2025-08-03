@@ -238,7 +238,7 @@ WHERE r.isdeleted = 0
                                             <i class="fe-search"></i>
                                         </button>
                                     <cfelse>
-                                        <span class="text-muted">—</span>
+                                        <span class="text-muted">--<span>
                                     </cfif>
                                 </td>
                             </tr>
