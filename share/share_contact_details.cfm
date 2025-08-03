@@ -228,7 +228,9 @@ WHERE r.isdeleted = 0
                         </tr>
                     </thead>
                     <tbody>
+                        <cfset noteIndex = 0>
                         <cfoutput query="qGetContactNotes">
+                            <cfset noteIndex = noteIndex + 1>
                             <tr>
                                 <td style="white-space: nowrap;">
                                     <cfif isDefined('notetimestamp') AND isDate(notetimestamp)>
@@ -248,9 +250,7 @@ WHERE r.isdeleted = 0
                                     <cfif isDefined('notedetailshtml') AND len(trim(notedetailshtml))>
                                         <button type="button" 
                                                 class="btn btn-sm btn-outline-primary note-details-btn" 
-                                                data-note-details="#HTMLEditFormat(notedetails)#"
-                                                data-note-html="#HTMLEditFormat(notedetailshtml)#"
-                                                data-note-timestamp="#dateFormat(notetimestamp, "mmm d, yyyy")# at #timeFormat(notetimestamp, "h:mm tt")#"
+                                                data-note-index="#noteIndex#"
                                                 title="View detailed note">
                                             <i class="fe-search"></i>
                                         </button>
@@ -334,19 +334,29 @@ WHERE r.isdeleted = 0
 
 <!--- JavaScript for note details functionality --->
 <script>
+// Store notes data in JavaScript object
+var notesData = [
+    <cfset noteIndex = 0>
+    <cfoutput query="qGetContactNotes">
+        <cfset noteIndex = noteIndex + 1>
+        {
+            details: '#JSStringFormat(notedetails)#',
+            html: '#JSStringFormat(notedetailshtml)#',
+            timestamp: '#dateFormat(notetimestamp, "mmm d, yyyy")# at #timeFormat(notetimestamp, "h:mm tt")#'
+        }<cfif noteIndex LT qGetContactNotes.recordCount>,</cfif>
+    </cfoutput>
+];
+
 // Use event delegation to handle button clicks
 document.addEventListener('click', function(event) {
     if (event.target.closest('.note-details-btn')) {
         const button = event.target.closest('.note-details-btn');
-        const noteDetails = button.getAttribute('data-note-details');
-        const noteDetailsHtml = button.getAttribute('data-note-html');
-        const noteTimestamp = button.getAttribute('data-note-timestamp');
+        const noteIndex = parseInt(button.getAttribute('data-note-index')) - 1; // Convert to 0-based index
         
-        console.log('Note Details:', noteDetails);
-        console.log('Note HTML:', noteDetailsHtml);
-        console.log('Note Timestamp:', noteTimestamp);
-        
-        showNoteDetails(noteDetails, noteDetailsHtml, noteTimestamp);
+        if (notesData[noteIndex]) {
+            const noteData = notesData[noteIndex];
+            showNoteDetails(noteData.details, noteData.html, noteData.timestamp);
+        }
     }
 });
 
@@ -379,10 +389,8 @@ function showNoteDetails(noteDetails, noteDetailsHtml, noteTimestamp) {
     const detailsDiv = document.createElement('div');
     detailsDiv.className = 'border rounded p-3 bg-light';
     if (noteDetailsHtml && noteDetailsHtml.trim()) {
-        // Since the HTML is already encoded in the database, we need to decode it
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = noteDetailsHtml;
-        detailsDiv.innerHTML = tempDiv.innerHTML;
+        // The HTML is already encoded, so we can set it directly
+        detailsDiv.innerHTML = noteDetailsHtml;
     } else {
         const emptyMsg = document.createElement('em');
         emptyMsg.className = 'text-muted';
