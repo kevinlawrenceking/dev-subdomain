@@ -231,6 +231,27 @@ WHERE r.isdeleted = 0
                         <cfset noteIndex = 0>
                         <cfoutput query="qGetContactNotes">
                             <cfset noteIndex = noteIndex + 1>
+                            
+                            <!--- Modal for viewing note details --->
+                            <script>
+                                $(document).ready(function() {
+                                    $("##remotenotedetails#noteid#").on("show.bs.modal", function(event) {
+                                        $(this).find(".modal-body").load("/include/remotenotedetails.cfm?contactid=#contactid#&noteid=#noteid#&returnurl=share");
+                                    });
+                                });
+                            </script>
+                            <div id="remotenotedetails#noteid#" class="modal fade" tabindex="-1" aria-labelledby="standard-modalLabel">
+                                <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h4 class="modal-title" id="standard-modalLabel">Note</h4>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
                             <tr>
                                 <td style="white-space: nowrap;">
                                     <cfif isDefined('notetimestamp') AND isDate(notetimestamp)>
@@ -248,12 +269,9 @@ WHERE r.isdeleted = 0
                                 </td>
                                 <td class="text-center">
                                     <cfif isDefined('notedetailshtml') AND len(trim(notedetailshtml))>
-                                        <button type="button" 
-                                                class="btn btn-sm btn-outline-primary note-details-btn" 
-                                                data-note-index="#noteIndex#"
-                                                title="View detailed note">
+                                        <a href="" data-bs-remote="true" data-bs-toggle="modal" data-bs-target="##remotenotedetails#noteid#" data-bs-placement="top" title="View Details" data-bs-original-title="View Details">
                                             <i class="fe-search"></i>
-                                        </button>
+                                        </a>
                                     <cfelse>
                                         <span class="text-muted">—</span>
                                     </cfif>
@@ -317,88 +335,4 @@ WHERE r.isdeleted = 0
     </div>
 </cfif>
 
-<!--- Note Details Modal --->
-<div class="modal fade" id="noteDetailsModal" tabindex="-1" role="dialog" aria-labelledby="noteDetailsModalLabel">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="noteDetailsModalLabel">Note Details</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="note-details">
-                    <h6 class="text-primary">Note Summary:</h6>
-                    <p class="mb-3" id="noteSummary">No summary available</p>
-                    
-                    <h6 class="text-primary">Detailed Information:</h6>
-                    <div class="border rounded p-3 bg-light" id="noteDetailsHtml">
-                        <em class="text-muted">No detailed information available</em>
-                    </div>
-                    
-                    <small class="text-muted mt-3 d-block" id="noteTimestamp" style="display: none;">
-                        Created: 
-                    </small>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!--- JavaScript for note details functionality --->
-<script>
-// Store notes data in JavaScript object
-var notesData = [
-    <cfset noteIndex = 0>
-    <cfoutput query="qGetContactNotes">
-        <cfset noteIndex = noteIndex + 1>
-        {
-            details: '#JSStringFormat(notedetails)#',
-            html: '#JSStringFormat(notedetailshtml)#',
-            timestamp: '#dateFormat(notetimestamp, "mmm d, yyyy")# at #timeFormat(notetimestamp, "h:mm tt")#'
-        }<cfif noteIndex LT qGetContactNotes.recordCount>,</cfif>
-    </cfoutput>
-];
-
-// Use event delegation to handle button clicks
-document.addEventListener('click', function(event) {
-    if (event.target.closest('.note-details-btn')) {
-        const button = event.target.closest('.note-details-btn');
-        const noteIndex = parseInt(button.getAttribute('data-note-index')) - 1; // Convert to 0-based index
-        
-        if (notesData[noteIndex]) {
-            const noteData = notesData[noteIndex];
-            showNoteDetails(noteData.details, noteData.html, noteData.timestamp);
-        }
-    }
-});
-
-function showNoteDetails(noteDetails, noteDetailsHtml, noteTimestamp) {
-    // Set modal title
-    const previewText = noteDetails && noteDetails.length > 50 ? noteDetails.substring(0, 50) + '...' : noteDetails || 'Note Details';
-    document.getElementById('noteDetailsModalLabel').textContent = 'Note Details: ' + previewText;
-    
-    // Update note summary
-    document.getElementById('noteSummary').textContent = noteDetails || 'No summary available';
-    
-    // Update detailed information
-    const detailsDiv = document.getElementById('noteDetailsHtml');
-    if (noteDetailsHtml && noteDetailsHtml.trim()) {
-        detailsDiv.innerHTML = noteDetailsHtml;
-    } else {
-        detailsDiv.innerHTML = '<em class="text-muted">No detailed information available</em>';
-    }
-    
-    // Update timestamp
-    const timestampElement = document.getElementById('noteTimestamp');
-    if (noteTimestamp) {
-        timestampElement.textContent = 'Created: ' + noteTimestamp;
-        timestampElement.style.display = 'block';
-    } else {
-        timestampElement.style.display = 'none';
-    }
-    
-    // Show the modal
-    var modal = new bootstrap.Modal(document.getElementById('noteDetailsModal'));
-    modal.show();
-}
-</script>
+<!--- Remove the old modal and JavaScript since we're using the working pattern now --->
