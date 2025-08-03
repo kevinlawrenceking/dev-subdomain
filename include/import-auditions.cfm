@@ -351,7 +351,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h5 class="card-title mb-0">
-                                <i class="fe-clock me-2 text-muted"></i>Import History
+                                <i class="fe-clock me-2 text-muted"></i>Import History <cfoutput>#imports.recordcount#</cfoutput>
                             </h5>
                             <cfoutput>
                                 <small class="text-muted">You have <strong>#imports.recordcount#</strong> previous import<cfif imports.recordcount NEQ 1>s</cfif></small>
