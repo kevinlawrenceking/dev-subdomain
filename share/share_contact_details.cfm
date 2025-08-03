@@ -39,7 +39,7 @@
     </cfquery>
     
     <cfcatch type="any">
-        <cfset qGetContactNotes = QueryNew("note_id,notedetails,notedetailshtml,timestamp", "integer,varchar,longvarchar,timestamp")>
+        <cfset qGetContactNotes = QueryNew("note_id,notedetails,notedetailshtml,timestamp", "integer,varchar,varchar,timestamp")>
     </cfcatch>
 </cftry>
 <cftry>
