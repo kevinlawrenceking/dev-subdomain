@@ -325,8 +325,20 @@ WHERE r.isdeleted = 0
                 <h5 class="modal-title" id="noteDetailsModalLabel">Note Details</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body" id="noteDetailsContent">
-                <!-- Content will be populated by JavaScript -->
+            <div class="modal-body">
+                <div class="note-details">
+                    <h6 class="text-primary">Note Summary:</h6>
+                    <p class="mb-3" id="noteSummary">No summary available</p>
+                    
+                    <h6 class="text-primary">Detailed Information:</h6>
+                    <div class="border rounded p-3 bg-light" id="noteDetailsHtml">
+                        <em class="text-muted">No detailed information available</em>
+                    </div>
+                    
+                    <small class="text-muted mt-3 d-block" id="noteTimestamp" style="display: none;">
+                        Created: 
+                    </small>
+                </div>
             </div>
         </div>
     </div>
@@ -365,51 +377,25 @@ function showNoteDetails(noteDetails, noteDetailsHtml, noteTimestamp) {
     const previewText = noteDetails && noteDetails.length > 50 ? noteDetails.substring(0, 50) + '...' : noteDetails || 'Note Details';
     document.getElementById('noteDetailsModalLabel').textContent = 'Note Details: ' + previewText;
     
-    // Create elements safely to avoid XSS issues
-    const noteDetailsDiv = document.createElement('div');
-    noteDetailsDiv.className = 'note-details';
+    // Update note summary
+    document.getElementById('noteSummary').textContent = noteDetails || 'No summary available';
     
-    // Note Summary section
-    const summaryHeader = document.createElement('h6');
-    summaryHeader.className = 'text-primary';
-    summaryHeader.textContent = 'Note Summary:';
-    noteDetailsDiv.appendChild(summaryHeader);
-    
-    const summaryP = document.createElement('p');
-    summaryP.className = 'mb-3';
-    summaryP.textContent = noteDetails || 'No summary available';
-    noteDetailsDiv.appendChild(summaryP);
-    
-    // Detailed Information section
-    const detailsHeader = document.createElement('h6');
-    detailsHeader.className = 'text-primary';
-    detailsHeader.textContent = 'Detailed Information:';
-    noteDetailsDiv.appendChild(detailsHeader);
-    
-    const detailsDiv = document.createElement('div');
-    detailsDiv.className = 'border rounded p-3 bg-light';
+    // Update detailed information
+    const detailsDiv = document.getElementById('noteDetailsHtml');
     if (noteDetailsHtml && noteDetailsHtml.trim()) {
-        // The HTML is already encoded, so we can set it directly
         detailsDiv.innerHTML = noteDetailsHtml;
     } else {
-        const emptyMsg = document.createElement('em');
-        emptyMsg.className = 'text-muted';
-        emptyMsg.textContent = 'No detailed information available';
-        detailsDiv.appendChild(emptyMsg);
+        detailsDiv.innerHTML = '<em class="text-muted">No detailed information available</em>';
     }
-    noteDetailsDiv.appendChild(detailsDiv);
     
-    // Timestamp section
+    // Update timestamp
+    const timestampElement = document.getElementById('noteTimestamp');
     if (noteTimestamp) {
-        const timestampSmall = document.createElement('small');
-        timestampSmall.className = 'text-muted mt-3 d-block';
-        timestampSmall.textContent = 'Created: ' + noteTimestamp;
-        noteDetailsDiv.appendChild(timestampSmall);
+        timestampElement.textContent = 'Created: ' + noteTimestamp;
+        timestampElement.style.display = 'block';
+    } else {
+        timestampElement.style.display = 'none';
     }
-    
-    // Update modal content and show
-    document.getElementById('noteDetailsContent').innerHTML = '';
-    document.getElementById('noteDetailsContent').appendChild(noteDetailsDiv);
     
     // Show the modal
     var modal = new bootstrap.Modal(document.getElementById('noteDetailsModal'));
