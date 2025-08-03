@@ -36,12 +36,12 @@
     <!--- Query to get note details --->
     <cfquery name="qGetNoteDetails" datasource="#dsn#">
         SELECT 
-            note_id,
+            noteid,
             notedetails,
             notedetailshtml,
             timestamp
         FROM noteslog 
-        WHERE note_id = <cfqueryparam value="#val(note_id)#" cfsqltype="cf_sql_integer">
+        WHERE noteid = <cfqueryparam value="#val(note_id)#" cfsqltype="cf_sql_integer">
     </cfquery>
 
     <!--- Check if note was found --->
