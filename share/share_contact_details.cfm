@@ -247,8 +247,10 @@ WHERE r.isdeleted = 0
                                 <td class="text-center">
                                     <cfif isDefined('notedetailshtml') AND len(trim(notedetailshtml))>
                                         <button type="button" 
-                                                class="btn btn-sm btn-outline-primary" 
-                                                onclick="showNoteDetails('#HTMLEditFormat(JSStringFormat(notedetails))#', '#JSStringFormat(notedetailshtml)#', '#dateFormat(notetimestamp, "mmm d, yyyy")# at #timeFormat(notetimestamp, "h:mm tt")#')"
+                                                class="btn btn-sm btn-outline-primary note-details-btn" 
+                                                data-note-details="#HTMLEditFormat(notedetails)#"
+                                                data-note-html="#HTMLEditFormat(notedetailshtml)#"
+                                                data-note-timestamp="#dateFormat(notetimestamp, "mmm d, yyyy")# at #timeFormat(notetimestamp, "h:mm tt")#"
                                                 title="View detailed note">
                                             <i class="fe-search"></i>
                                         </button>
@@ -336,9 +338,21 @@ WHERE r.isdeleted = 0
 
 <!--- JavaScript for note details functionality --->
 <script>
+// Use event delegation to handle button clicks
+document.addEventListener('click', function(event) {
+    if (event.target.closest('.note-details-btn')) {
+        const button = event.target.closest('.note-details-btn');
+        const noteDetails = button.getAttribute('data-note-details');
+        const noteDetailsHtml = button.getAttribute('data-note-html');
+        const noteTimestamp = button.getAttribute('data-note-timestamp');
+        
+        showNoteDetails(noteDetails, noteDetailsHtml, noteTimestamp);
+    }
+});
+
 function showNoteDetails(noteDetails, noteDetailsHtml, noteTimestamp) {
     // Set modal title
-    const previewText = noteDetails.length > 50 ? noteDetails.substring(0, 50) + '...' : noteDetails;
+    const previewText = noteDetails && noteDetails.length > 50 ? noteDetails.substring(0, 50) + '...' : noteDetails || 'Note Details';
     document.getElementById('noteDetailsModalLabel').textContent = 'Note Details: ' + previewText;
     
     // Create elements safely to avoid XSS issues
@@ -365,7 +379,10 @@ function showNoteDetails(noteDetails, noteDetailsHtml, noteTimestamp) {
     const detailsDiv = document.createElement('div');
     detailsDiv.className = 'border rounded p-3 bg-light';
     if (noteDetailsHtml && noteDetailsHtml.trim()) {
-        detailsDiv.innerHTML = noteDetailsHtml;
+        // Since the HTML is already encoded in the database, we need to decode it
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = noteDetailsHtml;
+        detailsDiv.innerHTML = tempDiv.innerHTML;
     } else {
         const emptyMsg = document.createElement('em');
         emptyMsg.className = 'text-muted';
