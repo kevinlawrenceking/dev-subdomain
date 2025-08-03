@@ -7,7 +7,8 @@
 --->
 
 <!--- Set content type for JSON response --->
-<cfcontent type="application/json" charset="utf-8">
+<cfcontent type="application/json">
+<cfheader name="Content-Type" value="application/json; charset=utf-8">
 
 <!--- Include common settings if not already included --->
 <cfif NOT isDefined('dsn')>
@@ -15,7 +16,7 @@
 </cfif>
 
 <!--- Parameter validation --->
-<cfparam name="note_id" default="0">
+<cfparam name="noteid" default="0">
 
 <!--- Initialize response structure --->
 <cfset response = structNew()>
@@ -26,8 +27,8 @@
 <cfset response.timestamp = "">
 
 <cftry>
-    <!--- Validate note_id parameter --->
-    <cfif NOT isNumeric(note_id) OR val(note_id) LTE 0>
+    <!--- Validate noteid parameter --->
+    <cfif NOT isNumeric(noteid) OR val(noteid) LTE 0>
         <cfset response.message = "Invalid note ID provided">
         <cfoutput>#serializeJSON(response)#</cfoutput>
         <cfabort>
@@ -41,7 +42,7 @@
             notedetailshtml,
             notetimestamp
         FROM noteslog 
-        WHERE noteid = <cfqueryparam value="#val(note_id)#" cfsqltype="cf_sql_integer">
+        WHERE noteid = <cfqueryparam value="#val(noteid)#" cfsqltype="cf_sql_integer">
     </cfquery>
 
     <!--- Check if note was found --->
