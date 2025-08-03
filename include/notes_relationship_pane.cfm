@@ -105,25 +105,22 @@
                         </div>
 
                         <!--- Modal for viewing note details --->
-                        <script>
-                            $(document).ready(function() {
-                                $("##remotenotedetails#NotesRelationship.noteid#").on("show.bs.modal", function(event) {
-                                    
-                                    $(this).find(".modal-body").load("/include/remotenotedetails.cfm?contactid=0&noteid=#new_noteid#&returnurl=appoint");
-                                });
-                            });
-                        </script>
-                        <div id="remotenotedetails#NotesRelationship.noteid#" class="modal fade" tabindex="-1" aria-labelledby="standard-modalLabel" >
-
+                        <div id="remotenotedetails#notesRelationship.noteid#" class="modal fade" tabindex="-1" aria-labelledby="standard-modalLabel" >
                             <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
                                 <div class="modal-content">
                                     <div class="modal-header" >
-                                        <h4 class="modal-title" id="standard-modalLabel">Note</h4>
+                                        <h4 class="modal-title" id="standard-modalLabel">Note Details</h4>
                                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                             <span aria-hidden="true">&times;</span>
                                         </button>
                                     </div>
-                                    <div class="modal-body"></div>
+                                    <div class="modal-body">
+                                        <cfif len(trim(notesRelationship.notedetailshtml))>
+                                            #notesRelationship.notedetailshtml#
+                                        <cfelse>
+                                            <p class="text-muted">No additional details available for this note.</p>
+                                        </cfif>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -199,8 +196,8 @@
                             </td>
 
                             <td>#notesRelationship.col5#
-                                <cfif #notedetailshtml# is not ""><BR> 
-                                    <a href="" data-remote="true" data-toggle="modal" data-target="##remotenotedetails#NotesRelationship.noteid#" data-placement="top" title="View Details" data-original-title="View Details">
+                                <cfif len(trim(notesRelationship.notedetailshtml))><BR> 
+                                    <a href="" data-remote="true" data-toggle="modal" data-target="##remotenotedetails#notesRelationship.noteid#" data-placement="top" title="View Details" data-original-title="View Details">
                                         <i class="mdi mdi-eye-outline"></i> Details
                                     </a>
                                 </cfif>
@@ -253,7 +250,7 @@
                     <div class="card mb-1 w-100" >
                         <div class="card-header" id="heading_system_<cfoutput>#notesRelationship.currentrow#</cfoutput>">
                             <h5 class="m-0 align-middle w-100">
-                                <a class="text-dark collapsed" data-bs-toggle="collapse" href="#collapse_system_<cfoutput>#notesRelationship.currentrow#</cfoutput>" aria-expanded="<cfoutput>#header_aria_exanded#</cfoutput>">
+                                <a class="text-dark collapsed" data-toggle="collapse" href="#collapse_system_<cfoutput>#notesRelationship.currentrow#</cfoutput>" aria-expanded="<cfoutput>#header_aria_exanded#</cfoutput>">
                                     <cfoutput> <strong>#this.formatDate(notesRelationship.noteTimestamp)#</strong> -  #timeformat('#notesRelationship.noteTimestamp#','short')# <i class="fe-menu"></i> </cfoutput>
                                     <span class="badge badge-sm badge-blue badge-pill float-end" style="font-size:.7em;">
                                         <cfoutput>  <cfif #notesRelationship.col4# is "1">Public<cfelse>Private</cfif></cfoutput>
@@ -262,7 +259,7 @@
                             </h5>
                         </div>
 
-                        <div id="collapse_system_<cfoutput>#notesRelationship.currentrow#</cfoutput>" class="<cfoutput>#collapse_show#</cfoutput>" aria-labelledby="collapse_system_<cfoutput>#notesRelationship.currentrow#</cfoutput>" data-bs-parent="#accordion_systems">
+                        <div id="collapse_system_<cfoutput>#notesRelationship.currentrow#</cfoutput>" class="<cfoutput>#collapse_show#</cfoutput>" aria-labelledby="collapse_system_<cfoutput>#notesRelationship.currentrow#</cfoutput>" data-parent="#accordion_systems">
                             <div class="card-body">
                                 <cfoutput>
                                     <h5>#notesRelationship.noteDetails# 
