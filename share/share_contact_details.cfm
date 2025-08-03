@@ -32,10 +32,10 @@
             noteid,
             notedetails,
             notedetailshtml,
-            timestamp
+            notetimestamp
         FROM noteslog 
         WHERE contactid = <cfqueryparam value="#contactid#" cfsqltype="cf_sql_integer">
-        ORDER BY timestamp DESC
+        ORDER BY notetimestamp DESC
     </cfquery>
     <cfoutput>#qGetContactNotes.recordcount#</cfoutput>
  
@@ -216,8 +216,8 @@ WHERE r.isdeleted = 0
                         <cfoutput query="qGetContactNotes">
                             <tr>
                                 <td style="white-space: nowrap;">
-                                    <cfif isDefined('timestamp') AND isDate(timestamp)>
-                                        #dateFormat(timestamp, "mmm d, yyyy")#
+                                    <cfif isDefined('notetimestamp') AND isDate(notetimestamp)>
+                                        #dateFormat(notetimestamp, "mmm d, yyyy")#
                                     <cfelse>
                                         &nbsp;
                                     </cfif>

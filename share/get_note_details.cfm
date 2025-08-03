@@ -39,7 +39,7 @@
             noteid,
             notedetails,
             notedetailshtml,
-            timestamp
+            notetimestamp
         FROM noteslog 
         WHERE noteid = <cfqueryparam value="#val(note_id)#" cfsqltype="cf_sql_integer">
     </cfquery>
@@ -54,8 +54,8 @@
         <cfset response.notedetailshtml = qGetNoteDetails.notedetailshtml>
         
         <!--- Format timestamp if available --->
-        <cfif isDate(qGetNoteDetails.timestamp)>
-            <cfset response.timestamp = dateFormat(qGetNoteDetails.timestamp, "mmm d, yyyy") & " at " & timeFormat(qGetNoteDetails.timestamp, "h:mm tt")>
+        <cfif isDate(qGetNoteDetails.notetimestamp)>
+            <cfset response.timestamp = dateFormat(qGetNoteDetails.notetimestamp, "mmm d, yyyy") & " at " & timeFormat(qGetNoteDetails.notetimestamp, "h:mm tt")>
         </cfif>
     </cfif>
 
