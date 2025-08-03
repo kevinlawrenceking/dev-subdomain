@@ -29,7 +29,7 @@
  
     <cfquery name="qGetContactNotes" datasource="#dsn#">
         SELECT 
-            note_id,
+            noteid,
             notedetails,
             notedetailshtml,
             timestamp
@@ -233,7 +233,7 @@ WHERE r.isdeleted = 0
                                     <cfif isDefined('notedetailshtml') AND len(trim(notedetailshtml))>
                                         <button type="button" 
                                                 class="btn btn-sm btn-outline-primary" 
-                                                onclick="showNoteDetails(#note_id#, '#HTMLEditFormat(JSStringFormat(left(notedetails, 50)))#')"
+                                                onclick="showNoteDetails(#noteid#, '#HTMLEditFormat(JSStringFormat(left(notedetails, 50)))#')"
                                                 title="View detailed note">
                                             <i class="fe-search"></i>
                                         </button>
@@ -339,7 +339,7 @@ function showNoteDetails(noteId, notePreview) {
     modal.show();
     
     // Fetch note details via AJAX
-    fetch('/share/get_note_details.cfm?note_id=' + noteId)
+    fetch('/share/get_note_details.cfm?noteid=' + noteId)
         .then(response => response.json())
         .then(data => {
             if (data.success) {
