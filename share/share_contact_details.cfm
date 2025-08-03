@@ -22,22 +22,37 @@
 </cfif>
 
 <!--- Set defaults for required variables --->
+<cfparam name="contactid" default="0">
 <cfparam name="shares" default="#QueryNew('contactid', 'integer')#">
-<cfparam name="contactid" default="#IIF(isDefined('shares.contactid') AND shares.recordCount GT 0, 'shares.contactid', 0)#">
+
+<!--- If contactid is passed via URL, use that; otherwise try to get from shares query --->
+<cfif isDefined('url.contactid') AND isNumeric(url.contactid)>
+    <cfset contactid = val(url.contactid)>
+<cfelseif isDefined('shares.contactid') AND shares.recordCount GT 0 AND isNumeric(shares.contactid)>
+    <cfset contactid = val(shares.contactid)>
+</cfif>
+
+<!--- Validate that we have a valid contactid before proceeding --->
+<cfif NOT isNumeric(contactid) OR val(contactid) LTE 0>
+    <div class="alert alert-danger">
+        <h5>Error: Invalid Contact ID</h5>
+        <p>Unable to load contact details. Contact ID is missing or invalid.</p>
+        <small class="text-muted">Contact ID: #contactid#</small>
+    </div>
+    <cfabort>
+</cfif>
 
 <!--- Get individual notes for this contact --->
- 
-    <cfquery name="qGetContactNotes" datasource="#dsn#">
-        SELECT 
-            noteid,
-            notedetails,
-            notedetailshtml,
-            notetimestamp
-        FROM noteslog 
-        WHERE contactid = <cfqueryparam value="#contactid#" cfsqltype="cf_sql_integer">
-        ORDER BY notetimestamp DESC
-    </cfquery>
-    <cfoutput>#qGetContactNotes.recordcount#</cfoutput>
+<cfquery name="qGetContactNotes" datasource="#dsn#">
+    SELECT 
+        noteid,
+        notedetails,
+        notedetailshtml,
+        notetimestamp
+    FROM noteslog 
+    WHERE contactid = <cfqueryparam value="#contactid#" cfsqltype="cf_sql_integer">
+    ORDER BY notetimestamp DESC
+</cfquery>
  
 <cftry>
     <cfquery name="qGetContactDetail" datasource="#dsn#">
@@ -238,7 +253,7 @@ WHERE r.isdeleted = 0
                                             <i class="fe-search"></i>
                                         </button>
                                     <cfelse>
-                                        <span class="text-muted">--<span>
+                                        <span class="text-muted">—</span>
                                     </cfif>
                                 </td>
                             </tr>
