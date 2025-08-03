@@ -245,7 +245,9 @@ WHERE r.isdeleted = 0
                                     <div class="modal-content">
                                         <div class="modal-header">
                                             <h4 class="modal-title" id="standard-modalLabel">Note</h4>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                <span aria-hidden="true">&times;</span>
+                                            </button>
                                         </div>
                                         <div class="modal-body"></div>
                                     </div>
@@ -269,7 +271,7 @@ WHERE r.isdeleted = 0
                                 </td>
                                 <td class="text-center">
                                     <cfif isDefined('notedetailshtml') AND len(trim(notedetailshtml))>
-                                        <a href="" data-bs-remote="true" data-bs-toggle="modal" data-bs-target="##remotenotedetails#noteid#" data-bs-placement="top" title="View Details" data-bs-original-title="View Details">
+                                        <a href="" data-remote="true" data-toggle="modal" data-target="##remotenotedetails#noteid#" data-placement="top" title="View Details" data-original-title="View Details">
                                             <i class="fe-search"></i>
                                         </a>
                                     <cfelse>
