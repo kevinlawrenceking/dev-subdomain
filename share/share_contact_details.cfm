@@ -32,15 +32,8 @@
     <cfset contactid = val(shares.contactid)>
 </cfif>
 
-<!--- Validate that we have a valid contactid before proceeding --->
-<cfif NOT isNumeric(contactid) OR val(contactid) LTE 0>
-    <div class="alert alert-danger">
-        <h5>Error: Invalid Contact ID</h5>
-        <p>Unable to load contact details. Contact ID is missing or invalid.</p>
-        <cfoutput><small class="text-muted">Contact ID: #contactid#</small></cfoutput>
-    </div>
-    <cfabort>
-</cfif>
+<!--- Only proceed if we have a valid contactid --->
+<cfif isNumeric(contactid) AND val(contactid) GT 0>
 
 <!--- Get individual notes for this contact --->
 <cfquery name="qGetContactNotes" datasource="#dsn#">
@@ -334,6 +327,9 @@ WHERE r.isdeleted = 0
             </div>
         </div>
     </div>
+</cfif>
+
+<!--- Close the contactid validation condition --->
 </cfif>
 
 <!--- Remove the old modal and JavaScript since we're using the working pattern now --->
