@@ -270,7 +270,7 @@ WHERE r.isdeleted = 0
                                 </td>
                                 <td class="text-center">
                                     <cfif isDefined('notedetailshtml') AND len(trim(notedetailshtml))>
-                                        <a href="" data-remote="true" data-toggle="modal" data-target="##remotenotedetails#noteid#" data-placement="top" title="View Details" data-original-title="View Details">
+                                        <a href="#" data-toggle="modal" data-target="##remotenotedetails#noteid#" data-placement="top" title="View Details" data-original-title="View Details">
                                             <i class="fe-search"></i>
                                         </a>
                                     <cfelse>
