@@ -15,7 +15,38 @@
 <cfinclude template="/include/qry/audplatforms_sel.cfm" />
 <cfinclude template="/include/qry/incometypes_sel.cfm" />
 <cfinclude template="/include/qry/audpaycyles_sel.cfm" />
-<cfinclude template="/include/qry/book_det_57_1.cfm" />
+
+<!--- Parameter definition for audroleid --->
+<cfparam name="audroleid" default="0" />
+
+<!--- Conditionally include book details if audroleid exists --->
+<cfif audroleid GT 0>
+    <cfinclude template="/include/qry/book_det_57_1.cfm" />
+<cfelse>
+    <!--- Create a mock book_det query with default values when no audroleid --->
+    <cfquery name="book_det" datasource="#application.dsn#">
+        SELECT 
+            1 as incometypeid,
+            COALESCE(ar.netincome, '') as netincome,
+            COALESCE(ap.payrate, '') as payrate,
+            1 as paycycleid,
+            COALESCE(ap.buyout, '') as buyout,
+            COALESCE(ar.conflict_notes, '') as conflict_notes,
+            ar.conflict_enddate as conflict_enddate,
+            cat.audcatname,
+            ar.audroleid
+        FROM audprojects ap
+        LEFT JOIN audsubcategories sub ON ap.audSubCatID = sub.audSubCatId
+        LEFT JOIN audcategories cat ON sub.audcatid = cat.audcatid
+        LEFT JOIN audroles ar ON ar.audprojectid = ap.audprojectid
+        WHERE ap.audprojectid = <cfqueryparam value="#audprojectid#" cfsqltype="CF_SQL_INTEGER">
+    </cfquery>
+    
+    <!--- Set audroleid from the query result if found --->
+    <cfif book_det.recordcount GT 0 AND len(trim(book_det.audroleid))>
+        <cfset audroleid = book_det.audroleid>
+    </cfif>
+</cfif>
 
 <cfset dbug="N" />
 
