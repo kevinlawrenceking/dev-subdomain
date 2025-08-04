@@ -225,27 +225,6 @@ WHERE r.isdeleted = 0
                         <cfoutput query="qGetContactNotes">
                             <cfset noteIndex = noteIndex + 1>
                             
-                            <!--- Modal for viewing note details --->
-                            <div id="remotenotedetails#noteid#" class="modal fade" tabindex="-1" aria-labelledby="standard-modalLabel">
-                                <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h4 class="modal-title" id="standard-modalLabel">Note Details</h4>
-                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                                <span aria-hidden="true">&times;</span>
-                                            </button>
-                                        </div>
-                                        <div class="modal-body">
-                                            <cfif len(trim(qGetContactNotes.notedetailshtml))>
-                                                #qGetContactNotes.notedetailshtml#
-                                            <cfelse>
-                                                <p class="text-muted">No additional details available for this note.</p>
-                                            </cfif>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
                             <tr>
                                 <td style="white-space: nowrap;">
                                     <cfif isDefined('notetimestamp') AND isDate(notetimestamp)>
@@ -263,14 +242,28 @@ WHERE r.isdeleted = 0
                                 </td>
                                 <td class="text-center">
                                     <cfif len(trim(qGetContactNotes.notedetailshtml))>
-                                        <a href="##" data-toggle="modal" data-target="##remotenotedetails#noteid#" data-placement="top" title="View Details" data-original-title="View Details">
-                                            <i class="fe-search"></i>
+                                        <a href="##" onclick="toggleNoteDetails(#noteid#); return false;" title="View Details">
+                                            <i class="fe-plus-circle" id="icon-#noteid#"></i>
                                         </a>
                                     <cfelse>
                                         <span class="text-muted">—</span>
                                     </cfif>
                                 </td>
                             </tr>
+                            
+                            <!--- Expandable details row --->
+                            <cfif len(trim(qGetContactNotes.notedetailshtml))>
+                                <tr id="details-row-#noteid#" style="display: none;">
+                                    <td colspan="3">
+                                        <div class="alert alert-light border-left border-primary" style="border-left-width: 4px !important;">
+                                            <h6 class="text-primary mb-2">Note Details:</h6>
+                                            <div style="max-height: 300px; overflow-y: auto;">
+                                                #qGetContactNotes.notedetailshtml#
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </cfif>
                         </cfoutput>
                     </tbody>
                 </table>
@@ -331,5 +324,22 @@ WHERE r.isdeleted = 0
 
 <!--- Close the contactid validation condition --->
 </cfif>
+
+<script>
+function toggleNoteDetails(noteid) {
+    var detailsRow = document.getElementById('details-row-' + noteid);
+    var icon = document.getElementById('icon-' + noteid);
+    
+    if (detailsRow.style.display === 'none' || detailsRow.style.display === '') {
+        // Expand - show details
+        detailsRow.style.display = 'table-row';
+        icon.className = 'fe-minus-circle';
+    } else {
+        // Collapse - hide details
+        detailsRow.style.display = 'none';
+        icon.className = 'fe-plus-circle';
+    }
+}
+</script>
 
 <!--- Remove the old modal and JavaScript since we're using the working pattern now --->
