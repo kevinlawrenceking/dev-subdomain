@@ -52,6 +52,12 @@
     <cfargument name="new_contactid" type="numeric" required="false" default="0">
     <cfargument name="new_payrate" type="string" required="false" default="">
     <cfargument name="new_buyout" type="string" required="false" default="">
+    <!--- Additional booking form arguments --->
+    <cfargument name="new_incometypeid" type="numeric" required="false" default="0">
+    <cfargument name="new_netincome" type="string" required="false" default="">
+    <cfargument name="new_paycycleid" type="numeric" required="false" default="0">
+    <cfargument name="new_conflict_notes" type="string" required="false" default="">
+    <cfargument name="new_conflict_enddate" type="string" required="false" default="">
     <cfargument name="new_audprojectID" type="numeric" required="true">
 
 <!--- Build the update query dynamically --->
@@ -100,6 +106,30 @@
 
         <cfif len(trim(arguments.new_buyout))>
             ,buyout = <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#arguments.new_buyout#" maxlength="255">
+        </cfif>
+
+        <cfif arguments.new_incometypeid EQ 0>
+            ,incometypeid = NULL
+        <cfelse>
+            ,incometypeid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_incometypeid#">
+        </cfif>
+
+        <cfif len(trim(arguments.new_netincome))>
+            ,netincome = <cfqueryparam cfsqltype="CF_SQL_DECIMAL" value="#arguments.new_netincome#">
+        </cfif>
+
+        <cfif arguments.new_paycycleid EQ 0>
+            ,paycycleid = NULL
+        <cfelse>
+            ,paycycleid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_paycycleid#">
+        </cfif>
+
+        <cfif len(trim(arguments.new_conflict_notes))>
+            ,conflict_notes = <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#arguments.new_conflict_notes#" maxlength="500">
+        </cfif>
+
+        <cfif len(trim(arguments.new_conflict_enddate))>
+            ,conflict_enddate = <cfqueryparam cfsqltype="CF_SQL_DATE" value="#arguments.new_conflict_enddate#">
         </cfif>
 
     WHERE audprojectID = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_audprojectID#">

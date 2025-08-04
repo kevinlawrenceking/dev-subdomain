@@ -33,5 +33,21 @@
 <cfparam name="new_buyout" default="" />
 <!--- Initialize buyout parameter --->
 
+<!--- Additional booking form parameters --->
+<cfparam name="new_incometypeid" default="" />
+<!--- Initialize income type ID parameter --->
+
+<cfparam name="new_netincome" default="" />
+<!--- Initialize net income parameter --->
+
+<cfparam name="new_paycycleid" default="" />
+<!--- Initialize pay cycle ID parameter --->
+
+<cfparam name="new_conflict_notes" default="" />
+<!--- Initialize conflict notes parameter --->
+
+<cfparam name="new_conflict_enddate" default="" />
+<!--- Initialize conflict end date parameter --->
+
 <cfinclude template="/include/qry/audprojects_ins_401_1.cfm" />
 <!--- Include the template for inserting a new project --->
