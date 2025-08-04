@@ -1320,6 +1320,9 @@ ORDER BY label
     <cfargument name="cur_date" type="date" required="false">
     <cfargument name="materials" type="string" required="false" default="%">
     <cfargument name="audsearch" type="string" required="false" default="">
+    <cfargument name="sel_date_from" type="string" required="false" default="">
+    <cfargument name="sel_date_to" type="string" required="false" default="">
+    <cfargument name="sel_year" type="string" required="false" default="">
 
 <cfquery name="result" >
             SELECT 
@@ -1402,15 +1405,27 @@ ORDER BY label
                 AND t.audtype = <cfqueryparam value="#arguments.sel_audtype#" cfsqltype="CF_SQL_VARCHAR">
             </cfif>
 
-<cfif arguments.auddate eq "future">
+            <cfif arguments.auddate eq "future">
                 AND p.projdate >= <cfqueryparam value="#arguments.cur_date#" cfsqltype="CF_SQL_DATE">
             </cfif>
 
-<cfif arguments.auddate eq "past">
+            <cfif arguments.auddate eq "past">
                 AND p.projdate <= <cfqueryparam value="#arguments.cur_date#" cfsqltype="CF_SQL_DATE">
             </cfif>
 
-<cfif arguments.materials neq "%" and arguments.materials neq "">
+            <!--- Date range filtering --->
+            <cfif len(trim(arguments.sel_date_from)) and isDate(arguments.sel_date_from)>
+                AND p.projdate >= <cfqueryparam value="#arguments.sel_date_from#" cfsqltype="CF_SQL_DATE">
+            </cfif>
+
+            <cfif len(trim(arguments.sel_date_to)) and isDate(arguments.sel_date_to)>
+                AND p.projdate <= <cfqueryparam value="#arguments.sel_date_to#" cfsqltype="CF_SQL_DATE">
+            </cfif>
+
+            <!--- Year filtering --->
+            <cfif len(trim(arguments.sel_year)) and isNumeric(arguments.sel_year)>
+                AND YEAR(p.projdate) = <cfqueryparam value="#arguments.sel_year#" cfsqltype="CF_SQL_INTEGER">
+            </cfif><cfif arguments.materials neq "%" and arguments.materials neq "">
                 AND p.audprojectid IN (#arguments.materials#)
             </cfif>
 

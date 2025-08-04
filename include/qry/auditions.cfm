@@ -14,6 +14,10 @@
 
 <cfparam name="sel_contactid" default="%" />
 <cfparam name="sel_coname" default="%" />
+<!--- Date range and year filtering parameters --->
+<cfparam name="sel_date_from" default="" />
+<cfparam name="sel_date_to" default="" />
+<cfparam name="sel_year" default="" />
 <cfoutput>
 <cfset cur_date = "#dateformat('#now()#','YYYY-MM-dd')#" />
 

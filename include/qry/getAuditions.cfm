@@ -10,5 +10,8 @@
     auddate = auddate,
     cur_date = cur_date,
     materials = materials,
-    audsearch = audsearch
+    audsearch = audsearch,
+    sel_date_from = sel_date_from,
+    sel_date_to = sel_date_to,
+    sel_year = sel_year
 )>

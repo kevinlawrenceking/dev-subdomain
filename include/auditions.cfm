@@ -411,15 +411,15 @@ Key Features:
                                         <cfset gallery_button="btn-secondary"/>
                                     </cfif>
 
-                                    <a href="<cfoutput>/app/auditions/?sel_audstepid=#sel_audstepid#&sel_audtype=#sel_audtype#&sel_contactid=#sel_contactid#&sel_coname=#sel_coname#&auddate=#auddate#&audsearch=#audsearch#&view=tbl&materials=#materials#" class="btn btn-xs #table_button# waves-effect waves-light</cfoutput>">
+                                    <a href="<cfoutput>/app/auditions/?sel_audstepid=#sel_audstepid#&sel_audtype=#sel_audtype#&sel_contactid=#sel_contactid#&sel_coname=#sel_coname#&auddate=#auddate#&audsearch=#audsearch#&view=tbl&materials=#materials#&sel_date_from=#sel_date_from#&sel_date_to=#sel_date_to#&sel_year=#sel_year#</cfoutput>" class="btn btn-xs <cfoutput>#table_button#</cfoutput> waves-effect waves-light">
                                         <i class="mdi mdi-menu fa-2x"></i>
                                     </a>
                                     &nbsp;
-                                    <a href="<cfoutput>/app/auditions/?sel_audstepid=#sel_audstepid#&sel_audtype=#sel_audtype#&sel_contactid=#sel_contactid#&sel_coname=#sel_coname#&auddate=#auddate#&audsearch=#audsearch#&view=glry&materials=#materials#" class="btn btn-xs #gallery_button# waves-effect waves-light</cfoutput>">
+                                    <a href="<cfoutput>/app/auditions/?sel_audstepid=#sel_audstepid#&sel_audtype=#sel_audtype#&sel_contactid=#sel_contactid#&sel_coname=#sel_coname#&auddate=#auddate#&audsearch=#audsearch#&view=glry&materials=#materials#&sel_date_from=#sel_date_from#&sel_date_to=#sel_date_to#&sel_year=#sel_year#</cfoutput>" class="btn btn-xs <cfoutput>#gallery_button#</cfoutput> waves-effect waves-light">
                                         <i class="mdi mdi-drag fa-2x"></i>
                                     </a>
                                     &nbsp;&nbsp;
-                                    <a href="<cfoutput>/app/auditions/?sel_audstepid=#sel_audstepid#&sel_audtype=#sel_audtype#&sel_contactid=#sel_contactid#&sel_coname=#sel_coname#&auddate=#auddate#&audsearch=#audsearch#&view=#view#&isexport=y&materials=#materials#" class="btn btn-xs btn-outline-secondary waves-effect waves-light</cfoutput>" title="Export Auditions">
+                                    <a href="<cfoutput>/app/auditions/?sel_audstepid=#sel_audstepid#&sel_audtype=#sel_audtype#&sel_contactid=#sel_contactid#&sel_coname=#sel_coname#&auddate=#auddate#&audsearch=#audsearch#&view=#view#&isexport=y&materials=#materials#&sel_date_from=#sel_date_from#&sel_date_to=#sel_date_to#&sel_year=#sel_year#</cfoutput>" class="btn btn-xs btn-outline-secondary waves-effect waves-light" title="Export Auditions">
                                         <i class="mdi mdi-export fa-2x"></i>
                                     </a>
                                     &nbsp;&nbsp;
@@ -502,6 +502,9 @@ Key Features:
                                 if (isDefined('audsearch') and len(trim(audsearch))) urlParams = listAppend(urlParams, "audsearch=" & urlEncodeForURL(audsearch), "&");
                                 if (isDefined('view')) urlParams = listAppend(urlParams, "view=" & view, "&");
                                 if (isDefined('materials')) urlParams = listAppend(urlParams, "materials=" & materials, "&");
+                                if (isDefined('sel_date_from') and len(trim(sel_date_from))) urlParams = listAppend(urlParams, "sel_date_from=" & urlEncodeForURL(sel_date_from), "&");
+                                if (isDefined('sel_date_to') and len(trim(sel_date_to))) urlParams = listAppend(urlParams, "sel_date_to=" & urlEncodeForURL(sel_date_to), "&");
+                                if (isDefined('sel_year') and len(trim(sel_year))) urlParams = listAppend(urlParams, "sel_year=" & sel_year, "&");
                                 
                                 // Add pagination parameter placeholder
                                 baseUrl = "/app/auditions/?" & urlParams;
