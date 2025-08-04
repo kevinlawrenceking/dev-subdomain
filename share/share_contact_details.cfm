@@ -243,8 +243,8 @@ WHERE r.isdeleted = 0
                                             </button>
                                         </div>
                                         <div class="modal-body">
-                                            <cfif len(trim(notedetailshtml))>
-                                                #notedetailshtml#
+                                            <cfif len(trim(qGetContactNotes.notedetailshtml))>
+                                                #qGetContactNotes.notedetailshtml#
                                             <cfelse>
                                                 <p class="text-muted">No additional details available for this note.</p>
                                             </cfif>
@@ -269,7 +269,7 @@ WHERE r.isdeleted = 0
                                     </cfif>
                                 </td>
                                 <td class="text-center">
-                                    <cfif isDefined('notedetailshtml') AND len(trim(notedetailshtml))>
+                                    <cfif len(trim(qGetContactNotes.notedetailshtml))>
                                         <a href="##" data-toggle="modal" data-target="##remotenotedetails#noteid#" data-placement="top" title="View Details" data-original-title="View Details">
                                             <i class="fe-search"></i>
                                         </a>
