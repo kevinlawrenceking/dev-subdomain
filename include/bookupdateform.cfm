@@ -62,7 +62,7 @@
             </div>
         </div>   
 
-        <!--- Pay Rate Input --->
+        <!--- this section needs to be added to  --->
         <cfoutput>
             <div class="form-group col-md-6 col-sm-12">
                 <label for="new_payrate">Payrate ($)</label>

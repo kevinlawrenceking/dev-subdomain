@@ -186,7 +186,7 @@
                 </div>
             </div>
         </cfif>
-
+<!--- remove these two element below and add the elements exactly as is from bookupdatefornm.cfm --->
         <cfoutput query="auditionprojectdetails">
             <div class="form-group col-md-12">
                 <label for="payrate">Payrate / Session Fee</label>
@@ -208,7 +208,12 @@
         <div class="form-group text-center col-md-12">
             <button class="btn btn-xs btn-primary waves-effect mb-2 waves-light" style="background-color: #406e8e; border: #406e8e;" type="submit">Update</button>
         </div>
+
+
     </div>
+
+
+    <!--- remove above --->
 </form>
 
 <script src="/app/assets/js/libs/parsleyjs/parsley.min.js"></script>
