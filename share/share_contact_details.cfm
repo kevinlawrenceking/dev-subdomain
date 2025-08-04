@@ -246,7 +246,7 @@ WHERE r.isdeleted = 0
                                             <i class="fe-plus-circle" id="icon-#noteid#"></i>
                                         </a>
                                     <cfelse>
-                                        <span class="text-muted">—</span>
+                                        <span class="text-muted">--</span>
                                     </cfif>
                                 </td>
                             </tr>
@@ -255,7 +255,7 @@ WHERE r.isdeleted = 0
                             <cfif len(trim(qGetContactNotes.notedetailshtml))>
                                 <tr id="details-row-#noteid#" style="display: none;">
                                     <td colspan="3">
-                                        <div class="alert alert-light border-left border-primary" style="border-left-width: 4px !important;">
+                                        <div class="alert alert-light border-left border-info" style="border-left-width: 4px !important;">
                                             <h6 class="text-primary mb-2">Note Details:</h6>
                                             <div style="max-height: 300px; overflow-y: auto;">
                                                 #qGetContactNotes.notedetailshtml#
