@@ -498,6 +498,13 @@ Key Features:
                                     </div>
                                 </div>
                             </div>
+
+                            <!--- Reset button --->
+                            <div class="col-lg-4 pb-1 d-flex align-items-end">
+                                <a href="/app/auditions/" class="btn btn-outline-secondary waves-effect waves-light w-100" title="Clear all filters">
+                                    <i class="fe-refresh-cw me-1"></i> Reset Filters
+                                </a>
+                            </div>
                         </div>
 
                         <!--- Pagination Controls in Search Card (Gallery View Only) --->
