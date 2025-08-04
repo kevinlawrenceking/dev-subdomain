@@ -262,12 +262,12 @@
                             <thead class="table-dark">
                                 <cfoutput query="results" maxrows="1">
                                     <tr>
-                                        <th class="text-nowrap"><i class="fe-calendar me-1"></i>Date/Time</th>
-                                        <th class="text-nowrap"><i class="fe-film me-1"></i>Project</th>
-                                        <th class="text-nowrap"><i class="fe-user me-1"></i>Role</th>
-                                        <th class="text-nowrap"><i class="fe-tag me-1"></i>Category</th>
-                                        <th class="text-nowrap"><i class="fe-users me-1"></i>Source</th>
-                                        <th class="text-nowrap text-center"><i class="fe-check-circle me-1"></i>Import Status</th>
+                                        <th><i class="fe-calendar me-1"></i>Date/Time</th>
+                                        <th><i class="fe-film me-1"></i>Project</th>
+                                        <th><i class="fe-user me-1"></i>Role</th>
+                                        <th><i class="fe-tag me-1"></i>Category</th>
+                                        <th><i class="fe-users me-1"></i>Source</th>
+                                        <th class="text-center"><i class="fe-check-circle me-1"></i>Import Status</th>
                                     </tr>
                                 </cfoutput>
                             </thead>
@@ -351,26 +351,32 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h5 class="card-title mb-0">
-                                <i class="fe-clock me-2 text-muted"></i>Import History
+                                <i class="fe-clock me-2 text-muted"></i>Import History 
                             </h5>
                             <cfoutput>
                                 <small class="text-muted">You have <strong>#imports.recordcount#</strong> previous import<cfif imports.recordcount NEQ 1>s</cfif></small>
                             </cfoutput>
                         </div>
                         <div>
-                            <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="##importHistoryCollapse" aria-expanded="false">
-                                <i class="fe-chevron-down"></i>
+                            <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="##importHistoryCollapse" aria-expanded="true">
+                                <i class="fe-chevron-up"></i>
                             </button>
                         </div>
                     </div>
                 </div>
-                <div class="collapse" id="importHistoryCollapse">
+                <div class="collapse show" id="importHistoryCollapse">
                     <div class="card-body p-0">
-                        <div class="table-responsive">
+                        <!--- Debug: Show record count --->
+                        <cfif imports.recordcount EQ 0>
+                            <div class="alert alert-info m-3">
+                                <i class="fe-info me-2"></i>No import history found.
+                            </div>
+                        <cfelse>
+                            <div class="table-responsive">
                             <table class="table table-hover mb-0" id="basic-datatable-history">
                                 <thead class="table-light">
                                     <tr>
-                                        <th class="px-3 py-3" style="width: 90px;">
+                                        <th class="px-3 py-3">
                                             <i class="fe-hash me-1 text-muted"></i>Batch ID
                                         </th>
                                         <th class="px-3 py-3">
@@ -379,7 +385,7 @@
                                         <th class="px-3 py-3">
                                             <i class="fe-clock me-1 text-muted"></i>Time
                                         </th>
-                                        <th class="px-3 py-3 text-center" style="width: 100px;">
+                                        <th class="px-3 py-3 text-center">
                                             <i class="fe-eye me-1 text-muted"></i>Actions
                                         </th>
                                     </tr>
@@ -409,7 +415,8 @@
                                     </cfloop>
                                 </tbody>
                             </table>
-                        </div>
+                            </div>
+                        </cfif>
                     </div>
                 </div>
             </div>
@@ -535,6 +542,15 @@
 
 <!--- Place this script block at the end of your body section, right before the closing </body> tag --->
 <script>
+    // Toggle chevron icon for import history collapse
+    document.getElementById('importHistoryCollapse').addEventListener('show.bs.collapse', function () {
+        document.querySelector('[data-bs-target="##importHistoryCollapse"] i').className = 'fe-chevron-up';
+    });
+    
+    document.getElementById('importHistoryCollapse').addEventListener('hide.bs.collapse', function () {
+        document.querySelector('[data-bs-target="##importHistoryCollapse"] i').className = 'fe-chevron-down';
+    });
+
     <!--- Function to load record data into the modal form --->
     function loadForm(recordId) {
         $.ajax({

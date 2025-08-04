@@ -71,8 +71,9 @@
                                 <div class="modal-content">
                                     <div class="modal-header" style="background-color: red;">
                                         <h4 class="modal-title">Delete Note Confirmation</h4>
-                                        <button type="button" class="close" data-bs-dismiss="modal" >
-<i class="mdi mdi-close-thick"></i></button>
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
                                     </div>
                                     <div class="modal-body"></div>
                                 </div>
@@ -94,8 +95,9 @@
                                 <div class="modal-content">
                                     <div class="modal-header" >
                                         <h4 class="modal-title" id="standard-modalLabel">Note Links</h4>
-                                        <button type="button" class="close" data-bs-dismiss="modal" >
-<i class="mdi mdi-close-thick"></i></button>
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
                                     </div>
                                     <div class="modal-body"></div>
                                 </div>
@@ -105,20 +107,21 @@
                         <!--- Modal for viewing note details --->
                         <script>
                             $(document).ready(function() {
-                                $("##remotenotedetails#NotesRelationship.noteid#").on("show.bs.modal", function(event) {
+                                $("##remotenotedetails#notesRelationship.noteid#").on("show.bs.modal", function(event) {
                                     
                                     $(this).find(".modal-body").load("/include/remotenotedetails.cfm?contactid=0&noteid=#new_noteid#&returnurl=appoint");
                                 });
                             });
                         </script>
-                        <div id="remotenotedetails#NotesRelationship.noteid#" class="modal fade" tabindex="-1" aria-labelledby="standard-modalLabel" >
+                        <div id="remotenotedetails#notesRelationship.noteid#" class="modal fade" tabindex="-1" aria-labelledby="standard-modalLabel" >
 
                             <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
                                 <div class="modal-content">
                                     <div class="modal-header" >
                                         <h4 class="modal-title" id="standard-modalLabel">Note</h4>
-                                        <button type="button" class="close" data-bs-dismiss="modal" >
-<i class="mdi mdi-close-thick"></i></button>
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
                                     </div>
                                     <div class="modal-body"></div>
                                 </div>
@@ -140,8 +143,9 @@
                                 <div class="modal-content">
                                     <div class="modal-header" >
                                         <h4 class="modal-title" id="standard-modalLabel">Upload an Attachment</h4>
-                                        <button type="button" class="close" data-bs-dismiss="modal" >
-<i class="mdi mdi-close-thick"></i></button>
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
                                     </div>
                                     <div class="modal-body"></div>
                                 </div>
@@ -164,7 +168,7 @@
 
                             <td class="text-nowrap">
                                 <!--- Link to add a new link --->
-                                <a href="" data-bs-remote="true" data-bs-toggle="modal" data-bs-target="##remoteaddlink#notesRelationship.noteid#" data-bs-placement="top" title="Add Link" data-bs-original-title="Add Link">
+                                <a href="" data-remote="true" data-toggle="modal" data-target="##remoteaddlink#notesRelationship.noteid#" data-placement="top" title="Add Link" data-original-title="Add Link">
                                     <i class="fe-plus-circle"></i> Add link
                                 </a>
                                 <cfif #links.recordcount# is not "0">
@@ -180,7 +184,7 @@
 
                             <td class="text-nowrap">
                                 <!--- Link to add a new attachment --->
-                                <a href="" data-bs-remote="true" data-bs-toggle="modal" data-bs-target="##remoteaddattachment#notesRelationship.noteid#" data-bs-placement="top" title="Add attachment" data-bs-original-title="Add attachment">
+                                <a href="" data-remote="true" data-toggle="modal" data-target="##remoteaddattachment#notesRelationship.noteid#" data-placement="top" title="Add attachment" data-original-title="Add attachment">
                                     <i class="fe-plus-circle"></i> Add attachment
                                 </a>
                                 <cfif #attachments.recordcount# is not "0">
@@ -195,8 +199,8 @@
                             </td>
 
                             <td>#notesRelationship.col5#
-                                <cfif #notedetailshtml# is not ""><BR> 
-                                    <a href="" data-bs-remote="true" data-bs-toggle="modal" data-bs-target="##remotenotedetails#NotesRelationship.noteid#" data-bs-placement="top" title="View Details" data-bs-original-title="View Details">
+                                <cfif len(trim(notesRelationship.notedetailshtml))><BR> 
+                                    <a href="" data-remote="true" data-toggle="modal" data-target="##remotenotedetails#notesRelationship.noteid#" data-placement="top" title="View Details" data-original-title="View Details">
                                         <i class="mdi mdi-eye-outline"></i> Details
                                     </a>
                                 </cfif>
@@ -204,7 +208,7 @@
 
                             <td>
                                 <!--- Link to delete the note --->
-                                <a title="Delete Note" href="" data-bs-toggle="modal" data-bs-target="##remoteDeleteFormNote#notesRelationship.noteid#">
+                                <a title="Delete Note" href="" data-toggle="modal" data-target="##remoteDeleteFormNote#notesRelationship.noteid#">
                                     <i class="mdi mdi-trash-can-outline mr-1"></i>
                                 </a>
                             </td>
@@ -249,7 +253,7 @@
                     <div class="card mb-1 w-100" >
                         <div class="card-header" id="heading_system_<cfoutput>#notesRelationship.currentrow#</cfoutput>">
                             <h5 class="m-0 align-middle w-100">
-                                <a class="text-dark collapsed" data-bs-toggle="collapse" href="#collapse_system_<cfoutput>#notesRelationship.currentrow#</cfoutput>" aria-expanded="<cfoutput>#header_aria_exanded#</cfoutput>">
+                                <a class="text-dark collapsed" data-toggle="collapse" href="#collapse_system_<cfoutput>#notesRelationship.currentrow#</cfoutput>" aria-expanded="<cfoutput>#header_aria_exanded#</cfoutput>">
                                     <cfoutput> <strong>#this.formatDate(notesRelationship.noteTimestamp)#</strong> -  #timeformat('#notesRelationship.noteTimestamp#','short')# <i class="fe-menu"></i> </cfoutput>
                                     <span class="badge badge-sm badge-blue badge-pill float-end" style="font-size:.7em;">
                                         <cfoutput>  <cfif #notesRelationship.col4# is "1">Public<cfelse>Private</cfif></cfoutput>
@@ -258,7 +262,7 @@
                             </h5>
                         </div>
 
-                        <div id="collapse_system_<cfoutput>#notesRelationship.currentrow#</cfoutput>" class="<cfoutput>#collapse_show#</cfoutput>" aria-labelledby="collapse_system_<cfoutput>#notesRelationship.currentrow#</cfoutput>" data-bs-parent="#accordion_systems">
+                        <div id="collapse_system_<cfoutput>#notesRelationship.currentrow#</cfoutput>" class="<cfoutput>#collapse_show#</cfoutput>" aria-labelledby="collapse_system_<cfoutput>#notesRelationship.currentrow#</cfoutput>" data-parent="#accordion_systems">
                             <div class="card-body">
                                 <cfoutput>
                                     <h5>#notesRelationship.noteDetails# 
