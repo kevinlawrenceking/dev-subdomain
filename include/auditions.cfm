@@ -11,7 +11,7 @@ Purpose:
 Part of TAO Relationship System:
 - Audition Tracking and Management Module
 - Integrates with Contact Management for casting director information
-- Supports audition workflow tracking (Audition → Callback → Redirect → Pin/Avail → Booking)
+- Supports audition workflow tracking (Audition â†’ Callback â†’ Redirect â†’ Pin/Avail â†’ Booking)
 
 Database Tables/Components:
 - audprojects (main audition project data)
@@ -355,9 +355,6 @@ Key Features:
                             <input type="hidden" name="auddate" value="%"/>
                             <input type="hidden" name="page" value="1"/>
                             <input type="hidden" name="pageSize" value="#pageSize#"/>
-                            <input type="hidden" name="sel_date_from" value="#sel_date_from#"/>
-                            <input type="hidden" name="sel_date_to" value="#sel_date_to#"/>
-                            <input type="hidden" name="sel_year" value="#sel_year#"/>
                         </cfoutput>
 
                         <div class="row">
@@ -410,15 +407,15 @@ Key Features:
                                         <cfset gallery_button="btn-secondary"/>
                                     </cfif>
 
-                                    <a href="<cfoutput>/app/auditions/?sel_audstepid=#sel_audstepid#&sel_audtype=#sel_audtype#&sel_contactid=#sel_contactid#&sel_coname=#sel_coname#&sel_date_from=#sel_date_from#&sel_date_to=#sel_date_to#&sel_year=#sel_year#&auddate=#auddate#&audsearch=#audsearch#&view=tbl&materials=#materials#" class="btn btn-xs #table_button# waves-effect waves-light</cfoutput>">
+                                    <a href="<cfoutput>/app/auditions/?sel_audstepid=#sel_audstepid#&sel_audtype=#sel_audtype#&sel_contactid=#sel_contactid#&sel_coname=#sel_coname#&auddate=#auddate#&audsearch=#audsearch#&view=tbl&materials=#materials#" class="btn btn-xs #table_button# waves-effect waves-light</cfoutput>">
                                         <i class="mdi mdi-menu fa-2x"></i>
                                     </a>
                                     &nbsp;
-                                    <a href="<cfoutput>/app/auditions/?sel_audstepid=#sel_audstepid#&sel_audtype=#sel_audtype#&sel_contactid=#sel_contactid#&sel_coname=#sel_coname#&sel_date_from=#sel_date_from#&sel_date_to=#sel_date_to#&sel_year=#sel_year#&auddate=#auddate#&audsearch=#audsearch#&view=glry&materials=#materials#" class="btn btn-xs #gallery_button# waves-effect waves-light</cfoutput>">
+                                    <a href="<cfoutput>/app/auditions/?sel_audstepid=#sel_audstepid#&sel_audtype=#sel_audtype#&sel_contactid=#sel_contactid#&sel_coname=#sel_coname#&auddate=#auddate#&audsearch=#audsearch#&view=glry&materials=#materials#" class="btn btn-xs #gallery_button# waves-effect waves-light</cfoutput>">
                                         <i class="mdi mdi-drag fa-2x"></i>
                                     </a>
                                     &nbsp;&nbsp;
-                                    <a href="<cfoutput>/app/auditions/?sel_audstepid=#sel_audstepid#&sel_audtype=#sel_audtype#&sel_contactid=#sel_contactid#&sel_coname=#sel_coname#&sel_date_from=#sel_date_from#&sel_date_to=#sel_date_to#&sel_year=#sel_year#&auddate=#auddate#&audsearch=#audsearch#&view=#view#&isexport=y&materials=#materials#" class="btn btn-xs btn-outline-secondary waves-effect waves-light</cfoutput>" title="Export Auditions">
+                                    <a href="<cfoutput>/app/auditions/?sel_audstepid=#sel_audstepid#&sel_audtype=#sel_audtype#&sel_contactid=#sel_contactid#&sel_coname=#sel_coname#&auddate=#auddate#&audsearch=#audsearch#&view=#view#&isexport=y&materials=#materials#" class="btn btn-xs btn-outline-secondary waves-effect waves-light</cfoutput>" title="Export Auditions">
                                         <i class="mdi mdi-export fa-2x"></i>
                                     </a>
                                     &nbsp;&nbsp;
@@ -454,46 +451,6 @@ Key Features:
                             </div>
 
                             <div class="col-lg-4 pb-1"></div>
-
-                            <!--- Date Range Filter --->
-                            <div class="col-lg-4 pb-1">
-                                <div class="input-group">
-                                    <input type="date" 
-                                           name="sel_date_from" 
-                                           id="sel_date_from" 
-                                           class="form-control form-control-sm" 
-                                           value="<cfoutput>#sel_date_from#</cfoutput>" 
-                                           placeholder="From Date" 
-                                           title="From Date">
-                                    <span class="input-group-text">to</span>
-                                    <input type="date" 
-                                           name="sel_date_to" 
-                                           id="sel_date_to" 
-                                           class="form-control form-control-sm" 
-                                           value="<cfoutput>#sel_date_to#</cfoutput>" 
-                                           placeholder="To Date" 
-                                           title="To Date">
-                                </div>
-                            </div>
-
-                            <!--- Year Filter --->
-                            <div class="col-lg-4 pb-1">
-                                <select id="sel_year" name="sel_year" class="form-control" onchange="this.form.submit()">
-                                    <option value="%">All Years</option>
-                                    <cfloop from="#year(now())#" to="#year(now())-10#" step="-1" index="yearOption">
-                                        <cfoutput>
-                                            <option value="#yearOption#" <cfif "#yearOption#" is "#sel_year#">selected</cfif>>#yearOption#</option>
-                                        </cfoutput>
-                                    </cfloop>
-                                </select>
-                            </div>
-
-                            <div class="col-lg-4 pb-1">
-                                <!--- Apply Date Filter Button --->
-                                <button type="submit" class="btn btn-outline-primary btn-sm">
-                                    <i class="mdi mdi-filter"></i> Apply Date Filter
-                                </button>
-                            </div>
 
                             <!--- Search functionality --->
                             <div class="col-lg-8 pb-1">
@@ -538,9 +495,6 @@ Key Features:
                                 if (isDefined('sel_audcatid') and sel_audcatid neq "%") urlParams = listAppend(urlParams, "sel_audcatid=" & sel_audcatid, "&");
                                 if (isDefined('sel_contactid') and sel_contactid neq "%") urlParams = listAppend(urlParams, "sel_contactid=" & sel_contactid, "&");
                                 if (isDefined('sel_coname') and sel_coname neq "%") urlParams = listAppend(urlParams, "sel_coname=" & urlEncodeForURL(sel_coname), "&");
-                                if (isDefined('sel_date_from') and len(trim(sel_date_from))) urlParams = listAppend(urlParams, "sel_date_from=" & sel_date_from, "&");
-                                if (isDefined('sel_date_to') and len(trim(sel_date_to))) urlParams = listAppend(urlParams, "sel_date_to=" & sel_date_to, "&");
-                                if (isDefined('sel_year') and sel_year neq "%") urlParams = listAppend(urlParams, "sel_year=" & sel_year, "&");
                                 if (isDefined('audsearch') and len(trim(audsearch))) urlParams = listAppend(urlParams, "audsearch=" & urlEncodeForURL(audsearch), "&");
                                 if (isDefined('view')) urlParams = listAppend(urlParams, "view=" & view, "&");
                                 if (isDefined('materials')) urlParams = listAppend(urlParams, "materials=" & materials, "&");
