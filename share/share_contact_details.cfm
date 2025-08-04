@@ -36,10 +36,24 @@
 .note-toggle-icon {
     transition: transform 0.3s ease-in-out;
     cursor: pointer;
+    color: #406e8e !important;
+    text-decoration: none !important;
+}
+
+/* Remove underline from note toggle links */
+a:hover .note-toggle-icon,
+a:focus .note-toggle-icon,
+a .note-toggle-icon {
+    text-decoration: none !important;
 }
 
 .note-toggle-icon.expanded {
     transform: rotate(45deg);
+}
+
+/* Custom border color for note details */
+.border-custom {
+    border-left-color: #406e8e !important;
 }
 
 </style>
@@ -283,7 +297,7 @@ WHERE r.isdeleted = 0
                                 <tr id="details-row-#noteid#" class="note-details-row">
                                     <td colspan="3">
                                         <div class="note-details-content">
-                                            <div class="alert alert-light border-left border-info" style="border-left-width: 4px !important;">
+                                            <div class="alert alert-light border-left border-custom" style="border-left-width: 4px !important;">
                                                 <h6 class="text-primary mb-2">Note Details:</h6>
                                                 <div style="max-height: 300px; overflow-y: auto;">
                                                     #qGetContactNotes.notedetailshtml#
@@ -359,14 +373,14 @@ function toggleNoteDetails(noteid) {
     var detailsRow = document.getElementById('details-row-' + noteid);
     var icon = document.getElementById('icon-' + noteid);
     
-    if (detailsRow.style.display === 'none' || detailsRow.style.display === '') {
-        // Expand - show details
-        detailsRow.style.display = 'table-row';
-        icon.className = 'fe-minus-circle';
+    if (detailsRow.classList.contains('expanded')) {
+        // Collapse - hide details with smooth animation
+        detailsRow.classList.remove('expanded');
+        icon.className = 'fe-plus-circle note-toggle-icon';
     } else {
-        // Collapse - hide details
-        detailsRow.style.display = 'none';
-        icon.className = 'fe-plus-circle';
+        // Expand - show details with smooth animation
+        detailsRow.classList.add('expanded');
+        icon.className = 'fe-minus-circle note-toggle-icon expanded';
     }
 }
 </script>
