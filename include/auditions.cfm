@@ -454,7 +454,28 @@ Key Features:
                                 </select>
                             </div>
 
-                            <div class="col-lg-4 pb-1"></div>
+                            <!--- Date Range Filters --->
+                            <div class="col-lg-4 pb-1">
+                                <label for="sel_date_from" class="form-label">Date From:</label>
+                                <input type="date" id="sel_date_from" name="sel_date_from" class="form-control" value="<cfoutput>#sel_date_from#</cfoutput>" onchange="this.form.submit()">
+                            </div>
+
+                            <div class="col-lg-4 pb-1">
+                                <label for="sel_date_to" class="form-label">Date To:</label>
+                                <input type="date" id="sel_date_to" name="sel_date_to" class="form-control" value="<cfoutput>#sel_date_to#</cfoutput>" onchange="this.form.submit()">
+                            </div>
+
+                            <div class="col-lg-4 pb-1">
+                                <label for="sel_year" class="form-label">Year:</label>
+                                <select id="sel_year" name="sel_year" class="form-control" onchange="this.form.submit()">
+                                    <option value="">All Years</option>
+                                    <cfoutput>
+                                        <cfloop from="#year(now())+1#" to="#year(now())-10#" step="-1" index="yearOption">
+                                            <option value="#yearOption#" <cfif sel_year eq yearOption>selected</cfif>>#yearOption#</option>
+                                        </cfloop>
+                                    </cfoutput>
+                                </select>
+                            </div>
 
                             <!--- Search functionality --->
                             <div class="col-lg-8 pb-1">
