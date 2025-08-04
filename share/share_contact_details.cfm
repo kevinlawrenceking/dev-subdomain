@@ -251,7 +251,7 @@ WHERE r.isdeleted = 0
     <div class="row mt-3">
         <div class="col-md-12">
             <h5 class="text-primary">Notes</h5>
-            <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+            <div class="table-responsive" style="max-height: 100px; overflow-y: auto;">
                 <table class="table table-sm table-striped">
                     <thead>
                         <tr>
