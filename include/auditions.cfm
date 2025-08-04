@@ -51,6 +51,10 @@ Key Features:
 <cfparam name="isexport" default="N"/>
 <cfparam name="sel_audcatid" default="%"/>
 <cfparam name="byimport" default=""/>
+<!--- Date range filter parameters --->
+<cfparam name="sel_date_from" default=""/>
+<cfparam name="sel_date_to" default=""/>
+<cfparam name="sel_year" default=""/>
 <!--- Pagination parameters --->
 <cfparam name="page" default="1"/>
 <cfparam name="pageSize" default="12"/>
