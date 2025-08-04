@@ -287,7 +287,7 @@ WHERE r.isdeleted = 0
                                             <i class="fe-plus-circle note-toggle-icon" id="icon-#noteid#"></i>
                                         </a>
                                     <cfelse>
-                                        <span class="text-muted">--</span>
+                                        <span class="text-muted">&nbsp;</span>
                                     </cfif>
                                 </td>
                             </tr>
