@@ -15,6 +15,33 @@
     border-color:  #406e8e !important;
 }
 
+/* Smooth slide animation for note details */
+.note-details-row {
+    transition: all 0.4s ease-in-out;
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+}
+
+.note-details-row.expanded {
+    max-height: 500px;
+    opacity: 1;
+}
+
+.note-details-content {
+    padding: 15px 0;
+}
+
+/* Icon rotation animation */
+.note-toggle-icon {
+    transition: transform 0.3s ease-in-out;
+    cursor: pointer;
+}
+
+.note-toggle-icon.expanded {
+    transform: rotate(45deg);
+}
+
 </style>
 <!--- Include common settings if not already included --->
 <cfif NOT isDefined('dsn')>
