@@ -270,7 +270,7 @@ WHERE r.isdeleted = 0
                                 <td class="text-center">
                                     <cfif len(trim(qGetContactNotes.notedetailshtml))>
                                         <a href="##" onclick="toggleNoteDetails(#noteid#); return false;" title="View Details">
-                                            <i class="fe-plus-circle" id="icon-#noteid#"></i>
+                                            <i class="fe-plus-circle note-toggle-icon" id="icon-#noteid#"></i>
                                         </a>
                                     <cfelse>
                                         <span class="text-muted">--</span>
@@ -280,12 +280,14 @@ WHERE r.isdeleted = 0
                             
                             <!--- Expandable details row --->
                             <cfif len(trim(qGetContactNotes.notedetailshtml))>
-                                <tr id="details-row-#noteid#" style="display: none;">
+                                <tr id="details-row-#noteid#" class="note-details-row">
                                     <td colspan="3">
-                                        <div class="alert alert-light border-left border-info" style="border-left-width: 4px !important;">
-                                            <h6 class="text-primary mb-2">Note Details:</h6>
-                                            <div style="max-height: 300px; overflow-y: auto;">
-                                                #qGetContactNotes.notedetailshtml#
+                                        <div class="note-details-content">
+                                            <div class="alert alert-light border-left border-info" style="border-left-width: 4px !important;">
+                                                <h6 class="text-primary mb-2">Note Details:</h6>
+                                                <div style="max-height: 300px; overflow-y: auto;">
+                                                    #qGetContactNotes.notedetailshtml#
+                                                </div>
                                             </div>
                                         </div>
                                     </td>
