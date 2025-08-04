@@ -526,12 +526,12 @@ Key Features:
                                 if (isDefined('sel_audstepid') and sel_audstepid neq "%") urlParams = listAppend(urlParams, "sel_audstepid=" & sel_audstepid, "&");
                                 if (isDefined('sel_audcatid') and sel_audcatid neq "%") urlParams = listAppend(urlParams, "sel_audcatid=" & sel_audcatid, "&");
                                 if (isDefined('sel_contactid') and sel_contactid neq "%") urlParams = listAppend(urlParams, "sel_contactid=" & sel_contactid, "&");
-                                if (isDefined('sel_coname') and sel_coname neq "%") urlParams = listAppend(urlParams, "sel_coname=" & urlEncodeForURL(sel_coname), "&");
-                                if (isDefined('audsearch') and len(trim(audsearch))) urlParams = listAppend(urlParams, "audsearch=" & urlEncodeForURL(audsearch), "&");
+                                if (isDefined('sel_coname') and sel_coname neq "%") urlParams = listAppend(urlParams, "sel_coname=" & urlEncodedFormat(sel_coname), "&");
+                                if (isDefined('audsearch') and len(trim(audsearch))) urlParams = listAppend(urlParams, "audsearch=" & urlEncodedFormat(audsearch), "&");
                                 if (isDefined('view')) urlParams = listAppend(urlParams, "view=" & view, "&");
                                 if (isDefined('materials')) urlParams = listAppend(urlParams, "materials=" & materials, "&");
-                                if (isDefined('sel_date_from') and len(trim(sel_date_from))) urlParams = listAppend(urlParams, "sel_date_from=" & urlEncodeForURL(sel_date_from), "&");
-                                if (isDefined('sel_date_to') and len(trim(sel_date_to))) urlParams = listAppend(urlParams, "sel_date_to=" & urlEncodeForURL(sel_date_to), "&");
+                                if (isDefined('sel_date_from') and len(trim(sel_date_from))) urlParams = listAppend(urlParams, "sel_date_from=" & urlEncodedFormat(sel_date_from), "&");
+                                if (isDefined('sel_date_to') and len(trim(sel_date_to))) urlParams = listAppend(urlParams, "sel_date_to=" & urlEncodedFormat(sel_date_to), "&");
                                 if (isDefined('sel_year') and len(trim(sel_year))) urlParams = listAppend(urlParams, "sel_year=" & sel_year, "&");
                                 
                                 // Add pagination parameter placeholder
