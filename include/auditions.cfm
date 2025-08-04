@@ -51,6 +51,13 @@ Key Features:
 <cfparam name="isexport" default="N"/>
 <cfparam name="sel_audcatid" default="%"/>
 <cfparam name="byimport" default=""/>
+<!--- Search and filter parameters --->
+<cfparam name="sel_audstepid" default="%"/>
+<cfparam name="sel_audtype" default="%"/>
+<cfparam name="sel_contactid" default="%"/>
+<cfparam name="auddate" default="%"/>
+<cfparam name="materials" default="%"/>
+<cfparam name="audsearch" default=""/>
 <!--- Date range filter parameters --->
 <cfparam name="sel_date_from" default=""/>
 <cfparam name="sel_date_to" default=""/>
@@ -456,7 +463,7 @@ Key Features:
 
                             <!--- Date Range Filters --->
                             <div class="col-lg-4 pb-1">
-                                <label for="sel_date_from" class="form-label">xxxDate From:</label>
+                                <label for="sel_date_from" class="form-label">Date From:</label>
                                 <input type="date" id="sel_date_from" name="sel_date_from" class="form-control" value="<cfoutput>#sel_date_from#</cfoutput>" onchange="this.form.submit()">
                             </div>
 
