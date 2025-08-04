@@ -36,7 +36,7 @@ Key Features:
 
 ===========================================================================================
 --->
-
+<cfabort>
 <!--- Export handling --->
 <cfif isdefined('isexport') and isexport EQ "Y">
     <cfset session.projectlist = projectlist />
