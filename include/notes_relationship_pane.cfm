@@ -105,22 +105,25 @@
                         </div>
 
                         <!--- Modal for viewing note details --->
+                        <script>
+                            $(document).ready(function() {
+                                $("##remotenotedetails#notesRelationship.noteid#").on("show.bs.modal", function(event) {
+                                    
+                                    $(this).find(".modal-body").load("/include/remotenotedetails.cfm?contactid=0&noteid=#new_noteid#&returnurl=appoint");
+                                });
+                            });
+                        </script>
                         <div id="remotenotedetails#notesRelationship.noteid#" class="modal fade" tabindex="-1" aria-labelledby="standard-modalLabel" >
+
                             <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
                                 <div class="modal-content">
                                     <div class="modal-header" >
-                                        <h4 class="modal-title" id="standard-modalLabel">Note Details</h4>
+                                        <h4 class="modal-title" id="standard-modalLabel">Note</h4>
                                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                             <span aria-hidden="true">&times;</span>
                                         </button>
                                     </div>
-                                    <div class="modal-body">
-                                        <cfif len(trim(notesRelationship.notedetailshtml))>
-                                            #notesRelationship.notedetailshtml#
-                                        <cfelse>
-                                            <p class="text-muted">No additional details available for this note.</p>
-                                        </cfif>
-                                    </div>
+                                    <div class="modal-body"></div>
                                 </div>
                             </div>
                         </div>

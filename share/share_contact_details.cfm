@@ -233,23 +233,22 @@ WHERE r.isdeleted = 0
                             <cfset noteIndex = noteIndex + 1>
                             
                             <!--- Modal for viewing note details --->
-                            <script>
-                                $(document).ready(function() {
-                                    $("##remotenotedetails#noteid#").on("show.bs.modal", function(event) {
-                                        $(this).find(".modal-body").load("/include/remotenotedetails.cfm?contactid=#contactid#&noteid=#noteid#&returnurl=share");
-                                    });
-                                });
-                            </script>
                             <div id="remotenotedetails#noteid#" class="modal fade" tabindex="-1" aria-labelledby="standard-modalLabel">
                                 <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
                                     <div class="modal-content">
                                         <div class="modal-header">
-                                            <h4 class="modal-title" id="standard-modalLabel">Note</h4>
+                                            <h4 class="modal-title" id="standard-modalLabel">Note Details</h4>
                                             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                                 <span aria-hidden="true">&times;</span>
                                             </button>
                                         </div>
-                                        <div class="modal-body"></div>
+                                        <div class="modal-body">
+                                            <cfif len(trim(notedetailshtml))>
+                                                #notedetailshtml#
+                                            <cfelse>
+                                                <p class="text-muted">No additional details available for this note.</p>
+                                            </cfif>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
