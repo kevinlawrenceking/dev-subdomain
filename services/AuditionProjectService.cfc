@@ -1291,6 +1291,7 @@ ORDER BY label
 
 <cfquery name="result" >
             SELECT 
+                a4.audroleid,
                 a.audprojectid, 
                 a.projname, 
                 a.projDescription, 
