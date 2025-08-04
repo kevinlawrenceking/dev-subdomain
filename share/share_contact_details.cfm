@@ -251,7 +251,7 @@ WHERE r.isdeleted = 0
     <div class="row mt-3">
         <div class="col-md-12">
             <h5 class="text-primary">Notes</h5>
-            <div class="table-responsive" style="max-height: 100px; overflow-y: auto;">
+            <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
                 <table class="table table-sm table-striped">
                     <thead>
                         <tr>
@@ -373,19 +373,30 @@ function toggleNoteDetails(noteid) {
     var icon = document.getElementById('icon-' + noteid);
     
     if (detailsRow.classList.contains('expanded')) {
-        // Collapse - animate to 0 height
-        detailsRow.style.maxHeight = detailsRow.scrollHeight + 'px';
-        // Force reflow
-        detailsRow.offsetHeight;
+        // Collapse - hide details with smooth animation
         detailsRow.style.maxHeight = '0px';
         detailsRow.classList.remove('expanded');
         icon.className = 'fe-plus-circle note-toggle-icon';
     } else {
         // Expand - calculate actual content height and animate to it
+        detailsRow.style.maxHeight = 'none';
         var actualHeight = detailsRow.scrollHeight;
+        detailsRow.style.maxHeight = '0px';
+        
+        // Force reflow
+        detailsRow.offsetHeight;
+        
+        // Animate to actual height
         detailsRow.style.maxHeight = actualHeight + 'px';
         detailsRow.classList.add('expanded');
         icon.className = 'fe-minus-circle note-toggle-icon expanded';
+        
+        // Remove inline max-height after animation completes
+        setTimeout(function() {
+            if (detailsRow.classList.contains('expanded')) {
+                detailsRow.style.maxHeight = 'none';
+            }
+        }, 400);
     }
 }
 </script>
