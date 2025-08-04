@@ -456,7 +456,7 @@ Key Features:
 
                             <!--- Date Range Filters --->
                             <div class="col-lg-4 pb-1">
-                                <label for="sel_date_from" class="form-label">Date From:</label>
+                                <label for="sel_date_from" class="form-label">xxxDate From:</label>
                                 <input type="date" id="sel_date_from" name="sel_date_from" class="form-control" value="<cfoutput>#sel_date_from#</cfoutput>" onchange="this.form.submit()">
                             </div>
 
