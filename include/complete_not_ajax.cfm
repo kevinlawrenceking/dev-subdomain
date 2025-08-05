@@ -1,7 +1,7 @@
 <!--- complete_not_ajax.cfm [UPDATED WITH DEBUG COUNTERS] --->
 <cfparam name="hide_completed" default="Y" />
 <cfparam name="src" default="c" />
-<cfset dbug = "Y" />
+<cfset dbug = "N" />
 
 <cfset debugCounters = {
   selectedNotifications = 0,
