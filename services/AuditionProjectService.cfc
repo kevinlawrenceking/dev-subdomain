@@ -60,7 +60,7 @@
     <cfargument name="new_conflict_enddate" type="string" required="false" default="">
     <cfargument name="new_audprojectID" type="numeric" required="true">
 
-<!--- Build the update query dynamically --->
+<!--- Update audprojects table with project-level fields --->
 <cfquery>
     UPDATE audprojects
     SET
@@ -100,40 +100,55 @@
             ,contactid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_contactid#">
         </cfif>
 
-        <cfif len(trim(arguments.new_payrate))>
-            ,payrate = <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#arguments.new_payrate#" maxlength="100">
-        </cfif>
-
         <cfif len(trim(arguments.new_buyout))>
             ,buyout = <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#arguments.new_buyout#" maxlength="255">
         </cfif>
 
-        <cfif arguments.new_incometypeid EQ 0>
-            ,incometypeid = NULL
-        <cfelse>
-            ,incometypeid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_incometypeid#">
+    WHERE audprojectID = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_audprojectID#">
+</cfquery>
+
+<!--- Update audroles table with role-level booking fields --->
+<cfquery>
+    UPDATE audroles
+    SET
+        <cfif len(trim(arguments.new_payrate))>
+            payrate = <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#arguments.new_payrate#" maxlength="100">
         </cfif>
 
         <cfif len(trim(arguments.new_netincome))>
-            ,netincome = <cfqueryparam cfsqltype="CF_SQL_DECIMAL" value="#arguments.new_netincome#">
+            <cfif len(trim(arguments.new_payrate))>,</cfif>netincome = <cfqueryparam cfsqltype="CF_SQL_DECIMAL" value="#arguments.new_netincome#">
         </cfif>
 
-        <cfif arguments.new_paycycleid EQ 0>
-            ,paycycleid = NULL
-        <cfelse>
-            ,paycycleid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_paycycleid#">
+        <cfif arguments.new_paycycleid GT 0>
+            <cfif len(trim(arguments.new_payrate)) OR len(trim(arguments.new_netincome))>,</cfif>paycycleid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_paycycleid#">
         </cfif>
 
         <cfif len(trim(arguments.new_conflict_notes))>
-            ,conflict_notes = <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#arguments.new_conflict_notes#" maxlength="500">
+            <cfif len(trim(arguments.new_payrate)) OR len(trim(arguments.new_netincome)) OR arguments.new_paycycleid GT 0>,</cfif>conflict_notes = <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#arguments.new_conflict_notes#" maxlength="500">
         </cfif>
 
         <cfif len(trim(arguments.new_conflict_enddate))>
-            ,conflict_enddate = <cfqueryparam cfsqltype="CF_SQL_DATE" value="#arguments.new_conflict_enddate#">
+            <cfif len(trim(arguments.new_payrate)) OR len(trim(arguments.new_netincome)) OR arguments.new_paycycleid GT 0 OR len(trim(arguments.new_conflict_notes))>,</cfif>conflict_enddate = <cfqueryparam cfsqltype="CF_SQL_DATE" value="#arguments.new_conflict_enddate#">
         </cfif>
 
     WHERE audprojectID = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_audprojectID#">
- 
+    AND (
+        <cfif len(trim(arguments.new_payrate))>
+            payrate != <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#arguments.new_payrate#">
+        </cfif>
+        <cfif len(trim(arguments.new_netincome))>
+            <cfif len(trim(arguments.new_payrate))> OR </cfif>netincome != <cfqueryparam cfsqltype="CF_SQL_DECIMAL" value="#arguments.new_netincome#">
+        </cfif>
+        <cfif arguments.new_paycycleid GT 0>
+            <cfif len(trim(arguments.new_payrate)) OR len(trim(arguments.new_netincome))> OR </cfif>paycycleid != <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_paycycleid#">
+        </cfif>
+        <cfif len(trim(arguments.new_conflict_notes))>
+            <cfif len(trim(arguments.new_payrate)) OR len(trim(arguments.new_netincome)) OR arguments.new_paycycleid GT 0> OR </cfif>conflict_notes != <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#arguments.new_conflict_notes#">
+        </cfif>
+        <cfif len(trim(arguments.new_conflict_enddate))>
+            <cfif len(trim(arguments.new_payrate)) OR len(trim(arguments.new_netincome)) OR arguments.new_paycycleid GT 0 OR len(trim(arguments.new_conflict_notes))> OR </cfif>conflict_enddate != <cfqueryparam cfsqltype="CF_SQL_DATE" value="#arguments.new_conflict_enddate#">
+        </cfif>
+    )
 </cfquery>
 
 </cffunction>
@@ -1199,8 +1214,7 @@ ORDER BY label
                 r.audroleid, 
                 proj.projName, 
                 proj.projDescription, 
-                proj.payrate,
-                proj.buyout,
+
                 proj.conflict_notes,
                 proj.conflict_enddate,
                 cat.audCatName, 
@@ -1210,6 +1224,9 @@ ORDER BY label
                 proj.audprojectdate, 
                 proj.contactid, 
                 ct.contracttype, 
+                r.payrate,
+                r.netincome,
+                r.buyout,
                 ton.tone, 
                 net.network, 
                 un.unionName, 
