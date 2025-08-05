@@ -360,9 +360,7 @@ WHERE cd.contactMeetingloc IS NULL;
             <strong>DEBUG: Process completed successfully</strong><br>
             End Time: #timeFormat(now(), "HH:mm:ss")#<br>
             Total events processed: #events.recordCount#<br>
-            <Cfif isdefined('uppdate_when.recordcount')></Cfif>
-            Meeting dates updated: #uppdate_when.recordCount# contacts<br>
-        </cfif>
+
             Meeting locations updated: #uppdate_where.recordCount# contacts
         </div>
     </cfoutput>
