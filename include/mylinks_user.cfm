@@ -72,6 +72,16 @@
     font-size: 10px;
 }
 
+/* Initially hide edit buttons */
+.link-actions {
+    display: none;
+}
+
+/* Show edit buttons when edit mode is active */
+.edit-mode .link-actions {
+    display: block;
+}
+
 .links-empty {
     text-align: center;
     padding: 20px;
@@ -132,10 +142,16 @@
     <!--- Dashboard Card --->
     <div class="card grid-item loaded" data-id="#dashboards.pnid#">
         <div class="card-header" id="heading_system_#dashboards.currentrow#">
-            <h5 class="m-0">
+            <h5 class="m-0 d-flex justify-content-between align-items-center">
                 <a class="text-dark collapsed" data-bs-toggle="collapse" href="##collapse_system_#dashboards.currentrow#">
                     #siteTypeDetails.sitetypename# Links
                 </a>
+                <cfif mylinks_user.recordcount gt 0>
+                    <button id="editToggleBtn" onclick="toggleEditMode()" 
+                            class="btn btn-sm btn-light border">
+                        <i class="fas fa-edit"></i> Edit
+                    </button>
+                </cfif>
             </h5>
         </div>
         <div class="card-body">
@@ -317,6 +333,24 @@
                         window.open(trimmedUrl, '_blank');
                     }
                 });
+            }
+        };
+
+        // Toggle edit mode function
+        window.toggleEditMode = function() {
+            var linksContainer = $('#linksContainer');
+            var editBtn = $('#editToggleBtn');
+            
+            if (linksContainer.hasClass('edit-mode')) {
+                // Exit edit mode
+                linksContainer.removeClass('edit-mode');
+                editBtn.html('<i class="fas fa-edit"></i> Edit');
+                editBtn.removeClass('btn-warning').addClass('btn-light');
+            } else {
+                // Enter edit mode
+                linksContainer.addClass('edit-mode');
+                editBtn.html('<i class="fas fa-times"></i> Done');
+                editBtn.removeClass('btn-light').addClass('btn-warning');
             }
         };
     });
