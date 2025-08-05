@@ -1,6 +1,18 @@
 <cftransaction>
 
+    <!--- Debug variable - set to "Y" to show debug information --->
+    <cfparam name="dbug" default="N" />
     <cfset dbug="Y" />
+
+    <cfif dbug eq "Y">
+        <cfoutput>
+            <div style="background-color: #f0f0f0; padding: 10px; margin: 5px; border: 1px solid #ccc;">
+                <strong>DEBUG: Starting events_completed.cfm</strong><br>
+                Current Date/Time: #now()#<br>
+                Process Start Time: #timeFormat(now(), "HH:mm:ss")#
+            </div>
+        </cfoutput>
+    </cfif>
 
     <CFINCLUDE template="remote_load.cfm" />
 
@@ -9,9 +21,27 @@
         WHERE notstartdate > '#dateformat('#now()#','YYYY-MM-dd')#' AND notstatus <> 'Future';
     </cfquery>
 
+    <cfif dbug eq "Y">
+        <cfoutput>
+            <div style="background-color: #e6f3ff; padding: 10px; margin: 5px; border: 1px solid #ccc;">
+                <strong>DEBUG: Future notifications query</strong><br>
+                Records found: #future.recordCount#
+            </div>
+        </cfoutput>
+    </cfif>
+
     <cfquery datasource="#dsn#" result="result"  name="activefix">
         SELECT * FROM funotifications
         WHERE notstartdate < '#dateformat(' #now()#','YYYY-MM-dd')#' AND notstatus='Future' </cfquery>
+
+        <cfif dbug eq "Y">
+            <cfoutput>
+                <div style="background-color: #e6f3ff; padding: 10px; margin: 5px; border: 1px solid #ccc;">
+                    <strong>DEBUG: Active fix query</strong><br>
+                    Records found: #activefix.recordCount#
+                </div>
+            </cfoutput>
+        </cfif>
 
             <cfquery datasource="#dsn#" result="result"  name="upactive">
                 update funotifications
@@ -40,15 +70,43 @@
 
                             </cfloop>
 
-                            <cfquery datasource="#dsn#" result="result"  name="events">
-                                SELECT e.eventid,e.eventtitle,e.eventstop,u.recordname,u.userid
-                                FROM events e
-                                inner join taousers u on e.userid = u.userid
-                                WHERE e.eventstatus = 'Active' AND e.eventstop < CURDATE() order by e.eventstop </cfquery>
+            <cfquery datasource="#dsn#" result="result"  name="events">
+                SELECT e.eventid,e.eventtitle,e.eventstop,u.recordname,u.userid
+                FROM events e
+                inner join taousers u on e.userid = u.userid
+                WHERE e.eventstatus = 'Active' AND e.eventstop < CURDATE() order by e.eventstop </cfquery>
 
-                                    <cfloop query="events">
+                <cfif dbug eq "Y">
+                    <cfoutput>
+                        <div style="background-color: #fff2e6; padding: 10px; margin: 5px; border: 1px solid #ccc;">
+                            <strong>DEBUG: Events to process</strong><br>
+                            Events found: #events.recordCount#<br>
+                            <cfif events.recordCount gt 0>
+                                Events: 
+                                <cfloop query="events">
+                                    #events.eventid# (#events.eventtitle#)
+                                    <cfif events.currentRow lt events.recordCount>, </cfif>
+                                </cfloop>
+                            </cfif>
+                        </div>
+                    </cfoutput>
+                </cfif>
 
-                                        <cfset new_eventid=events.eventid />
+                    <cfloop query="events">
+
+                        <cfif dbug eq "Y">
+                            <cfoutput>
+                                <div style="background-color: #f0fff0; padding: 10px; margin: 5px; border: 1px solid #90EE90;">
+                                    <strong>DEBUG: Processing Event #events.currentRow# of #events.recordCount#</strong><br>
+                                    Event ID: #events.eventid#<br>
+                                    Event Title: #events.eventtitle#<br>
+                                    Event Stop: #events.eventstop#<br>
+                                    User: #events.recordname# (ID: #events.userid#)
+                                </div>
+                            </cfoutput>
+                        </cfif>
+
+                        <cfset new_eventid=events.eventid />
 
                                         <cfset new_userid=events.userid />
 
@@ -92,10 +150,29 @@
                                             AND eu.userid = #new_userid#
                                         </cfquery>
 
+                                        <cfif dbug eq "Y">
+                                            <cfoutput>
+                                                <div style="background-color: #ffe6f2; padding: 10px; margin: 5px; border: 1px solid #ffb3d9;">
+                                                    <strong>DEBUG: Follow-up contacts found</strong><br>
+                                                    Contacts for Event #new_eventid#: #fu.recordCount# contacts
+                                                </div>
+                                            </cfoutput>
+                                        </cfif>
+
                                         <cfloop query="fu">
                                             <cfset new_contactid=fu.contactid />
                                             <cfset new_contactname=fu.recordname />
                                             <cfset new_systemid=fu.new_systemid />
+
+                                            <cfif dbug eq "Y">
+                                                <cfoutput>
+                                                    <div style="background-color: #f0f8ff; padding: 5px; margin: 5px; border: 1px solid #87ceeb;">
+                                                        <strong>DEBUG: Processing Contact #fu.currentRow#</strong><br>
+                                                        Contact: #new_contactname# (ID: #new_contactid#)<br>
+                                                        System ID: #new_systemid#
+                                                    </div>
+                                                </cfoutput>
+                                            </cfif>
 
                                             <cfquery datasource="#dsn#" result="result"  name="find_fu">
                                                 SELECT su.suid
@@ -116,6 +193,16 @@
                                             </cfquery>
 
 <cfif #find_fu.recordcount# is "0">
+
+                                                <cfif dbug eq "Y">
+                                                    <cfoutput>
+                                                        <div style="background-color: #ffffe0; padding: 5px; margin: 5px; border: 1px solid #ffd700;">
+                                                            <strong>DEBUG: Creating new follow-up system</strong><br>
+                                                            No existing system found for contact #new_contactname# (ID: #new_contactid#)<br>
+                                                            System ID: #new_systemid#
+                                                        </div>
+                                                    </cfoutput>
+                                                </cfif>
 
                                                 <cfoutput>
 
@@ -265,4 +352,16 @@ INNER JOIN (
 SET cd.contactMeetingloc = sub.oldest_new_contactMeetingLoc
 WHERE cd.contactMeetingloc IS NULL;
 </cfquery>
+
+<cfif dbug eq "Y">
+    <cfoutput>
+        <div style="background-color: #d4edda; padding: 10px; margin: 5px; border: 1px solid #c3e6cb;">
+            <strong>DEBUG: Process completed successfully</strong><br>
+            End Time: #timeFormat(now(), "HH:mm:ss")#<br>
+            Total events processed: #events.recordCount#<br>
+            Meeting dates updated: #uppdate_when.recordCount# contacts<br>
+            Meeting locations updated: #uppdate_where.recordCount# contacts
+        </div>
+    </cfoutput>
+</cfif>
 
