@@ -361,7 +361,7 @@ WHERE cd.contactMeetingloc IS NULL;
             End Time: #timeFormat(now(), "HH:mm:ss")#<br>
             Total events processed: #events.recordCount#<br>
 
-            Meeting locations updated: #uppdate_where.recordCount# contacts
+
         </div>
     </cfoutput>
 </cfif>
