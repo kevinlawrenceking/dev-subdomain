@@ -6,7 +6,7 @@
 
     <cfif dbug eq "Y">
         <cfoutput>
-            <div style="background-color: #f0f0f0; padding: 10px; margin: 5px; border: 1px solid #ccc;">
+            <div style="background-color: ##f0f0f0; padding: 10px; margin: 5px; border: 1px solid ##ccc;">
                 <strong>DEBUG: Starting events_completed.cfm</strong><br>
                 Current Date/Time: #now()#<br>
                 Process Start Time: #timeFormat(now(), "HH:mm:ss")#
@@ -23,7 +23,7 @@
 
     <cfif dbug eq "Y">
         <cfoutput>
-            <div style="background-color: #e6f3ff; padding: 10px; margin: 5px; border: 1px solid #ccc;">
+            <div style="background-color: ##e6f3ff; padding: 10px; margin: 5px; border: 1px solid ##ccc;">
                 <strong>DEBUG: Future notifications query</strong><br>
                 Records found: #future.recordCount#
             </div>
@@ -36,7 +36,7 @@
 
         <cfif dbug eq "Y">
             <cfoutput>
-                <div style="background-color: #e6f3ff; padding: 10px; margin: 5px; border: 1px solid #ccc;">
+                <div style="background-color: ##e6f3ff; padding: 10px; margin: 5px; border: 1px solid ##ccc;">
                     <strong>DEBUG: Active fix query</strong><br>
                     Records found: #activefix.recordCount#
                 </div>
@@ -78,7 +78,7 @@
 
                 <cfif dbug eq "Y">
                     <cfoutput>
-                        <div style="background-color: #fff2e6; padding: 10px; margin: 5px; border: 1px solid #ccc;">
+                        <div style="background-color: ##fff2e6; padding: 10px; margin: 5px; border: 1px solid ##ccc;">
                             <strong>DEBUG: Events to process</strong><br>
                             Events found: #events.recordCount#<br>
                             <cfif events.recordCount gt 0>
@@ -96,7 +96,7 @@
 
                         <cfif dbug eq "Y">
                             <cfoutput>
-                                <div style="background-color: #f0fff0; padding: 10px; margin: 5px; border: 1px solid #90EE90;">
+                                <div style="background-color: ##f0fff0; padding: 10px; margin: 5px; border: 1px solid ##90EE90;">
                                     <strong>DEBUG: Processing Event #events.currentRow# of #events.recordCount#</strong><br>
                                     Event ID: #events.eventid#<br>
                                     Event Title: #events.eventtitle#<br>
@@ -152,7 +152,7 @@
 
                                         <cfif dbug eq "Y">
                                             <cfoutput>
-                                                <div style="background-color: #ffe6f2; padding: 10px; margin: 5px; border: 1px solid #ffb3d9;">
+                                                <div style="background-color: ##ffe6f2; padding: 10px; margin: 5px; border: 1px solid ##ffb3d9;">
                                                     <strong>DEBUG: Follow-up contacts found</strong><br>
                                                     Contacts for Event #new_eventid#: #fu.recordCount# contacts
                                                 </div>
@@ -166,7 +166,7 @@
 
                                             <cfif dbug eq "Y">
                                                 <cfoutput>
-                                                    <div style="background-color: #f0f8ff; padding: 5px; margin: 5px; border: 1px solid #87ceeb;">
+                                                    <div style="background-color: ##f0f8ff; padding: 5px; margin: 5px; border: 1px solid ##87ceeb;">
                                                         <strong>DEBUG: Processing Contact #fu.currentRow#</strong><br>
                                                         Contact: #new_contactname# (ID: #new_contactid#)<br>
                                                         System ID: #new_systemid#
@@ -196,7 +196,7 @@
 
                                                 <cfif dbug eq "Y">
                                                     <cfoutput>
-                                                        <div style="background-color: #ffffe0; padding: 5px; margin: 5px; border: 1px solid #ffd700;">
+                                                        <div style="background-color: ##ffffe0; padding: 5px; margin: 5px; border: 1px solid ##ffd700;">
                                                             <strong>DEBUG: Creating new follow-up system</strong><br>
                                                             No existing system found for contact #new_contactname# (ID: #new_contactid#)<br>
                                                             System ID: #new_systemid#
@@ -355,7 +355,7 @@ WHERE cd.contactMeetingloc IS NULL;
 
 <cfif dbug eq "Y">
     <cfoutput>
-        <div style="background-color: #d4edda; padding: 10px; margin: 5px; border: 1px solid #c3e6cb;">
+        <div style="background-color: ##d4edda; padding: 10px; margin: 5px; border: 1px solid ##c3e6cb;">
             <strong>DEBUG: Process completed successfully</strong><br>
             End Time: #timeFormat(now(), "HH:mm:ss")#<br>
             Total events processed: #events.recordCount#<br>
