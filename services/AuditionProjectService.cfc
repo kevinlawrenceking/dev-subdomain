@@ -1378,7 +1378,7 @@ ORDER BY label
             SELECT 
                 p.audprojectid AS recid, 
                 p.audprojectid, 
-                p.payrate,
+                r.payrate,
                 p.buyout,
                 r.audroleid, 
                 st.audstep, 
