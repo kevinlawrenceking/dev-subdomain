@@ -256,7 +256,7 @@
     });
 
     $('#confirmReminderButton').click(function () {
-      $.post("/include/complete_not_ajax.cfm", {
+      $.post("/include/complete_not_ajax.cfm?bypass=1", {
         notid: selectedReminder.id,
         notstatus: selectedReminder.status
       }, function () {

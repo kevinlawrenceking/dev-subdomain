@@ -398,7 +398,7 @@ $(document).ready(function () {
 
     // Handle confirmation
     $('#confirmReminderButton').click(function () {
-        $.post("/include/complete_not_ajax.cfm", {
+        $.post("/include/complete_not_ajax.cfm?bypass=1", {
             notid: dashboardSelectedReminder.id,
             notstatus: dashboardSelectedReminder.status
         }, function () {
