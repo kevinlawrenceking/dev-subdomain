@@ -6,7 +6,7 @@
         r.audroleid,
         proj.projName, 
         proj.projDescription,
-        proj.payrate,
+        r.payrate,
         cat.audCatName, 
         cat.audcatid,
         subcat.audSubCatName, 
