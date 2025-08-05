@@ -4,6 +4,7 @@
     <cfparam name="dbug" default="N" />
     <cfset dbug="Y" />
 
+    
     <cfif dbug eq "Y">
         <cfoutput>
             <div style="background-color: ##f0f0f0; padding: 10px; margin: 5px; border: 1px solid ##ccc;">
