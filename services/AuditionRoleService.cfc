@@ -119,8 +119,8 @@
                 r.payrate, 
                 r.netincome, 
                 r.buyout, 
-                p.conflict_notes,
-                p.conflict_enddate,
+                r.conflict_notes,
+                r.conflict_enddate,
                 pc.paycycleid, 
                 pc.paycyclename
             FROM 
@@ -192,7 +192,7 @@
     <cfargument name="conflict_enddate" type="string" required="false" default="">
 
     <cfquery>
-        UPDATE audprojects
+        UPDATE audroles
         SET 
             conflict_notes = <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#arguments.conflict_notes#" null="#NOT len(trim(arguments.conflict_notes))#">
             <cfif isDate(arguments.conflict_enddate)>
