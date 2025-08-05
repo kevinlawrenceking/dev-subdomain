@@ -1379,7 +1379,7 @@ ORDER BY label
                 p.audprojectid AS recid, 
                 p.audprojectid, 
                 r.payrate,
-                p.buyout,
+                r.buyout,
                 r.audroleid, 
                 st.audstep, 
                 st.stepcss, 
