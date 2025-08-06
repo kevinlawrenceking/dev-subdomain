@@ -14,8 +14,12 @@
 <cfif NOT len(trim(new_incometypeid))><cfset new_incometypeid = 0></cfif>
 <cfif NOT len(trim(new_netincome))><cfset new_netincome = ""></cfif>
 <cfif NOT len(trim(new_paycycleid))><cfset new_paycycleid = 0></cfif>
+<!--- 
 <cfif NOT len(trim(new_conflict_notes))><cfset new_conflict_notes = ""></cfif>
 <cfif NOT len(trim(new_conflict_enddate))><cfset new_conflict_enddate = ""></cfif>
+
+--->
+
 
 <!--- Call the function --->
 <cfset AuditionProjectService.UPDaudprojects_24586(
@@ -31,7 +35,9 @@
     new_incometypeid = new_incometypeid,
     new_netincome = new_netincome,
     new_paycycleid = new_paycycleid,
+    <!---
     new_conflict_notes = new_conflict_notes,
     new_conflict_enddate = new_conflict_enddate,
+    --->
     new_audprojectID = new_audprojectID
 )>>
