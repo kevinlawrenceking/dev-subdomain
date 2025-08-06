@@ -18,7 +18,7 @@
 
 <!--- Fetch project details --->
 <cfinclude template="/include/qry/projectDetails_368_2.cfm" />
-
+<Cfabort>
 <cfset audroleid = projectDetails.audroleid />
 
 <!--- Fetch role details --->
@@ -41,7 +41,7 @@
 </cfif>
 </cfif>
 <cfparam name="events_list" default="">
-<Cfabort>
+
 <cfif #ctaction# is "addmember">
 
 <cfinclude template="/include/qry/add_aud_contact.cfm" />
