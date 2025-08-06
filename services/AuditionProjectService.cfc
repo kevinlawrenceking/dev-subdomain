@@ -1302,6 +1302,7 @@ ORDER BY label
                 a.isdeleted, 
                 a.contactid, 
                 a.recordname, 
+                a4.incometypeid,
                 a2.audSubCatName, 
                 ac.audcatname, 
                 ac.audcatid
