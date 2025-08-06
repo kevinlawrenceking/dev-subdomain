@@ -18,12 +18,12 @@
 
 <!--- Fetch project details --->
 <cfinclude template="/include/qry/projectDetails_368_2.cfm" />
-<Cfabort>
+
 <cfset audroleid = projectDetails.audroleid />
 
 <!--- Fetch role details --->
 <cfinclude template="/include/qry/roleDetails_368_3.cfm" />
-
+<Cfabort>
 <!--- Delete referral contacts --->
 <cfinclude template="/include/qry/delete_ref_368_4.cfm" />
 
