@@ -145,6 +145,8 @@
     <cfargument name="new_netincome" required="false">
     <cfargument name="new_buyout" required="false">
     <cfargument name="new_paycycleid" required="false">
+    <cfargument name="new_conflict_notes" type="string" required="false" default="">
+    <cfargument name="new_conflict_enddate" type="date" required="false">
 
     <cfquery >
         UPDATE audroles
@@ -168,6 +170,14 @@
         
         <cfif isNumeric(arguments.new_paycycleid)>
             ,paycycleid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_paycycleid#">
+        </cfif>
+        
+        <cfif len(trim(arguments.new_conflict_notes))>
+            ,conflict_notes = <cfqueryparam cfsqltype="CF_SQL_LONGVARCHAR" value="#arguments.new_conflict_notes#">
+        </cfif>
+        
+        <cfif isDate(arguments.new_conflict_enddate)>
+            ,conflict_enddate = <cfqueryparam cfsqltype="CF_SQL_DATE" value="#arguments.new_conflict_enddate#">
         </cfif>
         
         WHERE audroleid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_audroleid#">

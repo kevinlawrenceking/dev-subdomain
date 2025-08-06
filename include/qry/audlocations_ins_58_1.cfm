@@ -8,5 +8,7 @@
     new_payrate = new_payrate,
     new_netincome = new_netincome,
     new_buyout = new_buyout,
-    new_paycycleid = new_paycycleid
+    new_paycycleid = new_paycycleid,
+    new_conflict_notes = new_conflict_notes,
+    new_conflict_enddate = new_conflict_enddate
 )>
