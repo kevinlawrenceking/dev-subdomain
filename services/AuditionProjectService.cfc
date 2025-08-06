@@ -108,7 +108,7 @@
     UPDATE audroles
     SET 0=0 
         <cfif len(trim(arguments.new_payrate))>
-            payrate = <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#arguments.new_payrate#" maxlength="100">
+            ,payrate = <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#arguments.new_payrate#" maxlength="100">
         </cfif>
 
         <cfif len(trim(arguments.new_netincome))>
