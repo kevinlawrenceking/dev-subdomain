@@ -1,6 +1,6 @@
-<cfabort><cfinclude template="/include/qry/submitsitefix_368_1.cfm" />
+<cfinclude template="/include/qry/submitsitefix_368_1.cfm" />
 <!---<CFINCLUDE template="/include/projdate_fix_user.cfm" /> --->
-
+<cfabort>
     <cfquery >
         CALL UpdateAudProjects();
     </cfquery>
