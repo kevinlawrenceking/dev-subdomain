@@ -120,7 +120,9 @@
                 r.netincome, 
                 r.buyout, 
                 pc.paycycleid, 
-                pc.paycyclename
+                pc.paycyclename,
+                r.conflict_notes,
+                r.conflict_enddate
             FROM 
                 audroles r
             INNER JOIN 
@@ -145,6 +147,8 @@
     <cfargument name="new_netincome" required="false">
     <cfargument name="new_buyout" required="false">
     <cfargument name="new_paycycleid" required="false">
+    <cfargument name="new_conflict_notes" type="string" required="false" default="">
+    <cfargument name="new_conflict_enddate" type="string" required="false">
 
     <cfquery >
         UPDATE audroles
@@ -170,6 +174,14 @@
             ,paycycleid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_paycycleid#">
         </cfif>
         
+        <cfif len(trim(arguments.new_conflict_notes))>
+            ,conflict_notes = <cfqueryparam cfsqltype="CF_SQL_LONGVARCHAR" value="#arguments.new_conflict_notes#">
+        </cfif>
+        
+        <cfif isDate(arguments.new_conflict_enddate)>
+            ,conflict_enddate = <cfqueryparam cfsqltype="CF_SQL_DATE" value="#arguments.new_conflict_enddate#">
+        </cfif>
+        
         WHERE audroleid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_audroleid#">
     </cfquery>
 
@@ -177,6 +189,8 @@
 
 <!--- 
     PURPOSE: Update conflict notes and end date for an audition project
+
+--->
 
 <cffunction output="false" name="UPDaudroles_23813" access="public" returntype="void">
     <cfargument name="statusField" type="string" required="true">

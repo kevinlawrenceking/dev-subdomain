@@ -98,10 +98,6 @@
             ,contactid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_contactid#">
         </cfif>
 
-        <cfif len(trim(arguments.new_buyout))>
-            ,buyout = <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#arguments.new_buyout#" maxlength="255">
-        </cfif>
-
     WHERE audprojectID = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_audprojectID#">
 </cfquery>
 
@@ -115,6 +111,10 @@
 
         <cfif len(trim(arguments.new_netincome))>
             <cfif len(trim(arguments.new_payrate))>,</cfif>netincome = <cfqueryparam cfsqltype="CF_SQL_DECIMAL" value="#arguments.new_netincome#">
+        </cfif>
+
+        <cfif len(trim(arguments.new_buyout))>
+            <cfif len(trim(arguments.new_payrate)) OR len(trim(arguments.new_netincome))>,</cfif>buyout = <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#arguments.new_buyout#" maxlength="255">
         </cfif>
 
         <cfif arguments.new_paycycleid GT 0>
@@ -398,7 +398,7 @@
     <cfargument name="audprojectid" type="numeric" required="true">
 
 <cfquery name="result" >
-            SELECT projname, projdescription, payrate, buyout, contactid
+            SELECT projname, projdescription, contactid
             FROM audprojects
             WHERE audprojectid = <cfqueryparam value="#arguments.audprojectid#" cfsqltype="CF_SQL_INTEGER">
          
@@ -1133,7 +1133,6 @@ ORDER BY label
                 isDeleted,
                 IsDirect,
                 contactid,
-                payrate,
                 projdate
             ) VALUES (
                 <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#arguments.new_projName#" maxlength="500" null="#NOT len(trim(arguments.new_projName))#" />,
@@ -1143,7 +1142,6 @@ ORDER BY label
                 <cfqueryparam cfsqltype="CF_SQL_BIT" value="#arguments.new_isDeleted#" null="#NOT len(trim(arguments.new_isDeleted))#" />,
                 <cfqueryparam cfsqltype="CF_SQL_BIT" value="#arguments.isdirect#" null="#NOT len(trim(arguments.isdirect))#" />,
                 <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_contactid#" null="#NOT len(trim(arguments.new_contactid))#" />,
-                <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#arguments.new_payrate#" maxlength="100" null="#NOT len(trim(arguments.new_payrate))#" />,
                 <cfqueryparam cfsqltype="CF_SQL_DATE" value="#arguments.new_projdate#" />
             )
          
@@ -1502,8 +1500,6 @@ ORDER BY p.projdate DESC
             <cfif structKeyExists(arguments, "new_isDeleted")>, isDeleted</cfif>
             <cfif structKeyExists(arguments, "isdirect")>, isDirect</cfif>
             <cfif structKeyExists(arguments, "new_contactid") AND arguments.new_contactid NEQ 0>, contactid</cfif>
-            <cfif structKeyExists(arguments, "new_payrate") AND len(trim(arguments.new_payrate))>, payrate</cfif>
-            <cfif structKeyExists(arguments, "new_buyout") AND len(trim(arguments.new_buyout))>, buyout</cfif>
         ) VALUES (
             <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#arguments.new_projName#" maxlength="500">,
             <cfqueryparam cfsqltype="CF_SQL_LONGVARCHAR" value="#arguments.new_projDescription#">,
@@ -1518,8 +1514,6 @@ ORDER BY p.projdate DESC
             <cfif structKeyExists(arguments, "new_isDeleted")>, <cfqueryparam cfsqltype="CF_SQL_BIT" value="#arguments.new_isDeleted#"></cfif>
             <cfif structKeyExists(arguments, "isdirect")>, <cfqueryparam cfsqltype="CF_SQL_BIT" value="#arguments.isdirect#"></cfif>
             <cfif structKeyExists(arguments, "new_contactid") AND arguments.new_contactid NEQ 0>, <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_contactid#"></cfif>
-            <cfif structKeyExists(arguments, "new_payrate") AND len(trim(arguments.new_payrate))>, <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#arguments.new_payrate#" maxlength="100"></cfif>
-            <cfif structKeyExists(arguments, "new_buyout") AND len(trim(arguments.new_buyout))>, <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#arguments.new_buyout#" maxlength="255"></cfif>
         )
     </cfquery>
 

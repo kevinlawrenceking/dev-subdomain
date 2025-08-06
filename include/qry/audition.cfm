@@ -1,6 +1,8 @@
-<cfinclude template="/include/qry/submitsitefix_368_1.cfm" />
+
 <!---<CFINCLUDE template="/include/projdate_fix_user.cfm" /> --->
-<cfabort>
+
+
+
     <cfquery >
         CALL UpdateAudProjects();
     </cfquery>
@@ -43,7 +45,6 @@
 <cfif #ctaction# is "addmember">
 
 <cfinclude template="/include/qry/add_aud_contact.cfm" />
-<cfinclude template="/include/qry/set_missing.cfm" />
 
         <cfif DateCompare(projectDetails.audprojectdate, Now()) lt 0>
       
@@ -67,7 +68,9 @@
     <cfloop query="cdcheck">
         <cfinclude template="/include/qry/add_cd_368_10.cfm" />
     </cfloop>
+
 </cfif>
+
 
 <cfset EventContactsXRefService = createObject("component", "services.EventContactsXRefService")>
 <cfset EventContactsXRefService.eventaudsync(audprojectid)>

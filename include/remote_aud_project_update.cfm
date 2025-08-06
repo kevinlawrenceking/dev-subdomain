@@ -277,7 +277,7 @@
             </cfif>
         </cfoutput>
         
-        <!--- Conflict Notes and End Date --->
+        <!--- Conflict Notes and End Date
         <cfoutput>
             <div class="form-group row">
                 <div class="col-md-6 col-sm-12">
@@ -289,7 +289,7 @@
                     <input class="form-control" id="new_conflict_enddate" name="new_conflict_enddate" value="#(structKeyExists(auditionprojectdetails, 'conflict_enddate') AND isDate(auditionprojectdetails.conflict_enddate)) ? dateFormat(auditionprojectdetails.conflict_enddate, 'yyyy-mm-dd') : ''#" type="date" />
                 </div>
             </div>
-        </cfoutput>
+        </cfoutput> --->
 
         <div class="form-group text-center col-md-12">
             <button class="btn btn-xs btn-primary waves-effect mb-2 waves-light" style="background-color: #406e8e; border: #406e8e;" type="submit">Update</button>
