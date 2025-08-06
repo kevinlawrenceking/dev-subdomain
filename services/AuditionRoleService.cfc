@@ -120,7 +120,9 @@
                 r.netincome, 
                 r.buyout, 
                 pc.paycycleid, 
-                pc.paycyclename
+                pc.paycyclename,
+                r.conflict_notes,
+                r.conflict_enddate
             FROM 
                 audroles r
             INNER JOIN 
