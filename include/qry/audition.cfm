@@ -69,10 +69,9 @@
         <cfinclude template="/include/qry/add_cd_368_10.cfm" />
     </cfloop>
 </cfif>
-
+<Cfabort>
 <cfset EventContactsXRefService = createObject("component", "services.EventContactsXRefService")>
 <cfset EventContactsXRefService.eventaudsync(audprojectid)>
 
 
 <cfinclude template="/include/qry/audageranges_audtion_xref_368_11.cfm" />
-<Cfabort>
