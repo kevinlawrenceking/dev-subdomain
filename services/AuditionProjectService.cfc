@@ -1301,6 +1301,7 @@ ORDER BY label
                 a4.buyout,
                 a.userid, 
                 a.audSubCatID, 
+                a4.incometypeid,
                 a2.audcatid, 
                 a.unionid, 
                 a.networkID, 
