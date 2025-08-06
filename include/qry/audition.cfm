@@ -15,10 +15,10 @@
 
 <!--- Consolidate submitsitefix into the main update DONE 
 <cfinclude template="/include/qry/submitsitefix_368_1.cfm" />--->
-<Cfabort>
+
 <!--- Fetch project details --->
 <cfinclude template="/include/qry/projectDetails_368_2.cfm" />
-
+<Cfabort>
 <cfset audroleid = projectDetails.audroleid />
 
 <!--- Fetch role details --->
