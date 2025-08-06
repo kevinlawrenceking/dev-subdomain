@@ -68,6 +68,8 @@
             ,projDescription = <cfqueryparam cfsqltype="CF_SQL_LONGVARCHAR" value="#arguments.new_projDescription#">
         </cfif>
 
+         
+
         <cfif arguments.new_unionID EQ 0>
             ,unionID = NULL
         <cfelse>
@@ -104,37 +106,61 @@
 <!--- Update audroles table with role-level booking fields --->
 <cfquery>
     UPDATE audroles
-    SET
+    SET 
+        <cfset needsComma = false>
         <cfif len(trim(arguments.new_payrate))>
             payrate = <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#arguments.new_payrate#" maxlength="100">
+            <cfset needsComma = true>
         </cfif>
 
         <cfif len(trim(arguments.new_netincome))>
-            <cfif len(trim(arguments.new_payrate))>,</cfif>netincome = <cfqueryparam cfsqltype="CF_SQL_DECIMAL" value="#arguments.new_netincome#">
+            <cfif needsComma>,</cfif>netincome = <cfqueryparam cfsqltype="CF_SQL_DECIMAL" value="#arguments.new_netincome#">
+            <cfset needsComma = true>
         </cfif>
 
         <cfif len(trim(arguments.new_buyout))>
-            <cfif len(trim(arguments.new_payrate)) OR len(trim(arguments.new_netincome))>,</cfif>buyout = <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#arguments.new_buyout#" maxlength="255">
+            <cfif needsComma>,</cfif>buyout = <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#arguments.new_buyout#" maxlength="255">
+            <cfset needsComma = true>
+        </cfif>
+
+        <cfif arguments.new_incometypeid GT 0>
+            <cfif needsComma>,</cfif>incometypeid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_incometypeid#">
+            <cfset needsComma = true>
         </cfif>
 
         <cfif arguments.new_paycycleid GT 0>
+<<<<<<< HEAD
             <cfif len(trim(arguments.new_payrate)) OR len(trim(arguments.new_netincome)) OR len(trim(arguments.new_buyout))>,</cfif>paycycleid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_paycycleid#">
         </cfif>
 
         <cfif arguments.new_incometypeid GT 0>
             <cfif len(trim(arguments.new_payrate)) OR len(trim(arguments.new_netincome)) OR len(trim(arguments.new_buyout)) OR arguments.new_paycycleid GT 0>,</cfif>incometypeid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_incometypeid#">
+=======
+            <cfif needsComma>,</cfif>paycycleid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_paycycleid#">
+>>>>>>> dev
         </cfif>
 
     WHERE audprojectID = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_audprojectID#">
     AND (
+        <cfset needsOr = false>
         <cfif len(trim(arguments.new_payrate))>
             payrate != <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#arguments.new_payrate#">
+            <cfset needsOr = true>
         </cfif>
         <cfif len(trim(arguments.new_netincome))>
-            <cfif len(trim(arguments.new_payrate))> OR </cfif>netincome != <cfqueryparam cfsqltype="CF_SQL_DECIMAL" value="#arguments.new_netincome#">
+            <cfif needsOr> OR </cfif>netincome != <cfqueryparam cfsqltype="CF_SQL_DECIMAL" value="#arguments.new_netincome#">
+            <cfset needsOr = true>
+        </cfif>
+        <cfif len(trim(arguments.new_buyout))>
+            <cfif needsOr> OR </cfif>buyout != <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#arguments.new_buyout#">
+            <cfset needsOr = true>
+        </cfif>
+        <cfif arguments.new_incometypeid GT 0>
+            <cfif needsOr> OR </cfif>incometypeid != <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_incometypeid#">
+            <cfset needsOr = true>
         </cfif>
         <cfif arguments.new_paycycleid GT 0>
-            <cfif len(trim(arguments.new_payrate)) OR len(trim(arguments.new_netincome))> OR </cfif>paycycleid != <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_paycycleid#">
+            <cfif needsOr> OR </cfif>paycycleid != <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_paycycleid#">
         </cfif>
         <cfif arguments.new_incometypeid GT 0>
             <cfif len(trim(arguments.new_payrate)) OR len(trim(arguments.new_netincome)) OR arguments.new_paycycleid GT 0> OR </cfif>incometypeid != <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_incometypeid#">
@@ -1310,6 +1336,7 @@ ORDER BY label
                 a.isdeleted, 
                 a.contactid, 
                 a.recordname, 
+                a4.incometypeid,
                 a2.audSubCatName, 
                 ac.audcatname, 
                 ac.audcatid
