@@ -13,6 +13,7 @@ git pull origin dev
 IF ERRORLEVEL 1 goto error
 
 echo ---- Merging dev into uat ----
+cd /d "%GIT_REPO_DIR%"
 git checkout uat
 git pull origin uat
 IF ERRORLEVEL 1 goto error
@@ -22,7 +23,7 @@ git push origin uat
 IF ERRORLEVEL 1 goto error
 
 echo.
-echo Deployment complete. 
+echo Deployment complete.
 echo Now use the Hostek Git panel to pull the latest uat branch to the server.
 goto end
 
