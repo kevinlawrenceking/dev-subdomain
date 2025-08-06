@@ -39,7 +39,7 @@
 
     <cfinclude template="/include/qry/delete2_368_8.cfm" />
 </cfif>
-
+</cfif>
 <cfparam name="events_list" default="">
 
 <cfif #ctaction# is "addmember">
@@ -68,7 +68,7 @@
     <cfloop query="cdcheck">
         <cfinclude template="/include/qry/add_cd_368_10.cfm" />
     </cfloop>
-</cfif>
+
 <Cfabort>
 <cfset EventContactsXRefService = createObject("component", "services.EventContactsXRefService")>
 <cfset EventContactsXRefService.eventaudsync(audprojectid)>
