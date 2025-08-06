@@ -1,6 +1,5 @@
    <cfparam name="audsourceid" default="0" />
-<cfset componentPath = "/services/AuditionRoleService">
-<cfset auditionRoleService = createObject("component", componentPath)>
+<cfset auditionRoleService = createObject("component", "services.AuditionRoleService")>
 <cfset auditionRoleService.UPDaudroles_24542(audsourceid)>
 
  <cfif application.dbug eq "Y" and userid eq 30555>
