@@ -7,11 +7,11 @@
     <cfset debugService = createObject("component", "services.DebugService")>
     <cfset debugDetails = {
         functionName = "UPDaudroles_24542",
-        arguments = arguments,
-        rowsAffected = result.recordCount
+        audsourceid = audsourceid,
+        timestamp = now()
     }>
     <cfset debugService.insertDebugLog(
-        filename = "AuditionRoleService.cfc",
+        filename = "submitsitefix_368_1.cfm",
         debugDetails = serializeJSON(debugDetails)
     )>
     </cfif>
