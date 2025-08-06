@@ -512,13 +512,8 @@ Status Workflow:
             <Center>
 
                 <h4 class="card-header text-nowrap " style="color:white;background-color: #406E8E;margin:0!important;padding:15px!important;">
-                    <cfoutput>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-
-Appointments
-
-</cfoutput>
-
-</h4>
+                    <cfoutput>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Appointments</cfoutput>
+                </h4>
 
 </Center>
 
