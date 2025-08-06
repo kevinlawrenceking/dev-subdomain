@@ -25,6 +25,9 @@
 </cfif>
 
 <cfset dbug="N" />
+
+<!--- Check if the income type is not equal to 1 to conditionally apply styles. --->
+<cfset defaultIncomeTypeId = structKeyExists(auditionprojectdetails, "incometypeid") ? auditionprojectdetails.incometypeid : 1>
 <Cfif #defaultIncomeTypeId# is not "1">
     <style>
         #hidden_divs {
@@ -219,7 +222,7 @@
             <label for="new_incometypeid">Income Type</label>
             <select id="new_incometypeid" name="new_incometypeid" class="form-control" onChange="showDivs('hidden_divs', this);">
                 <cfoutput query="incometypes_sel">
-                    <cfset selectedIncomeType = structKeyExists(auditionprojectdetails, "incometypeid") ? auditionprojectdetails.incometypeid : 1>
+                    <cfset selectedIncomeType = auditionprojectdetails.incometypeid />
                     <option value="#incometypes_sel.id#" <cfif #incometypes_sel.id# is "#selectedIncomeType#">selected</cfif>>#incometypes_sel.name#</option>
                 </cfoutput>
             </select>
