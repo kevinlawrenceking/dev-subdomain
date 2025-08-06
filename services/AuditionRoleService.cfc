@@ -178,6 +178,8 @@
 <!--- 
     PURPOSE: Update conflict notes and end date for an audition project
 
+--->
+
 <cffunction output="false" name="UPDaudroles_23813" access="public" returntype="void">
     <cfargument name="statusField" type="string" required="true">
     <cfargument name="newAudRoleId" type="numeric" required="true">
