@@ -21,9 +21,9 @@
 
 <cfset audroleid = projectDetails.audroleid />
 
-<!--- Fetch role details --->
+<!--- Fetch role details ---><Cfabort>
 <cfinclude template="/include/qry/roleDetails_368_3.cfm" />
-<Cfabort>
+
 <!--- Delete referral contacts --->
 <cfinclude template="/include/qry/delete_ref_368_4.cfm" />
 
