@@ -39,7 +39,7 @@
 
     <cfinclude template="/include/qry/delete2_368_8.cfm" />
 </cfif>
-<Cfabort>
+
 <cfparam name="events_list" default="">
 
 <cfif #ctaction# is "addmember">
@@ -75,3 +75,4 @@
 
 
 <cfinclude template="/include/qry/audageranges_audtion_xref_368_11.cfm" />
+<Cfabort>
