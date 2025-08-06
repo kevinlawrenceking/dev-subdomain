@@ -1,7 +1,7 @@
 
 <!---<CFINCLUDE template="/include/projdate_fix_user.cfm" /> --->
 
-<Cfabort>
+
 
     <cfquery >
         CALL UpdateAudProjects();
@@ -18,7 +18,7 @@
 
 <!--- Fetch project details --->
 <cfinclude template="/include/qry/projectDetails_368_2.cfm" />
-
+<Cfabort>
 <cfset audroleid = projectDetails.audroleid />
 
 <!--- Fetch role details --->
