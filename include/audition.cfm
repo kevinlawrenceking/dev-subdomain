@@ -104,7 +104,7 @@ Status Workflow:
                     </div>
                 </div>
             </div>
-        </div><cfabort>
+        </div>
 
         <!--- Status cancellation modal --->
         <div id="StatusCancel#steps.audstepid#" class="modal fade" tabindex="-1" role="dialog">
