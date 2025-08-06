@@ -26,15 +26,7 @@
 
 <cfset dbug="N" />
 
-<!--- Check if the income type is not equal to 1 to conditionally apply styles. --->
-<cfset defaultIncomeTypeId = structKeyExists(auditionprojectdetails, "incometypeid") ? auditionprojectdetails.incometypeid : 1>
-<Cfif #defaultIncomeTypeId# is not "1">
-    <style>
-        #hidden_divs {
-            display: none;
-        }
-    </style>
-</cfif>
+
 
 <script src="/app/assets/js/jquery.chained.js"></script>
 
