@@ -68,6 +68,8 @@
             ,projDescription = <cfqueryparam cfsqltype="CF_SQL_LONGVARCHAR" value="#arguments.new_projDescription#">
         </cfif>
 
+         ,incometypeid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_incometypeid#">
+
         <cfif arguments.new_unionID EQ 0>
             ,unionID = NULL
         <cfelse>

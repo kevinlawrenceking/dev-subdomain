@@ -34,8 +34,7 @@
 <!--- Initialize buyout parameter --->
 
 <!--- Additional booking form parameters --->
-<cfparam name="new_incometypeid" default="" />
-<!--- Initialize income type ID parameter --->
+ 
 
 <cfparam name="new_netincome" default="" />
 <!--- Initialize net income parameter --->
