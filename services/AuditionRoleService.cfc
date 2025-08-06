@@ -146,7 +146,7 @@
     <cfargument name="new_buyout" required="false">
     <cfargument name="new_paycycleid" required="false">
     <cfargument name="new_conflict_notes" type="string" required="false" default="">
-    <cfargument name="new_conflict_enddate" type="date" required="false">
+    <cfargument name="new_conflict_enddate" type="string" required="false">
 
     <cfquery >
         UPDATE audroles
