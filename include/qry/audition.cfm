@@ -1,4 +1,4 @@
-<cfinclude template="/include/qry/submitsitefix_368_1.cfm" />
+<cfabort><cfinclude template="/include/qry/submitsitefix_368_1.cfm" />
 <!---<CFINCLUDE template="/include/projdate_fix_user.cfm" /> --->
 
     <cfquery >
@@ -10,7 +10,7 @@
 <cfparam name="new_contactid" default="" />
 <cfparam name="eventid" default="0" />
 <cfparam name="secid" default="176" />
-<cfabort>
+
 <!--- Consolidate submitsitefix into the main update DONE 
 <cfinclude template="/include/qry/submitsitefix_368_1.cfm" />--->
 
