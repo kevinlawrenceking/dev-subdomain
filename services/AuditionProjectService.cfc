@@ -68,7 +68,7 @@
             ,projDescription = <cfqueryparam cfsqltype="CF_SQL_LONGVARCHAR" value="#arguments.new_projDescription#">
         </cfif>
 
-         ,incometypeid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_incometypeid#">
+         
 
         <cfif arguments.new_unionID EQ 0>
             ,unionID = NULL
@@ -106,7 +106,7 @@
 <!--- Update audroles table with role-level booking fields --->
 <cfquery>
     UPDATE audroles
-    SET
+    SET 0=0 
         <cfif len(trim(arguments.new_payrate))>
             payrate = <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#arguments.new_payrate#" maxlength="100">
         </cfif>
@@ -118,6 +118,8 @@
         <cfif len(trim(arguments.new_buyout))>
             <cfif len(trim(arguments.new_payrate)) OR len(trim(arguments.new_netincome))>,</cfif>buyout = <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#arguments.new_buyout#" maxlength="255">
         </cfif>
+
+        ,incometypeid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_incometypeid#">
 
         <cfif arguments.new_paycycleid GT 0>
             <cfif len(trim(arguments.new_payrate)) OR len(trim(arguments.new_netincome))>,</cfif>paycycleid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_paycycleid#">
