@@ -133,7 +133,7 @@
         <!--- Main action buttons --->
         <button type="button" class="btn btn-xs btn-primary waves-effect mb-2 waves-light" 
                 href="addlink.cfm" data-bs-remote="true" data-bs-toggle="modal" 
-                data-bs-target="##paneladd" title="Add Custom Panel">
+                data-bs-target="#paneladd" title="Add Custom Panel">
             Add Panel
         </button>
 
