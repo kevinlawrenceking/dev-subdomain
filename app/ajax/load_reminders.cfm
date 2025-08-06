@@ -83,7 +83,7 @@
 <cfoutput query="qReminders">
   <tr id="not_#notID#" class="#iif(notStatus EQ 'Skipped', 'skipped-row', '')#">
     <td>
-      <a href="##" data-bs-toggle="modal" data-bs-target="##action#notID#-modal" title="Click for details">
+      <a href="" data-bs-toggle="modal" data-bs-target="##action#notID#-modal" title="Click for details">
         <i class="fe-info font-14 mr-1"></i>
       </a>
       #actionDetails#
