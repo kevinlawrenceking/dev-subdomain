@@ -104,7 +104,7 @@ Status Workflow:
                     </div>
                 </div>
             </div>
-        </div>
+        </div><cfabort>
 
         <!--- Status cancellation modal --->
         <div id="StatusCancel#steps.audstepid#" class="modal fade" tabindex="-1" role="dialog">
@@ -639,7 +639,7 @@ Status Workflow:
             </div>
 
         </div>
-<cfabort>
+
 <script>
                                         $(document).ready(function() {
                                             $("##remoteDeleteAud#events.eventid#").on("show.bs.modal", function(event) {
