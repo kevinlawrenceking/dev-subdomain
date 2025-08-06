@@ -1,4 +1,4 @@
-<cfinclude template="/include/qry/submitsitefix_368_1.cfm" />
+<cfabort><cfinclude template="/include/qry/submitsitefix_368_1.cfm" />
 <!---<CFINCLUDE template="/include/projdate_fix_user.cfm" /> --->
 
     <cfquery >
