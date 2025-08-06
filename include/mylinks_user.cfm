@@ -147,7 +147,7 @@
                     #siteTypeDetails.sitetypename# Links
                 </a>
                 <cfif mylinks_user.recordcount gt 0>
-                    <button id="editToggleBtn" onclick="toggleEditMode()" 
+                    <button id="editToggleBtn_#siteTypeDetails.sitetypeid#" onclick="toggleEditMode('#siteTypeDetails.sitetypeid#')" 
                             class="btn btn-sm btn-light border">
                         <i class="fas fa-edit"></i> Edit
                     </button>
@@ -156,7 +156,7 @@
         </div>
         <div class="card-body">
             <!--- Container for links with similar styling to reminders --->
-            <div id="linksContainer">
+            <div id="linksContainer_#siteTypeDetails.sitetypeid#">
                 <!--- Loop through site links --->
                 <cfloop query="mylinks_user">
                     <cfoutput>
@@ -337,9 +337,9 @@
         };
 
         // Toggle edit mode function
-        window.toggleEditMode = function() {
-            var linksContainer = $('#linksContainer');
-            var editBtn = $('#editToggleBtn');
+        window.toggleEditMode = function(siteTypeId) {
+            var linksContainer = $('#linksContainer_' + siteTypeId);
+            var editBtn = $('#editToggleBtn_' + siteTypeId);
             
             if (linksContainer.hasClass('edit-mode')) {
                 // Exit edit mode
