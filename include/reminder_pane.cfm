@@ -80,7 +80,21 @@
             }
           }
         },
-        { data: "contactfullname", visible: <cfoutput>#contactVisibilty#</cfoutput> },
+        { 
+          data: "contactfullname", 
+          visible: <cfoutput>#contactVisibilty#</cfoutput>,
+          render: function (data, type, row) {
+            if (type === 'display') {
+              return `
+                ${data}
+                <a href="/include/contactdetails.cfm?contactid=${row.contactid}" class="ms-1" title="View Contact Details">
+                  <i class="mdi mdi-eye-outline" style="font-size: 12px;"></i>
+                </a>
+              `;
+            }
+            return data;
+          }
+        },
         { data: "notStartDatef" },
         { data: "notEndDatef", visible: false },
         { data: "reminder_text" },
