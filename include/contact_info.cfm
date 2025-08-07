@@ -528,16 +528,16 @@ $(document).ready(function() {
                     <cfif tagscontact.recordcount gt 0>
                         <cfloop query="tagscontact">
                             <cfoutput>
-                            <a href="javascript:;" data-bs-remote="true" data-bs-toggle="modal" data-bs-target="#remoteUpdateTag" 
+                            <a href="javascript:;" data-bs-remote="true" data-bs-toggle="modal" data-bs-target="##remoteUpdateTag" 
                                class="badge bg-secondary me-1" data-bs-toggle="tooltip" title="Update Tag">#tagscontact.valuetext#</a>
                             </cfoutput>
                         </cfloop>
-                        <a href="javascript:;" data-bs-remote="true" data-bs-toggle="modal" data-bs-target="#remoteUpdateTag" 
+                        <a href="javascript:;" data-bs-remote="true" data-bs-toggle="modal" data-bs-target="##remoteUpdateTag" 
                            class="text-muted" data-bs-toggle="tooltip" title="Add Tag">
                             <small><i class="fe-plus-circle"></i></small>
                         </a>
                     <cfelse>
-                        <a href="javascript:;" data-bs-remote="true" data-bs-toggle="modal" data-bs-target="#remoteUpdateTag" 
+                        <a href="javascript:;" data-bs-remote="true" data-bs-toggle="modal" data-bs-target="##remoteUpdateTag" 
                            class="text-muted" data-bs-toggle="tooltip" title="Add Tag">Add a Tag</a>
                     </cfif>
                 </div>
@@ -552,7 +552,7 @@ $(document).ready(function() {
                 <p class="text-muted small mb-2">
                     <cfoutput>
                     <strong>Birthday:</strong>
-                    <a href="javascript:;" data-bs-remote="true" data-bs-toggle="modal" data-bs-target="#remoteUpdateName" 
+                    <a href="javascript:;" data-bs-remote="true" data-bs-toggle="modal" data-bs-target="##remoteUpdateName" 
                        class="text-decoration-none" data-bs-toggle="tooltip" title="Update Contact">
                         <cfif len(trim(details.contactBirthday))>
                             #month(details.contactbirthday)#/#day(details.contactbirthday)#
@@ -567,10 +567,10 @@ $(document).ready(function() {
                     <cfoutput>
                     <cfset meetingdate = this.formatDate(details.contactmeetingdate) />
                     <strong>Initial Meeting:</strong>
-                    <a href="javascript:;" data-bs-remote="true" data-bs-toggle="modal" data-bs-target="#remoteUpdateName" 
+                    <a href="javascript:;" data-bs-remote="true" data-bs-toggle="modal" data-bs-target="##remoteUpdateName" 
                        class="text-decoration-none" data-bs-toggle="tooltip" title="Update Contact">#meetingdate#</a>
                     <cfif len(trim(details.contactmeetingloc))>
-                        <a href="javascript:;" data-bs-remote="true" data-bs-toggle="modal" data-bs-target="#remoteUpdateName" 
+                        <a href="javascript:;" data-bs-remote="true" data-bs-toggle="modal" data-bs-target="##remoteUpdateName" 
                            class="text-decoration-none" data-bs-toggle="tooltip" title="Update Contact">(#details.contactmeetingloc#)</a>
                     </cfif>
                     </cfoutput>
@@ -625,7 +625,7 @@ $(document).ready(function() {
                                     <cfoutput>
                                     <h6 class="mb-1">
                                         <a href="javascript:;" data-bs-remote="true" data-bs-toggle="modal" 
-                                           data-bs-target="#remoteUpdateSUID#rels.suid#" 
+                                           data-bs-#target="##remoteUpdateSUID#rels.suid#" 
                                            class="text-decoration-none" data-bs-toggle="tooltip" title="Relationship System">#rels.SystemType#</a>
                                     </h6>
                                     <div class="text-uppercase small text-muted">#rels.systemscope#</div>
