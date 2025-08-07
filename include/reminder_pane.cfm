@@ -47,9 +47,15 @@
   function loadReminders() {
     const showInactive = $("#showInactive").is(":checked") ? 1 : 0;
     const enableFiltering = <cfoutput>'#ucase(showContact)#'</cfoutput> === 'Y';
+    
+    console.log('Loading reminders with showInactive:', showInactive);
+
+    // Destroy existing DataTable if it exists
+    if ($.fn.DataTable.isDataTable('#remindersTable')) {
+      $('#remindersTable').DataTable().destroy();
+    }
 
     $('#remindersTable').DataTable({
-      destroy: true,
       ajax: {
         url: "/include/get_reminders.cfm?bypass=1",
         data: {
@@ -256,12 +262,27 @@
     });
 
     $('#confirmReminderButton').click(function () {
-      $.post("/include/complete_not_ajax.cfm?bypass=1", {
-        notid: selectedReminder.id,
-        notstatus: selectedReminder.status
-      }, function () {
-        loadReminders();
-        bootstrap.Modal.getInstance(document.getElementById('confirmReminderModal')).hide();
+      console.log('Submitting reminder completion:', selectedReminder);
+      console.log('Posting data:', { notid: selectedReminder.id, notstatus: selectedReminder.status });
+      
+      $.ajax({
+        url: "/include/complete_not_ajax.cfm?bypass=1",
+        type: "POST",
+        data: {
+          notid: selectedReminder.id,
+          notstatus: selectedReminder.status
+        },
+        success: function(response) {
+          console.log('Response from complete_not_ajax.cfm:', response);
+          loadReminders();
+          bootstrap.Modal.getInstance(document.getElementById('confirmReminderModal')).hide();
+        },
+        error: function(xhr, status, error) {
+          console.error('Error completing reminder:', error);
+          console.error('Status:', status);
+          console.error('Response:', xhr.responseText);
+          alert('Error completing reminder: ' + error + '\nStatus: ' + status + '\nResponse: ' + xhr.responseText);
+        }
       });
     });
   });
