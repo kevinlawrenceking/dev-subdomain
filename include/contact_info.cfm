@@ -113,7 +113,7 @@
 <!--- Initialize modal for relationship system (SUID 0) --->
 <script>
 $(document).ready(function() {
-    $("###remoteUpdateSUID0").on("show.bs.modal", function(event) {
+    $("##remoteUpdateSUID0").on("show.bs.modal", function(event) {
         $(this).find(".modal-body").load("<cfoutput>/include/remoteUpdateSUID.cfm?suid=0&contactid=#currentid#</cfoutput>");
     });
 });
@@ -136,7 +136,7 @@ $(document).ready(function() {
 <cfloop query="ru">
     <script>
     $(document).ready(function() {
-        $("###remoteUpdateSUID<cfoutput>#ru.suid#</cfoutput>").on("show.bs.modal", function(event) {
+        $("##remoteUpdateSUID<cfoutput>#ru.suid#</cfoutput>").on("show.bs.modal", function(event) {
             $(this).find(".modal-body").load("<cfoutput>/include/remoteUpdateSUID.cfm?suid=#ru.suid#&contactid=#currentid#</cfoutput>");
         });
     });
@@ -162,7 +162,7 @@ $(document).ready(function() {
 <cfloop query="cu">
     <script>
     $(document).ready(function() {
-        $("###remoteUpdateC<cfoutput>#cu.itemid#</cfoutput>").on("show.bs.modal", function(event) {
+        $("##remoteUpdateC<cfoutput>#cu.itemid#</cfoutput>").on("show.bs.modal", function(event) {
             var modal = $(this);
             modal.find(".modal-body").load("<cfoutput>/include/remoteupdatec.cfm?userid=#userid#&itemid=#cu.itemid#</cfoutput>", function() {
                 modal.find("form").parsley();
@@ -212,7 +212,7 @@ $(document).ready(function() {
         <!--- Delete confirmation modal --->
         <script>
         $(document).ready(function() {
-            $("###remoteDeleteForm#sysActive.suid#").on("show.bs.modal", function(event) {
+            $("##remoteDeleteForm#sysActive.suid#").on("show.bs.modal", function(event) {
                 $(this).find(".modal-body").load("/include/remoteDeleteForm.cfm?recid=#sysActive.suid#&rpgid=40&pgaction=update&contactid=#currentid#&pgdir=contact&t4=1");
             });
         });
@@ -238,7 +238,7 @@ $(document).ready(function() {
 <cfloop query="c">
     <script>
     $(document).ready(function() {
-        $("###remoteAddC<cfoutput>#c.catid#</cfoutput>").on("show.bs.modal", function(event) {
+        $("##remoteAddC<cfoutput>#c.catid#</cfoutput>").on("show.bs.modal", function(event) {
             $(this).find(".modal-body").load("<cfoutput>/include/remoteAddC.cfm?catid=#c.catid#&userid=#userid#&contactid=#currentid#</cfoutput>", function() {
                 $(this).find("form").parsley();
             });
@@ -262,7 +262,7 @@ $(document).ready(function() {
 <!--- Tag management modal --->
 <script>
 $(document).ready(function() {
-    $("###remoteUpdateTag").on("show.bs.modal", function(event) {
+    $("##remoteUpdateTag").on("show.bs.modal", function(event) {
         $(this).find(".modal-body").load("<cfoutput>/include/remoteUpdateTag.cfm?contactid=#currentid#</cfoutput>");
     });
 });
@@ -283,7 +283,7 @@ $(document).ready(function() {
 <!--- New form modal --->
 <script>
 $(document).ready(function() {
-    $("###remoteNewForm").on("show.bs.modal", function(event) {
+    $("##remoteNewForm").on("show.bs.modal", function(event) {
         $(this).find(".modal-body").load("<cfoutput>/include/RemoteNewForm.cfm?rpgid=36&pgid=3&t2=1&pgdir=#pgdir#&contactid=#contactid#</cfoutput>");
     });
 });
@@ -311,7 +311,7 @@ $(document).ready(function() {
 <cfoutput>
 <script>
 $(document).ready(function() {
-    $("###remoteDeleteForm#currentid#").on("show.bs.modal", function(event) {
+    $("##remoteDeleteForm#currentid#").on("show.bs.modal", function(event) {
         $(this).find(".modal-body").load("/include/remoteDeleteForm.cfm?recid=#currentid#&rpgid=#pgid#&pgaction=update&pgdir=#pgdir#");
     });
 });
@@ -333,7 +333,7 @@ $(document).ready(function() {
 <!--- Contact name update modal --->
 <script>
 $(document).ready(function() {
-    $("###remoteUpdateName").on("show.bs.modal", function(event) {
+    $("##remoteUpdateName").on("show.bs.modal", function(event) {
         $(this).find(".modal-body").load("<cfoutput>/include/remoteUpdateName.cfm?contactid=#currentid#&userid=#userid#</cfoutput>");
     });
 });
@@ -425,7 +425,7 @@ $(document).ready(function() {
             <cfoutput>
             <script>
             $(document).ready(function() {
-                $("###remoteDeleteForm#recid#").on("show.bs.modal", function(event) {
+                $("##remoteDeleteForm#recid#").on("show.bs.modal", function(event) {
                     $(this).find(".modal-body").load("/include/remoteDeleteForm.cfm?recid=#contactid#&rpgid=3&pgaction=update&pgdir=#pgdir#");
                 });
             });
