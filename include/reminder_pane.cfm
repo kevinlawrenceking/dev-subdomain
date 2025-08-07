@@ -93,7 +93,7 @@
             if (type === 'display') {
               return `
                 ${data}
-                <a href="/include/contactdetails.cfm?contactid=${row.contactid}" class="ms-1" title="View Contact Details">
+                <a href="/app/contact/?contactid=${row.contactid}" class="ms-1" title="View Contact Details">
                   <i class="mdi mdi-eye-outline" style="font-size: 12px;"></i>
                 </a>
               `;
