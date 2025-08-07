@@ -304,16 +304,18 @@
           // Close modal first
           bootstrap.Modal.getInstance(document.getElementById('confirmReminderModal')).hide();
           
-          // Add a small delay to ensure database transaction is committed
-          setTimeout(function() {
-            // Reload the table data
-            console.log('Reloading reminders table...');
-            loadReminders();
-          }, 300); // 300ms delay
-          
-          // Optional: Show success message
+          // Show brief success message then refresh the page
           if (parsedResponse.success) {
             console.log(`Successfully ${parsedResponse.status} reminder ${parsedResponse.notid}`);
+            // Refresh the page to show updated reminders
+            setTimeout(function() {
+              window.location.reload();
+            }, 500); // Small delay to let modal close
+          } else {
+            // Fallback if no success property
+            setTimeout(function() {
+              window.location.reload();
+            }, 500);
           }
         },
         error: function(xhr, status, error) {
