@@ -2,7 +2,7 @@
 <cfparam name="hide_completed" default="Y" />
 <cfparam name="src" default="c" />
 <cfparam name="notid" />
-<cfset dbug = "Y" />
+<cfset dbug = "N" />
 
 <cfset debugCounters = {
   selectedNotifications = 0,
