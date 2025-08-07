@@ -51,7 +51,7 @@
     $('#remindersTable').DataTable({
       destroy: true,
       ajax: {
-        url: "/include/get_reminders.cfm",
+        url: "/include/get_reminders.cfm?bypass=1",
         data: {
           showInactive: showInactive,
           currentid: <cfoutput>#contactid#</cfoutput>,
