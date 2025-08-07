@@ -1,157 +1,152 @@
+<!---
+    PURPOSE: Left navigation sidebar for the application
+    AUTHOR: Kevin King
+    DATE: 2025-08-06
+    DEPENDENCIES: Bootstrap 5, Feather Icons, session variables
+--->
+
 <cfparam name="mock_yn" default="N" />
-
 <cfparam name="BROWSER_USER_AVATAR_FILENAME" default="N" />
-<cfif #mock_yn# is "Y" and #mocktoday# is not "">
 
-    <cfset cookie.mocktoday=mocktoday />
-    <cfelse>
-
-        <cfcookie name="mocktoday" expires="#now()#">
-
+<!--- Mock date handling for testing --->
+<cfif mock_yn IS "Y" AND len(trim(mocktoday))>
+    <cfset cookie.mocktoday = mocktoday />
+<cfelse>
+    <cfcookie name="mocktoday" expires="#now()#" />
 </cfif>
 
 <div class="left-side-menu">
-
     <div class="h-100" data-simplebar>
-
-<!--- Sidemenu --->
+        <!--- Sidemenu --->
         <div id="sidebar-menu">
-
-                <ul id="side-menu">
+            <ul id="side-menu">
+                <!--- User Profile Section --->
                 <li>
                     <div class="user-lg text-center">
-                       <center> <a href="/app/image-upload/?ref_pgid=7" style="text-align:center;">
+                        <a href="/app/image-upload/?ref_pgid=7" class="text-center">
                             <cfoutput>
-                                <img src="#session.userAvatarUrl#?ver=#rand()#" alt="user-image" id="mobile" class="rounded-circle avatar-md text-center" />
+                                <img src="#session.userAvatarUrl#?ver=#rand()#" 
+                                     alt="user-image" 
+                                     class="rounded-circle avatar-md" />
                                 <br />
-                                <span class="pro-user-name ml-1 text-center">#avatarname#</span>
+                                <span class="pro-user-name mt-2 d-block">#avatarname#</span>
                             </cfoutput>
-                        </a></center>
+                        </a>
                     </div>
                 </li>
                 
-                <Cfoutput query="menuItemsU">
+                <!--- Main Menu Items --->
+                <cfoutput query="menuItemsU">
                     <li>
                         <a href="/app/#menuItemsU.compDir#/">
-                            <i data-feather="#menuitemsU.compicon#"></i>
-                            <span>#menuItemsU.compName# </span>
+                            <i data-feather="#menuItemsU.compicon#"></i>
+                            <span>#menuItemsU.compName#</span>
                         </a>
                     </li>
+                </cfoutput>
 
-                </Cfoutput>
-
-                <!---
-
-                           <li>
-                        <a href="/app/auditions/">
-                            <i data-feather="<i data-feather="film"></i>
-                            <span>Auditions </span>
-                        </a>
-                    </li>
-
---->
-                <cfif #userrole# is "Administrator">
-
-<li>
-                                <a href="#sidebara" data-bs-toggle="collapse">
-                                <i data-feather="sliders"></i>
-                                    <span> Relationships - Admin </span>
-                                    <span class="menu-arrow"></span>
-                                </a>
-<div class="collapse" id="sidebara">
-    <style>
-        #sidebara .nav-second-level {
-            list-style-type: disc !important;
-            padding-left: 30px; /* Indents bullets */
-        }
-
-        #sidebara .nav-second-level a {
-            color: #f8f8ff;
-            margin-left: 5px;
-        }
-
-        #sidebara .nav-second-level a:hover,
-        #sidebara .nav-second-level a:active {
-            color: #dece8e !important;
-        }
-    </style>
-    <ul class="nav-second-level">
-        <cfoutput query="menuItemsa">    
-            <li>&nbsp;&nbsp;&nbsp;
-                <a href="/app/#menuItemsA.compDir#/" >
-                    <span>#menuItemsA.compName#</span>
-                </a>
-            </li>
-        </cfoutput>
-    </ul>
-</div>
-
-
-
-
-                            </li>
-
-<li>
-                                <a href="#sidebarEmail" data-bs-toggle="collapse">
-                                      <i data-feather="sliders"></i>
-                                    <span> Audition - Admin </span>
-                                    <span class="menu-arrow"></span>
-                                </a>
-                    
-
-
-
-                    <div class="collapse" id="sidebarEmail">
-    <style>
-        #3#sidebarEmail .nav-second-level {
-            list-style-type: disc !important;
-            padding-left: 30px; /* Indents bullets */
-        }
-
-        #sidebarEmail .nav-second-level a {
-            color: #f8f8ff;
-            margin-left: 5px;
-        }
-
-        #sidebarEmail .nav-second-level a:hover,
-        #sidebarEmail .nav-second-level a:active {
-            color: #dece8e !important;
-        }
-    </style>
-    <ul class="nav-second-level">
-        <cfoutput query="menuItemsaud">    
-            <li>&nbsp;&nbsp;&nbsp;
-                <a href="/app/#menuItemsAud.compDir#/">
-                    <span>#menuItemsAud.compName#</span>
-                </a>
-            </li>
-        </cfoutput>
-    </ul>
-</div>
-
-                            </li>
-
-</cfif>
-
-<cfparam name="userisbetatester" default="0" />
-
-<cfif #userIsBetaTester# is "1">
+                
+                <!--- Administrator Menu Sections --->
+                <cfif userrole IS "Administrator">
+                    <!--- Relationships Admin Section --->
                     <li>
-                        <a href="/app/Testings/">
-                            <i data-feather="list"></i>
-                            <span> Testing Log</span>
+                        <a href="#sidebara" data-bs-toggle="collapse" aria-expanded="false">
+                            <i data-feather="users"></i>
+                            <span>Relationships - Admin</span>
+                            <span class="menu-arrow"></span>
                         </a>
+                        <div class="collapse" id="sidebara">
+                            <ul class="nav-second-level">
+                                <cfoutput query="menuItemsa">    
+                                    <li>
+                                        <a href="/app/#menuItemsA.compDir#/">
+                                            <span>#menuItemsA.compName#</span>
+                                        </a>
+                                    </li>
+                                </cfoutput>
+                            </ul>
+                        </div>
                     </li>
 
+                    <!--- Audition Admin Section --->
+                    <li>
+                        <a href="#sidebarAudition" data-bs-toggle="collapse" aria-expanded="false">
+                            <i data-feather="film"></i>
+                            <span>Audition - Admin</span>
+                            <span class="menu-arrow"></span>
+                        </a>
+                        <div class="collapse" id="sidebarAudition">
+                            <ul class="nav-second-level">
+                                <cfoutput query="menuItemsaud">    
+                                    <li>
+                                        <a href="/app/#menuItemsAud.compDir#/">
+                                            <span>#menuItemsAud.compName#</span>
+                                        </a>
+                                    </li>
+                                </cfoutput>
+                            </ul>
+                        </div>
+                    </li>
                 </cfif>
 
-</ul>
-
+                <!--- Beta Tester Menu Item --->
+                <cfparam name="userIsBetaTester" default="0" />
+                <cfif userIsBetaTester IS "1">
+                    <li>
+                        <a href="/app/Testings/">
+                            <i data-feather="clipboard"></i>
+                            <span>Testing Log</span>
+                        </a>
+                    </li>
+                </cfif>
+            </ul>
         </div>
-
-<div class="clearfix"></div>
-
+        
+        <div class="clearfix"></div>
     </div>
-    <!--- Sidebar left --->
-
+    <!--- End Sidebar --->
 </div>
+
+<!--- Sidebar Styles --->
+<style>
+    .nav-second-level {
+        list-style-type: none !important;
+        padding-left: 0;
+        margin-left: 20px;
+    }
+
+    .nav-second-level li {
+        margin: 5px 0;
+    }
+
+    .nav-second-level a {
+        color: #f8f8ff;
+        font-size: 0.9em;
+        padding: 5px 10px;
+        border-radius: 4px;
+        transition: all 0.2s ease-in-out;
+    }
+
+    .nav-second-level a:hover,
+    .nav-second-level a:active {
+        color: #dece8e !important;
+        background-color: rgba(222, 206, 142, 0.1);
+        text-decoration: none;
+    }
+
+    .pro-user-name {
+        font-size: 0.9em;
+        font-weight: 500;
+    }
+
+    .user-lg .avatar-md {
+        width: 60px;
+        height: 60px;
+        margin-bottom: 10px;
+    }
+
+    #side-menu .menu-arrow {
+        float: right;
+        margin-top: 2px;
+    }
+</style>

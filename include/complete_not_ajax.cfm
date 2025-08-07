@@ -1,7 +1,8 @@
 <!--- complete_not_ajax.cfm [UPDATED WITH DEBUG COUNTERS] --->
 <cfparam name="hide_completed" default="Y" />
 <cfparam name="src" default="c" />
-<cfset dbug = "N" />
+<cfparam name="notid" required="true" />
+<cfset dbug = "Y" />
 
 <cfset debugCounters = {
   selectedNotifications = 0,
@@ -272,10 +273,15 @@ notsnext.recordcount: #notsnext.recordcount#
   </cfif>
 
   <cfif checkformaint.recordcount EQ 0>
-  <CFIF DBUG EQ "Y"><CFOUTPUT>
-  checkformaint.recordcount: #checkformaint.recordcount#<br> 
-    </CFOUTPUT></CFIF>
+    <cfif dbug EQ "Y">
+      <cfoutput>
+        checkformaint.recordcount: #checkformaint.recordcount#<br> 
+      </cfoutput>
+    </cfif>
 
+    <!--- Set required variables for addNotifications.cfm --->
+    <cfset subtitle = "Maintenance system created for contact: #new_contactname#" />
+    
     <cfinclude template="/include/qry/addNotifications.cfm" />
     <cfinclude template="/include/qry/findSystemByScope.cfm" />
     <cfset session.ftom = "Y" />
