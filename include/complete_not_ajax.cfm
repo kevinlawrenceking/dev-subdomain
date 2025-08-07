@@ -1,9 +1,35 @@
 <!--- complete_not_ajax.cfm [UPDATED WITH DEBUG COUNTERS] --->
+<cfsetting showdebugoutput="false">
+<cfcontent type="application/json">
+
 <cfparam name="hide_completed" default="Y" />
 <cfparam name="src" default="c" />
-<cfparam name="notid" />
-<cfparam name="notstatus" default="" />
-<cfset dbug = "Y" />
+<cfparam name="form.notid" default="" />
+<cfparam name="url.notid" default="" />
+<cfparam name="form.notstatus" default="" />
+<cfparam name="url.notstatus" default="" />
+
+<!--- Handle both form and URL parameters --->
+<cfif len(trim(form.notid))>
+  <cfset notid = form.notid />
+<cfelseif len(trim(url.notid))>
+  <cfset notid = url.notid />
+<cfelse>
+  <cfif url.bypass NEQ 1>
+    <cfoutput>{"error": "notid parameter is required but was not provided"}</cfoutput>
+  </cfif>
+  <cfabort>
+</cfif>
+
+<cfif len(trim(form.notstatus))>
+  <cfset notstatus = form.notstatus />
+<cfelseif len(trim(url.notstatus))>
+  <cfset notstatus = url.notstatus />
+<cfelse>
+  <cfset notstatus = "Pending" />
+</cfif>
+
+<cfset dbug = "N" />
 
 <cfset debugCounters = {
   selectedNotifications = 0,
@@ -60,6 +86,8 @@
     <p>
       <strong>Debug Output:</strong>
     </p>
+    notid: #notid#<br/>
+    notstatus: #notstatus#<br/>
     notstartdate: #notstartdate#<br/>
     Contact ID: #contactid#<br/>
     New Contact Name: #new_contactname#<br/>
@@ -72,15 +100,6 @@
     Unique Name: #uniquename#<br/>
     Is Unique: #IsUnique#<br/>
   </cfoutput>
-</cfif>
-
-<cfif NOT len(trim(notstatus))>
-  <cfset notstatus = "Pending" />
-  <cfif dbug EQ "Y">
-    <cfoutput>
-      <p>notstatus not provided, defaulting to: Pending</p>
-    </cfoutput>
-  </cfif>
 </cfif>
 
 <cfset notEndDate = dateFormat(now(), 'yyyy-mm-dd') />
@@ -315,4 +334,7 @@ notsnext.recordcount: #notsnext.recordcount#
     </ul>
   </cfoutput>
   <cfabort>
+<cfelse>
+  <!--- Return success response for AJAX calls --->
+  <cfoutput>{"success": true, "notid": "#notid#", "status": "#notstatus#"}</cfoutput>
 </cfif>
