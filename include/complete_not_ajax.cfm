@@ -2,6 +2,7 @@
 <cfparam name="hide_completed" default="Y" />
 <cfparam name="src" default="c" />
 <cfparam name="notid" />
+<cfparam name="notstatus" default="" />
 <cfset dbug = "Y" />
 
 <cfset debugCounters = {
@@ -73,12 +74,13 @@
   </cfoutput>
 </cfif>
 
-<cfif NOT isDefined('notstatus')>
+<cfif NOT len(trim(notstatus))>
   <cfset notstatus = "Pending" />
-  <cfoutput>
-    <p>notstatus isn't defined</p>
-    notstatus: Pending<br/>
-  </cfoutput>
+  <cfif dbug EQ "Y">
+    <cfoutput>
+      <p>notstatus not provided, defaulting to: Pending</p>
+    </cfoutput>
+  </cfif>
 </cfif>
 
 <cfset notEndDate = dateFormat(now(), 'yyyy-mm-dd') />
