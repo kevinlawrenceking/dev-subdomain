@@ -47,9 +47,15 @@
   function loadReminders() {
     const showInactive = $("#showInactive").is(":checked") ? 1 : 0;
     const enableFiltering = <cfoutput>'#ucase(showContact)#'</cfoutput> === 'Y';
+    
+    console.log('Loading reminders with showInactive:', showInactive);
+
+    // Destroy existing DataTable if it exists
+    if ($.fn.DataTable.isDataTable('#remindersTable')) {
+      $('#remindersTable').DataTable().destroy();
+    }
 
     $('#remindersTable').DataTable({
-      destroy: true,
       ajax: {
         url: "/include/get_reminders.cfm?bypass=1",
         data: {
@@ -284,8 +290,28 @@
         },
         success: function(response) {
           console.log('Response from complete_not_ajax.cfm:', response);
-          loadReminders();
+          
+          // Parse the JSON response if it's a string
+          let parsedResponse;
+          try {
+            parsedResponse = typeof response === 'string' ? JSON.parse(response) : response;
+            console.log('Parsed response:', parsedResponse);
+          } catch (e) {
+            console.error('Error parsing response:', e);
+            parsedResponse = response;
+          }
+          
+          // Close modal first
           bootstrap.Modal.getInstance(document.getElementById('confirmReminderModal')).hide();
+          
+          // Reload the table data
+          console.log('Reloading reminders table...');
+          loadReminders();
+          
+          // Optional: Show success message
+          if (parsedResponse.success) {
+            console.log(`Successfully ${parsedResponse.status} reminder ${parsedResponse.notid}`);
+          }
         },
         error: function(xhr, status, error) {
           console.error('Error completing reminder:', error);
