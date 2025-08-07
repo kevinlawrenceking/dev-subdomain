@@ -1,7 +1,29 @@
 <!--- complete_not_ajax.cfm [UPDATED WITH DEBUG COUNTERS] --->
 <cfparam name="hide_completed" default="Y" />
 <cfparam name="src" default="c" />
-<cfparam name="notid" />
+<cfparam name="form.notid" default="" />
+<cfparam name="url.notid" default="" />
+<cfparam name="form.notstatus" default="" />
+<cfparam name="url.notstatus" default="" />
+
+<!--- Handle both form and URL parameters --->
+<cfif len(trim(form.notid))>
+  <cfset notid = form.notid />
+<cfelseif len(trim(url.notid))>
+  <cfset notid = url.notid />
+<cfelse>
+  <cfoutput>ERROR: notid parameter is required but was not provided</cfoutput>
+  <cfabort>
+</cfif>
+
+<cfif len(trim(form.notstatus))>
+  <cfset notstatus = form.notstatus />
+<cfelseif len(trim(url.notstatus))>
+  <cfset notstatus = url.notstatus />
+<cfelse>
+  <cfset notstatus = "Pending" />
+</cfif>
+
 <cfset dbug = "N" />
 
 <cfset debugCounters = {
@@ -59,6 +81,8 @@
     <p>
       <strong>Debug Output:</strong>
     </p>
+    notid: #notid#<br/>
+    notstatus: #notstatus#<br/>
     notstartdate: #notstartdate#<br/>
     Contact ID: #contactid#<br/>
     New Contact Name: #new_contactname#<br/>
@@ -70,14 +94,6 @@
     Action Days Recurring: #actionDaysRecurring#<br/>
     Unique Name: #uniquename#<br/>
     Is Unique: #IsUnique#<br/>
-  </cfoutput>
-</cfif>
-
-<cfif NOT isDefined('notstatus')>
-  <cfset notstatus = "Pending" />
-  <cfoutput>
-    <p>notstatus isn't defined</p>
-    notstatus: Pending<br/>
   </cfoutput>
 </cfif>
 

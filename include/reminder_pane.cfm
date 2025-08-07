@@ -246,9 +246,11 @@
         status: $(this).data('status'),
         text: $(this).data('text')
       };
+      
+      console.log('Selected reminder for action:', selectedReminder);
 
       $("#confirmReminderText").text(
-        `Are you sure you want to mark "${selectedReminder.text} reminder" as ${selectedReminder.status}?`
+        `Are you sure you want to mark "${selectedReminder.text}" as ${selectedReminder.status}?`
       );
 
       const confirmModal = new bootstrap.Modal(document.getElementById('confirmReminderModal'));
@@ -256,12 +258,27 @@
     });
 
     $('#confirmReminderButton').click(function () {
-      $.post("/include/complete_not_ajax.cfm?bypass=1", {
-        notid: selectedReminder.id,
-        notstatus: selectedReminder.status
-      }, function () {
-        loadReminders();
-        bootstrap.Modal.getInstance(document.getElementById('confirmReminderModal')).hide();
+      console.log('Submitting reminder completion:', selectedReminder);
+      console.log('Posting data:', { notid: selectedReminder.id, notstatus: selectedReminder.status });
+      
+      $.ajax({
+        url: "/include/complete_not_ajax.cfm?bypass=1",
+        type: "POST",
+        data: {
+          notid: selectedReminder.id,
+          notstatus: selectedReminder.status
+        },
+        success: function(response) {
+          console.log('Response from complete_not_ajax.cfm:', response);
+          loadReminders();
+          bootstrap.Modal.getInstance(document.getElementById('confirmReminderModal')).hide();
+        },
+        error: function(xhr, status, error) {
+          console.error('Error completing reminder:', error);
+          console.error('Status:', status);
+          console.error('Response:', xhr.responseText);
+          alert('Error completing reminder: ' + error + '\nStatus: ' + status + '\nResponse: ' + xhr.responseText);
+        }
       });
     });
   });
