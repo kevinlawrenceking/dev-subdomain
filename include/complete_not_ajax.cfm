@@ -1,6 +1,6 @@
 <!--- complete_not_ajax.cfm [UPDATED WITH DEBUG COUNTERS] --->
 <cfsetting showdebugoutput="false">
-<cfcontent type="application/json">
+<cfsetting enablecfoutputonly="true">
 
 <cfparam name="hide_completed" default="Y" />
 <cfparam name="src" default="c" />
@@ -16,6 +16,7 @@
   <cfset notid = url.notid />
 <cfelse>
   <cfif url.bypass NEQ 1>
+    <cfcontent type="application/json">
     <cfoutput>{"error": "notid parameter is required but was not provided"}</cfoutput>
   </cfif>
   <cfabort>
@@ -322,6 +323,7 @@ notsnext.recordcount: #notsnext.recordcount#
 
 <!--- Final Debug Summary --->
 <cfif dbug EQ "Y">
+  <cfsetting enablecfoutputonly="false">
   <cfoutput>
     <h3>Debug Summary</h3>
     <ul>
@@ -336,5 +338,7 @@ notsnext.recordcount: #notsnext.recordcount#
   <cfabort>
 <cfelse>
   <!--- Return success response for AJAX calls --->
+  <cfcontent type="application/json">
+  <cfsetting enablecfoutputonly="false">
   <cfoutput>{"success": true, "notid": "#notid#", "status": "#notstatus#"}</cfoutput>
 </cfif>
