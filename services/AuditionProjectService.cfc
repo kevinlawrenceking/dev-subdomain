@@ -129,15 +129,7 @@
         </cfif>
 
         <cfif arguments.new_paycycleid GT 0>
-<<<<<<< HEAD
-            <cfif len(trim(arguments.new_payrate)) OR len(trim(arguments.new_netincome)) OR len(trim(arguments.new_buyout))>,</cfif>paycycleid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_paycycleid#">
-        </cfif>
-
-        <cfif arguments.new_incometypeid GT 0>
-            <cfif len(trim(arguments.new_payrate)) OR len(trim(arguments.new_netincome)) OR len(trim(arguments.new_buyout)) OR arguments.new_paycycleid GT 0>,</cfif>incometypeid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_incometypeid#">
-=======
             <cfif needsComma>,</cfif>paycycleid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_paycycleid#">
->>>>>>> dev
         </cfif>
 
     WHERE audprojectID = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_audprojectID#">
@@ -161,9 +153,6 @@
         </cfif>
         <cfif arguments.new_paycycleid GT 0>
             <cfif needsOr> OR </cfif>paycycleid != <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_paycycleid#">
-        </cfif>
-        <cfif arguments.new_incometypeid GT 0>
-            <cfif len(trim(arguments.new_payrate)) OR len(trim(arguments.new_netincome)) OR arguments.new_paycycleid GT 0> OR </cfif>incometypeid != <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_incometypeid#">
         </cfif>
     )
 </cfquery>
