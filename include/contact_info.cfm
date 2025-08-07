@@ -625,7 +625,7 @@ $(document).ready(function() {
                                     <cfoutput>
                                     <h6 class="mb-1">
                                         <a href="javascript:;" data-bs-remote="true" data-bs-toggle="modal" 
-                                           data-bs-#target="##remoteUpdateSUID#rels.suid#" 
+                                           data-bs-target="##remoteUpdateSUID#rels.suid#" 
                                            class="text-decoration-none" data-bs-toggle="tooltip" title="Relationship System">#rels.SystemType#</a>
                                     </h6>
                                     <div class="text-uppercase small text-muted">#rels.systemscope#</div>
