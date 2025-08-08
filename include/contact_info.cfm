@@ -528,7 +528,7 @@ $(document).ready(function() {
                     <cfif tagscontact.recordcount gt 0>
                         <cfloop query="tagscontact">
                             <cfoutput>
-                            <a href="javascript:;" data-bs-remote="true" data-bs-toggle="modal" data-bs-target="#remoteUpdateTag" 
+                            <a href="javascript:;" data-bs-remote="true" data-bs-toggle="modal" data-bs-target="##remoteUpdateTag" 
                                class="badge bg-secondary me-1" data-bs-toggle="tooltip" title="Update Tag">#tagscontact.valuetext#</a>
                             </cfoutput>
                         </cfloop>
