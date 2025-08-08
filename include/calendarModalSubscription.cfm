@@ -1,7 +1,7 @@
 <!--- This ColdFusion page displays a modal for subscription URL information. --->
 <div id="subscription" class="modal fade" tabindex="-1" aria-labelledby="standard-modalLabel">
   <div class="modal-dialog">
-    <script src="https://ajax.googleapis.com/include/libs/jquery/1.11.1/jquery.min.js"></script>
+   
     <div class="modal-content">
       <div class="modal-header">
         <h4 class="modal-title" id="standard-modalLabel">Subscription URL</h4>
