@@ -311,7 +311,7 @@ $(document).ready(function() {
 <cfoutput>
 <script>
 $(document).ready(function() {
-    $("#remoteDeleteForm#currentid#").on("show.bs.modal", function(event) {
+    $("##remoteDeleteForm#currentid#").on("show.bs.modal", function(event) {
         $(this).find(".modal-body").load("/include/remoteDeleteForm.cfm?recid=#currentid#&rpgid=#pgid#&pgaction=update&pgdir=#pgdir#");
     });
 });
@@ -425,7 +425,7 @@ $(document).ready(function() {
             <cfoutput>
             <script>
             $(document).ready(function() {
-                $("#remoteDeleteForm#recid#").on("show.bs.modal", function(event) {
+                $("##remoteDeleteForm#recid#").on("show.bs.modal", function(event) {
                     $(this).find(".modal-body").load("/include/remoteDeleteForm.cfm?recid=#contactid#&rpgid=3&pgaction=update&pgdir=#pgdir#");
                 });
             });
