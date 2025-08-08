@@ -1,3 +1,36 @@
+<!---
+    PURPOSE: Handle Google OAuth callback for calendar integration
+    AUTHOR: Kevin King
+    DATE: 2025-08-07
+    SCOPE: Only requests calendar.events scope for minimal permissions
+--->
+
+<cfparam name="URL.code" default="" />
+<cfparam name="URL.error" default="" />
+
+<!--- Handle OAuth errors --->
+<cfif len(trim(URL.error))>
+    <cfoutput>
+        <h2>OAuth Authorization Error</h2>
+        <p>Error: #HTMLEditFormat(URL.error)#</p>
+        <cfif isDefined("URL.error_description")>
+            <p>Description: #HTMLEditFormat(URL.error_description)#</p>
+        </cfif>
+        <p><a href="/app/calendar-appoint/">Return to Calendar</a></p>
+    </cfoutput>
+    <cfabort />
+</cfif>
+
+<!--- Validate authorization code --->
+<cfif not len(trim(URL.code))>
+    <cfoutput>
+        <h2>OAuth Error</h2>
+        <p>No authorization code received.</p>
+        <p><a href="/app/calendar-appoint/">Return to Calendar</a></p>
+    </cfoutput>
+    <cfabort />
+</cfif>
+
 <cfset authorizationCode = trim(URL.code)>
 <cfset clientId = "764716537559-ncfiag8dl4p05v7c9kcoltss0ou3heki.apps.googleusercontent.com">
 <cfset clientSecret = "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">
