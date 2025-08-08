@@ -14,6 +14,14 @@
         <cfset eventStopDate = events.eventstop>
         <cfset eventStopTime = events.eventstopTime>
         
+        <!--- Ensure we have valid start date and time --->
+        <cfif NOT isDate(eventStartDate)>
+            <cfset eventStartDate = now()>
+        </cfif>
+        <cfif NOT isDate(eventStartTime)>
+            <cfset eventStartTime = createTime(9, 0, 0)>
+        </cfif>
+        
         <!--- Fix missing or invalid stop date --->
         <cfif NOT isDate(eventStopDate) OR dateCompare(eventStopDate, eventStartDate) LT 0>
             <cfset eventStopDate = eventStartDate>
@@ -22,14 +30,21 @@
         <!--- Fix missing or invalid stop time --->
         <cfif NOT isDate(eventStopTime)>
             <!--- If stop time is invalid, add 1 hour to start time --->
-            <cfset eventStopTime = dateAdd("h", 1, eventStartTime)>
+            <cfset eventStopTime = createTime(hour(eventStartTime) + 1, minute(eventStartTime), 0)>
         <cfelseif dateCompare(eventStopDate, eventStartDate) EQ 0>
             <!--- Same date: check if stop time is after start time --->
-            <cfset startSeconds = hour(eventStartTime) * 3600 + minute(eventStartTime) * 60 + second(eventStartTime)>
-            <cfset stopSeconds = hour(eventStopTime) * 3600 + minute(eventStopTime) * 60 + second(eventStopTime)>
-            <cfif stopSeconds LTE startSeconds>
+            <cfset startMinutes = hour(eventStartTime) * 60 + minute(eventStartTime)>
+            <cfset stopMinutes = hour(eventStopTime) * 60 + minute(eventStopTime)>
+            <cfif stopMinutes LTE startMinutes>
                 <!--- Stop time is before or equal to start time, add 1 hour --->
-                <cfset eventStopTime = dateAdd("h", 1, eventStartTime)>
+                <cfset newHour = hour(eventStartTime) + 1>
+                <cfif newHour GTE 24>
+                    <cfset newHour = 23>
+                    <cfset newMinute = 59>
+                <cfelse>
+                    <cfset newMinute = minute(eventStartTime)>
+                </cfif>
+                <cfset eventStopTime = createTime(newHour, newMinute, 0)>
             </cfif>
         </cfif>
         
