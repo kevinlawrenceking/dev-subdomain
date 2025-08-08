@@ -113,7 +113,7 @@
 <!--- Initialize modal for relationship system (SUID 0) --->
 <script>
 $(document).ready(function() {
-    $("##remoteUpdateSUID0").on("show.bs.modal", function(event) {
+    $("#remoteUpdateSUID0").on("show.bs.modal", function(event) {
         $(this).find(".modal-body").load("<cfoutput>/include/remoteUpdateSUID.cfm?suid=0&contactid=#currentid#</cfoutput>");
     });
 });
@@ -136,7 +136,7 @@ $(document).ready(function() {
 <cfloop query="ru">
     <script>
     $(document).ready(function() {
-        $("##remoteUpdateSUID<cfoutput>#ru.suid#</cfoutput>").on("show.bs.modal", function(event) {
+        $("#remoteUpdateSUID<cfoutput>#ru.suid#</cfoutput>").on("show.bs.modal", function(event) {
             $(this).find(".modal-body").load("<cfoutput>/include/remoteUpdateSUID.cfm?suid=#ru.suid#&contactid=#currentid#</cfoutput>");
         });
     });
@@ -162,7 +162,7 @@ $(document).ready(function() {
 <cfloop query="cu">
     <script>
     $(document).ready(function() {
-        $("##remoteUpdateC<cfoutput>#cu.itemid#</cfoutput>").on("show.bs.modal", function(event) {
+        $("#remoteUpdateC<cfoutput>#cu.itemid#</cfoutput>").on("show.bs.modal", function(event) {
             var modal = $(this);
             modal.find(".modal-body").load("<cfoutput>/include/remoteupdatec.cfm?userid=#userid#&itemid=#cu.itemid#</cfoutput>", function() {
                 modal.find("form").parsley();
@@ -212,7 +212,7 @@ $(document).ready(function() {
         <!--- Delete confirmation modal --->
         <script>
         $(document).ready(function() {
-            $("##remoteDeleteForm#sysActive.suid#").on("show.bs.modal", function(event) {
+            $("#remoteDeleteForm#sysActive.suid#").on("show.bs.modal", function(event) {
                 $(this).find(".modal-body").load("/include/remoteDeleteForm.cfm?recid=#sysActive.suid#&rpgid=40&pgaction=update&contactid=#currentid#&pgdir=contact&t4=1");
             });
         });
@@ -238,7 +238,7 @@ $(document).ready(function() {
 <cfloop query="c">
     <script>
     $(document).ready(function() {
-        $("##remoteAddC<cfoutput>#c.catid#</cfoutput>").on("show.bs.modal", function(event) {
+        $("#remoteAddC<cfoutput>#c.catid#</cfoutput>").on("show.bs.modal", function(event) {
             $(this).find(".modal-body").load("<cfoutput>/include/remoteAddC.cfm?catid=#c.catid#&userid=#userid#&contactid=#currentid#</cfoutput>", function() {
                 $(this).find("form").parsley();
             });
@@ -262,7 +262,7 @@ $(document).ready(function() {
 <!--- Tag management modal --->
 <script>
 $(document).ready(function() {
-    $("##remoteUpdateTag").on("show.bs.modal", function(event) {
+    $("#remoteUpdateTag").on("show.bs.modal", function(event) {
         $(this).find(".modal-body").load("<cfoutput>/include/remoteUpdateTag.cfm?contactid=#currentid#</cfoutput>");
     });
 });
@@ -283,7 +283,7 @@ $(document).ready(function() {
 <!--- New form modal --->
 <script>
 $(document).ready(function() {
-    $("##remoteNewForm").on("show.bs.modal", function(event) {
+    $("#remoteNewForm").on("show.bs.modal", function(event) {
         $(this).find(".modal-body").load("<cfoutput>/include/RemoteNewForm.cfm?rpgid=36&pgid=3&t2=1&pgdir=#pgdir#&contactid=#contactid#</cfoutput>");
     });
 });
@@ -311,7 +311,7 @@ $(document).ready(function() {
 <cfoutput>
 <script>
 $(document).ready(function() {
-    $("##remoteDeleteForm#currentid#").on("show.bs.modal", function(event) {
+    $("#remoteDeleteForm#currentid#").on("show.bs.modal", function(event) {
         $(this).find(".modal-body").load("/include/remoteDeleteForm.cfm?recid=#currentid#&rpgid=#pgid#&pgaction=update&pgdir=#pgdir#");
     });
 });
@@ -333,7 +333,7 @@ $(document).ready(function() {
 <!--- Contact name update modal --->
 <script>
 $(document).ready(function() {
-    $("##remoteUpdateName").on("show.bs.modal", function(event) {
+    $("#remoteUpdateName").on("show.bs.modal", function(event) {
         $(this).find(".modal-body").load("<cfoutput>/include/remoteUpdateName.cfm?contactid=#currentid#&userid=#userid#</cfoutput>");
     });
 });
@@ -425,7 +425,7 @@ $(document).ready(function() {
             <cfoutput>
             <script>
             $(document).ready(function() {
-                $("##remoteDeleteForm#recid#").on("show.bs.modal", function(event) {
+                $("#remoteDeleteForm#recid#").on("show.bs.modal", function(event) {
                     $(this).find(".modal-body").load("/include/remoteDeleteForm.cfm?recid=#contactid#&rpgid=3&pgaction=update&pgdir=#pgdir#");
                 });
             });
@@ -528,16 +528,16 @@ $(document).ready(function() {
                     <cfif tagscontact.recordcount gt 0>
                         <cfloop query="tagscontact">
                             <cfoutput>
-                            <a href="javascript:;" data-bs-remote="true" data-bs-toggle="modal" data-bs-target="##remoteUpdateTag" 
+                            <a href="javascript:;" data-bs-remote="true" data-bs-toggle="modal" data-bs-target="#remoteUpdateTag" 
                                class="badge bg-secondary me-1" data-bs-toggle="tooltip" title="Update Tag">#tagscontact.valuetext#</a>
                             </cfoutput>
                         </cfloop>
-                        <a href="javascript:;" data-bs-remote="true" data-bs-toggle="modal" data-bs-target="##remoteUpdateTag" 
+                        <a href="javascript:;" data-bs-remote="true" data-bs-toggle="modal" data-bs-target="#remoteUpdateTag" 
                            class="text-muted" data-bs-toggle="tooltip" title="Add Tag">
                             <small><i class="fe-plus-circle"></i></small>
                         </a>
                     <cfelse>
-                        <a href="javascript:;" data-bs-remote="true" data-bs-toggle="modal" data-bs-target="##remoteUpdateTag" 
+                        <a href="javascript:;" data-bs-remote="true" data-bs-toggle="modal" data-bs-target="#remoteUpdateTag" 
                            class="text-muted" data-bs-toggle="tooltip" title="Add Tag">Add a Tag</a>
                     </cfif>
                 </div>
@@ -552,7 +552,7 @@ $(document).ready(function() {
                 <p class="text-muted small mb-2">
                     <cfoutput>
                     <strong>Birthday:</strong>
-                    <a href="javascript:;" data-bs-remote="true" data-bs-toggle="modal" data-bs-target="##remoteUpdateName" 
+                    <a href="javascript:;" data-bs-remote="true" data-bs-toggle="modal" data-bs-target="#remoteUpdateName" 
                        class="text-decoration-none" data-bs-toggle="tooltip" title="Update Contact">
                         <cfif len(trim(details.contactBirthday))>
                             #month(details.contactbirthday)#/#day(details.contactbirthday)#
@@ -567,10 +567,10 @@ $(document).ready(function() {
                     <cfoutput>
                     <cfset meetingdate = this.formatDate(details.contactmeetingdate) />
                     <strong>Initial Meeting:</strong>
-                    <a href="javascript:;" data-bs-remote="true" data-bs-toggle="modal" data-bs-target="##remoteUpdateName" 
+                    <a href="javascript:;" data-bs-remote="true" data-bs-toggle="modal" data-bs-target="#remoteUpdateName" 
                        class="text-decoration-none" data-bs-toggle="tooltip" title="Update Contact">#meetingdate#</a>
                     <cfif len(trim(details.contactmeetingloc))>
-                        <a href="javascript:;" data-bs-remote="true" data-bs-toggle="modal" data-bs-target="##remoteUpdateName" 
+                        <a href="javascript:;" data-bs-remote="true" data-bs-toggle="modal" data-bs-target="#remoteUpdateName" 
                            class="text-decoration-none" data-bs-toggle="tooltip" title="Update Contact">(#details.contactmeetingloc#)</a>
                     </cfif>
                     </cfoutput>
@@ -625,7 +625,7 @@ $(document).ready(function() {
                                     <cfoutput>
                                     <h6 class="mb-1">
                                         <a href="javascript:;" data-bs-remote="true" data-bs-toggle="modal" 
-                                           data-bs-target="##remoteUpdateSUID#rels.suid#" 
+                                           data-bs-target="#remoteUpdateSUID#rels.suid#" 
                                            class="text-decoration-none" data-bs-toggle="tooltip" title="Relationship System">#rels.SystemType#</a>
                                     </h6>
                                     <div class="text-uppercase small text-muted">#rels.systemscope#</div>
