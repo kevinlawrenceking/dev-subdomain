@@ -22,14 +22,14 @@
         <!--- Fix missing or invalid stop time --->
         <cfif NOT isDate(eventStopTime)>
             <!--- If stop time is invalid, add 1 hour to start time --->
-            <cfset eventStopTime = timeAdd("h", 1, eventStartTime)>
+            <cfset eventStopTime = dateAdd("h", 1, eventStartTime)>
         <cfelseif dateCompare(eventStopDate, eventStartDate) EQ 0>
             <!--- Same date: check if stop time is after start time --->
             <cfset startSeconds = hour(eventStartTime) * 3600 + minute(eventStartTime) * 60 + second(eventStartTime)>
             <cfset stopSeconds = hour(eventStopTime) * 3600 + minute(eventStopTime) * 60 + second(eventStopTime)>
             <cfif stopSeconds LTE startSeconds>
                 <!--- Stop time is before or equal to start time, add 1 hour --->
-                <cfset eventStopTime = timeAdd("h", 1, eventStartTime)>
+                <cfset eventStopTime = dateAdd("h", 1, eventStartTime)>
             </cfif>
         </cfif>
         
