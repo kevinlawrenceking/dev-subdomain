@@ -218,7 +218,7 @@ $(document).ready(function() {
         });
         </script>
 
-        <div id="#remoteDeleteForm#sysActive.suid#" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="remoteDeleteForm#sysActive.suid#Title" aria-hidden="true">
+        <div id="remoteDeleteForm#sysActive.suid#" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="remoteDeleteForm#sysActive.suid#Title" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header bg-danger text-white">
