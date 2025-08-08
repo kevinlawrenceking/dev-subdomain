@@ -1,4 +1,5 @@
 
+
 <cfsavecontent variable="events_loop">
     <cfoutput>
     <cfloop query="events">
@@ -6,20 +7,61 @@
         <cfif events.endrecur neq "">
             <cfset endRecur = DateFormat(events.endrecur, "yyyy-mm-dd")>
         </cfif>
+        
+        <!--- Validate and fix end date/time logic --->
+        <cfset eventStartDate = events.col3>
+        <cfset eventStartTime = events.eventStartTime>
+        <cfset eventStopDate = events.eventstop>
+        <cfset eventStopTime = events.eventstopTime>
+        
+        <!--- Ensure we have valid start date and time --->
+        <cfif NOT isDate(eventStartDate)>
+            <cfset eventStartDate = now()>
+        </cfif>
+        <cfif NOT isDate(eventStartTime)>
+            <cfset eventStartTime = createTime(9, 0, 0)>
+        </cfif>
+        
+        <!--- Fix missing or invalid stop date --->
+        <cfif NOT isDate(eventStopDate) OR dateCompare(eventStopDate, eventStartDate) LT 0>
+            <cfset eventStopDate = eventStartDate>
+        </cfif>
+        
+        <!--- Fix missing or invalid stop time --->
+        <cfif NOT isDate(eventStopTime)>
+            <!--- If stop time is invalid, add 1 hour to start time --->
+            <cfset eventStopTime = createTime(hour(eventStartTime) + 1, minute(eventStartTime), 0)>
+        <cfelseif dateCompare(eventStopDate, eventStartDate) EQ 0>
+            <!--- Same date: check if stop time is after start time --->
+            <cfset startMinutes = hour(eventStartTime) * 60 + minute(eventStartTime)>
+            <cfset stopMinutes = hour(eventStopTime) * 60 + minute(eventStopTime)>
+            <cfif stopMinutes LTE startMinutes>
+                <!--- Stop time is before or equal to start time, add 1 hour --->
+                <cfset newHour = hour(eventStartTime) + 1>
+                <cfif newHour GTE 24>
+                    <cfset newHour = 23>
+                    <cfset newMinute = 59>
+                <cfelse>
+                    <cfset newMinute = minute(eventStartTime)>
+                </cfif>
+                <cfset eventStopTime = createTime(newHour, newMinute, 0)>
+            </cfif>
+        </cfif>
+        
         {
             <cfif events.dow neq "">
                 groupId: "recurring#events.eventid#",
                 startRecur: "#startRecur#",
                 daysOfWeek: [ "#replace(trim(events.dow), ',', "','")#" ],
-                startTime: "#timeformat(events.eventStartTime, 'HH:mm')#",
-                endTime: "#timeformat(events.eventstopTime, 'HH:mm')#",
+                startTime: "#timeformat(eventStartTime, 'HH:mm')#",
+                endTime: "#timeformat(eventStopTime, 'HH:mm')#",
                 <cfif events.endrecur neq "">
                     endRecur: "#endRecur#",
                 </cfif>
             </cfif>
             title: "#JSStringFormat(events.col1)#",
-            start: "#dateFormat(events.col3, "yyyy-mm-dd")# #timeformat(events.eventStartTime, 'HH:mm')#",
-            end: "#dateFormat(events.eventstop, "yyyy-mm-dd")# #timeformat(events.eventstopTime, 'HH:mm')#",
+            start: "#dateFormat(eventStartDate, "yyyy-mm-dd")# #timeformat(eventStartTime, 'HH:mm')#",
+            end: "#dateFormat(eventStopDate, "yyyy-mm-dd")# #timeformat(eventStopTime, 'HH:mm')#",
             url: "<cfif events.audprojectid eq "">/app/appoint/?eventid=#events.eventid#&returnurl=calendar-appoint&rcontactid=0<cfelse>/app/audition/?focusid=#events.eventid#&audprojectid=#events.audprojectid#</cfif>",
             description: "#JSStringFormat(events.col5)#",
             className: "colorkey-#events.id#"
