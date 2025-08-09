@@ -29,7 +29,7 @@
       );
     </cfquery>
 
-    <cfset inserted = val(structFind(r, "rowcount"))>
+    <cfset inserted = r.recordcount>
     <cfoutput>#inserted# row(s) inserted.</cfoutput>
 
     <cfcatch type="any">
