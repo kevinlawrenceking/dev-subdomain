@@ -1,7 +1,6 @@
 <cftransaction>
   <cftry>
-    <!--- 1) Pull the source row from ABOD, formatting all date/timestamp fields as strings --->
-    <cfquery name="src" datasource="abod">
+     <cfquery name="src" datasource="abod">
       SELECT
         CustomerFirst,
         CustomerLast,
@@ -30,7 +29,7 @@
         IsDeleted,
         DATE_FORMAT(canceldate, '%Y-%m-%d %H:%i:%s')     AS canceldate_str,
         userid
-      FROM new_development.thrivecart_tbl
+      FROM thrivecart_tbl
       WHERE id = 1361
       LIMIT 1
     </cfquery>
@@ -41,7 +40,7 @@
 
     <!--- 2) Insert into ABO, omit id, force status = 'Pending' --->
     <cfquery name="ins" datasource="abo" result="r">
-      INSERT INTO actorsbusinessoffice.thrivecart_tbl (
+      INSERT INTO thrivecart_tbl (
         CustomerFirst, CustomerLast, purchasedate, CustomerFullName,
         baseProductName, `timestamp`, CustomerEmail, PurchaseName,
         BillingAddress, BillingCity, BillingZip, BillingCountry, BillingState,
