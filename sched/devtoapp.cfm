@@ -1,71 +1,41 @@
-<div class="row">
+<cftransaction>
+  <cftry>
+    <cfquery name="qInsert" datasource="abo" result="r">
+      INSERT INTO actorsbusinessoffice.thrivecart_tbl (
+        CustomerFirst, CustomerLast, purchasedate, CustomerFullName,
+        baseProductName, `timestamp`, CustomerEmail, PurchaseName,
+        BillingAddress, BillingCity, BillingZip, BillingCountry, BillingState,
+        InvoiceID, CustomerID, BaseProductLabel, BaseProductID, OrderDate,
+        TrialDays, TrialEndDate, PurchaseAmountCents, BasePaymentPlanID,
+        status, UUID, IsDemo, IsDeleted, canceldate, userid
+      )
+      SELECT
+        s.CustomerFirst, s.CustomerLast, s.purchasedate, s.CustomerFullName,
+        s.baseProductName, s.`timestamp`, s.CustomerEmail, s.PurchaseName,
+        s.BillingAddress, s.BillingCity, s.BillingZip, s.BillingCountry, s.BillingState,
+        s.InvoiceID, s.CustomerID, s.BaseProductLabel, s.BaseProductID, s.OrderDate,
+        s.TrialDays, s.TrialEndDate, s.PurchaseAmountCents, s.BasePaymentPlanID,
+        'Pending', s.UUID, s.IsDemo, s.IsDeleted, s.canceldate, s.userid
+      FROM (
+        SELECT *
+        FROM new_development.thrivecart_tbl
+        ORDER BY purchasedate DESC, id DESC
+        LIMIT 1
+      ) AS s
+      WHERE NOT EXISTS (
+        SELECT 1
+        FROM actorsbusinessoffice.thrivecart_tbl d
+        WHERE d.UUID = s.UUID
+      );
+    </cfquery>
 
-    <div class="col-md-3 col-sm-6 col-xs-12">
+    <cfset inserted = val(structFind(r, "rowcount"))>
+    <cfoutput>#inserted# row(s) inserted.</cfoutput>
 
-        <div class="card h-100 mb-3">
-
-            <Center>
-                
-                <h4 class="card-header text-nowrap">
-
-                </h4>
-                
-            </Center>
-            
-            <div class="card-body">
-
-                <p class="card-text">
-
-                    <A href="" class="no-hover-effect">
-
-                        <figure>
-
-                            X
-
-                        </figure>
-
-                    </A>
-
-                </p>
-
-            </div>
-        </div>
-
-    </div>
-
-    <cfoutput>
-
-        <cfset h5style="font-size:0.875rem;font-weight: 500;text-align:left;margin-bottom:0;" />
-
-    </cfoutput>
-
-    <div class="col-md-9 col-sm-6 col-xs-12">
-
-        <div class="card h-100 mb-3">
-
-            <h4 class="card-header">
-
-                Header</h4>
-
-                <div class="card-body">
-
-                    <p class="mt-1 mb-0 py-1 text-muted font-14">
-
-                        Test
-
-                    </p>
-
-                    <p class="mt-1 mb-0 text-muted py-1 font-14">
-                        
-                        Test
-                        
-                    </p>
-
-                </div>
-                
-        </div>
-
-    </div>
-
-</div>
-<p>&nbsp;</p>
+    <cfcatch type="any">
+      <cftransaction action="rollback" />
+      <cfoutput>Insert failed: #cfcatch.message#</cfoutput>
+      <cfabort />
+    </cfcatch>
+  </cftry>
+</cftransaction>
