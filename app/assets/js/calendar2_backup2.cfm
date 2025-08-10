@@ -1,5 +1,4 @@
 
-
 <cfsavecontent variable="events_loop">
     <cfoutput>
     <cfloop query="events">
