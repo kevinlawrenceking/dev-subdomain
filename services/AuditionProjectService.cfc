@@ -109,42 +109,42 @@
     SET 
         <cfset needsComma = false>
         <cfif len(trim(arguments.new_payrate))>
-            payrate = <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#arguments.new_payrate#" maxlength="100">
+            payrate = <cfqueryparam cfsqltype="CF_SQL_DECIMAL" value="#arguments.new_payrate#" scale="2">
             <cfset needsComma = true>
         </cfif>
 
         <cfif len(trim(arguments.new_netincome))>
-            <cfif needsComma>,</cfif>netincome = <cfqueryparam cfsqltype="CF_SQL_DECIMAL" value="#arguments.new_netincome#">
+            <cfif needsComma>,</cfif>netincome = <cfqueryparam cfsqltype="CF_SQL_DECIMAL" value="#arguments.new_netincome#" scale="2">
             <cfset needsComma = true>
         </cfif>
 
         <cfif len(trim(arguments.new_buyout))>
-            <cfif needsComma>,</cfif>buyout = <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#arguments.new_buyout#" maxlength="255">
+            <cfif needsComma>,</cfif>buyout = <cfqueryparam cfsqltype="CF_SQL_DECIMAL" value="#arguments.new_buyout#" scale="2">
             <cfset needsComma = true>
         </cfif>
 
-        <cfif arguments.new_incometypeid GT 0>
+   
             <cfif needsComma>,</cfif>incometypeid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_incometypeid#">
             <cfset needsComma = true>
-        </cfif>
-
-        <cfif arguments.new_paycycleid GT 0>
+   
+     
+  
             <cfif needsComma>,</cfif>paycycleid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_paycycleid#">
-        </cfif>
+   
 
     WHERE audprojectID = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_audprojectID#">
     AND (
         <cfset needsOr = false>
         <cfif len(trim(arguments.new_payrate))>
-            payrate != <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#arguments.new_payrate#">
+            payrate != <cfqueryparam cfsqltype="CF_SQL_DECIMAL" value="#arguments.new_payrate#" scale="2">
             <cfset needsOr = true>
         </cfif>
         <cfif len(trim(arguments.new_netincome))>
-            <cfif needsOr> OR </cfif>netincome != <cfqueryparam cfsqltype="CF_SQL_DECIMAL" value="#arguments.new_netincome#">
+            <cfif needsOr> OR </cfif>netincome != <cfqueryparam cfsqltype="CF_SQL_DECIMAL" value="#arguments.new_netincome#" scale="2">
             <cfset needsOr = true>
         </cfif>
         <cfif len(trim(arguments.new_buyout))>
-            <cfif needsOr> OR </cfif>buyout != <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#arguments.new_buyout#">
+            <cfif needsOr> OR </cfif>buyout != <cfqueryparam cfsqltype="CF_SQL_DECIMAL" value="#arguments.new_buyout#" scale="2">
             <cfset needsOr = true>
         </cfif>
         <cfif arguments.new_incometypeid GT 0>

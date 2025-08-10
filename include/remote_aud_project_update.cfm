@@ -220,7 +220,7 @@
         <!--- Income Type Selection --->
         <div class="form-group col-md-6 col-sm-12">
             <label for="new_incometypeid">Income Type</label>
-            <select id="new_incometypeid" name="new_incometypeid" class="form-control" onChange="showDivs('hidden_divs', this);">
+            <select id="new_incometypeid" name="new_incometypeid" class="form-control" >
                 <cfoutput query="incometypes_sel">
                     <cfset selectedIncomeType = structKeyExists(auditionprojectdetails, "incometypeid") ? auditionprojectdetails.incometypeid : 1>
                     <option value="#incometypes_sel.id#" <cfif #incometypes_sel.id# is "#selectedIncomeType#">selected</cfif>>#incometypes_sel.name#</option>
@@ -230,7 +230,7 @@
 
         <!--- Conditional Net Income Input --->
         <div class="form-group col-md-6 col-sm-12">
-            <div id="hidden_divs">
+            <div id="hidden_divsx">
                 <cfoutput>
                     <label for="new_netincome">Net Income ($)</label>
                     <input class="form-control" id="new_netincome" name="new_netincome" value="#auditionprojectdetails.netincome#" placeholder="net income" type="number" step="0.01" data-parsley-type="number" />
