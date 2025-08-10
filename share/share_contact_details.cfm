@@ -246,6 +246,50 @@ WHERE r.isdeleted = 0
     </div>
 </div>
 
+<!--- Events Section --->
+<cfif qGetContactEvents.recordcount GT 0>
+    <div class="row mt-3">
+        <div class="col-md-12">
+            <h5 class="text-primary">Events History</h5>
+            <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+                <table class="table table-sm table-striped">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            
+                            <th>Project</th>
+                      <th>Type</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <cfoutput query="qGetContactEvents" maxrows="10">
+                            <tr>
+                    
+                                <td style="white-space: nowrap;">
+                                    <cfif isDefined('col1') AND isDate(col1)>
+                                        #dateFormat(col1, "mmm d, yyyy")#
+                                    <cfelse>
+                                        &nbsp;
+                                    </cfif>
+                                </td>
+                                <td>#IIF(isDefined('col2') AND len(trim(col2)), "col2", "''")#</td>
+                                <td style="white-space: nowrap;">#IIF(isDefined('col3') AND len(trim(col3)), "col3", "''")#</td>
+                   
+                            </tr>
+                        </cfoutput>
+                    </tbody>
+                </table>
+                
+                <cfif qGetContactEvents.recordcount GT 10>
+                    <div class="text-center mt-2">
+                        <small class="text-muted">Showing 10 of #qGetContactEvents.recordcount# events</small>
+                    </div>
+                </cfif>
+            </div>
+        </div>
+    </div>
+</cfif>
+
 <!--- Notes Section --->
 <cfif qGetContactNotes.recordcount GT 0>
     <div class="row mt-3">
@@ -313,50 +357,6 @@ WHERE r.isdeleted = 0
                 <cfif qGetContactNotes.recordcount GT 10>
                     <div class="text-center mt-2">
                         <small class="text-muted">Showing recent notes</small>
-                    </div>
-                </cfif>
-            </div>
-        </div>
-    </div>
-</cfif>
-
-<!--- Events Section --->
-<cfif qGetContactEvents.recordcount GT 0>
-    <div class="row mt-3">
-        <div class="col-md-12">
-            <h5 class="text-primary">Events History</h5>
-            <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
-                <table class="table table-sm table-striped">
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            
-                            <th>Project</th>
-                      <th>Type</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <cfoutput query="qGetContactEvents" maxrows="10">
-                            <tr>
-                    
-                                <td style="white-space: nowrap;">
-                                    <cfif isDefined('col1') AND isDate(col1)>
-                                        #dateFormat(col1, "mmm d, yyyy")#
-                                    <cfelse>
-                                        &nbsp;
-                                    </cfif>
-                                </td>
-                                <td>#IIF(isDefined('col2') AND len(trim(col2)), "col2", "''")#</td>
-                                <td style="white-space: nowrap;">#IIF(isDefined('col3') AND len(trim(col3)), "col3", "''")#</td>
-                   
-                            </tr>
-                        </cfoutput>
-                    </tbody>
-                </table>
-                
-                <cfif qGetContactEvents.recordcount GT 10>
-                    <div class="text-center mt-2">
-                        <small class="text-muted">Showing 10 of #qGetContactEvents.recordcount# events</small>
                     </div>
                 </cfif>
             </div>
