@@ -24,6 +24,7 @@
 }
 
 .note-details-row.expanded {
+    max-height: 500px;
     opacity: 1;
 }
 
