@@ -18,5 +18,8 @@
 <!--- Include modal for updating event type --->
 <cfinclude template="calendarModalUpdateeventtype.cfm" />
 
+<!--- Include the calendar script --->
+<cfinclude template="/app/assets/js/calendar2.cfm" />
+
 <!--- Set script name for include path --->
 <cfset script_name_include="/include/#ListLast(GetCurrentTemplatePath(), " \")#" />

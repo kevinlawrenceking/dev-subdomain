@@ -36,6 +36,17 @@
     function e() {
         this.$body = l("body"), this.$modal = l("#event-modal"), this.$calendar = l("#calendar"), this.$btnNewEvent = l("#btn-new-event"), this.$btnDeleteEvent = l("#btn-delete-event"), this.$btnSaveEvent = l("#btn-save-event"), this.$modalTitle = l("#modal-title"), this.$calendarObj = null, this.$selectedEvent = null, this.$newEventData = null
     }
+    e.prototype.onEventClick = function(e) {
+        // Handle event click - redirect to the event URL
+        if (e.event.url) {
+            window.open(e.event.url, '_self');
+            e.jsEvent.preventDefault(); // prevent browser from following link in current tab
+        }
+    };
+    e.prototype.onSelect = function(e) {
+        // Handle new event creation if needed
+        // This can be expanded based on requirements
+    };
     e.prototype.init = function() {
         var e = new Date(l.now());
         var t = [<cfoutput>#events_loop#</cfoutput>
