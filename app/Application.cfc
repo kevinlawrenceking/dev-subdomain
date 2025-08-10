@@ -9,7 +9,7 @@
         <cfset application.information_schema="actorsbusinessoffice"/>
         <cfset application.suffix="_1.5"/>
     <cfelse>
-        <cfset application.dsn="abo"/>
+        <cfset application.dsn="abod"/>
         <cfset application.information_schema="new_development"/>
         <cfset application.suffix=""/>
     </cfif>
