@@ -253,7 +253,7 @@
                     <div class="alert alert-info d-flex align-items-center mb-4" role="alert">
                         <i class="fe-info me-2"></i>
                         <div>
-                            Click on any project name to view its details. Items marked as "Invalid" can be fixed using the Fix button.
+                            Click on any project name to view its details.
                         </div>
                     </div>
                     
@@ -315,12 +315,14 @@
                                                         <span class="badge bg-danger">
                                                             <i class="fe-alert-circle me-1"></i>Invalid
                                                         </span>
+                                                        <!--- Fix button commented out until modal is working correctly
                                                         <button type="button" 
                                                                 class="btn btn-sm btn-warning" 
                                                                 onclick="loadForm(#results.id#)"
                                                                 title="#err_list#">
                                                             <i class="fe-tool me-1"></i>Fix
                                                         </button>
+                                                        --->
                                                     </div>
                                                 <cfelse>
                                                     <span class="badge bg-success">
