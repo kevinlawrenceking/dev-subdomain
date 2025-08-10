@@ -311,19 +311,9 @@
                                             <td>#col5#</td>
                                             <td class="text-center">
                                                 <cfif col6 EQ "invalid">
-                                                    <div class="d-flex align-items-center justify-content-center gap-2">
-                                                        <span class="badge bg-danger">
-                                                            <i class="fe-alert-circle me-1"></i>Invalid
-                                                        </span>
-                                                        <!--- Fix button commented out until modal is working correctly
-                                                        <button type="button" 
-                                                                class="btn btn-sm btn-warning" 
-                                                                onclick="loadForm(#results.id#)"
-                                                                title="#err_list#">
-                                                            <i class="fe-tool me-1"></i>Fix
-                                                        </button>
-                                                        --->
-                                                    </div>
+                                                    <span class="badge bg-danger">
+                                                        <i class="fe-x-circle me-1"></i>Failed
+                                                    </span>
                                                 <cfelse>
                                                     <span class="badge bg-success">
                                                         <i class="fe-check me-1"></i>#col6#
@@ -441,7 +431,7 @@
     </div>
 </div>
 
-<!--- Modal for Fixing Invalid Records --->
+<!--- Modal for Fixing Invalid Records - COMMENTED OUT UNTIL WORKING CORRECTLY
 <div class="modal fade" id="fixModal" tabindex="-1" role="dialog" aria-labelledby="fixModalLabel" >
 
     <div class="modal-dialog modal-lg" role="document">
@@ -541,6 +531,7 @@
         </div>
     </div>
 </div>
+END COMMENTED OUT MODAL --->
 
 <!--- Place this script block at the end of your body section, right before the closing </body> tag --->
 <script>
