@@ -17,15 +17,12 @@
 
 /* Smooth slide animation for note details */
 .note-details-row {
-    transition: max-height 0.4s ease-in-out, opacity 0.4s ease-in-out;
-    overflow: hidden;
-    max-height: 0;
-    opacity: 0;
+    display: none;
+    transition: all 0.4s ease-in-out;
 }
 
 .note-details-row.expanded {
-    max-height: 500px;
-    opacity: 1;
+    display: table-row;
 }
 
 .note-details-content {
@@ -374,24 +371,15 @@ function toggleNoteDetails(noteid) {
     var icon = document.getElementById('icon-' + noteid);
     
     if (detailsRow.classList.contains('expanded')) {
-        // Collapse - hide details with smooth animation
+        // Collapse - hide details
         detailsRow.classList.remove('expanded');
         icon.className = 'fe-plus-circle note-toggle-icon';
     } else {
-        // Expand - show details with smooth animation
+        // Expand - show details
         detailsRow.classList.add('expanded');
         icon.className = 'fe-minus-circle note-toggle-icon expanded';
     }
 }
-
-// Initialize all detail rows as collapsed on page load
-document.addEventListener('DOMContentLoaded', function() {
-    var detailRows = document.querySelectorAll('.note-details-row');
-    detailRows.forEach(function(row) {
-        row.style.maxHeight = '0px';
-        row.style.opacity = '0';
-    });
-});
 </script>
 
 <!--- Remove the old modal and JavaScript since we're using the working pattern now --->
