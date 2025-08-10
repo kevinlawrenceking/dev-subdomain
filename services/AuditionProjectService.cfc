@@ -123,14 +123,14 @@
             <cfset needsComma = true>
         </cfif>
 
-        <cfif arguments.new_incometypeid GT 0>
+   
             <cfif needsComma>,</cfif>incometypeid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_incometypeid#">
             <cfset needsComma = true>
-        </cfif>
-
-        <cfif arguments.new_paycycleid GT 0>
+   
+     
+  
             <cfif needsComma>,</cfif>paycycleid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_paycycleid#">
-        </cfif>
+   
 
     WHERE audprojectID = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_audprojectID#">
     AND (
