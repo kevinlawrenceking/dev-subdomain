@@ -375,31 +375,23 @@ function toggleNoteDetails(noteid) {
     
     if (detailsRow.classList.contains('expanded')) {
         // Collapse - hide details with smooth animation
-        detailsRow.style.maxHeight = '0px';
         detailsRow.classList.remove('expanded');
         icon.className = 'fe-plus-circle note-toggle-icon';
     } else {
-        // Expand - calculate actual content height and animate to it
-        detailsRow.style.maxHeight = 'none';
-        var actualHeight = detailsRow.scrollHeight;
-        detailsRow.style.maxHeight = '0px';
-        
-        // Force reflow
-        detailsRow.offsetHeight;
-        
-        // Animate to actual height
-        detailsRow.style.maxHeight = actualHeight + 'px';
+        // Expand - show details with smooth animation
         detailsRow.classList.add('expanded');
         icon.className = 'fe-minus-circle note-toggle-icon expanded';
-        
-        // Remove inline max-height after animation completes
-        setTimeout(function() {
-            if (detailsRow.classList.contains('expanded')) {
-                detailsRow.style.maxHeight = 'none';
-            }
-        }, 400);
     }
 }
+
+// Initialize all detail rows as collapsed on page load
+document.addEventListener('DOMContentLoaded', function() {
+    var detailRows = document.querySelectorAll('.note-details-row');
+    detailRows.forEach(function(row) {
+        row.style.maxHeight = '0px';
+        row.style.opacity = '0';
+    });
+});
 </script>
 
 <!--- Remove the old modal and JavaScript since we're using the working pattern now --->
