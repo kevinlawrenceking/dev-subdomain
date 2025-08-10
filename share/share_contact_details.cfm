@@ -17,15 +17,12 @@
 
 /* Smooth slide animation for note details */
 .note-details-row {
-    transition: max-height 0.4s ease-in-out, opacity 0.4s ease-in-out;
-    overflow: hidden;
-    max-height: 0;
-    opacity: 0;
+    display: none;
+    transition: all 0.4s ease-in-out;
 }
 
 .note-details-row.expanded {
-    max-height: 500px;
-    opacity: 1;
+    display: table-row;
 }
 
 .note-details-content {
@@ -374,30 +371,13 @@ function toggleNoteDetails(noteid) {
     var icon = document.getElementById('icon-' + noteid);
     
     if (detailsRow.classList.contains('expanded')) {
-        // Collapse - hide details with smooth animation
-        detailsRow.style.maxHeight = '0px';
+        // Collapse - hide details
         detailsRow.classList.remove('expanded');
         icon.className = 'fe-plus-circle note-toggle-icon';
     } else {
-        // Expand - calculate actual content height and animate to it
-        detailsRow.style.maxHeight = 'none';
-        var actualHeight = detailsRow.scrollHeight;
-        detailsRow.style.maxHeight = '0px';
-        
-        // Force reflow
-        detailsRow.offsetHeight;
-        
-        // Animate to actual height
-        detailsRow.style.maxHeight = actualHeight + 'px';
+        // Expand - show details
         detailsRow.classList.add('expanded');
         icon.className = 'fe-minus-circle note-toggle-icon expanded';
-        
-        // Remove inline max-height after animation completes
-        setTimeout(function() {
-            if (detailsRow.classList.contains('expanded')) {
-                detailsRow.style.maxHeight = 'none';
-            }
-        }, 400);
     }
 }
 </script>
