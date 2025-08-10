@@ -26,7 +26,15 @@
 
 <cfset dbug="N" />
 
-
+<!--- Check if the income type is not equal to 1 to conditionally apply styles. --->
+<cfset defaultIncomeTypeId = structKeyExists(auditionprojectdetails, "incometypeid") ? auditionprojectdetails.incometypeid : 1>
+<Cfif #defaultIncomeTypeId# is not "1">
+    <style>
+        #hidden_divs {
+            display: none;
+        }
+    </style>
+</cfif>
 
 <script src="/app/assets/js/jquery.chained.js"></script>
 
@@ -214,7 +222,7 @@
             <label for="new_incometypeid">Income Type</label>
             <select id="new_incometypeid" name="new_incometypeid" class="form-control" >
                 <cfoutput query="incometypes_sel">
-                    <cfset selectedIncomeType = auditionprojectdetails.incometypeid />
+                    <cfset selectedIncomeType = structKeyExists(auditionprojectdetails, "incometypeid") ? auditionprojectdetails.incometypeid : 1>
                     <option value="#incometypes_sel.id#" <cfif #incometypes_sel.id# is "#selectedIncomeType#">selected</cfif>>#incometypes_sel.name#</option>
                 </cfoutput>
             </select>

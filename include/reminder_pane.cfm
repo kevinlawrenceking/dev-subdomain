@@ -90,21 +90,7 @@
             }
           }
         },
-        { 
-          data: "contactfullname", 
-          visible: <cfoutput>#contactVisibilty#</cfoutput>,
-          render: function (data, type, row) {
-            if (type === 'display') {
-              return `
-                ${data}
-                <a href="/app/contact/?contactid=${row.contactid}" class="ms-1" title="View Contact Details">
-                  <i class="mdi mdi-eye-outline" style="font-size: 12px;"></i>
-                </a>
-              `;
-            }
-            return data;
-          }
-        },
+        { data: "contactfullname", visible: <cfoutput>#contactVisibilty#</cfoutput> },
         { data: "notStartDatef" },
         { data: "notEndDatef", visible: false },
         { data: "reminder_text" },
@@ -270,11 +256,9 @@
         status: $(this).data('status'),
         text: $(this).data('text')
       };
-      
-      console.log('Selected reminder for action:', selectedReminder);
 
       $("#confirmReminderText").text(
-        `Are you sure you want to mark "${selectedReminder.text}" as ${selectedReminder.status}?`
+        `Are you sure you want to mark "${selectedReminder.text} reminder" as ${selectedReminder.status}?`
       );
 
       const confirmModal = new bootstrap.Modal(document.getElementById('confirmReminderModal'));
@@ -294,33 +278,8 @@
         },
         success: function(response) {
           console.log('Response from complete_not_ajax.cfm:', response);
-          
-          // Parse the JSON response if it's a string
-          let parsedResponse;
-          try {
-            parsedResponse = typeof response === 'string' ? JSON.parse(response) : response;
-            console.log('Parsed response:', parsedResponse);
-          } catch (e) {
-            console.error('Error parsing response:', e);
-            parsedResponse = response;
-          }
-          
-          // Close modal first
+          loadReminders();
           bootstrap.Modal.getInstance(document.getElementById('confirmReminderModal')).hide();
-          
-          // Show brief success message then refresh the page
-          if (parsedResponse.success) {
-            console.log(`Successfully ${parsedResponse.status} reminder ${parsedResponse.notid}`);
-            // Refresh the page to show updated reminders
-            setTimeout(function() {
-              window.location.reload();
-            }, 500); // Small delay to let modal close
-          } else {
-            // Fallback if no success property
-            setTimeout(function() {
-              window.location.reload();
-            }, 500);
-          }
         },
         error: function(xhr, status, error) {
           console.error('Error completing reminder:', error);
