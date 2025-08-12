@@ -103,32 +103,36 @@
     WHERE audprojectID = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_audprojectID#">
 </cfquery>
 
-<!--- Update audroles table with role-level booking fields (simplified to allow numeric updates even when incometypeid = 0) --->
+<!--- Update audroles table with role-level booking fields (revised: remove invalid dynamic cfqueryparam usage) --->
 <cfquery>
     UPDATE audroles
     SET
-        <!--- Build stable SET list; only include clauses actually provided --->
-        <cfset setClauses = []>
+        <cfset first = true>
         <cfif len(trim(arguments.new_payrate))>
-            <cfset arrayAppend(setClauses, "payrate = " & cfqueryparam(cfsqltype="CF_SQL_DECIMAL", value=arguments.new_payrate, scale="2"))>
+            payrate = <cfqueryparam cfsqltype="CF_SQL_DECIMAL" value="#val(arguments.new_payrate)#" scale="2">
+            <cfset first = false>
         </cfif>
         <cfif len(trim(arguments.new_netincome))>
-            <cfset arrayAppend(setClauses, "netincome = " & cfqueryparam(cfsqltype="CF_SQL_DECIMAL", value=arguments.new_netincome, scale="2"))>
+            <cfif NOT first>,</cfif>
+            netincome = <cfqueryparam cfsqltype="CF_SQL_DECIMAL" value="#val(arguments.new_netincome)#" scale="2">
+            <cfset first = false>
         </cfif>
         <cfif len(trim(arguments.new_buyout))>
-            <cfset arrayAppend(setClauses, "buyout = " & cfqueryparam(cfsqltype="CF_SQL_DECIMAL", value=arguments.new_buyout, scale="2"))>
+            <cfif NOT first>,</cfif>
+            buyout = <cfqueryparam cfsqltype="CF_SQL_DECIMAL" value="#val(arguments.new_buyout)#" scale="2">
+            <cfset first = false>
         </cfif>
-        <!--- Only update incometypeid / paycycleid if valid (>0); if 0 leave existing values untouched --->
         <cfif isNumeric(arguments.new_incometypeid) AND arguments.new_incometypeid GT 0>
-            <cfset arrayAppend(setClauses, "incometypeid = " & cfqueryparam(cfsqltype="CF_SQL_INTEGER", value=arguments.new_incometypeid))>
+            <cfif NOT first>,</cfif>
+            incometypeid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_incometypeid#">
+            <cfset first = false>
         </cfif>
         <cfif isNumeric(arguments.new_paycycleid) AND arguments.new_paycycleid GT 0>
-            <cfset arrayAppend(setClauses, "paycycleid = " & cfqueryparam(cfsqltype="CF_SQL_INTEGER", value=arguments.new_paycycleid))>
+            <cfif NOT first>,</cfif>
+            paycycleid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_paycycleid#">
+            <cfset first = false>
         </cfif>
-        <!--- Output the dynamic SET list. If nothing to update, force a harmless self-assignment to avoid SQL error. --->
-        <cfif arrayLen(setClauses) GT 0>
-            #arrayToList(setClauses, ", ")#
-        <cfelse>
+        <cfif first>
             payrate = payrate
         </cfif>
     WHERE audprojectID = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_audprojectID#">
@@ -1219,7 +1223,6 @@ ORDER BY label
 </cfquery>
 
 <cfreturn result>
-
 </cffunction>
 <cffunction output="false" name="SELaudprojects_24550" access="public" returntype="query">
     <cfargument name="audprojectID" type="numeric" required="true">
@@ -1502,6 +1505,7 @@ ORDER BY p.projdate DESC
         ) VALUES (
             <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#arguments.new_projName#" maxlength="500">,
             <cfqueryparam cfsqltype="CF_SQL_LONGVARCHAR" value="#arguments.new_projDescription#">,
+
             <cfqueryparam cfsqltype="CF_SQL_DATE" value="#arguments.new_eventStart#">,
             <cfqueryparam cfsqltype="CF_SQL_DATE" value="#arguments.new_eventStart#">
             <cfif structKeyExists(arguments, "new_userid") AND arguments.new_userid NEQ 0>, <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_userid#"></cfif>
