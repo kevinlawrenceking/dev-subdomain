@@ -1250,6 +1250,8 @@ ORDER BY label
             LEFT JOIN contactdetails c ON c.contactid = proj.contactid
             LEFT JOIN audunions un ON proj.unionID = un.unionID
             WHERE proj.audprojectID = <cfqueryparam value="#arguments.audprojectID#" cfsqltype="cf_sql_integer">
+            AND r.isdeleted = 0
+            AND proj.isDeleted = 0
          
 </cfquery>
 

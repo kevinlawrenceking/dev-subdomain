@@ -21,8 +21,14 @@
 
 <cfset audroleid = projectDetails.audroleid />
 
-<!--- Fetch role details --->
-<cfinclude template="/include/qry/roleDetails_368_3.cfm" />
+<!--- Validate audroleid before proceeding --->
+<cfif not isNumeric(audroleid) or audroleid eq "" or audroleid eq 0>
+    <cfset audroleid = 0>
+    <cfset roleDetails = queryNew("audroleid,audprojectid,auddialectid,audRoleName,charDescription,holdStartDate,holdEndDate,audroletype,audroletypeid,auddialect,audsource,audsourceid,contactid,payrate,netincome,buyout,incometype,iscallback,isredirect,ispin,isbooked,opencallid,contactname,paycycleid,paycyclename,submitsiteid,submitsitename,opencallname")>
+<cfelse>
+    <!--- Fetch role details --->
+    <cfinclude template="/include/qry/roleDetails_368_3.cfm" />
+</cfif>
 
 <!--- Delete referral contacts --->
 <cfinclude template="/include/qry/delete_ref_368_4.cfm" />
