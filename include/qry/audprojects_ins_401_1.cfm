@@ -11,7 +11,7 @@
 <cfif NOT len(trim(new_payrate))><cfset new_payrate = ""></cfif>
 <cfif NOT len(trim(new_buyout))><cfset new_buyout = ""></cfif>
 <!--- Additional booking form parameters --->
-<cfif NOT len(trim(new_incometypeid))><cfset new_incometypeid = 0></cfif>
+<cfif NOT len(trim(new_incometypeid))><cfset new_incometypeid = 1></cfif>
 <cfif NOT len(trim(new_netincome))><cfset new_netincome = ""></cfif>
 <cfif NOT len(trim(new_paycycleid))><cfset new_paycycleid = 0></cfif>
 <!--- 
