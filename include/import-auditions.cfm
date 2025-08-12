@@ -544,7 +544,8 @@ END COMMENTED OUT MODAL --->
         document.querySelector('[data-bs-target="##importHistoryCollapse"] i').className = 'fe-chevron-down';
     });
 
-    <!--- Function to load record data into the modal form --->
+    <!--- COMMENTED OUT UNTIL FIX MODAL IS WORKING CORRECTLY
+    Function to load record data into the modal form
     function loadForm(recordId) {
         $.ajax({
             url: '/include/get_record_data.cfm',
@@ -615,7 +616,7 @@ END COMMENTED OUT MODAL --->
         });
     }
 
-    <!--- Function to submit the fix form --->
+    Function to submit the fix form
     function submitFixForm() {
         var formData = $('#fixForm').serialize(); // Serialize the form data
 
@@ -651,5 +652,6 @@ END COMMENTED OUT MODAL --->
 
         return false; // Prevent the default form submission
     }
+    END COMMENTED OUT FUNCTIONS --->
 </script>
 
