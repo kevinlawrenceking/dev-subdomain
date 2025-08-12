@@ -107,54 +107,63 @@
 <cfquery>
     UPDATE audroles
     SET 
-        <cfset needsComma = false>
+        <cfset updateFields = []>
+        
         <cfif len(trim(arguments.new_payrate))>
-            payrate = <cfqueryparam cfsqltype="CF_SQL_DECIMAL" value="#arguments.new_payrate#" scale="2">
-            <cfset needsComma = true>
+            <cfset arrayAppend(updateFields, "payrate = " & preserveSingleQuotes(cfqueryparam(cfsqltype="CF_SQL_DECIMAL", value=arguments.new_payrate, scale="2")))>
         </cfif>
 
         <cfif len(trim(arguments.new_netincome))>
-            <cfif needsComma>,</cfif>netincome = <cfqueryparam cfsqltype="CF_SQL_DECIMAL" value="#arguments.new_netincome#" scale="2">
-            <cfset needsComma = true>
+            <cfset arrayAppend(updateFields, "netincome = " & preserveSingleQuotes(cfqueryparam(cfsqltype="CF_SQL_DECIMAL", value=arguments.new_netincome, scale="2")))>
         </cfif>
 
         <cfif len(trim(arguments.new_buyout))>
-            <cfif needsComma>,</cfif>buyout = <cfqueryparam cfsqltype="CF_SQL_DECIMAL" value="#arguments.new_buyout#" scale="2">
-            <cfset needsComma = true>
+            <cfset arrayAppend(updateFields, "buyout = " & preserveSingleQuotes(cfqueryparam(cfsqltype="CF_SQL_DECIMAL", value=arguments.new_buyout, scale="2")))>
         </cfif>
 
-   
-            <cfif needsComma>,</cfif>incometypeid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_incometypeid#">
-            <cfset needsComma = true>
-   
-     
-  
-            <cfif needsComma>,</cfif>paycycleid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_paycycleid#">
+        <cfif arguments.new_incometypeid GT 0>
+            <cfset arrayAppend(updateFields, "incometypeid = " & preserveSingleQuotes(cfqueryparam(cfsqltype="CF_SQL_INTEGER", value=arguments.new_incometypeid)))>
+        </cfif>
+
+        <cfif arguments.new_paycycleid GT 0>
+            <cfset arrayAppend(updateFields, "paycycleid = " & preserveSingleQuotes(cfqueryparam(cfsqltype="CF_SQL_INTEGER", value=arguments.new_paycycleid)))>
+        </cfif>
+
+        <cfif arrayLen(updateFields) GT 0>
+            #arrayToList(updateFields, ", ")#
+        </cfif>
    
 
     WHERE audprojectID = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_audprojectID#">
-    AND (
-        <cfset needsOr = false>
-        <cfif len(trim(arguments.new_payrate))>
-            payrate != <cfqueryparam cfsqltype="CF_SQL_DECIMAL" value="#arguments.new_payrate#" scale="2">
-            <cfset needsOr = true>
-        </cfif>
-        <cfif len(trim(arguments.new_netincome))>
-            <cfif needsOr> OR </cfif>netincome != <cfqueryparam cfsqltype="CF_SQL_DECIMAL" value="#arguments.new_netincome#" scale="2">
-            <cfset needsOr = true>
-        </cfif>
-        <cfif len(trim(arguments.new_buyout))>
-            <cfif needsOr> OR </cfif>buyout != <cfqueryparam cfsqltype="CF_SQL_DECIMAL" value="#arguments.new_buyout#" scale="2">
-            <cfset needsOr = true>
-        </cfif>
-        <cfif arguments.new_incometypeid GT 0>
-            <cfif needsOr> OR </cfif>incometypeid != <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_incometypeid#">
-            <cfset needsOr = true>
-        </cfif>
-        <cfif arguments.new_paycycleid GT 0>
-            <cfif needsOr> OR </cfif>paycycleid != <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_paycycleid#">
-        </cfif>
-    )
+    <cfif arrayLen(updateFields) GT 0>
+        AND (
+            <cfset whereConditions = []>
+            
+            <cfif len(trim(arguments.new_payrate))>
+                <cfset arrayAppend(whereConditions, "payrate != " & preserveSingleQuotes(cfqueryparam(cfsqltype="CF_SQL_DECIMAL", value=arguments.new_payrate, scale="2")))>
+            </cfif>
+            
+            <cfif len(trim(arguments.new_netincome))>
+                <cfset arrayAppend(whereConditions, "netincome != " & preserveSingleQuotes(cfqueryparam(cfsqltype="CF_SQL_DECIMAL", value=arguments.new_netincome, scale="2")))>
+            </cfif>
+            
+            <cfif len(trim(arguments.new_buyout))>
+                <cfset arrayAppend(whereConditions, "buyout != " & preserveSingleQuotes(cfqueryparam(cfsqltype="CF_SQL_DECIMAL", value=arguments.new_buyout, scale="2")))>
+            </cfif>
+            
+            <cfif arguments.new_incometypeid GT 0>
+                <cfset arrayAppend(whereConditions, "incometypeid != " & preserveSingleQuotes(cfqueryparam(cfsqltype="CF_SQL_INTEGER", value=arguments.new_incometypeid)))>
+            </cfif>
+            
+            <cfif arguments.new_paycycleid GT 0>
+                <cfset arrayAppend(whereConditions, "paycycleid != " & preserveSingleQuotes(cfqueryparam(cfsqltype="CF_SQL_INTEGER", value=arguments.new_paycycleid)))>
+            </cfif>
+            
+            <cfif arrayLen(whereConditions) GT 0>
+                #arrayToList(whereConditions, " OR ")#
+            </cfif>
+        )
+    </cfif>
 </cfquery>
 
 </cffunction>
