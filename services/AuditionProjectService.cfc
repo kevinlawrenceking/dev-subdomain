@@ -103,68 +103,35 @@
     WHERE audprojectID = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_audprojectID#">
 </cfquery>
 
-<!--- Update audroles table with role-level booking fields --->
+<!--- Update audroles table with role-level booking fields (simplified to allow numeric updates even when incometypeid = 0) --->
 <cfquery>
     UPDATE audroles
-    SET 
-        <cfset needsComma = false>
-        
+    SET
+        <!--- Build stable SET list; only include clauses actually provided --->
+        <cfset setClauses = []>
         <cfif len(trim(arguments.new_payrate))>
-            <cfif needsComma>,</cfif>payrate = <cfqueryparam cfsqltype="CF_SQL_DECIMAL" value="#arguments.new_payrate#" scale="2">
-            <cfset needsComma = true>
+            <cfset arrayAppend(setClauses, "payrate = " & cfqueryparam(cfsqltype="CF_SQL_DECIMAL", value=arguments.new_payrate, scale="2"))>
         </cfif>
-
         <cfif len(trim(arguments.new_netincome))>
-            <cfif needsComma>,</cfif>netincome = <cfqueryparam cfsqltype="CF_SQL_DECIMAL" value="#arguments.new_netincome#" scale="2">
-            <cfset needsComma = true>
+            <cfset arrayAppend(setClauses, "netincome = " & cfqueryparam(cfsqltype="CF_SQL_DECIMAL", value=arguments.new_netincome, scale="2"))>
         </cfif>
-
         <cfif len(trim(arguments.new_buyout))>
-            <cfif needsComma>,</cfif>buyout = <cfqueryparam cfsqltype="CF_SQL_DECIMAL" value="#arguments.new_buyout#" scale="2">
-            <cfset needsComma = true>
+            <cfset arrayAppend(setClauses, "buyout = " & cfqueryparam(cfsqltype="CF_SQL_DECIMAL", value=arguments.new_buyout, scale="2"))>
         </cfif>
-
-        <cfif arguments.new_incometypeid GT 0>
-            <cfif needsComma>,</cfif>incometypeid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_incometypeid#">
-            <cfset needsComma = true>
+        <!--- Only update incometypeid / paycycleid if valid (>0); if 0 leave existing values untouched --->
+        <cfif isNumeric(arguments.new_incometypeid) AND arguments.new_incometypeid GT 0>
+            <cfset arrayAppend(setClauses, "incometypeid = " & cfqueryparam(cfsqltype="CF_SQL_INTEGER", value=arguments.new_incometypeid))>
         </cfif>
-
-        <cfif arguments.new_paycycleid GT 0>
-            <cfif needsComma>,</cfif>paycycleid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_paycycleid#">
-            <cfset needsComma = true>
+        <cfif isNumeric(arguments.new_paycycleid) AND arguments.new_paycycleid GT 0>
+            <cfset arrayAppend(setClauses, "paycycleid = " & cfqueryparam(cfsqltype="CF_SQL_INTEGER", value=arguments.new_paycycleid))>
         </cfif>
-   
-
+        <!--- Output the dynamic SET list. If nothing to update, force a harmless self-assignment to avoid SQL error. --->
+        <cfif arrayLen(setClauses) GT 0>
+            #arrayToList(setClauses, ", ")#
+        <cfelse>
+            payrate = payrate
+        </cfif>
     WHERE audprojectID = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_audprojectID#">
-    <cfif needsComma OR len(trim(arguments.new_payrate)) OR len(trim(arguments.new_netincome)) OR len(trim(arguments.new_buyout))>
-        AND (
-            <cfset needsOr = false>
-            
-            <cfif len(trim(arguments.new_payrate))>
-                <cfif needsOr> OR </cfif>payrate != <cfqueryparam cfsqltype="CF_SQL_DECIMAL" value="#arguments.new_payrate#" scale="2">
-                <cfset needsOr = true>
-            </cfif>
-            
-            <cfif len(trim(arguments.new_netincome))>
-                <cfif needsOr> OR </cfif>netincome != <cfqueryparam cfsqltype="CF_SQL_DECIMAL" value="#arguments.new_netincome#" scale="2">
-                <cfset needsOr = true>
-            </cfif>
-            
-            <cfif len(trim(arguments.new_buyout))>
-                <cfif needsOr> OR </cfif>buyout != <cfqueryparam cfsqltype="CF_SQL_DECIMAL" value="#arguments.new_buyout#" scale="2">
-                <cfset needsOr = true>
-            </cfif>
-            
-            <cfif arguments.new_incometypeid GT 0>
-                <cfif needsOr> OR </cfif>incometypeid != <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_incometypeid#">
-                <cfset needsOr = true>
-            </cfif>
-            
-            <cfif arguments.new_paycycleid GT 0>
-                <cfif needsOr> OR </cfif>paycycleid != <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_paycycleid#">
-            </cfif>
-        )
-    </cfif>
 </cfquery>
 
 </cffunction>
@@ -605,8 +572,7 @@
                 r.audroleid, 
                 proj.projName, 
                 proj.projDescription, 
-                r.payrate,
-                r.buyout,
+
                 cat.audCatName, 
                 cat.audcatid, 
                 subcat.audSubCatName, 
@@ -715,8 +681,8 @@
                 AND p.isDeleted = 0
                 AND r.ispin = 1
                 AND p.userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
-                AND p.projdate >= <cfqueryparam value="#arguments.rangestart#" cfsqltype="CF_SQL_DATE">
-                AND p.projdate <= <cfqueryparam value="#arguments.rangeend#" cfsqltype="CF_SQL_DATE">
+                AND p.projdate >= <cfqueryparam value="#arguments.rangestart#" cfsqltype="cf_sql_date">
+                AND p.projdate <= <cfqueryparam value="#arguments.rangeend#" cfsqltype="cf_sql_date">
          
 </cfquery>
 
@@ -809,7 +775,6 @@
 </cfquery>
 
 <cfreturn result>
-
 </cffunction>
 <cffunction output="false" name="SELaudprojects_24241" access="public" returntype="query">
     <cfargument name="userid" type="numeric" required="true">
@@ -843,7 +808,6 @@
 </cfquery>
 
 <cfreturn result>
-
 </cffunction>
 <cffunction output="false" name="SELaudprojects_24242" access="public" returntype="query">
     <cfargument name="rangestart" type="date" required="true">
@@ -910,7 +874,6 @@
 </cfquery>
 
 <cfreturn result>
-
 </cffunction>
 <cffunction output="false" name="SELaudprojects_24245" access="public" returntype="query">
     <cfargument name="rangeStart" type="date" required="true">
