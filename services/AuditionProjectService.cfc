@@ -136,7 +136,7 @@
    
 
     WHERE audprojectID = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_audprojectID#">
-    <cfif needsComma>
+    <cfif needsComma OR len(trim(arguments.new_payrate)) OR len(trim(arguments.new_netincome)) OR len(trim(arguments.new_buyout))>
         AND (
             <cfset needsOr = false>
             
