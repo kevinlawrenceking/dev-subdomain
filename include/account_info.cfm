@@ -74,13 +74,13 @@ Last Updated: 2025
 <cfset pgrtn="P"/>
 
 <!--- Include required query files --->
-<cfinclude template="/include/qry/countries_457_1.cfm"/>
-<cfinclude template="/include/qry/regions_518_1.cfm"/>
-<cfinclude template="/include/qry/timezones_547_1.cfm"/>
-<cfinclude template="/include/qry/timezones_min_547_2.cfm"/>
-<cfinclude template="/include/qry/dateformats_463_1.cfm"/>
-<cfinclude template="/include/qry/details_1693_1.cfm"/>
-<cfinclude template="/include/qry/FindUser_1694_2.cfm"/>
+<cfinclude template="/include/qry/getAllCountries.cfm"/>
+<cfinclude template="/include/qry/getAllRegions.cfm"/>
+<cfinclude template="/include/qry/getAllTimezones.cfm"/>
+<cfinclude template="/include/qry/getMinimalTimezones.cfm"/>
+<cfinclude template="/include/qry/getAllDateFormats.cfm"/>
+<cfinclude template="/include/qry/getUserDetails.cfm"/>
+<cfinclude template="/include/qry/findUserById.cfm"/>
 
 <!--- Action handling logic --->
 <cfswitch expression="#ctaction#">

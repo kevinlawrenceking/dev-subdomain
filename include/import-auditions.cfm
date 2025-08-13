@@ -221,9 +221,9 @@
 
 <cfif isDefined('uploadid')>
     <!--- Include upload details and process the results --->
-    <cfinclude template="/include/qry/upload_details_140_1.cfm" />
+    <cfinclude template="/include/qry/getAuditionUploadDetails.cfm" />
     <cfset conlist = valuelist(upload_details.audprojectid) />
-    <cfinclude template="/include/qry/results_140_2.cfm" />
+    <cfinclude template="/include/qry/getAuditionImportResults.cfm" />
 
     <div class="row">
         <div class="col-12">
@@ -274,7 +274,7 @@
                             <tbody>
                                 <cfloop query="results">
                                     <!--- Include error details for each result --->
-                                    <cfinclude template="/include/qry/errs_125_2.cfm" />
+                                    <cfinclude template="/include/qry/getAuditionImportErrors.cfm" />
                                     <cfset err_list = valuelist(errs.error_msg)>
                                     <cfoutput>
                                         <tr id="row-#results.id#">
