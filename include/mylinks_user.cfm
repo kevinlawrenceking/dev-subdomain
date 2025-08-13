@@ -41,8 +41,9 @@
                 </a>
                 <cfif mylinks_user.recordcount gt 0>
                     <button id="editToggleBtn_#siteTypeDetails.sitetypeid#" onclick="toggleEditMode('#siteTypeDetails.sitetypeid#')" 
-                            class="btn btn-sm btn-light border">
-                        <i class="fas fa-edit"></i> Edit
+                            class="btn btn-sm btn-light border p-1" 
+                            title="Edit links">
+                        <i class="fas fa-edit"></i>
                     </button>
                 </cfif>
             </h5>
@@ -237,13 +238,15 @@
             if (linksContainer.hasClass('edit-mode')) {
                 // Exit edit mode
                 linksContainer.removeClass('edit-mode');
-                editBtn.html('<i class="fas fa-edit"></i> Edit');
+                editBtn.html('<i class="fas fa-edit"></i>');
                 editBtn.removeClass('btn-warning').addClass('btn-light');
+                editBtn.attr('title', 'Edit links');
             } else {
                 // Enter edit mode
                 linksContainer.addClass('edit-mode');
-                editBtn.html('<i class="fas fa-times"></i> Done');
+                editBtn.html('<i class="fas fa-times"></i>');
                 editBtn.removeClass('btn-light').addClass('btn-warning');
+                editBtn.attr('title', 'Done editing');
             }
         };
     });
