@@ -79,7 +79,7 @@
             SET d.dateadded = LEAST(COALESCE(d.dateadded, sub.new_dateadded), sub.new_dateadded)
             WHERE d.isdeleted = 0
               AND d.dateadded IS NULL;
-        </cfquery>--->
+        </cfquery> --->
    <cfquery>
         UPDATE audprojects pr
 JOIN (
@@ -125,10 +125,9 @@ WHERE  pr.projdate <> x.actual_projdate OR pr.projdate IS NULL;
                 e.eventstarttime = <cfqueryparam cfsqltype="CF_SQL_TIME" value="#arguments.new_eventStartTime#">,
             </cfif>
             
-            <!--- Calculate eventStopTime dynamically --->
-            e.eventstoptime = ADDTIME(
-                <cfqueryparam cfsqltype="CF_SQL_TIME" value="#arguments.new_eventStartTime#">,
-                SEC_TO_TIME(<cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_durseconds#">)
+            <!--- Calculate eventStopTime dynamically, with 24-hour wrap normalization --->
+            e.eventstoptime = SEC_TO_TIME(
+                (TIME_TO_SEC(<cfqueryparam cfsqltype="CF_SQL_TIME" value="#arguments.new_eventStartTime#">) + <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_durseconds#">) % 86400
             ),
 
             e.eventid = e.eventid;
@@ -169,8 +168,8 @@ WHERE  pr.projdate <> x.actual_projdate OR pr.projdate IS NULL;
       'Status' AS head4,
       'Type' AS head5,
       e.userid,
-      e.eventStartTime,
-      e.eventStopTime,
+      CAST(e.eventStartTime AS CHAR) AS eventStartTime,
+      CAST(e.eventStopTime AS CHAR) AS eventStopTime,
       t.eventtypecolor,
       e.eventid,
       r.audprojectid,
@@ -204,7 +203,7 @@ ORDER BY e.eventstart DESC
     <cfargument name="eventLocation" type="string" required="true">
     <cfargument name="eventStart" type="date" required="false">
     <cfargument name="eventStartTime" type="time" required="false">
-    <cfargument name="new_durseconds" type="numeric" required="true"> <!--- Duration in seconds --->
+    <cfargument name="new_durseconds" type="numeric" required="true"> <!-- Duration in seconds -->
     <cfargument name="dow" type="string" required="false" default="">
     <cfargument name="endRecur" required="false">
     <cfargument name="userid" type="numeric" required="true">
@@ -245,10 +244,7 @@ ORDER BY e.eventstart DESC
             </cfif>
             <cfif structKeyExists(arguments, "eventStartTime")>
                 , <cfqueryparam value="#arguments.eventStartTime#" cfsqltype="CF_SQL_TIME">
-                , ADDTIME(
-                    <cfqueryparam value="#arguments.eventStartTime#" cfsqltype="CF_SQL_TIME">,
-                    SEC_TO_TIME(<cfqueryparam value="#arguments.new_durseconds#" cfsqltype="CF_SQL_INTEGER">)
-                )
+                , SEC_TO_TIME( ( TIME_TO_SEC(<cfqueryparam value="#arguments.eventStartTime#" cfsqltype="CF_SQL_TIME">) + <cfqueryparam value="#arguments.new_durseconds#" cfsqltype="CF_SQL_INTEGER"> ) % 86400 )
             </cfif>
             <cfif structKeyExists(arguments, "dow") and len(arguments.dow) gt 0>
                 , <cfqueryparam value="#arguments.dow#" cfsqltype="CF_SQL_VARCHAR">
@@ -281,7 +277,7 @@ ORDER BY e.eventstart DESC
 
 <cfquery result="result" name="updateQuery" >
       UPDATE events
-      SET eventstoptime = TIME( (ADDTIME(TIME(eventstarttime), TIME('01:00:00'))) % (TIME('24:00:00')))
+      SET eventstoptime = SEC_TO_TIME( ( TIME_TO_SEC(TIME(eventstarttime)) + 3600 ) % 86400 )
       WHERE eventstarttime = <cfqueryparam value="#arguments.eventStartTime#" cfsqltype="CF_SQL_TIME">
       AND eventstoptime IS NULL
     </cfquery>
@@ -708,37 +704,41 @@ WHERE
             <cfif structKeyExists(arguments, "new_audRoleID") AND isNumeric(arguments.new_audRoleID)>, audRoleID</cfif>
             <cfif structKeyExists(arguments, "new_audTypeID") AND isNumeric(arguments.new_audTypeID)>, audTypeID</cfif>
             <cfif structKeyExists(arguments, "new_audLocation") AND len(trim(arguments.new_audLocation))>, audLocation</cfif>
-            , eventtitle
-            <cfif arguments.new_eventStart NEQ "1970-01-01">, eventStart</cfif>
-            <cfif arguments.new_eventStartTime NEQ "00:00:00">, eventStartTime</cfif>
-            <cfif arguments.new_eventStopTime NEQ "00:00:00">, eventStopTime</cfif>
-            <cfif arguments.new_audplatformid NEQ 0>, audplatformID</cfif>
-            <cfif arguments.new_audStepID NEQ 0>, audStepID</cfif>
-            <cfif len(trim(arguments.new_parkingDetails))>, parkingDetails</cfif>
-            <cfif isBoolean(arguments.new_workwithcoach)>, workwithcoach</cfif>
-            <cfif isBoolean(arguments.new_trackmileage)>, trackmileage</cfif>
-        ) VALUES (
+            <cfif structKeyExists(arguments, "new_eventStart") AND isDate(arguments.new_eventStart)>, eventStart</cfif>
+            <cfif structKeyExists(arguments, "new_eventStartTime") AND len(trim(arguments.new_eventStartTime))>, eventStartTime</cfif>
+            <cfif structKeyExists(arguments, "new_eventStopTime") AND len(trim(arguments.new_eventStopTime))>, eventStopTime</cfif>
+            <cfif structKeyExists(arguments, "new_audplatformid") AND isNumeric(arguments.new_audplatformid)>, audplatformID</cfif>
+            <cfif structKeyExists(arguments, "new_audStepID") AND isNumeric(arguments.new_audStepID)>, audStepID</cfif>
+            <cfif structKeyExists(arguments, "new_parkingDetails") AND len(trim(arguments.new_parkingDetails))>, parkingDetails</cfif>
+            <cfif structKeyExists(arguments, "new_workwithcoach") AND isBoolean(arguments.new_workwithcoach)>, workwithcoach</cfif>
+            <cfif structKeyExists(arguments, "new_trackmileage") AND isBoolean(arguments.new_trackmileage)>, trackmileage</cfif>
+            <cfif structKeyExists(arguments, "new_audlocid") AND isNumeric(arguments.new_audlocid)>, audlocid</cfif>,
+            isdeleted
+        )
+        VALUES (
             <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_userid#">
-            <cfif arguments.new_audRoleID NEQ 0>, <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_audRoleID#"></cfif>
-            <cfif arguments.new_audTypeID NEQ 0>, <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_audTypeID#"></cfif>
-            <cfif len(trim(arguments.new_audLocation))>, <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#arguments.new_audLocation#" maxlength="500"></cfif>
-            ,<cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#arguments.new_eventtitle#" maxlength="500">
-            <cfif arguments.new_eventStart NEQ "1970-01-01">, <cfqueryparam cfsqltype="CF_SQL_DATE" value="#arguments.new_eventStart#"></cfif>
-            <cfif arguments.new_eventStartTime NEQ "00:00:00">, <cfqueryparam cfsqltype="CF_SQL_TIME" value="#arguments.new_eventStartTime#"></cfif>
-            <cfif arguments.new_eventStopTime NEQ "00:00:00">, <cfqueryparam cfsqltype="CF_SQL_TIME" value="#arguments.new_eventStopTime#"></cfif>
-            <cfif arguments.new_audplatformid NEQ 0>, <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_audplatformid#"></cfif>
-            <cfif arguments.new_audStepID NEQ 0>, <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_audStepID#"></cfif>
-            <cfif len(trim(arguments.new_parkingDetails))>, <cfqueryparam cfsqltype="CF_SQL_LONGVARCHAR" value="#arguments.new_parkingDetails#"></cfif>
-            <cfif isBoolean(arguments.new_workwithcoach)>, <cfqueryparam cfsqltype="CF_SQL_BIT" value="#arguments.new_workwithcoach#"></cfif>
-            <cfif isBoolean(arguments.new_trackmileage)>, <cfqueryparam cfsqltype="CF_SQL_BIT" value="#arguments.new_trackmileage#"></cfif>
+            <cfif structKeyExists(arguments, "new_audRoleID") AND isNumeric(arguments.new_audRoleID)>, <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_audRoleID#"></cfif>
+            <cfif structKeyExists(arguments, "new_audTypeID") AND isNumeric(arguments.new_audTypeID)>, <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_audTypeID#"></cfif>
+            <cfif structKeyExists(arguments, "new_audLocation") AND len(trim(arguments.new_audLocation))>, <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#arguments.new_audLocation#" maxlength="500"></cfif>
+            <cfif structKeyExists(arguments, "new_eventStart") AND isDate(arguments.new_eventStart)>, <cfqueryparam cfsqltype="CF_SQL_DATE" value="#arguments.new_eventStart#"></cfif>
+            <cfif structKeyExists(arguments, "new_eventStartTime") AND len(trim(arguments.new_eventStartTime))>, <cfqueryparam cfsqltype="CF_SQL_TIME" value="#arguments.new_eventStartTime#"></cfif>
+            <cfif structKeyExists(arguments, "new_eventStopTime") AND len(trim(arguments.new_eventStopTime))>, <cfqueryparam cfsqltype="CF_SQL_TIME" value="#arguments.new_eventStopTime#"></cfif>
+            <cfif structKeyExists(arguments, "new_audplatformid") AND isNumeric(arguments.new_audplatformid)>, <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_audplatformid#"></cfif>
+            <cfif structKeyExists(arguments, "new_audStepID") AND isNumeric(arguments.new_audStepID)>, <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_audStepID#"></cfif>
+            <cfif structKeyExists(arguments, "new_parkingDetails") AND len(trim(arguments.new_parkingDetails))>, <cfqueryparam cfsqltype="CF_SQL_LONGVARCHAR" value="#arguments.new_parkingDetails#"></cfif>
+            <cfif structKeyExists(arguments, "new_workwithcoach") AND isBoolean(arguments.new_workwithcoach)>, <cfqueryparam cfsqltype="CF_SQL_BIT" value="#arguments.new_workwithcoach#"></cfif>
+            <cfif structKeyExists(arguments, "new_trackmileage") AND isBoolean(arguments.new_trackmileage)>, <cfqueryparam cfsqltype="CF_SQL_BIT" value="#arguments.new_trackmileage#"></cfif>
+            <cfif structKeyExists(arguments, "new_audlocid") AND isNumeric(arguments.new_audlocid)>, <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_audlocid#"></cfif>,
+            <cfqueryparam cfsqltype="CF_SQL_BIT" value="1">
         )
     </cfquery>
 
-<cfreturn result.generatedKey>
+<!--- Return the generated key --->
+    <cfreturn result.generatedKey>
 </cffunction>
 
 
-<cffunction output="false" name="UPDevents_24108" access="public" returntype="void">
+ <cffunction output="false" name="UPDevents_24108" access="public" returntype="void">
     <cfargument name="eventId" type="numeric" required="true">
     <cfargument name="newEventStart" type="date" required="false" default="">
     <cfargument name="newEventStartTime" type="time" required="false" default="">
@@ -1085,7 +1085,6 @@ WHERE
     <cfargument name="new_workwithcoach" type="boolean" required="true">
     <cfargument name="new_trackmileage" type="boolean" required="true">
   <cfargument name="new_eventtitle" type="string" required="true">
-<cfdump var="#arguments#">
 
 <cfquery result="result" name="insertEventQuery">
         INSERT INTO events_tbl (
@@ -1146,7 +1145,8 @@ audzip = <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#trim(arguments.new_aud
             WHERE eventid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_eventid#">
         </cfquery>
 
-</cffunction> <cffunction output="false" name="UPDevents_24557" access="public" returntype="void">
+</cffunction>
+<cffunction output="false" name="UPDevents_24557" access="public" returntype="void">
     <cfargument name="new_userid" type="numeric" required="true">
     <cfargument name="new_audRoleID" type="numeric" required="true">
     <cfargument name="new_audTypeID" type="numeric" required="true">
@@ -1207,12 +1207,6 @@ audzip = <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#trim(arguments.new_aud
         eventid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_eventid#">;
 </cfquery>
 
-
-
-    <!--- Debugging: Dump query results and abort execution --->
-    <cfdump var="#queryResult#" label="Query Debug">
-  
-
 </cffunction>
 
 
@@ -1226,6 +1220,7 @@ audzip = <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#trim(arguments.new_aud
     <cfif len(arguments.eventStopTime)>
         <cfset arguments.eventStopTime = ListFirst(arguments.eventStopTime, ".")>
     </cfif>
+
     <cfquery name="resultQuery" result="queryResult">
         UPDATE events
         SET eventid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_eventid#">
@@ -1235,15 +1230,83 @@ audzip = <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#trim(arguments.new_aud
         <cfif len(arguments.eventStartTime)>
             , eventStartTime = <cfqueryparam cfsqltype="CF_SQL_TIME" value="#arguments.eventStartTime#">
         </cfif>
-        <cfif len(arguments.eventStopTime)>
+     
             , eventStopTime = <cfqueryparam cfsqltype="CF_SQL_TIME" value="#arguments.eventStopTime#">
-        </cfif>
-        WHERE eventid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_eventid#">
+  
+        WHERE eventid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_eventid#">;
     </cfquery>
+
 </cffunction>
 
 
-<cffunction output="false" name="SELevents_24659" access="public" returntype="query">
+<cffunction output="false" name="SELevents_24597" access="public" returntype="query">
+    <cfargument name="audroleid" type="numeric" required="true">
+    <cfargument name="focusid" type="numeric" default="0">
+
+<cfquery name="result" >
+            SELECT
+                a.eventid,
+                a.eventStart,
+                a.eventStartTime,
+                s.audstep
+            FROM
+                events a
+            INNER JOIN
+                audsteps s ON s.audstepid = a.audstepid
+            WHERE
+                a.audroleid = <cfqueryparam value="#arguments.audroleid#" cfsqltype="CF_SQL_INTEGER">
+                <cfif arguments.focusid neq 0>
+                    AND a.eventid = <cfqueryparam value="#arguments.focusid#" cfsqltype="CF_SQL_INTEGER">
+                </cfif>
+                AND a.isdeleted IS FALSE
+            ORDER BY
+                a.eventStart DESC
+        </cfquery>
+
+<cfreturn result>
+
+</cffunction> <cffunction output="false" name="SELevents_24618" access="public" returntype="query">
+    <cfargument name="sessionUserId" type="numeric" required="true">
+    <cfargument name="currentId" type="numeric" required="false">
+
+<cfquery name="result" >
+            SELECT
+                e.eventID,
+                e.eventID AS recid,
+                e.eventTitle AS col1,
+                e.eventDescription,
+                e.eventLocation AS col2,
+                e.eventStatus AS col4,
+                e.eventCreation,
+                e.eventStart AS col3,
+                e.eventStop,
+                e.eventTypeName AS col5,
+                'Appointment' AS head1,
+                'Location' AS head2,
+                'Date' AS head3,
+                'Status' AS head4,
+                'Type' AS head5,
+                e.userid,
+                e.eventStartTime,
+                e.eventStopTime,
+                t.eventtypecolor,
+                e.dow,
+                e.endRecur,
+                t.id
+            FROM events e
+            INNER JOIN eventtypes_user t ON t.eventtypename = e.eventtypename
+            WHERE e.userid = <cfqueryparam value="#arguments.sessionUserId#" cfsqltype="CF_SQL_INTEGER">
+            AND t.userid = <cfqueryparam value="#arguments.sessionUserId#" cfsqltype="CF_SQL_INTEGER">
+            <cfif structKeyExists(arguments, "currentId")>
+                AND e.eventid IN (
+                    SELECT eventid FROM eventcontactsxref WHERE contactid = <cfqueryparam value="#arguments.currentId#" cfsqltype="CF_SQL_INTEGER">
+                )
+            </cfif>
+        </cfquery>
+
+<cfreturn result>
+
+</cffunction> <cffunction output="false" name="SELevents_24659" access="public" returntype="query">
     <cfargument name="sessionUserID" type="numeric" required="true">
     <cfargument name="currentID" type="numeric" required="false">
 
@@ -1267,8 +1330,8 @@ audzip = <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#trim(arguments.new_aud
                 'Status' AS head4,
                 'Type' AS head5,
                 e.userid,
-                CAST(e.eventStartTime AS CHAR) AS eventStartTime,
-                CAST(e.eventStopTime AS CHAR) AS eventStopTime,
+                e.eventStartTime,
+                e.eventStopTime,
                 t.eventtypecolor,
                 e.dow,
                 e.endRecur,
@@ -1287,16 +1350,15 @@ audzip = <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#trim(arguments.new_aud
                 )
             </cfif>
         </cfquery>
-        <cfreturn queryResult>
-    </cffunction>
 
-    <!-- Patch: Cast TIME columns to CHAR in RESevents_24660 -->
-    <cffunction output="false" name="RESevents_24660" access="public" returntype="query">
-        <!-- ...existing code (arguments)... -->
-        <cfargument name="userID" type="numeric" required="true">
-        <cfargument name="currentID" type="numeric" required="false">
-        <cfset var queryResult = "">
-        <cfquery result="result" name="queryResult" >
+<cfreturn queryResult>
+</cffunction> <cffunction output="false" name="RESevents_24660" access="public" returntype="query">
+    <cfargument name="userID" type="numeric" required="true">
+    <cfargument name="currentID" type="numeric" required="false">
+
+<cfset var queryResult = "">
+
+<cfquery result="result" name="queryResult" >
             SELECT
                 e.eventID,
                 e.eventID AS recid,
@@ -1314,8 +1376,8 @@ audzip = <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#trim(arguments.new_aud
                 'Status' AS head4,
                 'Type' AS head5,
                 e.userid,
-                CAST(e.eventStartTime AS CHAR) AS eventStartTime,
-                CAST(e.eventStopTime AS CHAR) AS eventStopTime,
+                e.eventStartTime,
+                e.eventStopTime,
                 t.eventtypecolor,
                 e.eventid,
                 r.audprojectid,
@@ -1334,8 +1396,87 @@ audzip = <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#trim(arguments.new_aud
             </cfif>
             ORDER BY e.eventstart DESC
         </cfquery>
-        <cfreturn queryResult>
-    </cffunction>
 
-    <!-- ...existing code... -->
-</cfcomponent>
+<cfreturn queryResult>
+</cffunction> <cffunction output="false" name="DETevents_24675" access="public" returntype="query">
+    <cfargument name="audprojectid" type="numeric" required="true">
+
+<cfquery name="result" >
+            SELECT
+                e.eventlocation AS same_eventLocation,
+                e.audlocadd1 AS same_audlocadd1,
+                e.audlocadd2 AS same_audlocadd2,
+                e.audcity AS same_audcity,
+                IFNULL(e.region_id, 3911) AS same_region_id,
+                IFNULL(c.countryid, 'US') AS same_countryid,
+                  IFNULL(r.regionname, 'California') AS same_regionname,
+                IFNULL(c.countryname, 'United States') AS same_countryname,
+                e.audzip AS same_audzip
+            FROM
+                EVENTS e
+            INNER JOIN
+                audroles a ON a.audroleid = e.audroleid
+            LEFT JOIN
+                regions r ON e.region_id = r.region_id
+            LEFT JOIN
+                countries c ON c.countryid = r.countryid
+            WHERE
+                a.audprojectid = <cfqueryparam value="#arguments.audprojectid#" cfsqltype="CF_SQL_INTEGER">
+                AND e.eventlocation IS NOT NULL
+            ORDER BY
+                e.eventid
+        </cfquery>
+
+<cfreturn result>
+
+</cffunction> <cffunction output="false" name="SELevents_24686" access="public" returntype="query">
+    <cfargument name="sessionUserId" type="numeric" required="true">
+    <cfargument name="contactId" type="numeric" required="true">
+
+<cfquery name="result" >
+            SELECT
+                e.eventID,
+                e.eventID AS recid,
+                e.eventTitle,
+                e.eventStart,
+                e.eventStartTime
+            FROM
+                events e
+            INNER JOIN
+                eventtypes_user t ON t.eventtypename = e.eventtypename
+            WHERE
+                e.userid = <cfqueryparam value="#arguments.sessionUserId#" cfsqltype="CF_SQL_INTEGER">
+                AND t.userid = <cfqueryparam value="#arguments.sessionUserId#" cfsqltype="CF_SQL_INTEGER">
+                AND e.eventid IN (
+                    SELECT eventid FROM eventcontactsxref WHERE contactid = <cfqueryparam value="#arguments.contactId#" cfsqltype="CF_SQL_INTEGER">
+                )
+        </cfquery>
+
+<cfreturn result>
+
+</cffunction> 
+<cffunction output="false" name="SELevents_24695" access="public" returntype="query">
+    <cfargument name="sessionUserID" type="numeric" required="true">
+    <cfargument name="contactID" type="numeric" required="true">
+
+<cfquery name="result" >
+            SELECT
+                e.eventID,
+                e.eventID AS recid,
+                e.eventTitle,
+                e.eventStart,
+                e.eventStartTime
+            FROM
+                events e
+            INNER JOIN
+                eventtypes_user t ON t.eventtypename = e.eventtypename
+            WHERE
+                e.userid = <cfqueryparam value="#arguments.sessionUserID#" cfsqltype="CF_SQL_INTEGER">
+                AND t.userid = <cfqueryparam value="#arguments.sessionUserID#" cfsqltype="CF_SQL_INTEGER">
+                AND e.eventid IN (
+                    SELECT eventid FROM eventcontactsxref WHERE contactid = <cfqueryparam value="#arguments.contactID#" cfsqltype="CF_SQL_INTEGER">
+                )
+        </cfquery>
+
+<cfreturn result>
+</cffunction> </cfcomponent>>
