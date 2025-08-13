@@ -25,6 +25,19 @@
     <cfset browser_contact_avatar_loc = "/media-#host#/users/#finduser.userid#/contacts/#contactid#" />   
     <cfset browser_contact_avatar_filename = "#browser_contact_avatar_loc#/avatar.jpg" />
     
+
+    <cfoutput>
+        <cfif #host# is "app">
+<cfset cal_root_dir="c:\home\theactorsoffice.com\wwwroot\#host#-subdomain_1.5\" />
+        <cfelse>
+<cfset cal_root_dir="c:\home\theactorsoffice.com\wwwroot\#host#-subdomain\" />
+        </cfif>
+
+    
+    <cfset cal_root_url="https://#host#.theactorsoffice.com/" />
+</cfoutput>
+
+
     <!--- Prepare calendar names and URLs --->
     <cfset calendar_name3 = "#FindUser.userfirstname##FindUser.userlastname#" />
     <cfset calendar_name2 = #REReplace(calendar_name3, "[^0-9A-Za-z ]", "", "all")# />

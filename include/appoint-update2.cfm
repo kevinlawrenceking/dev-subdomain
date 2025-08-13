@@ -78,7 +78,7 @@ eventID: #eventid#<br>
     <cfelse>
     
         <!--- Include add template for new relationship --->
-        <cfinclude template="/include/qry/add_14_6.cfm" />
+        <cfinclude template="/include/qry/insertNewContact.cfm" />
         
         <cfset currentid=result.generated_key />
         <cfset contactid=result.generated_key />

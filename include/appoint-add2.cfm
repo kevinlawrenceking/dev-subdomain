@@ -41,7 +41,7 @@
     <cfset endRecur = JavaCast("null", "")>
 </cfif>
 
-<cfinclude template="/include/qry/add_14_1.cfm" />
+<cfinclude template="/include/qry/insertNewEvent.cfm" />
 <cfinclude template="/include/qry/t_14_2.cfm" />
 <cfinclude template="/include/qry/tt_14_3.cfm" />
 <cfinclude template="/include/qry/dd_14_4.cfm" />
@@ -56,7 +56,7 @@
             <cfset new_contactid = 0 />
         </cfif>
     <cfelse>
-        <cfinclude template="/include/qry/add_14_6.cfm" />
+        <cfinclude template="/include/qry/insertNewContact.cfm" />
         <cfset currentid =newcontactid />
         <cfset contactid = newcontactid />
         <cfset new_contactid = newcontactid />
