@@ -87,11 +87,11 @@
 
   <div class="card grid-item loaded" data-id="#dashboards.pnid#">
 
-    <div class="card-header" id="heading_system_#dashboards.currentrow#">
+    <div class="card-header card-header-alt" id="heading_system_#dashboards.currentrow#">
 
       <h5 class="m-0">
 
-        <a class="text-dark collapsed" data-bs-toggle="collapse" href="##collapse_system_#dashboards.currentrow#">
+        <a class="text-white collapsed" data-bs-toggle="collapse" href="##collapse_system_#dashboards.currentrow#">
 
           #dashboards.pnTitle#
 
