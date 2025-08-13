@@ -1,7 +1,14 @@
 <!--- This ColdFusion page handles the event form for creating or updating appointments. --->
 
+<cfparam name="eventid" default="0" />
 <cfparam name="reventid" default="0" />
 <cfparam name="rcontactid" default="0" />
+
+<!--- Ensure eventid is numeric and not empty --->
+<cfif not isNumeric(eventid) or eventid eq "">
+    <cfset eventid = 0>
+</cfif>
+
 <cfinclude template="/include/qry/eventdetails_334_3.cfm" />
 <cfinclude template="/include/qry/durations.cfm" />
 <cfinclude template="/include/qry/relationships_13_1.cfm" />

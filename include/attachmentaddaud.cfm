@@ -10,7 +10,7 @@
 <cfparam name="placeholder" default="" />
 
 <!--- Include the notes query template --->
-<cfinclude template="/include/qry/notes_21_1.cfm" />
+<cfinclude template="/include/qry/getNoteDetails.cfm" />
 
 <!--- Form for file upload --->
 <form action="/include/attachmentadd2aud.cfm" method="post" class="parsley-examples" enctype="multipart/form-data" id="upload" 
