@@ -41,7 +41,8 @@
                 </a>
                 <cfif mylinks_user.recordcount gt 0>
                     <button id="editToggleBtn_#siteTypeDetails.sitetypeid#" onclick="toggleEditMode('#siteTypeDetails.sitetypeid#')" 
-                            class="btn btn-sm btn-light border p-1" 
+                            class="btn btn-sm btn-light border" 
+                            style="padding: 2px 4px;"
                             title="Edit links">
                         <i class="fas fa-edit"></i>
                     </button>
