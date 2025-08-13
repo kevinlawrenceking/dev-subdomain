@@ -1,114 +1,7 @@
 <!--- This ColdFusion page handles the display and management of site links for a specific dashboard panel. --->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
-<style>
-/* Link Styles - matching reminder format */
-.link-row {
-    border: 1px solid #e9ecef;
-    border-radius: 6px;
-    padding: 8px 12px;
-    margin-bottom: 8px;
-    background-color: #FFFFFF;
-    transition: all 0.3s ease;
-    word-wrap: break-word;
-    overflow: hidden;
-    position: relative;
-    min-height: 48px;
-    color: inherit;
-}
 
-.link-row:hover {
-    border-color: #adb5bd;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    text-decoration: none;
-    color: inherit;
-}
-
-.link-row:focus {
-    outline: 2px solid #007bff;
-    outline-offset: 2px;
-    text-decoration: none;
-    color: inherit;
-}
-
-.link-icon-container {
-    display: flex;
-    align-items: center;
-    margin-right: 12px;
-    min-width: 32px;
-    height: 32px;
-}
-
-.link-icon {
-    max-width: 32px;
-    max-height: 32px;
-    width: auto;
-    height: auto;
-    object-fit: contain;
-}
-
-.link-content {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    min-height: 32px;
-}
-
-.link-sitename {
-    font-weight: 600;
-    color: #495057;
-    font-size: 14px;
-    line-height: 1.3;
-}
-
-.link-actions .btn {
-    padding: 2px 6px;
-    font-size: 11px;
-    border-radius: 3px;
-    margin-left: 4px;
-}
-
-.link-actions .btn i {
-    font-size: 10px;
-}
-
-/* Initially hide edit buttons */
-.link-actions {
-    display: none;
-}
-
-/* Show edit buttons when edit mode is active */
-.edit-mode .link-actions {
-    display: block;
-}
-
-.links-empty {
-    text-align: center;
-    padding: 20px;
-    color: #6c757d;
-    font-style: italic;
-}
-
-/* Animation for successful link updates */
-.link-row.updating {
-    background-color: #d4edda;
-    border-color: #c3e6cb;
-    animation: pulseUpdate 0.5s ease-in-out;
-}
-
-@keyframes pulseUpdate {
-    0% { background-color: #ffffff; }
-    50% { background-color: #d4edda; }
-    100% { background-color: #d4edda; }
-}
-
-#linksContainer {
-    overflow: hidden;
-    background-color: #FFFFFF;
-    padding: 12px;
-    border-radius: 6px;
-}
-</style>
 
 <cfset siteLinksService = createObject("component", "services.SiteLinksService")>
 <cfset mylinks_user = siteLinksService.getSiteLinksByPanelId(dashboards.pnid, userid)>
@@ -141,9 +34,9 @@
 
     <!--- Dashboard Card --->
     <div class="card grid-item loaded" data-id="#dashboards.pnid#">
-        <div class="card-header" id="heading_system_#dashboards.currentrow#">
+        <div class="card-header card-header-alt" id="heading_system_#dashboards.currentrow#">
             <h5 class="m-0 d-flex justify-content-between align-items-center">
-                <a class="text-dark collapsed" data-bs-toggle="collapse" href="##collapse_system_#dashboards.currentrow#">
+                <a class="text-white collapsed" data-bs-toggle="collapse" href="##collapse_system_#dashboards.currentrow#">
                     #siteTypeDetails.sitetypename# Links
                 </a>
                 <cfif mylinks_user.recordcount gt 0>
