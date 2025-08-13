@@ -56,8 +56,19 @@
 
     // Destroy existing DataTable if it exists
     if ($.fn.DataTable.isDataTable('#remindersTable')) {
-      $('#remindersTable').DataTable().destroy();
+      try {
+        $('#remindersTable').DataTable().clear();
+        $('#remindersTable').DataTable().destroy();
+        $('#remindersTable').empty();
+      } catch(e) {
+        console.warn('Error destroying DataTable:', e);
+        // Force removal of DataTable instance
+        $('#remindersTable').removeData();
+      }
     }
+    
+    // Remove any existing filter row
+    $('#filterRow').remove();
 
     $('#remindersTable').DataTable({
       ajax: {
@@ -144,60 +155,54 @@
         // Check if filter row already exists, if so remove it first
         $('#filterRow').remove();
         
+        // Get the actual number of visible columns
+        const visibleColumns = api.columns(':visible').count();
+        
         // Create filter row with cells only for visible columns
         let filterRow = '<tr id="filterRow">';
-        // Action column - no filter
-        filterRow += '<th></th>';
-        // Contact column - dropdown filter (only if visible)
-        filterRow += <cfoutput>'#contactVisible#'</cfoutput> === 'none' ? '' : '<th></th>';
-        // Start Date column - no filter
-        filterRow += '<th></th>';
-        // Reminder column - dropdown filter
-        filterRow += '<th></th>';
-        // Type column - dropdown filter
-        filterRow += '<th></th>';
+        for (let i = 0; i < visibleColumns; i++) {
+          filterRow += '<th></th>';
+        }
         filterRow += '</tr>';
         
         $('#remindersTable thead').append(filterRow);
 
-        // Define which visible columns should have dropdowns
-        const dropdownColumns = [];
+        // Define which columns should have dropdowns based on visible columns
+        const allColumns = api.columns().header().toArray();
         let visibleColIndex = 0;
+        const dropdownColumns = [];
         
-        // Action column (index 0) - no filter
-        visibleColIndex++;
-        
-        // Contact column (index 1) - add filter if visible
-        if (<cfoutput>'#contactVisible#'</cfoutput> !== 'none') {
-          dropdownColumns.push({dataIndex: 1, filterIndex: visibleColIndex});
-          visibleColIndex++;
-        }
-        
-        // Start Date column (index 2) - no filter
-        visibleColIndex++;
-        
-        // Reminder column (index 4) - add filter
-        dropdownColumns.push({dataIndex: 4, filterIndex: visibleColIndex});
-        visibleColIndex++;
-        
-        // Type column (index 6) - add filter
-        dropdownColumns.push({dataIndex: 6, filterIndex: visibleColIndex});
+        api.columns().every(function(index) {
+          const column = this;
+          if (column.visible()) {
+            const headerText = $(column.header()).text().trim();
+            
+            // Add dropdown filters for Contact, Reminder, and Type columns
+            if (headerText === 'Contact' || headerText === 'Reminder' || headerText === 'Type') {
+              dropdownColumns.push({dataIndex: index, filterIndex: visibleColIndex});
+            }
+            visibleColIndex++;
+          }
+        });
 
         dropdownColumns.forEach(function (col) {
           const column = api.column(col.dataIndex);
           const th = $('#remindersTable thead tr:eq(1) th').eq(col.filterIndex);
-          const select = $('<select class="form-select form-select-sm"><option value="">All</option></select>')
-            .appendTo(th.empty())
-            .on('change', function () {
-              const val = $.fn.dataTable.util.escapeRegex($(this).val());
-              column.search(val ? '^' + val + '$' : '', true, false).draw();
-            });
+          
+          if (th.length > 0) {
+            const select = $('<select class="form-select form-select-sm"><option value="">All</option></select>')
+              .appendTo(th.empty())
+              .on('change', function () {
+                const val = $.fn.dataTable.util.escapeRegex($(this).val());
+                column.search(val ? '^' + val + '$' : '', true, false).draw();
+              });
 
-          column.data().unique().sort().each(function (d) {
-            if (d) {
-              select.append('<option value="' + d + '">' + d + '</option>');
-            }
-          });
+            column.data().unique().sort().each(function (d) {
+              if (d) {
+                select.append('<option value="' + d + '">' + d + '</option>');
+              }
+            });
+          }
         });
       }
     });
@@ -278,8 +283,17 @@
         },
         success: function(response) {
           console.log('Response from complete_not_ajax.cfm:', response);
-          loadReminders();
-          bootstrap.Modal.getInstance(document.getElementById('confirmReminderModal')).hide();
+          
+          // Small delay to ensure modal is properly hidden before reloading table
+          const confirmModal = bootstrap.Modal.getInstance(document.getElementById('confirmReminderModal'));
+          if (confirmModal) {
+            confirmModal.hide();
+          }
+          
+          // Use setTimeout to ensure modal is fully hidden before reloading
+          setTimeout(function() {
+            loadReminders();
+          }, 300);
         },
         error: function(xhr, status, error) {
           console.error('Error completing reminder:', error);
