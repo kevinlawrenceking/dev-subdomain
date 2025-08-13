@@ -26,7 +26,7 @@
     --ct-link-hover-color: #1d80c2;
     --ct-border-color: #dee2e6;
     --ct-box-shadow: 0 0 35px 0 #9aa1ab26;
-    --ct-box-shadow-sm: 0 .75rem 6rem #38414a08;
+    --ct-box-shadow-sm: 0 .75rem 6rem #E9EAEC08;
     --ct-box-shadow-lg: 0 0 45px 0 #3333331f;
     --ct-box-shadow-inset: inset 0 1px 2px #33333313;
     --ct-component-active-color: white;
@@ -197,8 +197,8 @@
     --ct-kbd-color: #fff;
     --ct-kbd-bg: #323a46;
     --ct-pre-color: #323a46;
-    --ct-bg-leftbar: #38414a;
-    --ct-bg-leftbar-dark: #38414a;
+    --ct-bg-leftbar: #E9EAEC;
+    --ct-bg-leftbar-dark: #E9EAEC;
     --ct-bg-leftbar-brand: #4a81d4;
     --ct-bg-leftbar-gradient: #683ba9;
     --ct-twocolumn-sidebar-bg: #fff;
