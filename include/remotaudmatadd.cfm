@@ -9,7 +9,7 @@
 <cfparam name="placeholder" default="" />
 
 <!--- Include the query for media types --->
-<cfinclude template="/include/qry/types_45_1.cfm" />
+<cfinclude template="/include/qry/getAuditionMediaTypes.cfm" />
 
 <form action="/include/remoteaudmatadd2.cfm" method="post" class="parsley-examples" enctype="multipart/form-data" id="upload">
     <cfoutput>

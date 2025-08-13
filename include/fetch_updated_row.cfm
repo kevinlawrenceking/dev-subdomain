@@ -4,7 +4,7 @@
 
 <!--- Include query results and error templates --->
 <cfinclude template="/include/qry/results_125_1.cfm" />
-<cfinclude template="/include/qry/errs_125_2.cfm" />
+<cfinclude template="/include/qry/getAuditionImportErrors.cfm" />
 
 <!--- Create a list of error messages from the error query --->
 <cfset err_list = valuelist(errs.error_msg)>

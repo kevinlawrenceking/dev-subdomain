@@ -3,5 +3,5 @@
 <cfparam name="dbug" default="N" />
 
 <!--- Query to fetch date formats from the database --->
-<cfinclude template="/include/qry/dateformats_463_1.cfm" />
+<cfinclude template="/include/qry/getAllDateFormats.cfm" />
 

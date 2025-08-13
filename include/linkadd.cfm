@@ -4,7 +4,7 @@
 <cfparam name="contactid" default="0" />
 
 <!--- Include notes query template --->
-<cfinclude template="/include/qry/notes_21_1.cfm" /> 
+<cfinclude template="/include/qry/getNoteDetails.cfm" /> 
 
 <cfset new_eventid = notes.eventid />
 

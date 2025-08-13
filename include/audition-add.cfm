@@ -429,7 +429,7 @@
 
                                             <div class="row">
                                             
-                                              <cfinclude template="/include/qry/countries_457_1.cfm"/>
+                                              <cfinclude template="/include/qry/getAllCountries.cfm"/>
                                               <cfinclude template="/include/qry/regions.cfm"/>
                                               <cfinclude template="/include/qry/cities.cfm"/>
 

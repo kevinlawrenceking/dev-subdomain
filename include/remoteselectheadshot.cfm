@@ -2,7 +2,7 @@
 <cfset host = ListFirst(currentURL, ".") />
 <cfinclude template="/include/qry/headshots_sel_unused.cfm" />
 <cfparam name="placeholder" default="" />
-<cfinclude template="/include/qry/types_45_1.cfm" />
+<cfinclude template="/include/qry/getAuditionMediaTypes.cfm" />
 <CfaborT>
 <div class="row" />
 

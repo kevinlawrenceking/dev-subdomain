@@ -20,7 +20,7 @@
 <cfparam name="placeholder" default="" />
 <cfparam name="eventid" default="" />
 
-<cfinclude template="/include/qry/types_45_1.cfm" /> 
+<cfinclude template="/include/qry/getAuditionMediaTypes.cfm" /> 
 
 <form action="/include/remoteaddHeadshot2.cfm" method="post" class="parsley-examples" enctype="multipart/form-data" id="upload" 
       data-parsley-excluded="input[type=button], input[type=submit], input[type=reset], input[type=hidden], [disabled], :hidden"

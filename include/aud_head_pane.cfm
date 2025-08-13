@@ -2,7 +2,7 @@
 
 <cfinclude template="/include/qry/audmedia.cfm" />
 <cfinclude template="/include/qry/types_44_1.cfm" />
-<cfinclude template="/include/qry/audlinks_44_2.cfm" />
+<cfinclude template="/include/qry/getAuditionLinks.cfm" />
 
 <div id="remoteselectheadshot" class="modal fade" tabindex="-1" aria-labelledby="headshotModalLabel">
     <div class="modal-dialog modal-lg"> <!--- Large modal for better viewing --->
