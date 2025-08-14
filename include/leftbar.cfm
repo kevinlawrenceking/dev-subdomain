@@ -15,7 +15,7 @@
     <cfcookie name="mocktoday" expires="#now()#" />
 </cfif>
 
-<div class="left-side-menu">
+<div class="left-side-menu left-side-menu-light">
     <div class="h-100" data-simplebar>
         <!--- Sidemenu --->
         <div id="sidebar-menu">
