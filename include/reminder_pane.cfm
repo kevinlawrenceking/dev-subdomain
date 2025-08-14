@@ -54,20 +54,35 @@
     
     console.log('Loading reminders with showInactive:', showInactive);
 
-    // Destroy existing DataTable if it exists
+    // Check if DataTable already exists
     if ($.fn.DataTable.isDataTable('#remindersTable')) {
-      try {
-        $('#remindersTable').DataTable().clear();
-        $('#remindersTable').DataTable().destroy();
-        $('#remindersTable').empty();
-      } catch(e) {
-        console.warn('Error destroying DataTable:', e);
-        // Force removal of DataTable instance
-        $('#remindersTable').removeData();
-      }
+      // Just reload the data instead of destroying the whole table
+      const table = $('#remindersTable').DataTable();
+      const newAjaxData = {
+        showInactive: showInactive,
+        currentid: <cfoutput>#contactid#</cfoutput>,
+        userid: <cfoutput>#userid#</cfoutput>
+      };
+      
+      // Update the ajax data and reload
+      table.ajax.url("/include/get_reminders.cfm?bypass=1").load(function(json) {
+        console.log('Data reloaded, updating modals...');
+        injectReminderModals(json);
+        
+        // Only recreate filters if they don't exist or if showInactive changed
+        if (enableFiltering && $('#filterRow').length === 0) {
+          setTimeout(function() {
+            createFilterDropdowns(table);
+          }, 100);
+        }
+      });
+      
+      // Update the ajax data for future requests
+      table.ajax.data(newAjaxData);
+      return;
     }
-    
-    // Remove any existing filter row
+
+    // Remove any existing filter row from previous table
     $('#filterRow').remove();
 
     $('#remindersTable').DataTable({
@@ -148,61 +163,74 @@
         emptyTable: showInactive ? "No completed or skipped reminders" : "You have no active reminders"
       },
       initComplete: function () {
-        if (!enableFiltering) return;
-
-        const api = this.api();
-        
-        // Check if filter row already exists, if so remove it first
-        $('#filterRow').remove();
-        
-        // Get the actual number of visible columns
-        const visibleColumns = api.columns(':visible').count();
-        
-        // Create filter row with cells only for visible columns
-        let filterRow = '<tr id="filterRow">';
-        for (let i = 0; i < visibleColumns; i++) {
-          filterRow += '<th></th>';
+        if (enableFiltering) {
+          const api = this.api();
+          setTimeout(function() {
+            createFilterDropdowns(api);
+          }, 100);
         }
-        filterRow += '</tr>';
-        
-        $('#remindersTable thead').append(filterRow);
+      }
+    });
+  }
 
-        // Define which columns should have dropdowns based on visible columns
-        const allColumns = api.columns().header().toArray();
-        let visibleColIndex = 0;
-        const dropdownColumns = [];
+  function createFilterDropdowns(api) {
+    // Remove existing filter row
+    $('#filterRow').remove();
+    
+    // Get the actual number of visible columns
+    const visibleColumns = api.columns(':visible').count();
+    
+    // Create filter row with cells only for visible columns
+    let filterRow = '<tr id="filterRow">';
+    for (let i = 0; i < visibleColumns; i++) {
+      filterRow += '<th></th>';
+    }
+    filterRow += '</tr>';
+    
+    $('#remindersTable thead').append(filterRow);
+
+    // Define which columns should have dropdowns based on visible columns
+    let visibleColIndex = 0;
+    const dropdownColumns = [];
+    
+    api.columns().every(function(index) {
+      const column = this;
+      if (column.visible()) {
+        const headerText = $(column.header()).text().trim();
         
-        api.columns().every(function(index) {
-          const column = this;
-          if (column.visible()) {
-            const headerText = $(column.header()).text().trim();
-            
-            // Add dropdown filters for Contact, Reminder, and Type columns
-            if (headerText === 'Contact' || headerText === 'Reminder' || headerText === 'Type') {
-              dropdownColumns.push({dataIndex: index, filterIndex: visibleColIndex});
-            }
-            visibleColIndex++;
+        // Add dropdown filters for Contact, Reminder, and Type columns
+        if (headerText === 'Contact' || headerText === 'Reminder' || headerText === 'Type') {
+          dropdownColumns.push({dataIndex: index, filterIndex: visibleColIndex});
+        }
+        visibleColIndex++;
+      }
+    });
+
+    // Create the dropdown filters
+    dropdownColumns.forEach(function (col) {
+      const column = api.column(col.dataIndex);
+      const th = $('#remindersTable thead tr:eq(1) th').eq(col.filterIndex);
+      
+      if (th.length > 0) {
+        const select = $('<select class="form-select form-select-sm"><option value="">All</option></select>')
+          .appendTo(th.empty())
+          .on('change', function () {
+            const val = $.fn.dataTable.util.escapeRegex($(this).val());
+            column.search(val ? '^' + val + '$' : '', true, false).draw();
+          });
+
+        // Get unique values and populate dropdown
+        const uniqueValues = [];
+        column.data().each(function (d) {
+          if (d && d.toString().trim() && uniqueValues.indexOf(d) === -1) {
+            uniqueValues.push(d);
           }
         });
-
-        dropdownColumns.forEach(function (col) {
-          const column = api.column(col.dataIndex);
-          const th = $('#remindersTable thead tr:eq(1) th').eq(col.filterIndex);
-          
-          if (th.length > 0) {
-            const select = $('<select class="form-select form-select-sm"><option value="">All</option></select>')
-              .appendTo(th.empty())
-              .on('change', function () {
-                const val = $.fn.dataTable.util.escapeRegex($(this).val());
-                column.search(val ? '^' + val + '$' : '', true, false).draw();
-              });
-
-            column.data().unique().sort().each(function (d) {
-              if (d) {
-                select.append('<option value="' + d + '">' + d + '</option>');
-              }
-            });
-          }
+        
+        // Sort and add options
+        uniqueValues.sort().forEach(function(value) {
+          const option = $('<option></option>').attr('value', value).text(value);
+          select.append(option);
         });
       }
     });
@@ -284,16 +312,26 @@
         success: function(response) {
           console.log('Response from complete_not_ajax.cfm:', response);
           
-          // Small delay to ensure modal is properly hidden before reloading table
+          // Hide the modal first
           const confirmModal = bootstrap.Modal.getInstance(document.getElementById('confirmReminderModal'));
           if (confirmModal) {
             confirmModal.hide();
           }
           
-          // Use setTimeout to ensure modal is fully hidden before reloading
-          setTimeout(function() {
-            loadReminders();
-          }, 300);
+          // Use a more targeted reload that preserves filter state
+          if ($.fn.DataTable.isDataTable('#remindersTable')) {
+            const table = $('#remindersTable').DataTable();
+            // Just reload the data without destroying the table structure
+            table.ajax.reload(function(json) {
+              console.log('Table data reloaded, updating modals...');
+              injectReminderModals(json);
+            }, false); // false = don't reset paging
+          } else {
+            // Fallback to full reload if table doesn't exist
+            setTimeout(function() {
+              loadReminders();
+            }, 100);
+          }
         },
         error: function(xhr, status, error) {
           console.error('Error completing reminder:', error);
