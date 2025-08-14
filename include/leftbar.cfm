@@ -109,6 +109,54 @@
 
 <!--- Sidebar Styles --->
 <style>
+    /* Alternative Light Theme for Left Sidebar */
+    .left-side-menu-light {
+        background-color: #E9EAEC !important;
+    }
+    
+    .left-side-menu-light .pro-user-name {
+        color: #2c3e50 !important;
+    }
+    
+    .left-side-menu-light #side-menu > li > a {
+        color: #2c3e50 !important;
+        border-bottom: 1px solid #d0d1d3 !important;
+    }
+    
+    .left-side-menu-light #side-menu > li > a:hover,
+    .left-side-menu-light #side-menu > li > a:focus,
+    .left-side-menu-light #side-menu > li > a.active {
+        color: #1a252f !important;
+        background-color: #dce0e3 !important;
+    }
+    
+    .left-side-menu-light #side-menu > li > a i {
+        color: #495057 !important;
+    }
+    
+    .left-side-menu-light #side-menu > li > a:hover i,
+    .left-side-menu-light #side-menu > li > a:focus i,
+    .left-side-menu-light #side-menu > li > a.active i {
+        color: #1a252f !important;
+    }
+    
+    .left-side-menu-light .menu-arrow {
+        color: #495057 !important;
+    }
+    
+    .left-side-menu-light .nav-second-level a {
+        color: #495057 !important;
+        border-bottom: 1px solid #d0d1d3 !important;
+    }
+    
+    .left-side-menu-light .nav-second-level a:hover,
+    .left-side-menu-light .nav-second-level a:active {
+        color: #1a252f !important;
+        background-color: #dce0e3 !important;
+        text-decoration: none;
+    }
+
+    /* Original Dark Theme Styles (default) */
     .nav-second-level {
         list-style-type: none !important;
         padding-left: 0;
