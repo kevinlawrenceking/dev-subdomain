@@ -152,6 +152,12 @@
 
         const api = this.api();
         
+        // Store current filter values before recreating
+        const currentFilters = {};
+        $('#filterRow select').each(function(index) {
+          currentFilters[index] = $(this).val();
+        });
+        
         // Check if filter row already exists, if so remove it first
         $('#filterRow').remove();
         
@@ -185,25 +191,45 @@
           }
         });
 
-        dropdownColumns.forEach(function (col) {
-          const column = api.column(col.dataIndex);
-          const th = $('#remindersTable thead tr:eq(1) th').eq(col.filterIndex);
-          
-          if (th.length > 0) {
-            const select = $('<select class="form-select form-select-sm"><option value="">All</option></select>')
-              .appendTo(th.empty())
-              .on('change', function () {
-                const val = $.fn.dataTable.util.escapeRegex($(this).val());
-                column.search(val ? '^' + val + '$' : '', true, false).draw();
-              });
+        // Use setTimeout to ensure data is fully loaded before creating dropdowns
+        setTimeout(function() {
+          dropdownColumns.forEach(function (col) {
+            const column = api.column(col.dataIndex);
+            const th = $('#remindersTable thead tr:eq(1) th').eq(col.filterIndex);
+            
+            if (th.length > 0) {
+              const select = $('<select class="form-select form-select-sm"><option value="">All</option></select>')
+                .appendTo(th.empty())
+                .on('change', function () {
+                  const val = $.fn.dataTable.util.escapeRegex($(this).val());
+                  column.search(val ? '^' + val + '$' : '', true, false).draw();
+                });
 
-            column.data().unique().sort().each(function (d) {
-              if (d) {
-                select.append('<option value="' + d + '">' + d + '</option>');
+              // Get unique values and populate dropdown
+              const uniqueValues = [];
+              column.data().each(function (d) {
+                if (d && d.trim() && uniqueValues.indexOf(d) === -1) {
+                  uniqueValues.push(d);
+                }
+              });
+              
+              // Sort and add options
+              uniqueValues.sort().forEach(function(value) {
+                const option = $('<option></option>').attr('value', value).text(value);
+                select.append(option);
+              });
+              
+              // Restore previous filter value if it exists and is still valid
+              const previousValue = currentFilters[col.filterIndex];
+              if (previousValue && uniqueValues.indexOf(previousValue) !== -1) {
+                select.val(previousValue);
+                // Reapply the filter
+                const val = $.fn.dataTable.util.escapeRegex(previousValue);
+                column.search(val ? '^' + val + '$' : '', true, false).draw();
               }
-            });
-          }
-        });
+            }
+          });
+        }, 100);
       }
     });
   }
