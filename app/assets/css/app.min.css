@@ -1381,7 +1381,7 @@ summary {
 .avatar-section {
     text-align: center;
     padding: 1rem;
-    background: var(--ct-body-bg);
+
     border-radius: 6px;
     margin-bottom: 1rem;
 }
