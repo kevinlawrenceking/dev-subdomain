@@ -120,6 +120,36 @@
         height: 100vh !important;
         overflow-y: auto;
         overflow-x: hidden;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(0,0,0,0.2) transparent;
+    }
+    
+    /* Hide scrollbar for webkit browsers when not needed */
+    .left-side-menu .h-100::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    .left-side-menu .h-100::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    
+    .left-side-menu .h-100::-webkit-scrollbar-thumb {
+        background-color: rgba(0,0,0,0.2);
+        border-radius: 3px;
+        transition: background-color 0.2s ease;
+    }
+    
+    .left-side-menu .h-100::-webkit-scrollbar-thumb:hover {
+        background-color: rgba(0,0,0,0.4);
+    }
+    
+    /* For light theme, adjust scrollbar colors */
+    .left-side-menu-light .h-100::-webkit-scrollbar-thumb {
+        background-color: rgba(0,0,0,0.15);
+    }
+    
+    .left-side-menu-light .h-100::-webkit-scrollbar-thumb:hover {
+        background-color: rgba(0,0,0,0.3);
     }
     
     #sidebar-menu {
