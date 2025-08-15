@@ -68,7 +68,7 @@ Services: NotificationService for handling notification operations and batch pro
 <style>
 /* Ensure all dashboard panels have solid white backgrounds */
 .grid-item {
-    background-color: #FFFFFF !important;
+    background-color: #F9F9F9 !important;
 }
 </style>
 
