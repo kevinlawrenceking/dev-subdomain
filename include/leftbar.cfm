@@ -109,6 +109,23 @@
 
 <!--- Sidebar Styles --->
 <style>
+    /* Left Sidebar Scrolling */
+    .left-side-menu {
+        height: 100vh;
+        position: fixed;
+        overflow: hidden;
+    }
+    
+    .left-side-menu .h-100 {
+        height: 100vh !important;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+    
+    #sidebar-menu {
+        padding-bottom: 20px;
+    }
+
     /* Alternative Light Theme for Left Sidebar */
     .left-side-menu-light {
         background-color: #E9EAEC !important;
