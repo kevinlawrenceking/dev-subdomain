@@ -190,7 +190,7 @@
     .user-lg .avatar-md {
         width: 60px;
         height: 60px;
-        margin-bottom: 10px;
+        margin-bottom: 15px;
     }
 
     /* Add space between user profile and menu */
@@ -201,7 +201,7 @@
     }
     
     .left-side-menu-light .user-lg {
-        border-bottom: 1px solid #d0d1d3;
+        border-bottom: 0px solid #d0d1d3;
     }
 
     #side-menu .menu-arrow {
