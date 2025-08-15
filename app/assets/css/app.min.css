@@ -8514,7 +8514,7 @@ left: auto;
     align-items: center;
     width: 100%;
     min-height: 50px; /* Allow for multi-line content */
-    background-color: #fff;
+    background-color: #F9F9F9;
     border-radius: 6px;
     position: relative;
     overflow: hidden;
