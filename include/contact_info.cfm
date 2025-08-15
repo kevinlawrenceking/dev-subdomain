@@ -689,7 +689,7 @@ x</button>
 
 
 <cfoutput>
-<p class="pt-3 pr-3 d-flex text-nowrap">
+<p class="pt-3 pr-3 d-flex text-nowrap" style="background-color: #F9F9F9;">
   <span class="ms-auto pe-3">
     <a href="javascript:;" data-bs-remote="true" data-bs-toggle="modal" data-bs-target="##remoteUpdateName" data-bs-placement="top" title="Update Contact" data-bs-original-title="Update Contact">
       <i class="mdi mdi-square-edit-outline"></i>
