@@ -30,7 +30,7 @@
         <h3>URL Parameters</h3>
         <cfoutput>
             <ul>
-                <li><strong>shareToken:</strong> #url.shareToken#</li>
+                <li><strong>shareToken:</strong> #structKeyExists(url, "shareToken") ? url.shareToken : "Not provided"#</li>
                 <li><strong>u:</strong> #url.u#</li>
                 <li><strong>uid:</strong> #url.uid#</li>
             </ul>
@@ -42,7 +42,7 @@
 </cfif>
 
 <!--- Handle new shareToken system --->
-<cfif len(trim(url.shareToken)) gt 0>
+<cfif structKeyExists(url, "shareToken") AND len(trim(url.shareToken)) gt 0>
     <cfif debug is "YES">
         <div class="debug-info success">
             <h3>Using New Token System</h3>
