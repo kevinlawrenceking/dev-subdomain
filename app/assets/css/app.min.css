@@ -1473,7 +1473,7 @@ summary {
 }
 
 .action-card {
-    background: var(--ct-body-bg);
+ 
     border: 1px solid var(--ct-border-color);
     border-radius: 12px;
     padding: 1.5rem;
