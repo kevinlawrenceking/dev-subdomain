@@ -254,5 +254,20 @@
     #side-menu .menu-arrow {
         float: right;
         margin-top: 2px;
+        margin-right: 10px;
+        margin-left: 10px;
+    }
+    
+    /* Ensure menu text doesn't overlap with arrow */
+    #side-menu > li > a {
+        padding-right: 45px !important;
+        position: relative;
+    }
+    
+    #side-menu > li > a .menu-arrow {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
     }
 </style>
