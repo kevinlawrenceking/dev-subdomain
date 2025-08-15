@@ -5,7 +5,7 @@
     FEATURES: Professional styling, responsive design, modern UI elements
 --->
 
-<div class="user-info-card fade-in">
+<div class="user-info-card fade-in" style="background-color: #F4F5F6;">
     <!-- User Name Header -->
     <div class="user-name-header">
         <cfoutput>#userFirstName# #userlastName#</cfoutput>

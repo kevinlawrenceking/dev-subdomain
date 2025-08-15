@@ -701,6 +701,7 @@
     <cfquery name="qUserDetails">
         SELECT
             u.*,  
+            left(u.passwordhash, 10) as uid,
             t.tzname, 
             t.tzgeneral,
             tc.*, 
