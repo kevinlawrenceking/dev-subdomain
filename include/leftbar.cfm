@@ -114,7 +114,7 @@
         height: 100vh;
         position: fixed;
         overflow: hidden;
-        width: 260px; /* Increased from default ~240px */
+        width: 280px; /* Increased from 260px for better text visibility */
     }
     
     .left-side-menu .h-100 {
