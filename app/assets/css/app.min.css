@@ -8796,3 +8796,8 @@ img {
     padding: 12px;
     border-radius: 6px;
 }
+
+/* Ensure all dashboard panels have solid white backgrounds */
+.grid-item {
+    background-color: #F9F9F9 !important;
+}
