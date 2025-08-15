@@ -14,7 +14,7 @@
 :root {
     --ct-danger-rgb: #f1556c;
  
-    --ct-body-bg: #F4F5F6 ;
+    --ct-body-bg: #F9F9F9 ;
     --ct-body-color: #595959;
     --ct-text-opacity: 1;
     --ct-warning-rgb: #dece8e;
@@ -1342,7 +1342,7 @@ summary {
 }
 
 .user-details {
-    background: var(--ct-body-bg);
+
     border-radius: 6px;
     padding: 1.5rem;
 }
@@ -1381,7 +1381,7 @@ summary {
 .avatar-section {
     text-align: center;
     padding: 1rem;
-    background: var(--ct-body-bg);
+
     border-radius: 6px;
     margin-bottom: 1rem;
 }
@@ -1473,7 +1473,7 @@ summary {
 }
 
 .action-card {
-    background: var(--ct-body-bg);
+ 
     border: 1px solid var(--ct-border-color);
     border-radius: 12px;
     padding: 1.5rem;
@@ -8514,7 +8514,7 @@ left: auto;
     align-items: center;
     width: 100%;
     min-height: 50px; /* Allow for multi-line content */
-    background-color: #fff;
+    background-color: #F9F9F9;
     border-radius: 6px;
     position: relative;
     overflow: hidden;
@@ -8795,4 +8795,17 @@ img {
     background-color: #FFFFFF;
     padding: 12px;
     border-radius: 6px;
+}
+
+/* Ensure all dashboard panels have solid white backgrounds */
+.grid-item {
+    background-color: #F9F9F9 !important;
+}
+
+.card-body {
+  background-color: #F9F9F9 !important;
+}
+
+.card {
+  background-color: #F9F9F9 !important;
 }
