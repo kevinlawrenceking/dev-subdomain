@@ -1,4 +1,18 @@
-<!--- This ColdFusion page manages contact data display and interactions, including importing, exporting, and managing tags and systems. --->
+<!--- This ColdFusion page manages    var table = $('#<cfoutput>#contacts_table#</cfoutput>').DataTable({
+        "pageLength": <cfoutput>#defaultRowsValue#</cfoutput>,
+        "lengthMenu": [[10, 25, 50, 100, 500, 9999999], [10, 25, 50, 100, 500, "All"]],
+        "searching": true,
+        order: [[1, 'asc']],
+        stateSave: false,
+        dom: '<"row"<"col-sm-6"l><"col-sm-6"f>> <"row"<"col-sm-12"B>> <"row"rtip>',
+        responsive: false,
+        scrollX: true,
+        autoWidth: true,
+        serverSide: true,
+        ajax: {
+            url: '/include/contacts_ss.cfm?contacts_table=<cfoutput>#contacts_table#</cfoutput>&userid=<cfoutput>#userid#</cfoutput>&bytag=<cfoutput>#bytag#</cfoutput>&byimport=<cfoutput>#byimport#</cfoutput>',
+            type: 'post'
+        },isplay and interactions, including importing, exporting, and managing tags and systems. --->
 
 
 
@@ -131,21 +145,23 @@ $(document).ready(function() {
         checkboxes: {
             selectRow: true
         },
-        width: "30px"
+        width: "40px",
+        className: "text-center"
     },
     {
         targets: 1, // Name column
-        width: "200px"
+        width: "25%",
+        className: "text-nowrap"
     },
     {
         targets: 2, // Tags column
         orderable: false,
-        width: "150px"
+        width: "20%"
     },
     {
         targets: 3, // Company column
         orderable: false,
-        width: "180px",
+        width: "20%",
         render: function(data, type, row) {
             if (type === 'display' && data && data.length > 25) {
                 return '<span title="' + data + '">' + data.substring(0, 25) + '...</span>';
@@ -155,7 +171,8 @@ $(document).ready(function() {
     },
     {
         targets: 4, // Phone column
-        width: "130px",
+        width: "15%",
+        className: "text-nowrap",
         render: function(data, type, row) {
             if (type === 'display' && data && data.length > 15) {
                 return '<span title="' + data + '">' + data.substring(0, 15) + '...</span>';
@@ -165,7 +182,7 @@ $(document).ready(function() {
     },
     {
         targets: 5, // Email column
-        width: "200px",
+        width: "20%",
         render: function(data, type, row) {
             if (type === 'display' && data && data.length > 25) {
                 return '<span title="' + data + '">' + data.substring(0, 25) + '...</span>';
