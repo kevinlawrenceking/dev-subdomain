@@ -22,7 +22,7 @@
             <ul id="side-menu">
                 <!--- User Profile Section --->
                 <li>
-                    <div class="user-lg text-center">
+                    <div class="user-lg text-center" >
                         <a href="/app/image-upload/?ref_pgid=7" class="text-center">
                             <cfoutput>
                                 <img src="#session.userAvatarUrl#?ver=#rand()#" 
@@ -191,6 +191,17 @@
         width: 60px;
         height: 60px;
         margin-bottom: 10px;
+    }
+
+    /* Add space between user profile and menu */
+    .user-lg {
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .left-side-menu-light .user-lg {
+        border-bottom: 1px solid #d0d1d3;
     }
 
     #side-menu .menu-arrow {
