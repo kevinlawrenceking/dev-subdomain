@@ -8801,3 +8801,7 @@ img {
 .grid-item {
     background-color: #F9F9F9 !important;
 }
+
+.card-body {
+  background-color: #F9F9F9 !important;
+}
