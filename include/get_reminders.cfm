@@ -36,7 +36,10 @@
     a.actionDetails,
     a.actionInfo,
     c.contactid,
-    COALESCE(NULLIF(c.contactfullname, ''), ci.valueCompany, c.contactfullname) AS contactfullname,
+    CASE 
+      WHEN c.contactfullname = '' AND ci.valueCompany IS NOT NULL THEN ci.valueCompany
+      ELSE c.contactfullname
+    END AS contactfullname,
     ns.status_color,
     f.sustartDate,
     f.suEndDate,
