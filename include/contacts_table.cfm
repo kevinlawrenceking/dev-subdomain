@@ -39,11 +39,9 @@ $(document).ready(function() {
         order: [[1, 'asc']],
         stateSave: false,
         dom: '<"row"<"col-sm-6"l><"col-sm-6"f>> <"row"<"col-sm-12"B>> <"row"rtip>',
-        responsive: {
-            details: {
-                type: 'column'
-            }
-        },
+        responsive: false,
+        scrollX: true,
+        autoWidth: false,
         serverSide: true,
         ajax: {
             url: '/include/contacts_ss.cfm?contacts_table=<cfoutput>#contacts_table#</cfoutput>&userid=<cfoutput>#userid#</cfoutput>&bytag=<cfoutput>#bytag#</cfoutput>&byimport=<cfoutput>#byimport#</cfoutput>',
@@ -132,11 +130,48 @@ $(document).ready(function() {
         targets: 0,
         checkboxes: {
             selectRow: true
+        },
+        width: "30px"
+    },
+    {
+        targets: 1, // Name column
+        width: "200px"
+    },
+    {
+        targets: 2, // Tags column
+        orderable: false,
+        width: "150px"
+    },
+    {
+        targets: 3, // Company column
+        orderable: false,
+        width: "180px",
+        render: function(data, type, row) {
+            if (type === 'display' && data && data.length > 25) {
+                return '<span title="' + data + '">' + data.substring(0, 25) + '...</span>';
+            }
+            return data;
         }
     },
     {
-        targets: [2, 3],
-        orderable: false
+        targets: 4, // Phone column
+        width: "130px",
+        render: function(data, type, row) {
+            if (type === 'display' && data && data.length > 15) {
+                return '<span title="' + data + '">' + data.substring(0, 15) + '...</span>';
+            }
+            return data;
+        }
+    },
+    {
+        targets: 5, // Email column
+        width: "200px",
+        render: function(data, type, row) {
+            if (type === 'display' && data && data.length > 25) {
+                return '<span title="' + data + '">' + data.substring(0, 25) + '...</span>';
+            }
+            return data;
+        }
     }
 ],
 
