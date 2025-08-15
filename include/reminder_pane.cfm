@@ -116,7 +116,16 @@
             }
           }
         },
-        { data: "contactfullname", visible: <cfoutput>#contactVisibilty#</cfoutput> },
+        { 
+          data: "contactfullname", 
+          visible: <cfoutput>#contactVisibilty#</cfoutput>,
+          render: function (data, type, row) {
+            if (type === 'display' && row.hlink) {
+              return `<a href="${row.hlink}" title="View contact details">${data}</a>`;
+            }
+            return data;
+          }
+        },
         { data: "notStartDatef" },
         { data: "notEndDatef", visible: false },
         { data: "reminder_text" },

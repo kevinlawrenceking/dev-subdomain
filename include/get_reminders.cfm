@@ -36,7 +36,10 @@
     a.actionDetails,
     a.actionInfo,
     c.contactid,
-    c.contactfullname,
+    CASE 
+      WHEN c.contactfullname = '' AND ci.valueCompany IS NOT NULL THEN ci.valueCompany
+      ELSE c.contactfullname
+    END AS contactfullname,
     ns.status_color,
     f.sustartDate,
     f.suEndDate,
@@ -47,8 +50,10 @@
   INNER JOIN fusystemusers f ON f.suID = n.suID
   INNER JOIN fusystems s ON s.systemID = f.systemid
   INNER JOIN contactdetails c on c.contactid = f.contactid
+  LEFT JOIN contactitems ci ON ci.contactid = c.contactid AND ci.valueCategory = 'Company'
   INNER JOIN fuactions a ON a.actionID = n.actionID
   INNER JOIN notstatuses ns ON ns.notstatus = n.notStatus
+
   
 
   WHERE c.userid = <cfqueryparam value="#userid#" cfsqltype="cf_sql_integer">
@@ -105,7 +110,8 @@ LIMIT <cfqueryparam value="#reminderLimit#" cfsqltype="cf_sql_integer">
     "sustartDate": formattedStart,
     "suenddate": formattedEnd,
     "recordname": recordname,
-    "systemdescript": systemdescript
+    "systemdescript": systemdescript,
+    "hlink": "/app/contact/?contactid=" & contactid
   })>
 </cfloop>
 
