@@ -221,6 +221,7 @@
         padding: 5px 10px;
         border-radius: 4px;
         transition: all 0.2s ease-in-out;
+        text-decoration: none;
     }
 
     .nav-second-level a:hover,
