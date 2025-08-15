@@ -105,7 +105,8 @@ LIMIT <cfqueryparam value="#reminderLimit#" cfsqltype="cf_sql_integer">
     "sustartDate": formattedStart,
     "suenddate": formattedEnd,
     "recordname": recordname,
-    "systemdescript": systemdescript
+    "systemdescript": systemdescript,
+    "hlink": "/app/contact/?contactid=" & contactid
   })>
 </cfloop>
 
