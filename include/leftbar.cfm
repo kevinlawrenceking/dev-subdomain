@@ -109,6 +109,54 @@
 
 <!--- Sidebar Styles --->
 <style>
+    /* Left Sidebar Scrolling */
+    .left-side-menu {
+        height: 100vh;
+        position: fixed;
+        overflow: hidden;
+        width: 280px; /* Increased from 260px for better text visibility */
+    }
+    
+    .left-side-menu .h-100 {
+        height: 100vh !important;
+        overflow-y: auto;
+        overflow-x: hidden;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(0,0,0,0.2) transparent;
+    }
+    
+    /* Hide scrollbar for webkit browsers when not needed */
+    .left-side-menu .h-100::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    .left-side-menu .h-100::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    
+    .left-side-menu .h-100::-webkit-scrollbar-thumb {
+        background-color: rgba(0,0,0,0.2);
+        border-radius: 3px;
+        transition: background-color 0.2s ease;
+    }
+    
+    .left-side-menu .h-100::-webkit-scrollbar-thumb:hover {
+        background-color: rgba(0,0,0,0.4);
+    }
+    
+    /* For light theme, adjust scrollbar colors */
+    .left-side-menu-light .h-100::-webkit-scrollbar-thumb {
+        background-color: rgba(0,0,0,0.15);
+    }
+    
+    .left-side-menu-light .h-100::-webkit-scrollbar-thumb:hover {
+        background-color: rgba(0,0,0,0.3);
+    }
+    
+    #sidebar-menu {
+        padding-bottom: 20px;
+    }
+
     /* Alternative Light Theme for Left Sidebar */
     .left-side-menu-light {
         background-color: #E9EAEC !important;
@@ -173,6 +221,7 @@
         padding: 5px 10px;
         border-radius: 4px;
         transition: all 0.2s ease-in-out;
+        text-decoration: none;
     }
 
     .nav-second-level a:hover,
@@ -207,5 +256,20 @@
     #side-menu .menu-arrow {
         float: right;
         margin-top: 2px;
+        margin-right: 10px;
+        margin-left: 10px;
+    }
+    
+    /* Ensure menu text doesn't overlap with arrow */
+    #side-menu > li > a {
+        padding-right: 45px !important;
+        position: relative;
+    }
+    
+    #side-menu > li > a .menu-arrow {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
     }
 </style>

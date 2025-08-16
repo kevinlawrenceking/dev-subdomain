@@ -5045,7 +5045,7 @@ html {
 }
 
 .content-page {
-    margin-left: 240px;
+    margin-left: 280px;
     overflow: hidden;
     padding: 0 15px 65px;
     min-height: 80vh;
@@ -5053,7 +5053,7 @@ html {
 }
 
 .left-side-menu {
-    width: 240px;
+    width: 280px;
     background: var(--ct-bg-leftbar);
     bottom: 0;
     padding: 20px 0;
@@ -7377,7 +7377,7 @@ body[data-leftbar-size=condensed] .logo span.logo-sm {
 body[data-leftbar-size=condensed] .left-side-menu {
 	position: absolute;
 	padding-top: 0;
-	width: 70px!important;
+	width: 75px!important;
 	z-index: 5
 }
 
