@@ -5,7 +5,7 @@
     <!--- Set recid to verid if not defined --->
     <cfset recid = verid />
 </cfif>
-
+<Cfabort>
 <cfinclude template="/include/qry/details_556_1.cfm" />
 
 <cfinclude template="/include/qry/results_556_2.cfm" />
