@@ -36,6 +36,7 @@
     this.sessionTimeout = createTimeSpan(0,9,20,0);
     this.loginStorage = "session";
     this.mappings["/app"] = expandPath(".");
+    this.strictVariables = false;
 
     // Make CF act “looser” on variable resolution and avoid null pitfalls
     this.searchImplicitScopes = true;   // ACF: re-enable implicit scope searching
