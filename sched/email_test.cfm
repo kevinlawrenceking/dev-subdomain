@@ -32,7 +32,7 @@
     
     <cftry>
         <cfmail 
-            from="test@theactorsoffice.com" 
+      
             to="kevinking7135@gmail.com"
             subject="Test Email from TAO Scheduler - #dateTimeFormat(now(), 'yyyy-mm-dd HH:nn:ss')#" 
             type="text">
