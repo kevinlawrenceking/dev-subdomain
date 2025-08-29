@@ -1267,7 +1267,14 @@ audzip = <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#trim(arguments.new_aud
 
 </cffunction> <cffunction output="false" name="SELevents_24618" access="public" returntype="query">
     <cfargument name="sessionUserId" type="numeric" required="true">
-    <cfargument name="currentId" type="numeric" required="false">
+    <cfargument name="currentId" type="any" required="false" default="0">
+
+    <!--- Validate and convert currentId to numeric --->
+    <cfif not isNumeric(arguments.currentId)>
+        <cfset arguments.currentId = 0>
+    <cfelse>
+        <cfset arguments.currentId = val(arguments.currentId)>
+    </cfif>
 
 <cfquery name="result" >
             SELECT
@@ -1297,7 +1304,7 @@ audzip = <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#trim(arguments.new_aud
             INNER JOIN eventtypes_user t ON t.eventtypename = e.eventtypename
             WHERE e.userid = <cfqueryparam value="#arguments.sessionUserId#" cfsqltype="CF_SQL_INTEGER">
             AND t.userid = <cfqueryparam value="#arguments.sessionUserId#" cfsqltype="CF_SQL_INTEGER">
-            <cfif structKeyExists(arguments, "currentId")>
+            <cfif arguments.currentId gt 0>
                 AND e.eventid IN (
                     SELECT eventid FROM eventcontactsxref WHERE contactid = <cfqueryparam value="#arguments.currentId#" cfsqltype="CF_SQL_INTEGER">
                 )
@@ -1308,7 +1315,14 @@ audzip = <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#trim(arguments.new_aud
 
 </cffunction> <cffunction output="false" name="SELevents_24659" access="public" returntype="query">
     <cfargument name="sessionUserID" type="numeric" required="true">
-    <cfargument name="currentID" type="numeric" required="false">
+    <cfargument name="currentID" type="any" required="false" default="0">
+
+    <!--- Validate and convert currentID to numeric --->
+    <cfif not isNumeric(arguments.currentID)>
+        <cfset arguments.currentID = 0>
+    <cfelse>
+        <cfset arguments.currentID = val(arguments.currentID)>
+    </cfif>
 
 <cfset var queryResult = "">
 
@@ -1344,7 +1358,7 @@ audzip = <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#trim(arguments.new_aud
             LEFT JOIN audroles r ON r.audroleid = a.audroleid
             WHERE e.userid = <cfqueryparam value="#arguments.sessionUserID#" cfsqltype="CF_SQL_INTEGER">
             AND t.userid = <cfqueryparam value="#arguments.sessionUserID#" cfsqltype="CF_SQL_INTEGER">
-            <cfif structKeyExists(arguments, "currentID")>
+            <cfif arguments.currentID gt 0>
                 AND e.eventid IN (
                     SELECT eventid FROM eventcontactsxref WHERE contactid = <cfqueryparam value="#arguments.currentID#" cfsqltype="CF_SQL_INTEGER">
                 )
@@ -1354,7 +1368,14 @@ audzip = <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#trim(arguments.new_aud
 <cfreturn queryResult>
 </cffunction> <cffunction output="false" name="RESevents_24660" access="public" returntype="query">
     <cfargument name="userID" type="numeric" required="true">
-    <cfargument name="currentID" type="numeric" required="false">
+    <cfargument name="currentID" type="any" required="false" default="0">
+
+    <!--- Validate and convert currentID to numeric --->
+    <cfif not isNumeric(arguments.currentID)>
+        <cfset arguments.currentID = 0>
+    <cfelse>
+        <cfset arguments.currentID = val(arguments.currentID)>
+    </cfif>
 
 <cfset var queryResult = "">
 
@@ -1389,7 +1410,7 @@ audzip = <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#trim(arguments.new_aud
             LEFT JOIN audsteps s ON s.audstepid = a.audstepid
             WHERE e.userid = <cfqueryparam value="#arguments.userID#" cfsqltype="CF_SQL_INTEGER">
             AND t.userid = <cfqueryparam value="#arguments.userID#" cfsqltype="CF_SQL_INTEGER">
-            <cfif structKeyExists(arguments, "currentID")>
+            <cfif arguments.currentID gt 0>
                 AND e.eventid IN (
                     SELECT eventid FROM eventcontactsxref WHERE contactid = <cfqueryparam value="#arguments.currentID#" cfsqltype="CF_SQL_INTEGER">
                 )

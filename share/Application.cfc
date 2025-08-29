@@ -15,6 +15,11 @@
         this.applicationTimeout = createTimeSpan(11, 1, 0, 0);
         this.sessionTimeout = createTimeSpan(0, 9, 20, 0);
         
+        // Make CF act "looser" on variable resolution for legacy compatibility
+        this.searchImplicitScopes = true;   // ACF: re-enable implicit scope searching
+        this.enableNullSupport = false;     // ACF: legacy truthy/falsy behavior
+        this.strictVariables = false;       // More permissive variable handling
+        
         // Create mappings to main app resources
         this.mappings["/app"] = expandPath("../app");
         this.mappings["/services"] = expandPath("../services");
@@ -75,10 +80,31 @@
                 onApplicationStart();
             }
             
+            // Basic parameter normalization for share app (minimal set)
+            var shareKeys = ["shareToken", "id", "page", "q"];
+            
+            // Default URL/FORM keys for safety
+            for (var k in shareKeys) {
+                param name="url.#k#" default="";
+                param name="form.#k#" default="";
+            }
+            
+            // Build a merged request map (URL wins, then FORM)
+            request.p = duplicate(form);
+            structAppend(request.p, url, true);
+            
+            // Expose common variables for legacy template compatibility
+            for (var k in shareKeys) {
+                if (NOT isDefined(k)) {
+                    request[k] = request.p[k];
+                }
+            }
+            
             // Validate share tokens as needed
-            if (structKeyExists(url, "shareToken")) {
+            if (len(request.p.shareToken)) {
                 // Here you would validate the token and set appropriate access variables
                 // This is where you'd implement the unique identifier validation
+                session.shareToken = request.p.shareToken;
             }
             
             return true;
@@ -94,6 +120,50 @@
         </cfoutput>
         
         <cfreturn true />
+    </cffunction>
+
+    <!--- Simple error handler for share app --->
+    <cffunction name="onError" access="public" returntype="void" output="true">
+        <cfargument name="exception" />
+        <cfargument name="eventName" />
+        
+        <cftry>
+            <!--- Log the error without email to avoid mail signing issues --->
+            <cflog file="TAO_share_errors" 
+                   text="Share App Error: #arguments.exception.message# - Event: #arguments.eventName#" 
+                   type="error" />
+            
+            <!--- Display user-friendly error page --->
+            <cfoutput>
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Error - TAO Share</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+                        .error-container { max-width: 600px; margin: 0 auto; }
+                        h1 { color: ##e74c3c; }
+                        .btn { background: ##3498db; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="error-container">
+                        <h1>Something went wrong</h1>
+                        <p>We're sorry, but there was an error processing your request.</p>
+                        <p><a href="/" class="btn">Return to Home</a></p>
+                    </div>
+                </body>
+                </html>
+            </cfoutput>
+            
+            <cfcatch>
+                <!--- Last resort - simple output --->
+                <cfoutput>
+                    <h2>System Error</h2>
+                    <p>A critical error occurred. Please try again later.</p>
+                </cfoutput>
+            </cfcatch>
+        </cftry>
     </cffunction>
 
 </cfcomponent>
