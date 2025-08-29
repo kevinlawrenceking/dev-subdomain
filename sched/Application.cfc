@@ -34,10 +34,9 @@
     
     // Mail settings for Hostek VPS
     this.smtpServerSettings = {
-      server = "localhost",
+      server = "127.0.0.1",
       port = 25,
-      username = "",
-      password = "",
+
       useSSL = false,
       useTLS = false,
       sign = false,
