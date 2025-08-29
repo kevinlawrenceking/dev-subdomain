@@ -9,7 +9,7 @@
   <!--- Environment detection --->
   <cfset host = ListFirst(cgi.server_name, ".") />
 
-  <!--- Database configuration --->
+  <!--- Database configuration - Set in application scope immediately --->
   <cfif host EQ "app">
     <cfset application.dsn = "abo" />
     <cfset application.information_schema = "actorsbusinessoffice" />
@@ -23,7 +23,7 @@
   <cfscript>
     // Basic application settings for scheduler
     this.name = "TAO_Scheduler";
-    this.datasource = application.dsn;
+    this.datasource = application.dsn;  // Use the DSN we just set
     this.sessionManagement = false;  // No sessions needed for scheduled tasks
     this.applicationTimeout = createTimeSpan(0, 0, 30, 0);  // 30 minutes
     
@@ -39,8 +39,21 @@
 
   <cffunction name="onApplicationStart" returntype="boolean" output="false">
     <cftry>
-      <!--- Get current version --->
-      <cfquery result="result" name="findit" datasource="#application.dsn#">
+      <!--- Ensure DSN is set --->
+      <cfif not structKeyExists(application, "dsn") or not len(application.dsn)>
+        <cfif host EQ "app">
+          <cfset application.dsn = "abo" />
+          <cfset application.information_schema = "actorsbusinessoffice" />
+          <cfset application.suffix = "_1.5" />
+        <cfelse>
+          <cfset application.dsn = "abod" />
+          <cfset application.information_schema = "new_development" />
+          <cfset application.suffix = "" />
+        </cfif>
+      </cfif>
+      
+      <!--- Try to get version, but don't fail if database is unavailable --->
+      <cfquery result="result" name="findit" datasource="#application.dsn#" timeout="5">
         SELECT verid
         FROM taoversions
         ORDER BY isactive DESC, verid DESC
@@ -50,6 +63,9 @@
       
       <cfcatch>
         <cfset application.rev = "1.0" />
+        <cflog file="TAO_sched_init_errors" 
+               text="Could not get version from database: #cfcatch.message#" 
+               type="warning" />
       </cfcatch>
     </cftry>
     
@@ -61,9 +77,22 @@
     
     <cftry>
       <cfscript>
-        // Ensure application is initialized
-        if (not structKeyExists(application, "dsn")) {
-          onApplicationStart();
+        // Ensure application scope has DSN (force initialization if needed)
+        if (not structKeyExists(application, "dsn") or not len(application.dsn)) {
+          if (host EQ "app") {
+            application.dsn = "abo";
+            application.information_schema = "actorsbusinessoffice";
+            application.suffix = "_1.5";
+          } else {
+            application.dsn = "abod";
+            application.information_schema = "new_development";
+            application.suffix = "";
+          }
+        }
+        
+        // Ensure other application variables exist
+        if (not structKeyExists(application, "rev")) {
+          application.rev = "1.0";
         }
         
         // Basic parameter normalization for scheduled tasks
