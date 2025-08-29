@@ -32,6 +32,18 @@
     this.enableNullSupport = false;
     this.strictVariables = false;
     
+    // Mail settings for Hostek VPS
+    this.smtpServerSettings = {
+      server = "localhost",
+      port = 25,
+      username = "",
+      password = "",
+      useSSL = false,
+      useTLS = false,
+      sign = false,
+      encrypt = false
+    };
+    
     // Basic mappings
     this.mappings["/include"] = expandPath("../include");
     this.mappings["/services"] = expandPath("../services");
