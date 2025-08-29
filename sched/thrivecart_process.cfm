@@ -1,4 +1,11 @@
-<cfset dbug="N" />
+<!--- 
+    PURPOSE: Process pending ThriveCart orders and send welcome emails
+    AUTHOR: Kevin King
+    DATE: 2025-08-29
+    DESCRIPTION: Scheduled task to handle ThriveCart order processing
+--->
+
+<cfparam name="dbug" default="N" />
 
 <!--- Use datasource from Application.cfc --->
 <cfset dsn = application.dsn />
@@ -6,7 +13,13 @@
 <cfset suffix = application.suffix />
 <cfset information_schema = application.information_schema />
 
-<Cfset to_email="kevinking7135@gmail.com" />
+<!--- Set host from CGI or default --->
+<cfset host = ListFirst(cgi.server_name, ".") />
+<cfif not len(host) or host eq "localhost">
+    <cfset host = "app" />
+</cfif>
+
+<cfset to_email = "kevinking7135@gmail.com" />
 
 <cfquery result="result"  name="U" datasource="#dsn#">
     SELECT th.id
@@ -23,32 +36,33 @@
 </cfquery>
 
 <cfloop query="U">
+    <cftry>
+        <cfset new_id = U.id />
 
-    <cfset new_id=U.id />
+        <cfoutput>
+            <cfset new_uuid = "#CreateUUID()#" />
+            <cfset new_customerfirst = "#u.CustomerFirst#" />
+            <cfset new_customerlast = "#u.CustomerLast#" />
+            <cfset new_customerEmail = "#u.CustomerEmail#" />
+            <cfset new_BaseProductLabel = "#u.BaseProductLabel#" />
+            <cfset new_planName = "#u.planName#" />
+        </cfoutput>
 
-    <cfoutput>
-
-        <cfset new_uuid="#CreateUUID()#" />
-        <cfset new_customerfirst="#u.CustomerFirst#" />
-        <cfset new_customerlast="#u.CustomerLast#" />
-        <cfset new_customerEmail="#u.CustomerEmail#" />
-        <cfset new_BaseProductLabel="#u.BaseProductLabel#" />
-        <cfset new_planName="#u.planName#" />
-    </cfoutput>
-
-    <cfquery result="result"  name="update" datasource="#dsn#">
-        UPDATE thrivecart
-        set uuid =
-        <cfqueryparam cfsqltype="cf_sql_varchar" value="#new_uuid#" />
-        where id = #new_id#
-    </cfquery>
+        <cfquery result="result" name="update" datasource="#dsn#">
+            UPDATE thrivecart
+            SET uuid = <cfqueryparam cfsqltype="cf_sql_varchar" value="#new_uuid#" />
+            WHERE id = <cfqueryparam cfsqltype="cf_sql_integer" value="#new_id#" />
+        </cfquery>
 
     <cfmail 
-    from="support@theactorsoffice.com" 
-    to="#new_customerEmail#"  bcc="kevinking7135@gmail.com"
-    subject="#new_customerfirst#, set up your profile for The Actor's Office!" 
-    type="HTML">
-<HTML>
+        from="support@theactorsoffice.com" 
+        to="#new_customerEmail#"  
+        bcc="kevinking7135@gmail.com"
+        subject="#new_customerfirst#, set up your profile for The Actor's Office!" 
+        type="HTML"
+        sign="false"
+        encrypt="false">
+        <HTML>
 
         <head>
             <title>The Actor's Office</title>
@@ -85,15 +99,22 @@
 </body>
 
         </HTML>
-</cfmail>
+        </cfmail>
 
-    <cfquery result="result"  name="update" datasource="#dsn#">
-        UPDATE thrivecart
-        set status =
-        <cfqueryparam cfsqltype="cf_sql_varchar" value="Emailed" />
-        where id = #new_id#
-    </cfquery>
+        <cfquery result="result" name="update2" datasource="#dsn#">
+            UPDATE thrivecart
+            SET status = <cfqueryparam cfsqltype="cf_sql_varchar" value="Emailed" />
+            WHERE id = <cfqueryparam cfsqltype="cf_sql_integer" value="#new_id#" />
+        </cfquery>
 
+        <cfcatch>
+            <cflog file="TAO_thrivecart_errors" 
+                   text="Error processing ThriveCart ID #new_id#: #cfcatch.message#" 
+                   type="error" />
+            
+            <!--- Continue processing other records even if one fails --->
+        </cfcatch>
+    </cftry>
 </cfloop>
 
 <cfinclude template="thrivecart_process_audition.cfm" />
