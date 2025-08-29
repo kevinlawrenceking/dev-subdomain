@@ -54,14 +54,12 @@
             WHERE id = <cfqueryparam cfsqltype="cf_sql_integer" value="#new_id#" />
         </cfquery>
 
-    <cfmail 
-        from="support@theactorsoffice.com" 
-        to="#new_customerEmail#"  
-        bcc="kevinking7135@gmail.com"
-        subject="#new_customerfirst#, set up your profile for The Actor's Office!" 
-        type="HTML"
-        sign="false"
-        encrypt="false">
+        <cfmail 
+            from="support@theactorsoffice.com" 
+            to="#new_customerEmail#"  
+            bcc="kevinking7135@gmail.com"
+            subject="#new_customerfirst#, set up your profile for The Actor's Office!" 
+            type="HTML">
         <HTML>
 
         <head>
