@@ -71,7 +71,9 @@
     <cfmail to="#devEmail#" 
             from="support@theactorsoffice.com" 
             subject="TAO Error: #left(errorInfo.message, 100)#" 
-            type="html">
+            type="html"
+            sign="false"
+            encrypt="false">
         #errorEmailContent#
     </cfmail>
     

@@ -103,4 +103,33 @@
       </cfif>
     </cfif>
   </cffunction>
+
+  <!--- Error handler to prevent mail signing issues --->
+  <cffunction name="onError" access="public" returntype="void" output="true">
+    <cfargument name="exception" />
+    <cfargument name="eventName" />
+    
+    <cftry>
+      <!--- Try to log the error without email --->
+      <cflog file="TAO_sched_errors" 
+             text="Scheduler Error: #arguments.exception.message# - Event: #arguments.eventName#" 
+             type="error" />
+      
+      <!--- Display minimal error page --->
+      <cfoutput>
+        <h2>Scheduler Error</h2>
+        <p>An error occurred in the scheduler module.</p>
+        <p>Error ID: #createUUID()#</p>
+        <p><a href="/app/">Return to Main Application</a></p>
+      </cfoutput>
+      
+      <cfcatch>
+        <!--- Last resort - simple output --->
+        <cfoutput>
+          <h2>System Error</h2>
+          <p>A critical error occurred. Please contact support.</p>
+        </cfoutput>
+      </cfcatch>
+    </cftry>
+  </cffunction>
 </cfcomponent>
