@@ -54,50 +54,61 @@
             WHERE id = <cfqueryparam cfsqltype="cf_sql_integer" value="#new_id#" />
         </cfquery>
 
-        <cfmail 
-            from="support@theactorsoffice.com" 
-            to="#new_customerEmail#"  
-            bcc="kevinking7135@gmail.com"
-            subject="#new_customerfirst#, set up your profile for The Actor's Office!" 
-            type="HTML">
-        <HTML>
+        <cftry>
+            <cfmail 
+                from="support@theactorsoffice.com" 
+                to="#new_customerEmail#"  
+                bcc="kevinking7135@gmail.com"
+                subject="#new_customerfirst#, set up your profile for The Actor's Office!" 
+                type="HTML">
+            <HTML>
 
-        <head>
-            <title>The Actor's Office</title>
+            <head>
+                <title>The Actor's Office</title>
 
-        </head>
+            </head>
 
-        <body>
-            <!--- Style Tag in the Body, not Head, for Email --->
-            <style type="text/css">
-                body {
-                    font-size: 14px;
-                }
+            <body>
+                <!--- Style Tag in the Body, not Head, for Email --->
+                <style type="text/css">
+                    body {
+                        font-size: 14px;
+                    }
 
-            </style>
-            <p>Hi #new_customerfirst#,</p>
+                </style>
+                <p>Hi #new_customerfirst#,</p>
 
-            <p>Your purchase of The Actor's Office has been received.</p>
+                <p>Your purchase of The Actor's Office has been received.</p>
 
-            <p>Now, it's time for you to create your user profile and get immediate access to the system.</p>
+                <p>Now, it's time for you to create your user profile and get immediate access to the system.</p>
 
-            <p>To get started, click the button below where you'll create your password and be walked through the setup process.</p>
+                <p>To get started, click the button below where you'll create your password and be walked through the setup process.</p>
 
-            <p><a href="https://#host#.theactorsoffice.com/setup/?uuid=#new_uuid#"><button>GET STARTED</button></a></p>
+                <p><a href="https://#host#.theactorsoffice.com/setup/?uuid=#new_uuid#"><button>GET STARTED</button></a></p>
 
-            <p>If you have any questions, simply respond to this email.</p>
+                <p>If you have any questions, simply respond to this email.</p>
 
-            <p>Welcome aboard!</p>
+                <p>Welcome aboard!</p>
 
-            <p>More to come...</p>
-            <p>Jodie Bentley and The Actor's Office Team</p>
+                <p>More to come...</p>
+                <p>Jodie Bentley and The Actor's Office Team</p>
 
-            <p>&nbsp;</p>
+                <p>&nbsp;</p>
 
-</body>
+            </body>
 
-        </HTML>
-        </cfmail>
+            </HTML>
+            </cfmail>
+            
+            <cfcatch type="any">
+                <cflog file="TAO_thrivecart_mail_errors" 
+                       text="Mail error for ThriveCart ID #new_id# (#new_customerEmail#): #cfcatch.message# - #cfcatch.detail#" 
+                       type="error" />
+                
+                <!--- Skip the status update if mail fails --->
+                <cfcontinue />
+            </cfcatch>
+        </cftry>
 
         <cfquery result="result" name="update2" datasource="#dsn#">
             UPDATE thrivecart
