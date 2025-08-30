@@ -1,7 +1,7 @@
 
 <!---<CFINCLUDE template="/include/projdate_fix_user.cfm" /> --->
 
-
+<cfset audprojectid = url.audprojectid />
 
     <cfquery >
         CALL UpdateAudProjects();
