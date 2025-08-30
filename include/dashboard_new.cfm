@@ -64,13 +64,7 @@ Services: NotificationService for handling notification operations and batch pro
 <cfset modaltitle = "Custom Panel Add" />
 <cfinclude template="/include/modal.cfm" />
 
-<!--- Dashboard Grid Layout --->
-<style>
-/* Ensure all dashboard panels have solid white backgrounds */
-.grid-item {
-    background-color: #FFFFFF !important;
-}
-</style>
+
 
 <div class="packery-grid" data-packery='{ "itemSelector": ".grid-item", "gutter": 10 }'>
     <!--- Dynamic Dashboard Panel Loading --->

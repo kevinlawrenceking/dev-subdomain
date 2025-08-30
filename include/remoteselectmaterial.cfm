@@ -1,7 +1,7 @@
 <!--- This ColdFusion page displays headshots and allows selection of media items for a specific event. --->
 <cfinclude template="/include/qry/materials_sel_unused.cfm" />
 <cfparam name="placeholder" default="" />
-<cfinclude template="/include/qry/types_45_1.cfm" /> 
+<cfinclude template="/include/qry/getAuditionMediaTypes.cfm" /> 
 
 <div class="row">
     <!--- Loop through the headshots query to display each headshot item --->

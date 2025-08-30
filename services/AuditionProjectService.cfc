@@ -103,58 +103,39 @@
     WHERE audprojectID = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_audprojectID#">
 </cfquery>
 
-<!--- Update audroles table with role-level booking fields --->
+<!--- Update audroles table with role-level booking fields (revised: remove invalid dynamic cfqueryparam usage) --->
 <cfquery>
     UPDATE audroles
-    SET 
-        <cfset needsComma = false>
+    SET
+        <cfset first = true>
         <cfif len(trim(arguments.new_payrate))>
-            payrate = <cfqueryparam cfsqltype="CF_SQL_DECIMAL" value="#arguments.new_payrate#" scale="2">
-            <cfset needsComma = true>
+            payrate = <cfqueryparam cfsqltype="CF_SQL_DECIMAL" value="#val(arguments.new_payrate)#" scale="2">
+            <cfset first = false>
         </cfif>
-
         <cfif len(trim(arguments.new_netincome))>
-            <cfif needsComma>,</cfif>netincome = <cfqueryparam cfsqltype="CF_SQL_DECIMAL" value="#arguments.new_netincome#" scale="2">
-            <cfset needsComma = true>
+            <cfif NOT first>,</cfif>
+            netincome = <cfqueryparam cfsqltype="CF_SQL_DECIMAL" value="#val(arguments.new_netincome)#" scale="2">
+            <cfset first = false>
         </cfif>
-
         <cfif len(trim(arguments.new_buyout))>
-            <cfif needsComma>,</cfif>buyout = <cfqueryparam cfsqltype="CF_SQL_DECIMAL" value="#arguments.new_buyout#" scale="2">
-            <cfset needsComma = true>
+            <cfif NOT first>,</cfif>
+            buyout = <cfqueryparam cfsqltype="CF_SQL_DECIMAL" value="#val(arguments.new_buyout)#" scale="2">
+            <cfset first = false>
         </cfif>
-
-   
-            <cfif needsComma>,</cfif>incometypeid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_incometypeid#">
-            <cfset needsComma = true>
-   
-     
-  
-            <cfif needsComma>,</cfif>paycycleid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_paycycleid#">
-   
-
+        <cfif isNumeric(arguments.new_incometypeid) AND arguments.new_incometypeid GT 0>
+            <cfif NOT first>,</cfif>
+            incometypeid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_incometypeid#">
+            <cfset first = false>
+        </cfif>
+        <cfif isNumeric(arguments.new_paycycleid) AND arguments.new_paycycleid GT 0>
+            <cfif NOT first>,</cfif>
+            paycycleid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_paycycleid#">
+            <cfset first = false>
+        </cfif>
+        <cfif first>
+            payrate = payrate
+        </cfif>
     WHERE audprojectID = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_audprojectID#">
-    AND (
-        <cfset needsOr = false>
-        <cfif len(trim(arguments.new_payrate))>
-            payrate != <cfqueryparam cfsqltype="CF_SQL_DECIMAL" value="#arguments.new_payrate#" scale="2">
-            <cfset needsOr = true>
-        </cfif>
-        <cfif len(trim(arguments.new_netincome))>
-            <cfif needsOr> OR </cfif>netincome != <cfqueryparam cfsqltype="CF_SQL_DECIMAL" value="#arguments.new_netincome#" scale="2">
-            <cfset needsOr = true>
-        </cfif>
-        <cfif len(trim(arguments.new_buyout))>
-            <cfif needsOr> OR </cfif>buyout != <cfqueryparam cfsqltype="CF_SQL_DECIMAL" value="#arguments.new_buyout#" scale="2">
-            <cfset needsOr = true>
-        </cfif>
-        <cfif arguments.new_incometypeid GT 0>
-            <cfif needsOr> OR </cfif>incometypeid != <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_incometypeid#">
-            <cfset needsOr = true>
-        </cfif>
-        <cfif arguments.new_paycycleid GT 0>
-            <cfif needsOr> OR </cfif>paycycleid != <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_paycycleid#">
-        </cfif>
-    )
 </cfquery>
 
 </cffunction>
@@ -595,8 +576,7 @@
                 r.audroleid, 
                 proj.projName, 
                 proj.projDescription, 
-                r.payrate,
-                r.buyout,
+
                 cat.audCatName, 
                 cat.audcatid, 
                 subcat.audSubCatName, 
@@ -705,8 +685,8 @@
                 AND p.isDeleted = 0
                 AND r.ispin = 1
                 AND p.userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
-                AND p.projdate >= <cfqueryparam value="#arguments.rangestart#" cfsqltype="CF_SQL_DATE">
-                AND p.projdate <= <cfqueryparam value="#arguments.rangeend#" cfsqltype="CF_SQL_DATE">
+                AND p.projdate >= <cfqueryparam value="#arguments.rangestart#" cfsqltype="cf_sql_date">
+                AND p.projdate <= <cfqueryparam value="#arguments.rangeend#" cfsqltype="cf_sql_date">
          
 </cfquery>
 
@@ -799,7 +779,6 @@
 </cfquery>
 
 <cfreturn result>
-
 </cffunction>
 <cffunction output="false" name="SELaudprojects_24241" access="public" returntype="query">
     <cfargument name="userid" type="numeric" required="true">
@@ -833,7 +812,6 @@
 </cfquery>
 
 <cfreturn result>
-
 </cffunction>
 <cffunction output="false" name="SELaudprojects_24242" access="public" returntype="query">
     <cfargument name="rangestart" type="date" required="true">
@@ -900,7 +878,6 @@
 </cfquery>
 
 <cfreturn result>
-
 </cffunction>
 <cffunction output="false" name="SELaudprojects_24245" access="public" returntype="query">
     <cfargument name="rangeStart" type="date" required="true">
@@ -1240,11 +1217,12 @@ ORDER BY label
             LEFT JOIN contactdetails c ON c.contactid = proj.contactid
             LEFT JOIN audunions un ON proj.unionID = un.unionID
             WHERE proj.audprojectID = <cfqueryparam value="#arguments.audprojectID#" cfsqltype="cf_sql_integer">
+            AND r.isdeleted = 0
+            AND proj.isDeleted = 0
          
 </cfquery>
 
 <cfreturn result>
-
 </cffunction>
 <cffunction output="false" name="SELaudprojects_24550" access="public" returntype="query">
     <cfargument name="audprojectID" type="numeric" required="true">
@@ -1527,6 +1505,7 @@ ORDER BY p.projdate DESC
         ) VALUES (
             <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#arguments.new_projName#" maxlength="500">,
             <cfqueryparam cfsqltype="CF_SQL_LONGVARCHAR" value="#arguments.new_projDescription#">,
+
             <cfqueryparam cfsqltype="CF_SQL_DATE" value="#arguments.new_eventStart#">,
             <cfqueryparam cfsqltype="CF_SQL_DATE" value="#arguments.new_eventStart#">
             <cfif structKeyExists(arguments, "new_userid") AND arguments.new_userid NEQ 0>, <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_userid#"></cfif>

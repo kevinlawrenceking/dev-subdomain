@@ -1,9 +1,9 @@
 <!--- This ColdFusion page handles the display and management of media materials for auditions, including modals for selecting and adding materials. --->
 
-<cfinclude template="/include/qry/audmedia_materials.cfm" />
-<cfinclude template="/include/qry/audmedia_picklist.cfm" />
-<cfinclude template="/include/qry/types_45_1.cfm" />
-<cfinclude template="/include/qry/audlinks_44_2.cfm" />
+<cfinclude template="/include/qry/getAuditionMaterials.cfm" />
+<cfinclude template="/include/qry/getAuditionMediaPicklist.cfm" />
+<cfinclude template="/include/qry/getAuditionMediaTypes.cfm" />
+<cfinclude template="/include/qry/getAuditionLinks.cfm" />
 <cfset modalid="remoteselectheadshot" />
 <cfset modaltitle="Select a Headshot" />
 <cfinclude template="/include/modal.cfm" />

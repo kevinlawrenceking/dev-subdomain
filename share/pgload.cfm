@@ -242,7 +242,7 @@ and l.linktype <> 'css'
     <cfset appAuthor=FindPage.appAuthor />
     <cfset appLogoName=FindPage.appLogoName />
     <cfif #host# is "uat">
-        <cfset colorTopBar="Purple" />
+        <cfset colorTopBar="#406E8E" />
         <cfelse>
             <cfset colorTopBar=FindPage.colorTopBar />
     </cfif>

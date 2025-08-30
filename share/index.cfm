@@ -4,7 +4,7 @@
     DATE: 2025-07-19
     NOTES: Updated to use a more secure shareToken system
 --->
-<Cfset debug="no">
+<Cfset debug="No">
 <cfparam name="url.shareToken" default="706C2C9EBECE60DA9F779903AC3FFE79" />
 <cfparam name="url.u" default="" />  <!--- Keep legacy parameter for backward compatibility --->
 <cfparam name="url.uid" default="" /> <!--- Original legacy parameter --->
@@ -30,7 +30,7 @@
         <h3>URL Parameters</h3>
         <cfoutput>
             <ul>
-                <li><strong>shareToken:</strong> #url.shareToken#</li>
+                <li><strong>shareToken:</strong> #structKeyExists(url, "shareToken") ? url.shareToken : "Not provided"#</li>
                 <li><strong>u:</strong> #url.u#</li>
                 <li><strong>uid:</strong> #url.uid#</li>
             </ul>
@@ -42,7 +42,7 @@
 </cfif>
 
 <!--- Handle new shareToken system --->
-<cfif len(trim(url.shareToken)) gt 0>
+<cfif structKeyExists(url, "shareToken") AND len(trim(url.shareToken)) gt 0>
     <cfif debug is "YES">
         <div class="debug-info success">
             <h3>Using New Token System</h3>

@@ -1,10 +1,11 @@
 <!--- This ColdFusion page retrieves version details and ticket information based on a given version ID. --->
-
-<cfif not #isdefined('recid')#>
+<cfparam name="recid" default=""/>
+<cfparam name="verid" default=""/>
+<cfif not #isdefined('recid')# and #recid# is not "">
     <!--- Set recid to verid if not defined --->
     <cfset recid = verid />
 </cfif>
-
+<Cfabort>
 <cfinclude template="/include/qry/details_556_1.cfm" />
 
 <cfinclude template="/include/qry/results_556_2.cfm" />
