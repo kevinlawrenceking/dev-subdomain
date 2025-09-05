@@ -1,4 +1,5 @@
 <cfcontent reset="true">
+
 <cfset listColumns = "`contactid`,`col1`,`col2`,`col3`,`col4`,`col5`" />
 <cfset sIndexColumn = "contactid" />
 <cfparam name="draw" default="1" type="integer" />

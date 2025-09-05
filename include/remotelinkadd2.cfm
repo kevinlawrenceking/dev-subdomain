@@ -1,5 +1,8 @@
 <!--- This ColdFusion page processes account-related actions and redirects based on the results of queries. --->
-
+<cfset new_sitetypeid   = form.new_sitetypeid />
+<cfset new_sitename   = form.new_sitename />
+<cfset new_siteurl   = form.new_siteurl />
+<Cfabort>
 <cfparam name="target" default="myaccount" />
 <cfparam name="ver" default="1" />
 
