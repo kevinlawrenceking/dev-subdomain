@@ -75,7 +75,7 @@
                     <cfset session.pgrtn = listLast(pageConfig.sessionVar, "=") />
                 </cfif>
                 
-                <!--- Render standard actions --->
+                <!--- Render standard actions 
                 <cfif structKeyExists(pageConfig, 'actions')>
                     <cfloop array="#pageConfig.actions#" index="action">
                         <cfswitch expression="#action.type#">
@@ -101,7 +101,7 @@
                             </cfcase>
                         </cfswitch>
                     </cfloop>
-                </cfif>
+                </cfif>--->
                 
                 <!--- Render conditional actions --->
                 <cfif structKeyExists(pageConfig, 'conditionalActions')>
