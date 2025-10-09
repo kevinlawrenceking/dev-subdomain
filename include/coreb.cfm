@@ -163,11 +163,11 @@
                                             <cfif #pgid# is "5">
                                                 <cfparam name="rcontactid" default="0" />
                                                 <cfset session.pgrtn = "D" />
-                                                <span style="font-size:14px;">
+                                           <!---     <span style="font-size:14px;">
                                                     <a href="/app/appoint-add/?returnurl=calendar-appoint&amp;rcontactid=#rcontactid#" style="color: ##406e8e !important;" title="Add Appointment">
                                                         <i class="fe-plus-circle"></i>
                                                     </a>
-                                                </span>
+                                                </span> --->
                                             </cfif>
                                         </cfoutput>
                                     </h4>
