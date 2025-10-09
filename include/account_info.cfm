@@ -80,7 +80,7 @@ Last Updated: 2025
 <cfinclude template="/include/qry/getMinimalTimezones.cfm"/>
 <cfinclude template="/include/qry/getAllDateFormats.cfm"/>
 <cfinclude template="/include/qry/getUserDetails.cfm"/>
-<cfinclude template="/include/qry/findUserById.cfm"/>
+
 
 <!--- Action handling logic --->
 <cfswitch expression="#ctaction#">
