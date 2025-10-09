@@ -180,6 +180,24 @@ Tables: contactdetails, contactitems, contactsimport, tags_user, fusystemusers
                             </a>
                         </li>
                     </ul>
+                    
+                    <!--- Script to handle DataTable column width issues when switching tabs --->
+                    <script>
+                        $(document).ready(function() {
+                            // Fix DataTable column widths when tabs are shown
+                            $('a[data-bs-toggle="tab"]').on('shown.bs.tab', function (e) {
+                                // Find all DataTables in the newly shown tab and adjust columns
+                                var targetPane = $(e.target.getAttribute('href'));
+                                targetPane.find('table.dataTable').each(function() {
+                                    var table = $(this).DataTable();
+                                    // Recalculate column widths
+                                    table.columns.adjust();
+                                    // Redraw the table
+                                    table.draw();
+                                });
+                            });
+                        });
+                    </script>
                     <!--- Tab Content Panels --->
                     <div id="content" class="tab-content" role="tablist">
                         
