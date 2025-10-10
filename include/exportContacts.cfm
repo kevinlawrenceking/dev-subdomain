@@ -207,7 +207,6 @@
             filename="#fullFilePath#" 
             query="export_ac" 
             overwrite="true"
-            format="xlsx"
             sheetname="Contacts Export">
 
         <!--- Verify file was created --->
