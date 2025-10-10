@@ -64,8 +64,9 @@
         userid: <cfoutput>#userid#</cfoutput>
       };
       
-      // Update the ajax data and reload
-      table.ajax.url("/include/get_reminders.cfm?bypass=1").load(function(json) {
+      // Update the ajax URL with new parameters and reload
+      const newUrl = "/include/get_reminders.cfm?bypass=1&showInactive=" + showInactive + "&currentid=" + <cfoutput>#contactid#</cfoutput> + "&userid=" + <cfoutput>#userid#</cfoutput>;
+      table.ajax.url(newUrl).load(function(json) {
         console.log('Data reloaded, updating modals...');
         injectReminderModals(json);
         
@@ -76,9 +77,6 @@
           }, 100);
         }
       });
-      
-      // Update the ajax data for future requests
-      table.ajax.data(newAjaxData);
       return;
     }
 
