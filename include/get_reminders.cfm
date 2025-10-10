@@ -3,10 +3,10 @@
 
 <cfparam name="url.currentid" default="0" type="numeric">
 <cfparam name="url.showInactive" default="0" type="numeric">
-<cfparam name="url.userid" default="#session.userid#" type="numeric">
+<cfparam name="url.userid" default="0" type="numeric">
 <cfset contactID = url.currentid>
 <cfset showInactive = url.showInactive>
-<cfset userid = url.userid>
+<cfset userid = url.userid GT 0 ? url.userid : session.userid>
 
 <cfset host = ListFirst(cgi.server_name, ".")/>
 
