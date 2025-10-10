@@ -144,9 +144,9 @@
                         cdTypeField.removeAttribute('data-parsley-required');
                       }
                     } else {
-                      // Show casting director fields, hide company only
+                      // Show casting director fields AND company (all three fields)
                       cdDiv.style.display = 'block';
-                      coOnlyDiv.style.display = 'none';
+                      coOnlyDiv.style.display = 'block';
                       
                       // Add required validation back to casting director role
                       if (cdTypeField) {
@@ -211,11 +211,11 @@
                         <legend>Add New Casting</legend>
                         <div class="form-group col-md-10">
                           <div class="form-check">
-                            <input class="form-check-input" type="radio" name="casting_info" id="casting_director_known" value="casting_director_known" checked="checked" />
+                            <input class="form-check-input" type="radio" name="casting_info" id="casting_director_known" value="casting_director_known" checked="checked" onchange="toggleCastingFields()" />
                               <label class="form-check-label" for="casting_director_known">Casting Director known</label>
                             </div>
                             <div class="form-check">
-                              <input class="form-check-input" type="radio" name="casting_info" id="only_company_known" value="only_company_known" />
+                              <input class="form-check-input" type="radio" name="casting_info" id="only_company_known" value="only_company_known" onchange="toggleCastingFields()" />
                                 <label class="form-check-label" for="only_company_known">Only company known</label>
                               </div>
                             </div>
@@ -242,14 +242,14 @@
                                 </div>
                               </div>
 
-                              <div id="co_only" style="display: none;">
-                                <div class="form-group col-md-6">
-                                  <label for="cdco">Casting Company</label>
-                                  <input class="form-control" type="text" id="companySearch" name="cdco" autocomplete="off" placeholder="Casting Company" />
-                                    <div id="results"></div>
-                                    <div class="invalid-feedback">Please enter a Casting Company.</div>
-                                  </div>
+                            <div id="co_only">
+                              <div class="form-group col-md-6">
+                                <label for="cdco">Casting Company</label>
+                                <input class="form-control" type="text" id="companySearch" name="cdco" autocomplete="off" placeholder="Casting Company" />
+                                  <div id="results"></div>
+                                  <div class="invalid-feedback">Please enter a Casting Company.</div>
                                 </div>
+                              </div>
                               </fieldset>
                             </div>
                           </div>
