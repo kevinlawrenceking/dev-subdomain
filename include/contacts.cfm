@@ -581,12 +581,11 @@ Tables: contactdetails, contactitems, contactsimport, tags_user, fusystemusers
 <script>
     $(document).ready(function() {
         $('#myformexport').on('submit', function(e) {
-            e.preventDefault();
-            var formData = $(this).serialize();
-            
-            $.post('/include/exportcontacts.cfm', formData, function(response) {
+            // Don't prevent default - allow normal form submission for file download
+            // Just close the modal after a short delay
+            setTimeout(function() {
                 $('#exampleModal5').modal('hide');
-            });
+            }, 500);
         });
     });
 </script>
