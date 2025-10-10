@@ -1,7 +1,14 @@
 <!--- This ColdFusion page handles the audition submission form, including various fields and dynamic visibility of elements based on user input. --->
 
 <cfparam name="rcontactid" default="0"/>
-<!--- Set default value for rcontactid --->
+<!--- Set                            <div class="form-check">
+                              <input class="form-check-input" type="radio" name="casting_info" id="casting_director_known" value="casting_director_known" checked="checked" onchange="toggleCastingFields()" />
+                                <label class="form-check-label" for="casting_director_known">Casting Director known</label>
+                              </div>
+                              <div class="form-check">
+                                <input class="form-check-input" type="radio" name="casting_info" id="only_company_known" value="only_company_known" onchange="toggleCastingFields()" />
+                                  <label class="form-check-label" for="only_company_known">Only company known</label>
+                                </div> value for rcontactid --->
 <cfparam name="isdirect" default="0"/>
 <!--- Set default value for isdirect --->
 <cfparam name="userCalStarttime" default=""/>
@@ -118,6 +125,36 @@
                         : 'none';
                     console.log("Value: ", element.value, "Type: ", typeof element.value);
                   }
+                  
+                  function toggleCastingFields() {
+                    const castingDirectorRadio = document.getElementById('casting_director_known');
+                    const onlyCompanyRadio = document.getElementById('only_company_known');
+                    const cdDiv = document.getElementById('CD');
+                    const coOnlyDiv = document.getElementById('co_only');
+                    const cdTypeField = document.getElementById('cdtype');
+                    
+                    if (onlyCompanyRadio.checked) {
+                      // Hide casting director fields, show only company
+                      cdDiv.style.display = 'none';
+                      coOnlyDiv.style.display = 'block';
+                      
+                      // Remove required validation from casting director role
+                      if (cdTypeField) {
+                        cdTypeField.removeAttribute('required');
+                        cdTypeField.removeAttribute('data-parsley-required');
+                      }
+                    } else {
+                      // Show casting director fields, hide company only
+                      cdDiv.style.display = 'block';
+                      coOnlyDiv.style.display = 'none';
+                      
+                      // Add required validation back to casting director role
+                      if (cdTypeField) {
+                        cdTypeField.setAttribute('required', 'required');
+                        cdTypeField.setAttribute('data-parsley-required', 'data-parsley-required');
+                      }
+                    }
+                  }
                 </script>
 
                 <script>
@@ -205,7 +242,7 @@
                                 </div>
                               </div>
 
-                              <div id="co_only">
+                              <div id="co_only" style="display: none;">
                                 <div class="form-group col-md-6">
                                   <label for="cdco">Casting Company</label>
                                   <input class="form-control" type="text" id="companySearch" name="cdco" autocomplete="off" placeholder="Casting Company" />
