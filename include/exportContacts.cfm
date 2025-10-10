@@ -1,38 +1,59 @@
-<!--- This ColdFusion page processes contact information and exports it to an Excel file. --->
+<!--- 
+    PURPOSE: Export contact information to Excel file
+    AUTHOR: System
+    DATE: 2025-10-09
+    PARAMETERS: idlist (comma-separated contact IDs)
+    RETURNS: Excel file download
+--->
 
-<cfparam name="new_exportid" default="" />
-<cfparam name="new_contactid" default="" />
-<cfparam name="new_FirstName" default="" />
-<cfparam name="new_LastName" default="" />
-<cfparam name="new_Tag1" default="" />
-<cfparam name="new_Tag2" default="" />
-<cfparam name="new_Tag3" default="" />
-<cfparam name="new_BusinessEmail" default="" />
-<cfparam name="new_PersonalEmail" default="" />
-<cfparam name="new_WorkPhone" default="" />
-<cfparam name="new_MobilePhone" default="" />
-<cfparam name="new_HomePhone" default="" />
-<cfparam name="new_Company" default="" />
-<cfparam name="new_Address" default="" />
-<cfparam name="new_Address2" default="" />
-<cfparam name="new_City" default="" />
-<cfparam name="new_State" default="" />
-<cfparam name="new_Zip" default="" />
-<cfparam name="new_Country" default="" />
-<cfparam name="new_ContactMeetingDate" default="" />
-<cfparam name="new_ContactMeetingLocation" default="" />
-<cfparam name="new_contactbirthday" default="" />
-<cfparam name="new_Website" default="" />
-<cfparam name="idlist" default="0" />
+<cftry>
+    <!--- Parameter definitions --->
+    <cfparam name="new_exportid" default="" />
+    <cfparam name="new_contactid" default="" />
+    <cfparam name="new_FirstName" default="" />
+    <cfparam name="new_LastName" default="" />
+    <cfparam name="new_Tag1" default="" />
+    <cfparam name="new_Tag2" default="" />
+    <cfparam name="new_Tag3" default="" />
+    <cfparam name="new_BusinessEmail" default="" />
+    <cfparam name="new_PersonalEmail" default="" />
+    <cfparam name="new_WorkPhone" default="" />
+    <cfparam name="new_MobilePhone" default="" />
+    <cfparam name="new_HomePhone" default="" />
+    <cfparam name="new_Company" default="" />
+    <cfparam name="new_Address" default="" />
+    <cfparam name="new_Address2" default="" />
+    <cfparam name="new_City" default="" />
+    <cfparam name="new_State" default="" />
+    <cfparam name="new_Zip" default="" />
+    <cfparam name="new_Country" default="" />
+    <cfparam name="new_ContactMeetingDate" default="" />
+    <cfparam name="new_ContactMeetingLocation" default="" />
+    <cfparam name="new_contactbirthday" default="" />
+    <cfparam name="new_Website" default="" />
+    <cfparam name="idlist" default="0" />
 
-<cfinclude template="/include/qry/AddExport_115_1.cfm" />
+    <!--- Validate required parameters --->
+    <cfif not isDefined('idlist') or idlist eq "0" or len(trim(idlist)) eq 0>
+        <cfthrow message="No contacts selected for export. Please select contacts from the list and try again." type="validation">
+    </cfif>
 
-<cfinclude template="/include/qry/x_115_2.cfm" />
+    <!--- Validate user session --->
+    <cfif not isDefined('session.userMediaPath') or len(trim(session.userMediaPath)) eq 0>
+        <cfthrow message="User session invalid. Please log in again." type="session">
+    </cfif>
 
-<!--- Loop through the query results to process each contact. --->
-<cfloop query="x">
+    <!--- Execute export initialization queries --->
+    <cfinclude template="/include/qry/AddExport_115_1.cfm" />
+    <cfinclude template="/include/qry/x_115_2.cfm" />
 
-    <cfset new_Tag1 = "" />
+    <!--- Validate we have contacts to export --->
+    <cfif not isDefined('x') or x.recordcount eq 0>
+        <cfthrow message="No contact records found for the selected IDs. Please check your selection and try again." type="data">
+    </cfif>
+
+    <!--- Loop through the query results to process each contact --->
+    <cfloop query="x">    <cfset new_Tag1 = "" />
     <cfset new_Tag2 = "" />
     <cfset new_Tag3 = "" />
     <cfset new_BusinessEmail = "" />
@@ -161,16 +182,75 @@
 
 <cfinclude template="/include/qry/export_ac_115_15.cfm" />
 
-<cfoutput>
-    <cfset app_direct = "#session.userMediaPath#\" />
-    <cfset sub_name_c = "#dateformat('#now()#','YYYYMMDD')#" />
-    <cfset sub_name_d = "#timeformat('#now()#','HHMMSS')#" />
-    <cfset fileName = "export#sub_name_c##sub_name_d#.xls" />
+<cftry>
+    <!--- Validate we have data to export --->
+    <cfif not isDefined('export_ac') or export_ac.recordcount eq 0>
+        <cfthrow message="No data found to export. Please select contacts and try again." type="validation">
+    </cfif>
 
-    <cfscript>
-        cfspreadsheet(action="write", fileName="#app_direct#\#fileName#", query="export_ac", overwrite=true);
-    </cfscript>
+    <cfoutput>
+        <!--- Create safe file paths --->
+        <cfset app_direct = session.userMediaPath />
+        <cfset sub_name_c = dateFormat(now(), "YYYYMMDD") />
+        <cfset sub_name_d = timeFormat(now(), "HHMMSS") />
+        <cfset fileName = "contacts_export_#sub_name_c#_#sub_name_d#.xlsx" />
+        <cfset fullFilePath = "#app_direct#/#fileName#" />
 
-    <cfheader name="content-disposition" value="Attachment;filename=#fileName#">
-    <cfcontent file="#app_direct#\#fileName#" type="application/vnd.ms-excel">
-</cfoutput>
+        <!--- Ensure directory exists --->
+        <cfif not directoryExists(app_direct)>
+            <cfdirectory action="create" directory="#app_direct#" mode="755">
+        </cfif>
+
+        <!--- Create Excel file --->
+        <cfspreadsheet 
+            action="write" 
+            filename="#fullFilePath#" 
+            query="export_ac" 
+            overwrite="true"
+            format="xlsx"
+            sheetname="Contacts Export">
+
+        <!--- Verify file was created --->
+        <cfif not fileExists(fullFilePath)>
+            <cfthrow message="Failed to create export file. Please check permissions and try again." type="file">
+        </cfif>
+
+        <!--- Send file to browser --->
+        <cfheader name="Content-Disposition" value="attachment; filename=#fileName#">
+        <cfheader name="Content-Type" value="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+        <cfcontent file="#fullFilePath#" type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" deletefile="false">
+    </cfoutput>
+
+    <cfcatch>
+        <!--- Error handling with user-friendly messages --->
+        <cfif cfcatch.type eq "validation">
+            <cfoutput>
+                <script>
+                    alert('Export Error: #cfcatch.message#');
+                    window.history.back();
+                </script>
+            </cfoutput>
+        <cfelse>
+            <cfoutput>
+                <script>
+                    alert('Export failed: #cfcatch.message#\n\nPlease contact support if this problem persists.');
+                    window.history.back();
+                </script>
+            </cfoutput>
+            <!--- Log the error for debugging --->
+            <cflog file="contact_export_errors" text="Export Error: #cfcatch.message# | Detail: #cfcatch.detail# | User: #session.userid#">
+        </cfif>
+    </cfcatch>
+</cftry>
+
+<cfcatch>
+    <!--- Handle any uncaught errors in the main process --->
+    <cfoutput>
+        <script>
+            alert('Export process failed: #cfcatch.message#\n\nPlease try again or contact support.');
+            window.history.back();
+        </script>
+    </cfoutput>
+    <cflog file="contact_export_errors" text="Main Export Error: #cfcatch.message# | Detail: #cfcatch.detail# | User: #session.userid# | IDList: #idlist#">
+</cfcatch>
+</cftry>
