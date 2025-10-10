@@ -1,12 +1,16 @@
 <cfcontent type="application/json">
 <cfsetting showdebugoutput="false">
 
-<cfparam name="url.currentid" default="0" type="numeric">
-<cfparam name="url.showInactive" default="0" type="numeric">
-<cfparam name="url.userid" default="0" type="numeric">
-<cfset contactID = url.currentid>
-<cfset showInactive = url.showInactive>
-<cfset userid = url.userid GT 0 ? url.userid : session.userid>
+<cfparam name="url.currentid" default="0">
+<cfparam name="url.showInactive" default="0">
+<cfparam name="url.userid" default="0">
+<cfset contactID = val(url.currentid)>
+<cfset showInactive = val(url.showInactive)>
+<cfif val(url.userid) GT 0>
+  <cfset userid = val(url.userid)>
+<cfelse>
+  <cfset userid = session.userid>
+</cfif>
 
 <cfset host = ListFirst(cgi.server_name, ".")/>
 
