@@ -5,6 +5,7 @@
 <cfparam name="form.CustomPlatform" default="" />
 <cfparam name="form.cdco" default="" />
 <cfparam name="form.cdfullname" default="" />
+<cfparam name="form.casting_info" default="casting_director_known" />
 <cfparam name="form.new_contactid" default="0" />
 <cfparam name="form.new_audStepID" default="1" />
 <cfparam name="form.new_audcatid" default="1" />
@@ -35,6 +36,7 @@
 <cfset CustomPlatform = form.CustomPlatform />
 <cfset cdco = form.cdco />
 <cfset cdfullname = form.cdfullname />
+<cfset casting_info = form.casting_info />
 <cfset new_contactid = form.new_contactid />
 <cfset new_audStepID = form.new_audStepID />
 <cfset new_audcatid = form.new_audcatid />
@@ -105,6 +107,10 @@
 
 <!--- Process new contact if new_contactid is 0 and cdco is not empty --->
 <cfif new_contactid EQ 0 AND len(trim(cdco)) GT 0>
+    <!--- If only company known, use company name as the contact name --->
+    <cfif casting_info EQ "only_company_known">
+        <cfset cdfullname = cdco />
+    </cfif>
     <cfinclude template="/include/qry/insContactDetails.cfm" />
     <cfset new_contactid = contactid />
     <cfinclude template="/include/qry/insert_28_8.cfm" />

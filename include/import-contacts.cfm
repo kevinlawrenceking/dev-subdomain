@@ -91,7 +91,7 @@
             <div class="card mb-3">
                 <div class="card-body">
                     <h5>Step One: Import Template</h5>    
-                    <p>Download the <a href="/include/ImportTemplate2.xlsx" target="new" download="ImportTemplate2.xlsx"><strong><i class="fe-upload"></i> Import Template</strong></a> to copy and paste all the contacts you'd like to import. <strong>Imports must be in this format.</strong></p>
+                    <p>Download the <a href="/include/download_contact_template.cfm" target="_blank"><strong><i class="fe-upload"></i> Import Template</strong></a> to copy and paste all the contacts you'd like to import. <strong>Imports must be in this format.</strong></p>
 
             
                 

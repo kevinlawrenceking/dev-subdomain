@@ -1117,7 +1117,7 @@ WHERE contactid = <cfqueryparam value="#arguments.contactid#" cfsqltype="cf_sql_
             contactitems 
         WHERE 
             contactitems.valueCategory = 'Tag'  
-            AND contactitems.valueText <> 'My Team'
+      
             AND contactitems.contactID = d.contactID 
             AND contactitems.itemStatus = 'Active' 
         LIMIT 1

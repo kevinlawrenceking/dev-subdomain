@@ -136,7 +136,7 @@
                             Get the Excel template with the correct format for importing your audition data.
                         </p>
                         <cfoutput>
-                            <a href="#application.auditionimporttemplate#" download target="_blank" 
+                            <a href="/include/download_audition_template.cfm" target="_blank" 
                                class="btn btn-outline-primary btn-lg">
                                 <i class="fe-download me-2"></i>Download Template
                             </a>
