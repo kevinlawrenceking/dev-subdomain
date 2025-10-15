@@ -4,28 +4,28 @@
     DATE: 2025-07-19
     NOTES: Updated to use a more secure shareToken system
 --->
-<Cfset debug="No">
-<cfparam name="url.shareToken" default="706C2C9EBECE60DA9F779903AC3FFE79" />
-<cfparam name="url.u" default="" />  <!--- Keep legacy parameter for backward compatibility --->
-<cfparam name="url.uid" default="" /> <!--- Original legacy parameter --->
-<cfinclude template="remote_load_common.cfm" />
+<cfset debug = "No">
+<cfparam name="url.shareToken" default="706C2C9EBECE60DA9F779903AC3FFE79">
+<cfparam name="url.u" default="">  <!--- Keep legacy parameter for backward compatibility --->
+<cfparam name="url.uid" default=""> <!--- Original legacy parameter --->
+<cfinclude template="remote_load_common.cfm">
 <!--- Debug Helper Function --->
 <cffunction name="debugDump" returntype="void" output="true">
     <cfargument name="label" type="string" required="true">
     <cfargument name="value" required="true">
-    <cfif debug is "YES">
+    <cfif variables.debug IS "YES">
         <cfdump var="#arguments.value#" label="#arguments.label#">
         <hr>
     </cfif>
 </cffunction>
 <!--- Ensure application variables are set --->
-<cfif not structKeyExists(application, "dsn")>
-    <cfif debug is "YES"><cfoutput><p class="alert alert-danger debug-info-sm">Application DSN not found, initializing...</p></cfoutput></cfif>
-    <cfset onApplicationStart() />
+<cfif NOT structKeyExists(application, "dsn")>
+    <cfif variables.debug IS "YES"><cfoutput><p class="alert alert-danger debug-info-sm">Application DSN not found, initializing...</p></cfoutput></cfif>
+    <cfset onApplicationStart()>
 </cfif>
 
 <!--- Debug URL parameters --->
-<cfif debug is "YES">
+<cfif variables.debug IS "YES">
     <div class="debug-info info">
         <h3>URL Parameters</h3>
         <cfoutput>
@@ -42,8 +42,8 @@
 </cfif>
 
 <!--- Handle new shareToken system --->
-<cfif structKeyExists(url, "shareToken") AND len(trim(url.shareToken)) gt 0>
-    <cfif debug is "YES">
+<cfif structKeyExists(url, "shareToken") AND len(trim(url.shareToken)) GT 0>
+    <cfif variables.debug IS "YES">
         <div class="debug-info success">
             <h3>Using New Token System</h3>
             <p>Token: <cfoutput>#url.shareToken#</cfoutput></p>
@@ -54,25 +54,25 @@
 </cfif>
 
 <!--- Legacy system handling --->
-<cfif len(trim(url.u)) gt 0 OR len(trim(url.uid)) gt 0>
-    <cfset session.userid = 0 />
-    <cfparam name="refresh_yn" default="N" />
-    <cfparam name="NEW_USERID" default="0" />
-    <cfset legacy_token = len(trim(url.u)) gt 0 ? url.u : url.uid />
+<cfif len(trim(url.u)) GT 0 OR len(trim(url.uid)) GT 0>
+    <cfset session.userid = 0>
+    <cfparam name="variables.refresh_yn" default="N">
+    <cfparam name="variables.NEW_USERID" default="0">
+    <cfset variables.legacy_token = len(trim(url.u)) GT 0 ? url.u : url.uid>
     
-    <cfif debug is "YES">
+    <cfif variables.debug IS "YES">
         <div class="debug-info warning">
             <h3>Using Legacy Token System</h3>
-            <p>Legacy token: <cfoutput>#legacy_token#</cfoutput></p>
-            <p>Token source: <cfoutput>#len(trim(url.u)) gt 0 ? "u parameter" : "uid parameter"#</cfoutput></p>
-            <p>Token length: <cfoutput>#len(legacy_token)#</cfoutput></p>
+            <p>Legacy token: <cfoutput>#variables.legacy_token#</cfoutput></p>
+            <p>Token source: <cfoutput>#len(trim(url.u)) GT 0 ? "u parameter" : "uid parameter"#</cfoutput></p>
+            <p>Token length: <cfoutput>#len(variables.legacy_token)#</cfoutput></p>
         </div>
     </cfif>
     <!--- Get user ID from legacy token --->
-    <cfif debug is "YES">
+    <cfif variables.debug IS "YES">
         <div class="debug-info purple">
             <h3>SQL Query Information</h3>
-            <p>Looking up user with token prefix: <cfoutput>#left(legacy_token,10)#</cfoutput></p>
+            <p>Looking up user with token prefix: <cfoutput>#left(variables.legacy_token,10)#</cfoutput></p>
             <code class="debug-code">
                 SELECT 
                     left(t.UUID,10) as userHash,
@@ -80,7 +80,7 @@
                 FROM 
                     taousers u inner join thrivecart t on t.id = u.customerid
                 WHERE 
-                    left(t.UUID,10) = '<cfoutput>#left(legacy_token,10)#</cfoutput>'
+                    left(t.UUID,10) = '<cfoutput>#left(variables.legacy_token,10)#</cfoutput>'
             </code>
         </div>
     </cfif>
@@ -93,10 +93,10 @@
         FROM 
             taousers u inner join thrivecart t on t.id = u.customerid
         WHERE 
-            left(t.UUID,10) = <cfqueryparam value="#left(legacy_token,10)#" cfsqltype="cf_sql_varchar">
+            left(t.UUID,10) = <cfqueryparam value="#left(variables.legacy_token,10)#" cfsqltype="cf_sql_varchar">
     </cfquery>
 
-    <cfif debug is "YES">
+    <cfif variables.debug IS "YES">
         <div class="debug-info purple">
             <h3>Query Result</h3>
             <p>Records found: <cfoutput>#default.recordCount#</cfoutput></p>
@@ -104,65 +104,65 @@
         </div>
     </cfif>
 
-    <cfif default.recordCount eq 0>
-        <cfif debug is "YES">
+    <cfif default.recordCount EQ 0>
+        <cfif variables.debug IS "YES">
             <div class="debug-info error">
                 <h3>Authentication Failed</h3>
-                <p>No user found with the provided token: <cfoutput>#legacy_token#</cfoutput></p>
+                <p>No user found with the provided token: <cfoutput>#variables.legacy_token#</cfoutput></p>
                 <p>Redirecting to invalid token page...</p>
             </div>
         </cfif>
-        <cfinclude template="invalid_token.cfm" />
+        <cfinclude template="invalid_token.cfm">
         <cfabort>
     </cfif>
     
-    <cfset u = default.userHash />
-    <cfset new_userid = default.userid />
+    <cfset variables.u = default.userHash>
+    <cfset variables.new_userid = default.userid>
     
-    <cfif debug is "YES">
+    <cfif variables.debug IS "YES">
         <div class="debug-info success">
             <h3>Authentication Successful</h3>
-            <p>User ID: <cfoutput>#new_userid#</cfoutput></p>
-            <p>Token (u): <cfoutput>#u#</cfoutput></p>
+            <p>User ID: <cfoutput>#variables.new_userid#</cfoutput></p>
+            <p>Token (u): <cfoutput>#variables.u#</cfoutput></p>
         </div>
     </cfif>
     
     <!--- Include legacy page --->
-    <cfif debug is "YES">
+    <cfif variables.debug IS "YES">
         <div class="debug-info info">
             <h3>Including Legacy Page</h3>
             <p>Template: pgload.cfm</p>
-            <p>User ID: <cfoutput>#new_userid#</cfoutput></p>
+            <p>User ID: <cfoutput>#variables.new_userid#</cfoutput></p>
         </div>
     </cfif>
  
 <cfelse>
-    <cfif debug is "YES">
+    <cfif variables.debug IS "YES">
         <div class="debug-info error">
             <h3>No Token Provided</h3>
             <p>Redirecting to main site...</p>
         </div>
     </cfif>
     <!--- No token provided - redirect to main site --->
-    <cflocation url="https://theactorsoffice.com" addtoken="false" />
+    <cflocation url="https://theactorsoffice.com" addtoken="false">
 </cfif>
 
-<cfif debug is "YES">
+<cfif variables.debug IS "YES">
     <div class="debug-info purple">
         <h3>Shares Query</h3>
         <code class="debug-code">
             SELECT `contactid`,`Name`,`Company`,`Title`,`Audition`,`WhereMet`,`WhenMet`,`NotesLog`,`userid`,`u`
-            FROM sharez where userid = <cfoutput>#new_userid#</cfoutput>
+            FROM sharez where userid = <cfoutput>#variables.new_userid#</cfoutput>
         </code>
     </div>
 </cfif>
 
 <cfquery name="shares" datasource="#application.dsn#">
 SELECT `contactid`,`Name`,`Company`,`Title`,`Audition`,`WhereMet`,`WhenMet`,`NotesLog`,`userid`
-FROM sharez where userid = <cfqueryparam value="#new_userid#" cfsqltype="cf_sql_integer">
+FROM sharez where userid = <cfqueryparam value="#variables.new_userid#" cfsqltype="cf_sql_integer">
 </cfquery>  
 
-<cfif debug is "YES">
+<cfif variables.debug IS "YES">
     <div class="debug-info purple">
         <h3>Shares Query Result</h3>
         <p>Records found: <cfoutput>#shares.recordCount#</cfoutput></p>
@@ -177,16 +177,16 @@ FROM sharez where userid = <cfqueryparam value="#new_userid#" cfsqltype="cf_sql_
 
 
 
-<cfparam name="TAOVERSION" default="0" />
+<cfparam name="variables.TAOVERSION" default="0">
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
     <cfoutput>
-        <meta charset="utf-8" />
+        <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-        <title>#appName# #shares.recordcount#| #pgTitle#</title>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>#variables.appName# #shares.recordcount#| #variables.pgTitle#</title>
 
     </cfoutput>
     <style>
@@ -197,20 +197,20 @@ FROM sharez where userid = <cfqueryparam value="#new_userid#" cfsqltype="cf_sql_
     <cfif isDefined("FindLinksT") AND isQuery(FindLinksT)>
         <cfloop query="FindLinksT">
             <cfoutput>
-                <cfif FindLinksT.linktype is "script">
+                <cfif FindLinksT.linktype IS "script">
                     <script src="#FindLinksT.linkurl#"></script>
                 </cfif>
 
-                <cfif FindLinksT.linktype is "script_include">
+                <cfif FindLinksT.linktype IS "script_include">
                     <script>
-                        <cfinclude template = "#FindLinksT.linkurl#?rev=#RandRange(1, 1000000)#" >
+                        <cfinclude template = "#FindLinksT.linkurl#?rev=#RandRange(1, 1000000)#">
                     </script>
                 </cfif>
-                <cfif FindLinksT.linktype is "css" or FindLinksT.linktype is "text/css" or FindLinksT.linktype is "ico">
+                <cfif FindLinksT.linktype IS "css" OR FindLinksT.linktype IS "text/css" OR FindLinksT.linktype IS "ico">
                     <link href="#FindLinksT.linkurl#?rev=#RandRange(1, 1000000)#" 
                     <cfif len(trim(FindLinksT.rel))>rel="#FindLinksT.rel#"</cfif>
                     type="text/css" 
-                    <cfif len(trim(FindLinksT.hrefid))>id="#FindLinksT.hrefid#"</cfif> />
+                    <cfif len(trim(FindLinksT.hrefid))>id="#FindLinksT.hrefid#"</cfif>>
                 </cfif>
             </cfoutput>
         </cfloop>
@@ -403,29 +403,29 @@ FROM sharez where userid = <cfqueryparam value="#new_userid#" cfsqltype="cf_sql_
         <div class="content-pag">
             <div class="content content-main">
                 <div class="container-fluid">
-                    <cfinclude template="share.cfm" />
+                    <cfinclude template="share.cfm">
                 </div>
             </div>
-            <cfparam name="pgdir" default="">
-                <cfparam name="pgid" default="0" />
+            <cfparam name="variables.pgdir" default="">
+            <cfparam name="variables.pgid" default="0">
         </div>
     </div>
     <cfif isDefined("FindLinksB") AND isQuery(FindLinksB)>
         <cfloop query="FindLinksB">
             <cfoutput>
-                <cfif FindLinksB.linktype is "script">
+                <cfif FindLinksB.linktype IS "script">
                     <script src="#FindLinksB.linkurl#?ver=#RandRange(1, 1000000)#"></script>
                 </cfif>
-                <cfif FindLinksB.linktype is "script_include">
+                <cfif FindLinksB.linktype IS "script_include">
                     <script>
-                        <cfinclude template = "#FindLinksB.linkurl#?rev=#RandRange(1, 1000000)#" >
+                        <cfinclude template = "#FindLinksB.linkurl#?rev=#RandRange(1, 1000000)#">
                     </script>
                 </cfif>
-                <cfif FindLinksB.linktype is "css" or FindLinksB.linktype is "text/css" or FindLinksB.linktype is "ico">
+                <cfif FindLinksB.linktype IS "css" OR FindLinksB.linktype IS "text/css" OR FindLinksB.linktype IS "ico">
                     <link href="#FindLinksB.linkurl#?rev=#RandRange(1, 1000000)#" 
                           <cfif len(trim(FindLinksB.rel))>rel="#FindLinksB.rel#"</cfif>
                           type="text/css"
-                                                    <cfif len(trim(FindLinksB.hrefid))>id="#FindLinksB.hrefid#"</cfif> />
+                                                    <cfif len(trim(FindLinksB.hrefid))>id="#FindLinksB.hrefid#"</cfif>>
                 </cfif>
             </cfoutput>
         </cfloop>
