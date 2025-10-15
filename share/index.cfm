@@ -386,13 +386,13 @@ FROM sharez where userid = <cfqueryparam value="#variables.new_userid#" cfsqltyp
     <div id="wrapper" >
 
         <div class="container-fluid" >
-            <cfinclude template="topmenu_main.cfm" />
+            <cfinclude template="topmenu_main.cfm">
              <div class="logo-box">
    
-           <Cfoutput>     
+           <cfoutput>     
     
                 <span class="logo-lg">
-                    <img src="/media-#dsn#/images/logo-light.png" alt="" height="30">
+                    <img src="/media-#application.dsn#/images/logo-light.png" alt="" height="30">
                 </span>
 
 
@@ -476,7 +476,7 @@ FROM sharez where userid = <cfqueryparam value="#variables.new_userid#" cfsqltyp
         </script>
     </cfif>
 
-    <cfif debug is "YES">
+    <cfif variables.debug IS "YES">
         <div class="debug-info debug-info-lg info">
             <h2>Debug Information Summary</h2>
             
