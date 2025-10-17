@@ -214,7 +214,7 @@ SET
     <cfargument name="userid" type="numeric" required="true">
 
 <cfquery name="result" >
-            SELECT top 5
+            SELECT  
                 p.pnid, 
                 p.pntitle, 
                 p.pnColXl, 
@@ -225,7 +225,7 @@ SET
                 pgpanels_user p
             WHERE 
                 p.userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER"> 
-                AND p.isvisible = <cfqueryparam value="1" cfsqltype="CF_SQL_BIT">
+                AND p.isvisible = 1
             ORDER BY 
                 p.pnorderno
         </cfquery>
