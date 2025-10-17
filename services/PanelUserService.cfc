@@ -5,7 +5,7 @@
 
 <cfquery name="result">
         SELECT 
-            p.pnid, 
+            p.pnidf, 
             p.pntitle, 
             p.pnColXl, 
             p.pnColMd, 
