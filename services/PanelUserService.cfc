@@ -5,7 +5,7 @@
 
 <cfquery name="result">
         SELECT 
-            p.pnidf, 
+            p.pnid, 
             p.pntitle, 
             p.pnColXl, 
             p.pnColMd, 
@@ -214,7 +214,7 @@ SET
     <cfargument name="userid" type="numeric" required="true">
 
 <cfquery name="result" >
-            SELECT 
+            SELECT top 5
                 p.pnid, 
                 p.pntitle, 
                 p.pnColXl, 
