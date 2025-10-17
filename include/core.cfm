@@ -12,6 +12,10 @@
 
 <html lang="en">
   <head>
+
+    <script> helpwiseSettings = { widget_id: '65958ef4eb602', align: 'right' } </script>
+
+<script src="https://cdn.helpwise.io/assets/js/livechat.js"></script>
     <cfoutput>
       <meta charset="utf-8"/>
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
