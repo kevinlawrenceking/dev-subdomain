@@ -2,7 +2,7 @@
     PURPOSE: Export shared contact data as CSV file (OPTIMIZED)
     AUTHOR: Updated by GitHub Copilot
     DATE: 2025-07-22
-    PARAMETERS: u (user hash token)
+    PARAMETERS: shareID (public share identifier)
     DEPENDENCIES: remote_load_common.cfm
     OPTIMIZATIONS: Secure parameterization, simplified query, direct CSV output
 --->
@@ -10,20 +10,21 @@
 <cfinclude template="remote_load_common.cfm">
 
 <!--- Validate required parameters --->
-<cfparam name="url.u" default="">
-<cfif NOT len(trim(url.u))>
+<cfparam name="url.shareID" default="">
+<cfset shareID = trim(url.shareID)>
+<cfif NOT len(shareID)>
     <cflocation url="index.cfm" addtoken="false">
 </cfif>
 
-<!--- Get user information from token --->
-<cfquery name="qUser" datasource="#application.dsn#" maxrows="1">
+<!--- Get user information from share identifier --->
+<cfquery name="qUser" datasource="#dsn#" maxrows="1">
     SELECT 
         u.userid,
         u.userfirstname,
         u.userlastname
-    FROM taousers u 
-    INNER JOIN thrivecart t ON t.id = u.customerid
-    WHERE left(t.UUID, 10) = <cfqueryparam value="#left(url.u, 10)#" cfsqltype="cf_sql_varchar">
+    FROM taousers u
+    WHERE u.shareID = <cfqueryparam value="#shareID#" cfsqltype="cf_sql_varchar" maxlength="36">
+    LIMIT 1
 </cfquery>
 
 <cfif qUser.recordCount EQ 0>
@@ -32,7 +33,7 @@
 </cfif>
 
 <!--- OPTIMIZED EXPORT QUERY: Use same data as main report --->
-<cfquery name="qExportData" datasource="#application.dsn#">
+<cfquery name="qExportData" datasource="#dsn#">
     SELECT 
         s.Name,
         COALESCE(s.Company, '') AS Company,

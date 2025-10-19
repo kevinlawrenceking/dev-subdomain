@@ -1,512 +1,398 @@
-<!--- 
-    PURPOSE: Main entry point for share directory
-    AUTHOR: Updated by GitHub Copilot
-    DATE: 2025-07-19
-    NOTES: Updated to use a more secure shareToken system
---->
-<cfset debug = "YES">
-<cfparam name="url.shareToken" default="706C2C9EBECE60DA9F779903AC3FFE79">
-<cfparam name="url.u" default="">  <!--- Keep legacy parameter for backward compatibility --->
-<cfparam name="url.uid" default=""> <!--- Original legacy parameter --->
-<cfinclude template="remote_load_common.cfm">
-<!--- Debug Helper Function --->
-<cffunction name="debugDump" returntype="void" output="true">
-    <cfargument name="label" type="string" required="true">
-    <cfargument name="value" required="true">
-    <cfif variables.debug IS "YES">
-        <cfdump var="#arguments.value#" label="#arguments.label#">
-        <hr>
-    </cfif>
-</cffunction>
-<!--- Ensure application variables are set --->
-<cfif NOT structKeyExists(application, "dsn")>
-    <cfif variables.debug IS "YES"><cfoutput><p class="alert alert-danger debug-info-sm">Application DSN not found, initializing...</p></cfoutput></cfif>
-    <cfset onApplicationStart()>
-</cfif>
+<!---<!---
 
-<!--- Debug URL parameters --->
-<cfif variables.debug IS "YES">
-    <div class="debug-info info">
-        <h3>URL Parameters</h3>
+    PURPOSE: Public entry point for shared contact views    PURPOSE: Public entry point for shared contact views
+
+    AUTHOR: GitHub Copilot    AUTHOR: GitHub Copilot
+
+    DATE: 2025-10-19    DATE: 2025-10-19
+
+    NOTES: Simplified to rely on a permanent shareID    NOTES: Simplified to rely on a permanent shareID
+
+--->--->
+
+<cfparam name="url.shareID" default=""><cfset debug = "YES">
+
+<cfparam name="url.debug" default=""><cfparam name="url.shareToken" default="706C2C9EBECE60DA9F779903AC3FFE79">
+
+<cfset variables.debug = (url.debug EQ "YES") ? "YES" : "NO"><cfparam name="url.u" default="">  <!--- Keep legacy parameter for backward compatibility --->
+
+<cfset shareID = trim(url.shareID)><cfparam name="url.uid" default=""> <!--- Original legacy parameter --->
+
+<cfinclude template="remote_load_common.cfm">
+
+<cffunction name="debugDump" returntype="void" output="true">
+
+<cfif NOT len(shareID)>    <cfargument name="label" type="string" required="true">
+
+    <cfinclude template="invalid_token.cfm">    <cfargument name="value" required="true">
+
+    <cfabort>    <cfif variables.debug IS "YES">
+
+</cfif>        <cfdump var="#arguments.value#" label="#arguments.label#">
+
+        <hr>
+
+<cfquery name="qShareUser" datasource="#dsn#" maxrows="1">    </cfif>
+
+    SELECT</cffunction>
+
+        tu.userid,<!--- Ensure application variables are set --->
+
+        tu.shareID,    <cfif variables.debug IS "YES"><cfoutput><p class="alert alert-danger debug-info-sm">Application DSN not found, initializing...</p></cfoutput></cfif>
+
+        tu.userfirstname,    <cfset onApplicationStart()>
+
+        tu.userlastname,</cfif>
+
+        tu.recordname
+
+    FROM taousers tu<!--- Debug URL parameters --->
+
+    WHERE tu.shareID = <cfqueryparam value="#shareID#" cfsqltype="cf_sql_varchar" maxlength="36"><cfif variables.debug IS "YES">
+
+    LIMIT 1    <div class="debug-info info">
+
+</cfquery>        <h3>URL Parameters</h3>
+
         <cfoutput>
-            <ul>
-                <li><strong>shareToken:</strong> #structKeyExists(url, "shareToken") ? url.shareToken : "Not provided"#</li>
-                <li><strong>u:</strong> #url.u#</li>
-                <li><strong>uid:</strong> #url.uid#</li>
+
+<cfif qShareUser.recordCount EQ 0>            <ul>
+
+    <cfinclude template="invalid_token.cfm">                <li><strong>shareToken:</strong> #structKeyExists(url, "shareToken") ? url.shareToken : "Not provided"#</li>
+
+    <cfabort>                <li><strong>u:</strong> #url.u#</li>
+
+</cfif>                <li><strong>uid:</strong> #url.uid#</li>
+
             </ul>
-        </cfoutput>
-        
-        <h3>Application Settings</h3>
-        <cfdump var="#application#" label="Application Scope" expand="false">
-    </div>
-</cfif>
+
+<cfset variables.new_userid = qShareUser.userid>        </cfoutput>
+
+<cfset variables.shareID = qShareUser.shareID>        
+
+<cfset variables.userfirstname = qShareUser.userfirstname>        <h3>Application Settings</h3>
+
+<cfset variables.userlastname = qShareUser.userlastname>        <cfdump var="#application#" label="Application Scope" expand="false">
+
+<cfset variables.recordname = qShareUser.recordname>    </div>
+
+<cfset variables.auditions = true></cfif>
+
+<cfset mediaBase = "/media-" & dsn>
 
 <!--- Handle new shareToken system --->
-<cfif structKeyExists(url, "shareToken") AND len(trim(url.shareToken)) GT 0>
-    <cfif variables.debug IS "YES">
-        <div class="debug-info success">
+
+<cfif variables.debug EQ "YES"><cfif structKeyExists(url, "shareToken") AND len(trim(url.shareToken)) GT 0>
+
+    <cfdump var="#qShareUser#" label="Share User" expand="false">    <cfif variables.debug IS "YES">
+
+</cfif>        <div class="debug-info success">
+
             <h3>Using New Token System</h3>
-            <p>Token: <cfoutput>#url.shareToken#</cfoutput></p>
-        </div>
-    </cfif>
-   
-   
-</cfif>
 
-<!--- Legacy system handling --->
-<cfif len(trim(url.u)) GT 0 OR len(trim(url.uid)) GT 0>
-    <cfset session.userid = 0>
-    <cfparam name="variables.refresh_yn" default="N">
-    <cfparam name="variables.NEW_USERID" default="0">
-    <cfset variables.legacy_token = len(trim(url.u)) GT 0 ? url.u : url.uid>
-    
-    <cfif variables.debug IS "YES">
-        <div class="debug-info warning">
-            <h3>Using Legacy Token System</h3>
-            <p>Legacy token: <cfoutput>#variables.legacy_token#</cfoutput></p>
-            <p>Token source: <cfoutput>#len(trim(url.u)) GT 0 ? "u parameter" : "uid parameter"#</cfoutput></p>
-            <p>Token length: <cfoutput>#len(variables.legacy_token)#</cfoutput></p>
-        </div>
-    </cfif>
-    <!--- Get user ID from legacy token --->
-    <cfif variables.debug IS "YES">
-        <div class="debug-info purple">
-            <h3>SQL Query Information</h3>
-            <p>Looking up user with token prefix: <cfoutput>#left(variables.legacy_token,10)#</cfoutput></p>
-            <code class="debug-code">
-                SELECT 
-                    left(t.UUID,10) as userHash,
-                    u.userid 
-                FROM 
-                    taousers u inner join thrivecart t on t.id = u.customerid
-                WHERE 
-                    left(t.UUID,10) = '<cfoutput>#left(variables.legacy_token,10)#</cfoutput>'
-            </code>
-        </div>
-    </cfif>
-    
-    <cfquery name="default" datasource="#application.dsn#" maxrows="1">
-        SELECT 
-            left(t.UUID,10) as userHash,
-            u.recordname,
-            u.userid 
-        FROM 
-            taousers u inner join thrivecart t on t.id = u.customerid
-        WHERE 
-            left(t.UUID,10) = <cfqueryparam value="#left(variables.legacy_token,10)#" cfsqltype="cf_sql_varchar">
-    </cfquery>
+<!DOCTYPE html>            <p>Token: <cfoutput>#url.shareToken#</cfoutput></p>
 
-    <cfif variables.debug IS "YES">
-        <div class="debug-info purple">
-            <h3>Query Result</h3>
-            <p>Records found: <cfoutput>#default.recordCount#</cfoutput></p>
-            <cfdump var="#default#" label="Default Query Result">
-        </div>
-    </cfif>
+<html lang="en">        </div>
 
-    <cfif default.recordCount EQ 0>
-        <cfif variables.debug IS "YES">
-            <div class="debug-info error">
-                <h3>Authentication Failed</h3>
-                <p>No user found with the provided token: <cfoutput>#variables.legacy_token#</cfoutput></p>
-                <p>Redirecting to invalid token page...</p>
-            </div>
-        </cfif>
-        <cfinclude template="invalid_token.cfm">
-        <cfabort>
-    </cfif>
-    
-    <cfset variables.u = default.userHash>
-    <cfset variables.new_userid = default.userid>
-    
-    <cfif variables.debug IS "YES">
-        <div class="debug-info success">
-            <h3>Authentication Successful</h3>
-            <p>User ID: <cfoutput>#variables.new_userid#</cfoutput></p>
-            <p>Token (u): <cfoutput>#variables.u#</cfoutput></p>
-        </div>
-    </cfif>
-    
-    <!--- Include legacy page --->
-    <cfif variables.debug IS "YES">
-        <div class="debug-info info">
-            <h3>Including Legacy Page</h3>
-            <p>Template: pgload.cfm</p>
-            <p>User ID: <cfoutput>#variables.new_userid#</cfoutput></p>
-        </div>
-    </cfif>
- 
-<cfelse>
-    <cfif variables.debug IS "YES">
-        <div class="debug-info error">
-            <h3>No Token Provided</h3>
-            <p>Redirecting to main site...</p>
-        </div>
-    </cfif>
-    <!--- No token provided - redirect to main site --->
-    <cflocation url="https://theactorsoffice.com" addtoken="false">
-</cfif>
+<head>    </cfif>
 
-<cfif variables.debug IS "YES">
-    <div class="debug-info purple">
-        <h3>Shares Query</h3>
-        <code class="debug-code">
-            SELECT `contactid`,`Name`,`Company`,`Title`,`Audition`,`WhereMet`,`WhenMet`,`NotesLog`,`userid`,`u`
-            FROM sharez where userid = <cfoutput>#variables.new_userid#</cfoutput>
-        </code>
-    </div>
-</cfif>
+    <cfoutput>   
 
-<cfquery name="shares" datasource="#application.dsn#">
-SELECT `contactid`,`Name`,`Company`,`Title`,`Audition`,`WhereMet`,`WhenMet`,`NotesLog`,`userid`
-FROM sharez where userid = <cfqueryparam value="#variables.new_userid#" cfsqltype="cf_sql_integer">
-</cfquery>  
+        <meta charset="utf-8">   
 
-<cfif variables.debug IS "YES">
-    <div class="debug-info purple">
-        <h3>Shares Query Result</h3>
-        <p>Records found: <cfoutput>#shares.recordCount#</cfoutput></p>
-        <cfdump var="#shares#" label="Shares Query Result">
-    </div>
-</cfif>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"></cfif>
 
-
-
-
-
-
-
-
-<cfparam name="variables.TAOVERSION" default="0">
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <cfoutput>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <title>#variables.appName# #shares.recordcount#| #variables.pgTitle#</title>
 
-    </cfoutput>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300&display=swap');
-    </style>
-     <link href="./icons.min.css" rel="stylesheet" type="text/css" />
-    <!--- Include styles and scripts from FindLinksT query --->
-    <cfif isDefined("FindLinksT") AND isQuery(FindLinksT)>
-        <cfloop query="FindLinksT">
-            <cfoutput>
-                <cfif FindLinksT.linktype IS "script">
-                    <script src="#FindLinksT.linkurl#"></script>
-                </cfif>
+        <title>#appname# | Shared Contacts</title><!--- Legacy system handling --->
 
-                <cfif FindLinksT.linktype IS "script_include">
-                    <script>
-                        <cfinclude template = "#FindLinksT.linkurl#?rev=#RandRange(1, 1000000)#">
-                    </script>
-                </cfif>
-                <cfif FindLinksT.linktype IS "css" OR FindLinksT.linktype IS "text/css" OR FindLinksT.linktype IS "ico">
-                    <link href="#FindLinksT.linkurl#?rev=#RandRange(1, 1000000)#" 
-                    <cfif len(trim(FindLinksT.rel))>rel="#FindLinksT.rel#"</cfif>
-                    type="text/css" 
-                    <cfif len(trim(FindLinksT.hrefid))>id="#FindLinksT.hrefid#"</cfif>>
-                </cfif>
-            </cfoutput>
+    </cfoutput><cfif len(trim(url.u)) GT 0 OR len(trim(url.uid)) GT 0>
+
+    <link href="./icons.min.css" rel="stylesheet" type="text/css" />    <cfset session.userid = 0>
+
+    <cfparam name="variables.refresh_yn" default="N">
+
+    <cfif isDefined("FindLinksT") AND isQuery(FindLinksT)>    <cfparam name="variables.NEW_USERID" default="0">
+
+        <cfloop query="FindLinksT">    <cfset variables.legacy_token = len(trim(url.u)) GT 0 ? url.u : url.uid>
+
+            <cfoutput>    
+
+                <cfif FindLinksT.linktype EQ "script">    <cfif variables.debug IS "YES">
+
+                    <script src="#FindLinksT.linkurl#"></script>        <div class="debug-info warning">
+
+                <cfelseif FindLinksT.linktype EQ "script_include">            <h3>Using Legacy Token System</h3>
+
+                    <script>            <p>Legacy token: <cfoutput>#variables.legacy_token#</cfoutput></p>
+
+                        <cfinclude template="#FindLinksT.linkurl#?rev=#RandRange(1,1000000)#">            <p>Token source: <cfoutput>#len(trim(url.u)) GT 0 ? "u parameter" : "uid parameter"#</cfoutput></p>
+
+                    </script>            <p>Token length: <cfoutput>#len(variables.legacy_token)#</cfoutput></p>
+
+                <cfelseif FindLinksT.linktype EQ "css" OR FindLinksT.linktype EQ "text/css" OR FindLinksT.linktype EQ "ico">        </div>
+
+                    <link href="#FindLinksT.linkurl#?rev=#RandRange(1,1000000)#"    </cfif>
+
+                          <cfif len(trim(FindLinksT.rel))>rel="#FindLinksT.rel#"</cfif>    <cfparam name="url.debug" default="">
+
+                          type="text/css"    <cfparam name="url.shareID" default="">
+
+                          <cfif len(trim(FindLinksT.hrefid))>id="#FindLinksT.hrefid#"</cfif>>    <cfset debug = (url.debug EQ "YES") ? "YES" : "NO">
+
+                </cfif>    <cfset shareID = trim(url.shareID)>
+
+            </cfoutput>    <cfset variables.debug = debug>
+
         </cfloop>
-    <cfelse>
 
-        <!--- Fallback if FindLinksT query is not defined --->
+    <cfelse>    <cfinclude template="remote_load_common.cfm">
+
         <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/js/bootstrap.bundle.min.js"></script>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>    <cfif NOT len(shareID)>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/js/bootstrap.bundle.min.js"></script>        <cfinclude template="invalid_token.cfm">
+
+    </cfelse>        <cfabort>
+
     </cfif>
-    
+
     <style>
-        /* Loading Spinner */
-        .spinner {
-            display: inline-block;
-            width: 80px;
-            height: 80px;
-            border: 8px solid #f3f3f3;
-            border-radius: 50%;
-            border-top: 8px solid #3498db;
-            animation: spin 2s linear infinite;
-        }
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        body.loading {    <cfquery name="qShareUser" datasource="#dsn#" maxrows="1">
 
-        .loading {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-            height: 100vh;
-            position: absolute;
-            top: 0;
-            left: 0;
-            background: rgba(255, 255, 255, 0.8);
+            display: flex;        SELECT
+
+            justify-content: center;            tu.userid,
+
+            align-items: center;            tu.shareID,
+
+            width: 100%;            tu.userfirstname,
+
+            height: 100vh;            tu.userlastname,
+
+            position: fixed;            tu.recordname
+
+            top: 0;        FROM taousers tu
+
+            left: 0;        WHERE tu.shareID = <cfqueryparam value="#shareID#" cfsqltype="cf_sql_varchar" maxlength="36">
+
+            background: rgba(255,255,255,0.85);    </cfquery>
+
             z-index: 9999;
-        }
 
-        /* Debug Panels */
-        .debug-info {
-            padding: 10px;
-            margin: 10px 0;
-            border: 1px solid;
-            border-radius: 4px;
-        }
+        }    <cfif qShareUser.recordCount EQ 0>
 
-        .debug-info.info {
-            background: #f0f8ff;
-            border-color: #add8e6;
-        }
+        <cfinclude template="invalid_token.cfm">
 
-        .debug-info.success {
-            background: #e6ffe6;
-            border-color: #90ee90;
-        }
+        #share-header {        <cfabort>
 
-        .debug-info.warning {
-            background: #fff8e6;
-            border-color: #ffd700;
-        }
+            background-color: #406E8E;    </cfif>
 
-        .debug-info.error {
-            background: #ffe6e6;
-            border-color: #ff0000;
-        }
+            color: #fff;
 
-        .debug-info.purple {
-            background: #e6e6ff;
-            border-color: #9370db;
-        }
+            padding: 1.5rem 1rem;    <cfset variables.new_userid = qShareUser.userid>
 
-        .debug-info-sm {
-            padding: 5px;
-            border-radius: 3px;
-        }
+            margin-bottom: 1rem;    <cfset variables.shareID = qShareUser.shareID>
 
-        .debug-info-lg {
-            padding: 20px;
-            margin: 20px 0;
-        }
+        }    <cfset variables.userfirstname = qShareUser.userfirstname>
 
-        .debug-code {
-            display: block;
-            background: #f8f8f8;
-            padding: 10px;
-            white-space: pre-wrap;
-            border-radius: 3px;
-            font-family: 'Courier New', monospace;
-            border: 1px solid #ddd;
-        }
+    <cfset variables.userlastname = qShareUser.userlastname>
 
-        /* Custom navbar colors */
-        .navbar-custom.dev {
-            background-color: #8b0000 !important;
-        }
+        #share-header .logo img {    <cfset variables.recordname = qShareUser.recordname>
 
-        .navbar-custom.production {
-            background-color: var(--top-bar-color) !important;
-        }
+            height: 32px;    <cfset variables.auditions = true>
 
-        /* Header Bar Styling */
-        .container-fluid {
-            padding: 0;
-        }
-        
-        /* Top header bar with primary background and 60px height */
-        #wrapper > .container-fluid {
-            background-color: #406E8E;
-            height: 60px;
-            display: flex;
-            align-items: center;
-            padding: 0 15px;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 1000;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        
-        .logo-box {
-            display: flex;
-            align-items: center;
-            height: 100%;
-        }
-        
-        .logo-lg img {
-            height: 30px;
             width: auto;
-        }
-        
-        /* Content spacing - adjust for fixed header */
-        .content-pag {
-            margin-top: 60px;
-        }
-        
-        .content-main {
-            margin-top: 0;
-        }
 
-    .badge-primary {
-    color: #fff;
-    background-color: #406E8E;
-}
+        }    <cfif debug EQ "YES">
 
-.badge-info {
-    color: #fff;
-    background-color: #1abc9c;
-}
+        <cfdump var="#qShareUser#" label="Share User" expand="false">
 
-.btn-outline-primary {
-    color: #406E8E;
-    border-color: #406E8E;
-}
+        .badge-primary {    </cfif>
 
-.btn-primary {
-    color: #fff;
-    background-color: #406E8E;
-    border-color: #406E8E;
-}
-    </style>
+            background-color: #406E8E !important;
 
-</head>
+            color: #fff !important;    <!DOCTYPE html>
 
-<body class="loading">
-    
+            border: 1px solid #406E8E !important;    <html lang="en">
 
-    
-    
-    <div id="wrapper" >
+        }    <head>
 
-        <div class="container-fluid" >
-            <cfinclude template="topmenu_main.cfm">
-             <div class="logo-box">
-   
-           <cfoutput>     
-    
-                <span class="logo-lg">
-                    <img src="/media-#application.dsn#/images/logo-light.png" alt="" height="30">
-                </span>
-
-
-            </cfoutput>
-        </div>
-    
-        </div>
-        <div class="content-pag">
-            <div class="content content-main">
-                <div class="container-fluid">
-                    <cfinclude template="share.cfm">
-                </div>
-            </div>
-            <cfparam name="variables.pgdir" default="">
-            <cfparam name="variables.pgid" default="0">
-        </div>
-    </div>
-    <cfif isDefined("FindLinksB") AND isQuery(FindLinksB)>
-        <cfloop query="FindLinksB">
-            <cfoutput>
-                <cfif FindLinksB.linktype IS "script">
-                    <script src="#FindLinksB.linkurl#?ver=#RandRange(1, 1000000)#"></script>
-                </cfif>
-                <cfif FindLinksB.linktype IS "script_include">
-                    <script>
-                        <cfinclude template = "#FindLinksB.linkurl#?rev=#RandRange(1, 1000000)#">
-                    </script>
-                </cfif>
-                <cfif FindLinksB.linktype IS "css" OR FindLinksB.linktype IS "text/css" OR FindLinksB.linktype IS "ico">
-                    <link href="#FindLinksB.linkurl#?rev=#RandRange(1, 1000000)#" 
-                          <cfif len(trim(FindLinksB.rel))>rel="#FindLinksB.rel#"</cfif>
-                          type="text/css"
-                                                    <cfif len(trim(FindLinksB.hrefid))>id="#FindLinksB.hrefid#"</cfif>>
-                </cfif>
-            </cfoutput>
-        </cfloop>
-    </cfif>
-    
-    <!--- Process shares modal views --->
-    <cfif isDefined("shares") AND isQuery(shares)>
-        <!--- Modal handlers for each contact --->
         <cfoutput>
-        <script>
-        $(document).ready(function() {
-            // Remove loading spinner
-            $('body').removeClass('loading');
-            
-            <cfloop query="shares">
-                $("##remoteShareViewC#shares.contactid#").on("show.bs.modal", function(event) {
-                    $(this).find(".modal-body").load("remoteShareViewC.cfm?contactid=#shares.contactid#");
-                });
-            </cfloop>
-        });  
-        </script>
-        </cfoutput>
-        
-        <!--- Modal HTML structures --->
-        <cfoutput>
-        <cfloop query="shares">
-            <div id="remoteShareViewC#shares.contactid#" class="modal modal-lg fade" tabindex="-1" role="dialog" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h4 class="modal-title">#shares.name#</h4>
-                            <button type="button" class="close" data-bs-dismiss="modal" aria-hidden="true"><i class="mdi mdi-close-thick"></i></button>
-                        </div>
-                        <div class="modal-body">
-                            <!--- Content will be loaded via AJAX --->
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </cfloop>
-        </cfoutput>
-    <cfelse>
-        <!--- If no shares, still remove loading spinner --->
-        <script>
-        $(document).ready(function() {
-            $('body').removeClass('loading');
-        });
-        </script>
-    </cfif>
 
-    <cfif variables.debug IS "YES">
-        <div class="debug-info debug-info-lg info">
-            <h2>Debug Information Summary</h2>
-            
-            <h3>URL Parameters</h3>
-            <cfdump var="#url#" label="URL Scope">
-            
-            <h3>Form Parameters</h3>
-            <cfdump var="#form#" label="Form Scope">
-            
-            <h3>Cookie Values</h3>
-            <cfdump var="#cookie#" label="Cookie Scope">
-            
-            <h3>Session Values</h3>
-            <cfdump var="#session#" label="Session Scope" expand="false">
-            
-            <h3>CGI Variables</h3>
-            <cfdump var="#cgi#" label="CGI Scope" expand="false">
-            
-            <h3>Server Information</h3>
-            <cfdump var="#server#" label="Server Scope" expand="false">
-            
-            <h3>Application Settings</h3>
-            <cfdump var="#application#" label="Application Scope" expand="false">
-            
-            <hr>
-            <p>Debug mode is enabled. Set debug="NO" at the top of the page to disable.</p>
-        </div>
-    </cfif>
+        .btn-primary,            <meta charset="utf-8">
 
+        .btn-outline-primary:hover {            <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-</body>
+            background-color: #406E8E !important;            <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+            border-color: #406E8E !important;            <title>#appname# | Shared Contacts</title>
+
+        }        </cfoutput>
+
+        <link href="./icons.min.css" rel="stylesheet" type="text/css" />
+
+        .text-primary,
+
+        .btn-outline-primary {        <cfif isDefined("FindLinksT") AND isQuery(FindLinksT)>
+
+            color: #406E8E !important;            <cfloop query="FindLinksT">
+
+            border-color: #406E8E !important;                <cfoutput>
+
+        }                    <cfif FindLinksT.linktype EQ "script">
+
+    </style>                        <script src="#FindLinksT.linkurl#"></script>
+
+</head>                    <cfelseif FindLinksT.linktype EQ "script_include">
+
+<body class="loading">                        <script>
+
+    <div class="container-fluid px-0">                            <cfinclude template="#FindLinksT.linkurl#?rev=#RandRange(1,1000000)#">
+
+        <header id="share-header">                        </script>
+
+            <div class="d-flex align-items-center">                    <cfelseif FindLinksT.linktype EQ "css" OR FindLinksT.linktype EQ "text/css" OR FindLinksT.linktype EQ "ico">
+
+                <div class="logo mr-3">                        <link href="#FindLinksT.linkurl#?rev=#RandRange(1,1000000)#"
+
+                    <cfoutput>                              <cfif len(trim(FindLinksT.rel))>rel="#FindLinksT.rel#"</cfif>
+
+                        <img src="#mediaBase#/images/logo-light.png" alt="The Actor's Office">                              type="text/css"
+
+                    </cfoutput>                              <cfif len(trim(FindLinksT.hrefid))>id="#FindLinksT.hrefid#"</cfif>>
+
+                </div>                    </cfif>
+
+                <div>                </cfoutput>
+
+                    <h1 class="h4 mb-1">Shared Contacts</h1>            </cfloop>
+
+                    <cfoutput>        <cfelse>
+
+                        <p class="mb-0">#userfirstname# #userlastname#</p>            <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+
+                    </cfoutput>            <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+                </div>            <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/js/bootstrap.bundle.min.js"></script>
+
+            </div>        </cfelse>
+
+        </header>
+
+        <style>
+
+        <main class="container-fluid">            body.loading {
+
+            <cfinclude template="share.cfm">                display: flex;
+
+        </main>                justify-content: center;
+
+    </div>                align-items: center;
+
+                width: 100%;
+
+    <cfif isDefined("FindLinksB") AND isQuery(FindLinksB)>                height: 100vh;
+
+        <cfloop query="FindLinksB">                position: fixed;
+
+            <cfoutput>                top: 0;
+
+                <cfif FindLinksB.linktype EQ "script">                left: 0;
+
+                    <script src="#FindLinksB.linkurl#?ver=#RandRange(1,1000000)#"></script>                background: rgba(255,255,255,0.85);
+
+                <cfelseif FindLinksB.linktype EQ "script_include">                z-index: 9999;
+
+                    <script>            }
+
+                        <cfinclude template="#FindLinksB.linkurl#?rev=#RandRange(1,1000000)#">
+
+                    </script>            #share-header {
+
+                <cfelseif FindLinksB.linktype EQ "css" OR FindLinksB.linktype EQ "text/css" OR FindLinksB.linktype EQ "ico">                background-color: #406E8E;
+
+                    <link href="#FindLinksB.linkurl#?ver=#RandRange(1,1000000)#"                color: #fff;
+
+                          <cfif len(trim(FindLinksB.rel))>rel="#FindLinksB.rel#"</cfif>                padding: 1.5rem 1rem;
+
+                          type="text/css"                margin-bottom: 1rem;
+
+                          <cfif len(trim(FindLinksB.hrefid))>id="#FindLinksB.hrefid#"</cfif>>            }
+
+                </cfif>
+
+            </cfoutput>            #share-header .logo img {
+
+        </cfloop>                height: 32px;
+
+    </cfif>                width: auto;
+
+</body>            }
 
 </html>
+
+            .badge-primary {
+                background-color: #406E8E !important;
+                color: #fff !important;
+                border: 1px solid #406E8E !important;
+            }
+
+            .btn-primary,
+            .btn-outline-primary:hover {
+                background-color: #406E8E !important;
+                border-color: #406E8E !important;
+            }
+
+            .text-primary,
+            .btn-outline-primary {
+                color: #406E8E !important;
+                border-color: #406E8E !important;
+            }
+        </style>
+    </head>
+    <body class="loading">
+        <div class="container-fluid px-0">
+            <header id="share-header">
+                <div class="d-flex align-items-center">
+                    <div class="logo mr-3">
+                        <cfoutput>
+                            <img src="/media-#application.dsn#/images/logo-light.png" alt="The Actor's Office">
+                        </cfoutput>
+                    </div>
+                    <div>
+                        <h1 class="h4 mb-1">Shared Contacts</h1>
+                        <cfoutput>
+                            <p class="mb-0">#userfirstname# #userlastname#</p>
+                        </cfoutput>
+                    </div>
+                </div>
+            </header>
+
+            <main class="container-fluid">
+                <cfinclude template="share.cfm">
+            </main>
+        </div>
+
+        <cfif isDefined("FindLinksB") AND isQuery(FindLinksB)>
+            <cfloop query="FindLinksB">
+                <cfoutput>
+                    <cfif FindLinksB.linktype EQ "script">
+                        <script src="#FindLinksB.linkurl#?ver=#RandRange(1,1000000)#"></script>
+                    <cfelseif FindLinksB.linktype EQ "script_include">
+                        <script>
+                            <cfinclude template="#FindLinksB.linkurl#?rev=#RandRange(1,1000000)#">
+                        </script>
+                    <cfelseif FindLinksB.linktype EQ "css" OR FindLinksB.linktype EQ "text/css" OR FindLinksB.linktype EQ "ico">
+                        <link href="#FindLinksB.linkurl#?ver=#RandRange(1,1000000)#"
+                              <cfif len(trim(FindLinksB.rel))>rel="#FindLinksB.rel#"</cfif>
+                              type="text/css"
+                              <cfif len(trim(FindLinksB.hrefid))>id="#FindLinksB.hrefid#"</cfif>>
+                    </cfif>
+                </cfoutput>
+            </cfloop>
+        </cfif>
+    </body>
+    </html>

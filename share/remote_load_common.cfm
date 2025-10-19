@@ -28,7 +28,6 @@
 <cfparam name="userfirstname" default="">
 <cfparam name="userlastname" default="">
 <cfparam name="host" default="app">
-<cfparam name="u" default="0">
 <cfparam name="auditions" default="false">
 
 <!--- Default empty query variables to prevent undefined errors --->

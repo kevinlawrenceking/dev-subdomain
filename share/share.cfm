@@ -91,8 +91,8 @@ SELECT DISTINCT
                       <strong>Report Date:</strong> #dateFormat(now(), 'medium')#
                       <span class="badge badge-info ml-3 px-3 py-2">#sharesWithEvents.recordCount# contacts</span>
                     </p>
-                    <cfif structKeyExists(variables, 'u') AND len(trim(u))>
-                      <a href="export.cfm?u=#u#" 
+                    <cfif structKeyExists(variables, 'shareID') AND len(trim(shareID))>
+                      <a href="export.cfm?shareID=#URLEncodedFormat(shareID)#" 
                          class="btn btn-primary">
                         <i class="fe-download mr-2"></i> Download Report
                       </a>
