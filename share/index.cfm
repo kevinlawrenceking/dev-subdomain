@@ -8,11 +8,8 @@
         * Delegates data rendering to share.cfm
 --->
 
-<cfparam name="url.shareID" default="">
-<cfparam name="url.debug" default="NO">
+<Cfabort>
 
- 
-<cfset shareID = trim(url.shareID)>
 
 <!--- Load common settings (DSN, asset lists, etc.) 
 <cfinclude template="remote_load_common.cfm">
