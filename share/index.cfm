@@ -1,9 +1,26 @@
+<!---
+    PURPOSE: Public entry point for shared contact views
+    AUTHOR: GitHub Copilot
+    DATE: 2025-10-19
+    NOTES:
+        * Relies on permanent shareID instead of legacy tokens
+        * Keeps lightweight debug output when url.debug=YES
+        * Delegates data rendering to share.cfm
+--->
 
+ 
+<cfset shareID = trim(url.shareID)>
+
+<!--- Load common settings (DSN, asset lists, etc.) 
+<cfinclude template="remote_load_common.cfm">
+--->
+<!--- Basic guard: require a shareID value --->
 <cfif NOT len(shareID)>
     <cfoutput><p>Missing shareID.</p></cfoutput>
     <cfabort>
 </cfif>
 
+<!--- Fetch the user tied to this shareID --->
 <cfquery name="qShareUser" datasource="#dsn#" maxrows="1">
     SELECT
         tu.userID,
@@ -15,7 +32,7 @@
     WHERE tu.shareID = <cfqueryparam value="#shareID#" cfsqltype="cf_sql_varchar" maxlength="36">
     LIMIT 1
 </cfquery>
-<Cfabort>
+
 <!--- Straightforward handling when no record exists --->
 <cfif qShareUser.recordCount EQ 0>
     <cfoutput><p>No shared data found.</p></cfoutput>
