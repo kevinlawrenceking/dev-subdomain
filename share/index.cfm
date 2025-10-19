@@ -10,7 +10,7 @@
 <cfset dsn = "abod">
  
 <cfset shareID = trim(url.shareID)>
-
+<cfset baseMediaPath = "C:\home\theactorsoffice.com\media-" & "abod">"
 <!--- Load common settings (DSN, asset lists, etc.) 
 <cfinclude template="remote_load_common.cfm">
 --->
