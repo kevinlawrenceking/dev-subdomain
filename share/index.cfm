@@ -7,7 +7,7 @@
         * Keeps lightweight debug output when url.debug=YES
         * Delegates data rendering to share.cfm
 --->
-
+<cfset dsn = "new_development">
  
 <cfset shareID = trim(url.shareID)>
 
