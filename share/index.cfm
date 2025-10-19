@@ -11,12 +11,12 @@
 <cfparam name="url.shareID" default="">
 <cfparam name="url.debug" default="NO">
 
-<cfset variables.debug = (url.debug EQ "YES") ? "YES" : "NO">
+ 
 <cfset shareID = trim(url.shareID)>
 
-<!--- Load common settings (DSN, asset lists, etc.) --->
+<!--- Load common settings (DSN, asset lists, etc.) 
 <cfinclude template="remote_load_common.cfm">
-
+--->
 <!--- Basic guard: require a shareID value --->
 <cfif NOT len(shareID)>
     <cfoutput><p>Missing shareID.</p></cfoutput>
