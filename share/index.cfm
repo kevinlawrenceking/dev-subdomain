@@ -9,7 +9,7 @@
 --->
 
 <cfparam name="url.shareID" default="">
-<cfparam name="url.debug" default="">
+<cfparam name="url.debug" default="NO">
 
 <cfset variables.debug = (url.debug EQ "YES") ? "YES" : "NO">
 <cfset shareID = trim(url.shareID)>
@@ -17,13 +17,13 @@
 <!--- Load common settings (DSN, asset lists, etc.) --->
 <cfinclude template="remote_load_common.cfm">
 
-<!--- Validate that a shareID was provided --->
+<!--- Basic guard: require a shareID value --->
 <cfif NOT len(shareID)>
-    <cfinclude template="invalid_token.cfm">
+    <cfoutput><p>Missing shareID.</p></cfoutput>
     <cfabort>
 </cfif>
 
-<!--- Look up the shared user by shareID --->
+<!--- Fetch the user tied to this shareID --->
 <cfquery name="qShareUser" datasource="#dsn#" maxrows="1">
     SELECT
         tu.userID,
@@ -36,9 +36,9 @@
     LIMIT 1
 </cfquery>
 
-<!--- Abort with invalid notice if not found --->
+<!--- Straightforward handling when no record exists --->
 <cfif qShareUser.recordCount EQ 0>
-    <cfinclude template="invalid_token.cfm">
+    <cfoutput><p>No shared data found.</p></cfoutput>
     <cfabort>
 </cfif>
 
@@ -50,25 +50,6 @@
 <cfset variables.recordname     = qShareUser.recordname>
 <cfset variables.auditions      = true>
 <cfset mediaBase                = application.baseMediaUrl>
-
-<!--- Optional debug output --->
-<cfif variables.debug EQ "YES">
-    <div class="debug-info info" style="background:#eef5ff;padding:1rem;margin:1rem 0;border:1px solid #99bdf2;">
-        <h3 style="margin-top:0;">Share Debug</h3>
-        <ul style="margin:0;">
-            <li><strong>shareID:</strong> <cfoutput>#shareID#</cfoutput></li>
-            <li><strong>User ID:</strong> <cfoutput>#variables.new_userid#</cfoutput></li>
-            <li><strong>Viewer:</strong> <cfoutput>#variables.userfirstname# #variables.userlastname#</cfoutput></li>
-        </ul>
-        <cfif isDefined("application")>
-            <p style="margin:0.75rem 0 0;">
-                <strong>DSN:</strong> <cfoutput>#application.dsn#</cfoutput>
-                &middot;
-                <strong>Media Base:</strong> <cfoutput>#mediaBase#</cfoutput>
-            </p>
-        </cfif>
-    </div>
-</cfif>
 
 <!DOCTYPE html>
 <html lang="en">
