@@ -506,7 +506,6 @@ $(document).ready(function() {
     var button = $(event.relatedTarget); // Button that triggered the modal
     var contactId = button.data('contactid');
     var contactName = button.data('contactname');
-    var contactNotes = button.data('notes');
     
     var modal = $(this);
     var modalBody = modal.find('.modal-body');
@@ -519,29 +518,13 @@ $(document).ready(function() {
     modalBody.html(
       '<div class="spinner-border text-primary" role="status" aria-hidden="true">' +
       '<span class="sr-only">Loading...</span></div>' +
-      '<span class="ml-2">Loading contact details...</span>' +
-      '<div id="notesSection" style="display: none;">' +
-      '<hr class="my-4">' +
-      '<h6 class="mb-3"><i class="mdi mdi-note-text mr-2"></i>Notes</h6>' +
-      '<div id="notesContent"></div>' +
-      '</div>'
+      '<span class="ml-2">Loading contact details...</span>'
     );
     
     // Load contact details via AJAX
     modalBody.load('share_contact_details.cfm?contactid=' + contactId, function(response, status) {
       if (status === "error") {
         modalBody.html('<div class="alert alert-danger">Error loading contact details. Please try again.</div>');
-      } else {
-        // Populate and show the notes section
-        var notesHtml = '';
-        if (contactNotes && contactNotes.trim() !== '') {
-          notesHtml = '<div class="alert alert-light border"><p class="mb-0">' + contactNotes + '</p></div>';
-        } else {
-          notesHtml = '<div class="alert alert-light border text-muted"><p class="mb-0"><em>No notes available for this contact.</em></p></div>';
-        }
-        
-        $('#notesContent').html(notesHtml);
-        $('#notesSection').show();
       }
     });
   });
@@ -558,12 +541,7 @@ $(document).ready(function() {
     modalBody.html(
       '<div class="spinner-border text-primary" role="status" aria-hidden="true">' +
       '<span class="sr-only">Loading...</span></div>' +
-      '<span class="ml-2">Loading contact details...</span>' +
-      '<div id="notesSection" style="display: none;">' +
-      '<hr class="my-4">' +
-      '<h6 class="mb-3"><i class="mdi mdi-note-text mr-2"></i>Notes</h6>' +
-      '<div id="notesContent"></div>' +
-      '</div>'
+      '<span class="ml-2">Loading contact details...</span>'
     );
   });
 });
