@@ -38,6 +38,13 @@
     <cfabort>
 </cfif>
 
+<!--- Quick summary stats for header --->
+<cfquery name="qShareSummary" datasource="#dsn#">
+    SELECT COUNT(*) AS totalContacts
+    FROM sharez
+    WHERE userid = <cfqueryparam value="#qShareUser.userID#" cfsqltype="cf_sql_integer">
+</cfquery>
+
 <!--- Expose common variables for downstream templates --->
 <cfset variables.new_userid     = qShareUser.userID>
 <cfset variables.shareID        = qShareUser.shareID>
@@ -46,6 +53,7 @@
 <cfset variables.recordname     = qShareUser.recordname>
 <cfset variables.auditions      = true>
 <cfset mediaBase                = baseMediaUrl>
+<cfset variables.shareContactCount = qShareSummary.totalContacts>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -94,7 +102,7 @@
         #share-header {
             background: linear-gradient(135deg, #355a75 0%, #406E8E 60%, #4a87af 100%);
             color: #fff;
-            padding: 1.5rem 1rem;
+            padding: 1.75rem 1.5rem;
             margin-bottom: 1rem;
             box-shadow: 0 12px 30px rgba(26, 52, 71, 0.28);
             border-bottom-left-radius: 18px;
@@ -106,14 +114,52 @@
             width: auto;
         }
 
-        #share-header h1 {
-            font-size: 1.75rem;
-            letter-spacing: 0.02em;
+        #share-header .header-inner {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1.5rem;
+            flex-wrap: wrap;
         }
 
-        #share-header p {
-            opacity: 0.92;
+        #share-header .header-title {
+            font-size: 1.75rem;
+            letter-spacing: 0.02em;
+            margin-bottom: 0.25rem;
+        }
+
+        #share-header .header-meta {
+            opacity: 0.9;
             font-size: 1rem;
+        }
+
+        #share-header .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        #share-header .download-btn {
+            background: rgba(255,255,255,0.18);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.35);
+            padding: 0.55rem 1.1rem;
+            border-radius: 999px;
+            font-weight: 600;
+        }
+
+        #share-header .download-btn:hover {
+            background: rgba(255,255,255,0.28);
+            color: #fff;
+        }
+
+        #share-header .header-avatar img {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            border: 3px solid rgba(255,255,255,0.4);
+            object-fit: cover;
+            box-shadow: 0 10px 25px rgba(13, 35, 52, 0.45);
         }
 
         main.container-fluid {
@@ -147,16 +193,35 @@
 <body class="loading">
     <div class="container-fluid px-0">
         <header id="share-header">
-            <div class="d-flex align-items-center">
-                <div class="logo mr-3">
-                    <cfoutput>
-                        <img src="#mediaBase#/images/logo-light.png" alt="The Actor's Office">
-                    </cfoutput>
+            <div class="header-inner">
+                <div class="d-flex align-items-center">
+                    <div class="logo mr-3">
+                        <cfoutput>
+                            <img src="#mediaBase#/images/logo-light.png" alt="The Actor's Office">
+                        </cfoutput>
+                    </div>
+                    <div>
+                        <cfoutput>
+                            <h1 class="header-title mb-0">#variables.recordname#</h1>
+                            <p class="header-meta mb-0">
+                                Report Date: #dateFormat(now(), "mmmm d, yyyy")#
+                                <cfif isNumeric(variables.shareContactCount)>
+                                    &bull; #NumberFormat(variables.shareContactCount)# Contacts
+                                </cfif>
+                            </p>
+                        </cfoutput>
+                    </div>
                 </div>
-                <div>
-                    <h1 class="h4 mb-1">Shared Contacts</h1>
+                <div class="header-actions">
                     <cfoutput>
-                        <p class="mb-0">#variables.userfirstname# #variables.userlastname#</p>
+                        <cfif structKeyExists(variables, "shareID") AND len(trim(variables.shareID))>
+                            <a href="export.cfm?shareID=#URLEncodedFormat(variables.shareID)#" class="btn download-btn">
+                                <i class="fe-download mr-2"></i>Download CSV
+                            </a>
+                        </cfif>
+                        <div class="header-avatar">
+                            <img src="#mediaBase#/users/#variables.new_userid#/avatar.jpg?ver=#RandRange(1, 1000000)#" alt="#HTMLEditFormat(variables.recordname)#" onerror="this.src='#mediaBase#/images/default-avatar.png';">
+                        </div>
                     </cfoutput>
                 </div>
             </div>
