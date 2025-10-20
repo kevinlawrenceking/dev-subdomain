@@ -65,10 +65,10 @@
     font-style: italic;
 }
 
-.badge-soft-warning {
-    background-color: rgba(246, 208, 124, 0.25);
-    color: #866217;
-    border: 1px solid rgba(246, 208, 124, 0.4);
+.badge-soft-info {
+    background-color: rgba(116, 192, 252, 0.22);
+    color: #285a7a;
+    border: 1px solid rgba(116, 192, 252, 0.35);
     border-radius: 999px;
     font-weight: 600;
 }
@@ -77,7 +77,8 @@
     display: flex;
     flex-wrap: wrap;
     gap: 0.35rem;
-    justify-content: flex-start;
+    justify-content: center;
+    align-items: center;
 }
 
 .tag-list .badge {
@@ -250,21 +251,14 @@ WHERE r.isdeleted = 0
         <cfif qGetContactDetail.recordCount GT 0>
             <cfoutput query="qGetContactDetail">
                 <div class="contact-hero mb-3">
-                    <div class="text-center mb-2" style="min-width: 120px;">
+                <div class="text-center mb-2" style="min-width: 115px;">
                         <img src="#share_avatar#"
                              class="rounded-circle img-thumbnail shadow-sm"
-                             style="width: 108px; height: 108px; object-fit: cover;"
+                        style="width: 105px; height: 105px; object-fit: cover;"
                              alt="Contact Avatar"
                              onerror="this.src='#default_share_avatar#';">
                         <h4 class="mt-3 mb-1 text-primary">#HTMLEditFormat(name)#</h4>
                         <cfif len(trim(tag))>
-                            <div class="tag-list mt-2 justify-content-center">
-                                <cfif findNoCase("<", tag)>
-                                    #tag#
-                                <cfelse>
-                                    <span class="badge badge-soft-warning">#HTMLEditFormat(tag)#</span>
-                                </cfif>
-                            </div>
                         </cfif>
                     </div>
                     <div class="contact-overview">
@@ -288,24 +282,35 @@ WHERE r.isdeleted = 0
                                 <p><a href="mailto:#HTMLEditFormat(email)#">#HTMLEditFormat(email)#</a></p>
                             </div>
                         </cfif>
-                        <div class="contact-card">
-                            <h6>Originally Met</h6>
-                            <p class="#len(trim(Wheremet)) ? '' : 'empty'#">#len(trim(Wheremet)) ? HTMLEditFormat(Wheremet) : 'Not recorded'#</p>
-                        </div>
-                        <div class="contact-card">
-                            <h6>Last Meeting</h6>
-                            <p class="#isDate(last_met) ? '' : 'empty'#">
-                                <cfif isDate(last_met)>
-                                    #dateFormat(last_met, "mmmm d, yyyy")#
-                                <cfelse>
-                                    Not recorded
-                                </cfif>
-                            </p>
-                        </div>
-                        <div class="contact-card">
-                            <h6>Last Meeting Type</h6>
-                            <p class="#len(trim(lasteventtype)) ? '' : 'empty'#">#len(trim(lasteventtype)) ? HTMLEditFormat(lasteventtype) : 'Not recorded'#</p>
-                        </div>
+                    </div>
+                </div>
+                <cfif len(trim(tag))>
+                    <div class="tag-list border rounded-pill px-3 py-2 mb-3" style="background: rgba(116,192,252,0.12);">
+                        <cfif findNoCase("<", tag)>
+                            #tag#
+                        <cfelse>
+                            <span class="badge badge-soft-info">#HTMLEditFormat(tag)#</span>
+                        </cfif>
+                    </div>
+                </cfif>
+                <div class="contact-overview mt-2">
+                    <div class="contact-card">
+                        <h6>Originally Met</h6>
+                        <p class="#len(trim(Wheremet)) ? '' : 'empty'#">#len(trim(Wheremet)) ? HTMLEditFormat(Wheremet) : 'Not recorded'#</p>
+                    </div>
+                    <div class="contact-card">
+                        <h6>Last Meeting</h6>
+                        <p class="#isDate(last_met) ? '' : 'empty'#">
+                            <cfif isDate(last_met)>
+                                #dateFormat(last_met, "mmmm d, yyyy")#
+                            <cfelse>
+                                Not recorded
+                            </cfif>
+                        </p>
+                    </div>
+                    <div class="contact-card">
+                        <h6>Last Meeting Type</h6>
+                        <p class="#len(trim(lasteventtype)) ? '' : 'empty'#">#len(trim(lasteventtype)) ? HTMLEditFormat(lasteventtype) : 'Not recorded'#</p>
                     </div>
                 </div>
             </cfoutput>
