@@ -63,30 +63,25 @@
     <link href="./icons.min.css" rel="stylesheet" type="text/css">
 
     <!--- Top-of-page assets from remote_load_common.cfm --->
-    <cfif isDefined("FindLinksT") AND isQuery(FindLinksT)>
-        <cfloop query="FindLinksT">
-            <cfoutput>
-                <cfif FindLinksT.linktype EQ "script">
-                    <script src="#FindLinksT.linkurl#?v=#cacheBuster#"></script>
-                <cfelseif FindLinksT.linktype EQ "script_include">
-                    <script>
-                        <cfinclude template="#FindLinksT.linkurl#?rev=#RandRange(1,1000000)#">
-                    </script>
-                <cfelseif FindLinksT.linktype EQ "css" OR FindLinksT.linktype EQ "text/css" OR FindLinksT.linktype EQ "ico">
-                    <link href="#FindLinksT.linkurl#?v=#cacheBuster#"
-                          type="text/css"
-                          <cfif len(trim(FindLinksT.rel))>rel="#FindLinksT.rel#"</cfif>
-                          <cfif len(trim(FindLinksT.hrefid))>id="#FindLinksT.hrefid#"</cfif>>
-                </cfif>
-            </cfoutput>
-        </cfloop>
-    <cfelse>
-        <!--- Fallback essentials if asset query unavailable --->
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/css/bootstrap.min.css">
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/js/bootstrap.bundle.min.js"></script>
-    </cfif>
+     
 
+   
+              <link href="/app/assets/images/favicon.ico?ver=13.3.1.20.742284201315" rel="shortcut icon"  type="text/css" />
+            
+              <script src="/app/assets/js/jquery-3.6.0.min.js?ver=13.4.0.854545125944"></script>
+            
+              <link href="/app/assets/css/icons.min.css?ver=13.3.1.20.530602384004" rel="stylesheet"  type="text/css" />
+            
+              <link href="/assets/css/utilityclasses.css?ver=13.3.1.20.346814331621" rel="stylesheet"  type="text/css" />
+            
+              <link href="/app/assets/css/app.min.css?ver=13.3.1.20.789234179323" rel="stylesheet"  type="text/css" id="app-style"/>
+            
+              <link href="/app/assets/css/datatables.min.css?ver=13.3.1.20.416948883" rel="stylesheet"  type="text/css" />
+            
+              <link href="/app/assets/css/dataTables.checkboxes.css?ver=13.3.1.20.963686479537"  type="text/css" />
+            
+              <script src="/app/assets/js/jquery.chained.js?ver=13.4.0.069754786874"></script>
+            
     <style>
         body.loading {
             display: flex;
