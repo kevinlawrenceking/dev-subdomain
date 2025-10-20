@@ -117,8 +117,8 @@
         }
 
         main.container-fluid {
-            max-width: 1220px;
-            padding: 0 2.5rem 3rem;
+            max-width: none;
+            padding: 0 1.5rem 3rem;
         }
 
         .badge-primary {
