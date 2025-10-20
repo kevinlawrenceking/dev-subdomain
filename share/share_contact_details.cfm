@@ -28,6 +28,11 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    background: rgba(64, 110, 142, 0.08);
+    border: 1px solid rgba(64, 110, 142, 0.2);
+    border-radius: 12px;
+    padding: 1.5rem 1rem;
+    box-shadow: 0 2px 8px rgba(64, 110, 142, 0.08);
 }
 
 .contact-hero-right {
