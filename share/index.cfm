@@ -9,7 +9,9 @@
 --->
 <cfset dsn = "abod">
 <cfset shareID = trim(url.shareID)>
-<cfset baseMediaPath = "C:\home\theactorsoffice.com\media-" & "abod">
+<cfset baseMediaPath = "C:\home\theactorsoffice.com\media-" & dsn>
+<cfset baseMediaUrl  = "/media-" & dsn>
+
 <cfset cacheBuster = RandRange(1, 1000000)>
 <!--- Load common settings (DSN, asset lists, etc.) 
 <cfinclude template="remote_load_common.cfm">
