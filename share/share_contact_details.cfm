@@ -65,6 +65,19 @@
     font-weight: 600;
 }
 
+.tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    justify-content: center;
+}
+
+.tag-list .badge {
+    border-radius: 999px;
+    font-weight: 600;
+    padding: 0.35rem 0.9rem;
+}
+
 /* Smooth slide animation for note details */
 .note-details-row {
     display: none;
@@ -226,7 +239,13 @@ WHERE r.isdeleted = 0
                              onerror="this.src='#default_share_avatar#';">
                         <h4 class="mt-3 mb-1 text-primary">#HTMLEditFormat(name)#</h4>
                         <cfif len(trim(tag))>
-                            <span class="badge badge-soft-warning px-3 py-2">#HTMLEditFormat(tag)#</span>
+                            <div class="tag-list mt-2">
+                                <cfif findNoCase("<", tag)>
+                                    #tag#
+                                <cfelse>
+                                    <span class="badge badge-soft-warning">#HTMLEditFormat(tag)#</span>
+                                </cfif>
+                            </div>
                         </cfif>
                     </div>
                     <div class="contact-overview flex-grow-1">
