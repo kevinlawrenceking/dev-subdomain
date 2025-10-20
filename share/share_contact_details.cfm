@@ -15,6 +15,56 @@
     border-color:  #406e8e !important;
 }
 
+.contact-overview {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+}
+
+.contact-card {
+    background: #f4f7fb;
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    border: 1px solid #e3ebf4;
+    height: 100%;
+}
+
+.contact-card h6 {
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #78879b;
+    margin-bottom: 0.5rem;
+}
+
+.contact-card p {
+    font-size: 1rem;
+    color: #2f3c4a;
+    margin-bottom: 0;
+}
+
+.contact-card a {
+    color: #406e8e;
+    text-decoration: none;
+}
+
+.contact-card a:hover {
+    text-decoration: underline;
+}
+
+.contact-card p.empty {
+    color: #99a7b7;
+    font-style: italic;
+}
+
+.badge-soft-warning {
+    background-color: rgba(246, 208, 124, 0.25);
+    color: #866217;
+    border: 1px solid rgba(246, 208, 124, 0.4);
+    border-radius: 999px;
+    font-weight: 600;
+}
+
 /* Smooth slide animation for note details */
 .note-details-row {
     display: none;
@@ -165,82 +215,67 @@ WHERE r.isdeleted = 0
 <div class="row">
     <div class="col-md-12">
         <h5 class="text-primary">Contact Information</h5>
-        <div class="row">
-            <cfif qGetContactDetail.recordCount GT 0>
-                <cfoutput query="qGetContactDetail">
-                    <!--- Avatar Column (1/3 width) --->
-                    <div class="col-md-4 text-center mb-3">
-                        <img src="#share_avatar#" 
-                             class="rounded-circle img-thumbnail" 
-                             style="width: 120px; height: 120px; object-fit: cover;" 
-                             alt="Contact Avatar" 
+        <cfif qGetContactDetail.recordCount GT 0>
+            <cfoutput query="qGetContactDetail">
+                <div class="d-flex flex-wrap align-items-start mb-4">
+                    <div class="text-center mr-4 mb-3">
+                        <img src="#share_avatar#"
+                             class="rounded-circle img-thumbnail shadow-sm"
+                             style="width: 120px; height: 120px; object-fit: cover;"
+                             alt="Contact Avatar"
                              onerror="this.src='#default_share_avatar#';">
                         <h4 class="mt-3 mb-1 text-primary">#HTMLEditFormat(name)#</h4>
                         <cfif len(trim(tag))>
-                            <p >#tag#</p>
+                            <span class="badge badge-soft-warning px-3 py-2">#HTMLEditFormat(tag)#</span>
                         </cfif>
                     </div>
-                    
-                    <!--- Contact Details Column (2/3 width) --->
-                    <div class="col-md-8">
-                        <div class="table-responsive">
-                            <table class="table table-sm table-striped mb-3">
-                                <tbody>
-                                    <tr>
-                                        <th>Title</th>
-                                        <td>#IIF(isDefined('Title') AND len(trim(Title)), "Title", "''")#</td>
-                                    </tr>
-                                    <tr>
-                                        <th>Company</th>
-                                        <td>#IIF(isDefined('Company') AND len(trim(Company)), "Company", "''")#</td>
-                                    </tr>
-                                    <cfif isDefined('phone') AND len(trim(phone))>
-                                        <tr>
-                                            <th>Phone</th>
-                                            <td>#phone#</td>
-                                        </tr>
-                                    </cfif>
-                                    <cfif isDefined('email') AND len(trim(email))>
-                                        <tr>
-                                            <th>Email</th>
-                                            <td>#email#</td>
-                                        </tr>
-                                    </cfif>
-                                    <tr>
-                                        <th>Originally Met</th>
-                                        <td>#IIF(isDefined('Wheremet') AND len(trim(Wheremet)), "Wheremet", "''")#</td>
-                                    </tr>
-                                    <tr>
-                                        <th>Last Mtg.</th>
-                                        <td>
-                                            <cfif isDefined('last_met') AND isDate(last_met)>
-                                                #dateFormat(last_met, "mmm d, yyyy")#
-                                            </cfif>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th style="width:40%">Last Mtg. Type</th>
-                                        <td>#IIF(isDefined('lasteventtype') AND len(trim(lasteventtype)), "lasteventtype", "''")#</td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                    <div class="contact-overview flex-grow-1">
+                        <div class="contact-card">
+                            <h6>Title</h6>
+                            <p class="#len(trim(Title)) ? '' : 'empty'#">#len(trim(Title)) ? HTMLEditFormat(Title) : 'Not provided'#</p>
+                        </div>
+                        <div class="contact-card">
+                            <h6>Company</h6>
+                            <p class="#len(trim(Company)) ? '' : 'empty'#">#len(trim(Company)) ? HTMLEditFormat(Company) : 'Not provided'#</p>
+                        </div>
+                        <cfif len(trim(phone))>
+                            <div class="contact-card">
+                                <h6>Phone</h6>
+                                <p>#HTMLEditFormat(phone)#</p>
+                            </div>
+                        </cfif>
+                        <cfif len(trim(email))>
+                            <div class="contact-card">
+                                <h6>Email</h6>
+                                <p><a href="mailto:#HTMLEditFormat(email)#">#HTMLEditFormat(email)#</a></p>
+                            </div>
+                        </cfif>
+                        <div class="contact-card">
+                            <h6>Originally Met</h6>
+                            <p class="#len(trim(Wheremet)) ? '' : 'empty'#">#len(trim(Wheremet)) ? HTMLEditFormat(Wheremet) : 'Not recorded'#</p>
+                        </div>
+                        <div class="contact-card">
+                            <h6>Last Meeting</h6>
+                            <p class="#isDate(last_met) ? '' : 'empty'#">
+                                <cfif isDate(last_met)>
+                                    #dateFormat(last_met, "mmmm d, yyyy")#
+                                <cfelse>
+                                    Not recorded
+                                </cfif>
+                            </p>
+                        </div>
+                        <div class="contact-card">
+                            <h6>Last Meeting Type</h6>
+                            <p class="#len(trim(lasteventtype)) ? '' : 'empty'#">#len(trim(lasteventtype)) ? HTMLEditFormat(lasteventtype) : 'Not recorded'#</p>
                         </div>
                     </div>
-                </cfoutput>
-            <cfelse>
-                <div class="col-md-12">
-                    <div class="table-responsive">
-                        <table class="table table-sm table-striped mb-3">
-                            <tbody>
-                                <tr>
-                                    <td colspan="2" class="text-center">No contact details available</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
                 </div>
-            </cfif>
-        </div>
+            </cfoutput>
+        <cfelse>
+            <div class="alert alert-light border text-center mb-4">
+                No contact details available.
+            </div>
+        </cfif>
     </div>
 </div>
 
