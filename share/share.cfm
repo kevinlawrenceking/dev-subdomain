@@ -23,11 +23,7 @@
 <cfparam name="pgaction" default="view">
 <cfparam name="auditions" default="true">
 
-<!--- Set session pgaction if not defined --->
-<cfif NOT structKeyExists(session, 'pgaction')>
-  <cfset session.pgaction = "view">
-</cfif>
-
+ 
 <!--- OPTIMIZED QUERY: Single JOIN to get shares with event counts --->
 <cfif structKeyExists(variables, 'new_userid') AND len(trim(new_userid))>
   <cfquery name="sharesWithEvents" datasource="#dsn#">
