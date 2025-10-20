@@ -40,6 +40,17 @@
 
 <!--- Straightforward handling when no record exists --->
 <cfif qShareUser.recordCount EQ 0>
+
+
+    <cfoutput>    SELECT
+        tu.userID,
+        tu.shareID,
+        tu.userFirstName,
+        tu.userLastName,
+        tu.recordname
+    FROM taousers tu
+    WHERE tu.shareID = <cfqueryparam value="#shareID#" cfsqltype="cf_sql_varchar" maxlength="36">
+    LIMIT 1</cfoutput>
     <cfoutput><p>No shared data found.</p></cfoutput>
     <cfabort>
 </cfif>
