@@ -87,18 +87,12 @@ SELECT DISTINCT
                       <tr>
                         <!--- View Details Button --->
                         <td class="text-center">
-        <button type="button" 
-          class="btn btn-sm btn-outline-primary view-contact-btn" 
-          data-toggle="modal" 
-          data-target="##contactDetailsModal"
-          data-bs-toggle="modal"
-          data-bs-target="##contactDetailsModal"
-                                  data-contactid="#sharesWithEvents.contactid#"
-                                  data-contactname="#HTMLEditFormat(sharesWithEvents.Name)#"
-                                  title="View Contact Details"
-                                  aria-label="View details for #HTMLEditFormat(sharesWithEvents.Name)#">
+                          <a href="contact.cfm?shareID=#URLEncodedFormat(variables.shareID)#&contactID=#sharesWithEvents.contactid#" 
+                             class="btn btn-sm btn-outline-primary view-contact-btn"
+                             title="View Contact Details"
+                             aria-label="View details for #HTMLEditFormat(sharesWithEvents.Name)#">
                             <i class="mdi mdi-eye"></i>
-                          </button>
+                          </a>
                         </td>
 
                         <!--- Name with Event Badge --->
@@ -219,44 +213,7 @@ SELECT DISTINCT
   </div>
 </div>
 
-<!--- Single Reusable Contact Detail Modal --->
-<div class="modal fade" 
-     id="contactDetailsModal" 
-     tabindex="-1" 
-     role="dialog" 
-     aria-labelledby="contactDetailsModalLabel" 
-     aria-hidden="true">
-  <div class="modal-dialog modal-lg" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="contactDetailsModalLabel">
-          Contact Details
-        </h5>
-        <button type="button" class="close" data-dismiss="modal" data-bs-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        <div class="spinner-border text-primary" role="status" aria-hidden="true">
-          <span class="sr-only">Loading...</span>
-        </div>
-        <span class="ml-2">Loading contact details...</span>
-        
-        <!--- Notes Section (will be shown after AJAX loads) --->
-        <div id="notesSection" style="display: none;">
-          <hr class="my-4">
-          <h6 class="mb-3"><i class="mdi mdi-note-text mr-2"></i>Notes</h6>
-          <div id="notesContent">
-            <!--- Notes content will be populated dynamically --->
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer">
-  <button type="button" class="btn btn-secondary" data-dismiss="modal" data-bs-dismiss="modal">Close</button>
-      </div>
-    </div>
-  </div>
-</div>
+
 
 <!--- Optimized DataTables Configuration --->
 <style>
@@ -343,54 +300,7 @@ SELECT DISTINCT
   box-shadow: 0 8px 16px rgba(64, 110, 142, 0.2);
 }
 
-.modal-content {
-  border: none;
-  border-radius: 18px;
-  box-shadow: 0 24px 45px rgba(27, 51, 70, 0.22);
-}
 
-#contactDetailsModal .modal-dialog {
-  max-width: 960px;
-  width: 95%;
-}
-
-.modal-header,
-.modal-footer {
-  border-color: #eef3f8;
-}
-
-.modal-title {
-  font-weight: 600;
-  color: #274562;
-}
-
-.spinner-border {
-  width: 2.5rem;
-  height: 2.5rem;
-}
-
-.note-details-content {
-  background: #f9fbfd;
-  border-radius: 12px;
-  padding: 1rem 1.25rem;
-  border: 1px solid #e0e9f2;
-}
-
-.note-toggle-icon {
-  background: #e7f1f9;
-  border-radius: 50%;
-  padding: 0.25rem;
-  transition: transform 0.3s ease-in-out, background 0.3s ease-in-out;
-  color: #406e8e !important;
-}
-
-.note-toggle-icon:hover {
-  background: #d4e7f8;
-}
-
-.note-toggle-icon.expanded {
-  transform: rotate(45deg);
-}
 
 /* Status Badge Styling */
 .status-badge {
@@ -501,48 +411,6 @@ $(document).ready(function() {
     }
   });
   
-  // Single Modal AJAX Loading
-  $('#contactDetailsModal').on('show.bs.modal', function(event) {
-    var button = $(event.relatedTarget); // Button that triggered the modal
-    var contactId = button.data('contactid');
-    var contactName = button.data('contactname');
-    
-    var modal = $(this);
-    var modalBody = modal.find('.modal-body');
-    var modalTitle = modal.find('.modal-title');
-    
-    // Update modal title
-    modalTitle.text('Contact Details');
-    
-    // Reset modal content to loading state
-    modalBody.html(
-      '<div class="spinner-border text-primary" role="status" aria-hidden="true">' +
-      '<span class="sr-only">Loading...</span></div>' +
-      '<span class="ml-2">Loading contact details...</span>'
-    );
-    
-    // Load contact details via AJAX
-    modalBody.load('share_contact_details.cfm?contactid=' + contactId, function(response, status) {
-      if (status === "error") {
-        modalBody.html('<div class="alert alert-danger">Error loading contact details. Please try again.</div>');
-      }
-    });
-  });
-  
-  // Reset modal content when hidden
-  $('#contactDetailsModal').on('hidden.bs.modal', function() {
-    var modalBody = $(this).find('.modal-body');
-    var modalTitle = $(this).find('.modal-title');
-    
-    // Reset title
-    modalTitle.text('Contact Details');
-    
-    // Reset content to loading state
-    modalBody.html(
-      '<div class="spinner-border text-primary" role="status" aria-hidden="true">' +
-      '<span class="sr-only">Loading...</span></div>' +
-      '<span class="ml-2">Loading contact details...</span>'
-    );
-  });
+
 });
 </script>
