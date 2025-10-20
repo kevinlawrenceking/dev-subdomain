@@ -85,7 +85,7 @@
         }
 
         #share-header {
-            background-color: ##406E8E;
+            background-color: #406E8E;
             color: #fff;
             padding: 1.5rem 1rem;
             margin-bottom: 1rem;
@@ -97,21 +97,21 @@
         }
 
         .badge-primary {
-            background-color: ##406E8E !important;
+            background-color: #406E8E !important;
             color: #fff !important;
-            border: 1px solid ##406E8E !important;
+            border: 1px solid #406E8E !important;
         }
 
         .btn-primary,
         .btn-outline-primary:hover {
-            background-color: ##406E8E !important;
-            border-color: ##406E8E !important;
+            background-color: #406E8E !important;
+            border-color: #406E8E !important;
         }
 
         .text-primary,
         .btn-outline-primary {
-            color: ##406E8E !important;
-            border-color: ##406E8E !important;
+            color: #406E8E !important;
+            border-color: #406E8E !important;
         }
     </style>
 </head>
