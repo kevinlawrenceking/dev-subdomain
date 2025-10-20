@@ -62,42 +62,6 @@ SELECT DISTINCT
       <div class="card shadow-sm">
         <div class="card-body">
           
-          <!--- Header Section: User Info & Export --->
-          <div class="row mb-4">
-            <div class="col-12">
-              <div class="d-flex align-items-center py-4">
-                <cfoutput>
-                  <div class="flex-shrink-0 mr-4">
-                    <img src="/media-#dsn#/users/#new_userid#/avatar.jpg?ver=#RandRange(1, 1000000)#" 
-                         class="rounded-circle img-thumbnail" 
-                         style="width: 100px; height: 100px; object-fit: cover;" 
-                         alt="User Avatar" 
-                         onerror="this.src='/assets/images/default-avatar.png';">
-                  </div>
-                  <div class="flex-grow-1">
-                    <h2 class="mb-2">
-                      <cfif structKeyExists(variables, 'userfirstname') AND structKeyExists(variables, 'userlastname')>
-                        #userfirstname# #userlastname#
-                      <cfelse>
-                        Shared Contact Report
-                      </cfif>
-                    </h2>
-                    <p class="text-muted mb-3 lead">
-                      <strong>Report Date:</strong> #dateFormat(now(), 'medium')#
-                      <span class="badge badge-info ml-3 px-3 py-2">#sharesWithEvents.recordCount# contacts</span>
-                    </p>
-                    <cfif structKeyExists(variables, 'shareID') AND len(trim(shareID))>
-                      <a href="export.cfm?shareID=#URLEncodedFormat(shareID)#" 
-                         class="btn btn-primary">
-                        <i class="fe-download mr-2"></i> Download Report
-                      </a>
-                    </cfif>
-                  </div>
-                </cfoutput>
-              </div>
-            </div>
-          </div>
-
           <!--- Responsive Table Container --->
           <div class="row">
             <div class="col-12">
