@@ -51,7 +51,7 @@
 <cfset variables.userfirstname  = qShareUser.userFirstName>
 <cfset variables.userlastname   = qShareUser.userLastName>
 <cfset variables.recordname     = qShareUser.recordname>
-<cfset variables.auditions      = true>
+<cfset variables.auditions      = false>
 <cfset mediaBase                = baseMediaUrl>
 <cfset variables.shareContactCount = qShareSummary.totalContacts>
 
@@ -110,7 +110,7 @@
         }
 
         #share-header .logo img {
-            height: 32px;
+            height: 24px;
             width: auto;
         }
 
@@ -118,20 +118,24 @@
             display: flex;
             align-items: flex-start;
             justify-content: space-between;
-            gap: 1.5rem;
+            gap: 1.75rem;
             flex-wrap: wrap;
         }
 
         #share-header .header-title {
-            font-size: 2rem;
+            font-size: 2.25rem;
             letter-spacing: 0.02em;
-            margin-bottom: 0.25rem;
-            color: rgba(255, 255, 255, 0.92);
+            margin-bottom: 0.2rem;
+            color: rgba(255, 255, 255, 0.94);
         }
 
         #share-header .header-meta {
             opacity: 0.9;
             font-size: 1rem;
+        }
+
+        #share-header .header-text {
+            margin-left: 0.75rem;
         }
 
         #share-header .header-actions {
@@ -196,12 +200,12 @@
         <header id="share-header">
             <div class="header-inner">
                 <div class="d-flex align-items-center">
-                    <div class="logo mr-3">
+                    <div class="logo mr-4">
                         <cfoutput>
                             <img src="#mediaBase#/images/logo-light.png" alt="The Actor's Office">
                         </cfoutput>
                     </div>
-                    <div>
+                    <div class="header-text">
                         <cfoutput>
                             <h1 class="header-title mb-0">#variables.recordname#</h1>
                             <p class="header-meta mb-0">

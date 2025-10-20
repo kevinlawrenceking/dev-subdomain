@@ -199,7 +199,7 @@ SELECT DISTINCT
      <!--- no_mtgs --->
                         <td>
                           <cfif sharesWithEvents.no_mtgs GT 0>
-                            <span class="badge badge-primary badge-pill ml-1" 
+                            <span class="badge badge-secondary badge-pill ml-1" 
                                   title="#sharesWithEvents.no_mtgs# events">
                               #sharesWithEvents.no_mtgs#
                             </span>
@@ -471,7 +471,7 @@ $(document).ready(function() {
     var columnDefs = [
       { targets: 0, width: "50px", orderable: false, searchable: false, className: "text-center" },
       { targets: 1, width: "200px", className: "fw-medium" },
-      { targets: [2,3,4,5,6], width: "150px" }
+      { targets: [2,3,4,5,6,7], width: "150px" }
     ];
   </cfif>
   
