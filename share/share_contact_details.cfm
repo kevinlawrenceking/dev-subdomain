@@ -22,48 +22,17 @@
     gap: 1rem;
 }
 
-.contact-overview {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(185px, 1fr));
-    gap: 0.55rem 0.75rem;
-    flex: 1 1 260px;
-    max-width: 440px;
+.contact-hero-left {
+    flex: 1 1 33%;
+    min-width: 200px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
-.contact-card {
-    background: #f7f9fc;
-    border-radius: 8px;
-    padding: 0.7rem 0.85rem;
-    border: 1px solid #dde6ef;
-    height: 100%;
-}
-
-.contact-card h6 {
-    font-size: 0.75rem;
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
-    color: #78879b;
-    margin-bottom: 0.25rem;
-}
-
-.contact-card p {
-    font-size: 0.94rem;
-    color: #2f3c4a;
-    margin-bottom: 0;
-}
-
-.contact-card a {
-    color: #406e8e;
-    text-decoration: none;
-}
-
-.contact-card a:hover {
-    text-decoration: underline;
-}
-
-.contact-card p.empty {
-    color: #99a7b7;
-    font-style: italic;
+.contact-hero-right {
+    flex: 2 1 66%;
+    min-width: 300px;
 }
 
 .badge-soft-info {
@@ -101,9 +70,8 @@
     border-radius: 12px;
     padding: 1rem 1.25rem;
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
     gap: 0.75rem 1rem;
-    flex: 1;
 }
 
 .contact-info-item {
@@ -306,7 +274,7 @@ WHERE r.isdeleted = 0
         <cfif qGetContactDetail.recordCount GT 0>
             <cfoutput query="qGetContactDetail">
              <div class="contact-hero mb-2">
-                <div class="text-center" style="min-width: 110px;">
+                <div class="contact-hero-left">
                     <img src="#share_avatar#"
                         class="rounded-circle img-thumbnail shadow-sm"
                         style="width: 96px; height: 96px; object-fit: cover;"
@@ -314,6 +282,7 @@ WHERE r.isdeleted = 0
                         onerror="this.src='#default_share_avatar#';">
                     <h4 class="mt-2 mb-0 text-primary">#HTMLEditFormat(name)#</h4>
                 </div>
+                <div class="contact-hero-right">
                     <div class="contact-info-box">
                         <div class="contact-info-item">
                             <h6>Title</h6>
@@ -335,27 +304,26 @@ WHERE r.isdeleted = 0
                                 <p><a href="mailto:#HTMLEditFormat(email)#">#HTMLEditFormat(email)#</a></p>
                             </div>
                         </cfif>
+                        <div class="contact-info-item">
+                            <h6>Originally Met</h6>
+                            <p class="#len(trim(Wheremet)) ? '' : 'empty'#">#len(trim(Wheremet)) ? HTMLEditFormat(Wheremet) : 'Not recorded'#</p>
+                        </div>
+                        <div class="contact-info-item">
+                            <h6>Last Meeting</h6>
+                            <p class="#isDate(last_met) ? '' : 'empty'#">
+                                <cfif isDate(last_met)>
+                                    #dateFormat(last_met, "mmmm d, yyyy")#
+                                <cfelse>
+                                    Not recorded
+                                </cfif>
+                            </p>
+                        </div>
+                        <div class="contact-info-item">
+                            <h6>Last Meeting Type</h6>
+                            <p class="#len(trim(lasteventtype)) ? '' : 'empty'#">#len(trim(lasteventtype)) ? HTMLEditFormat(lasteventtype) : 'Not recorded'#</p>
+                        </div>
                     </div>
                 </div>
-                <div class="contact-overview mt-1">
-                    <div class="contact-card">
-                        <h6>Originally Met</h6>
-                        <p class="#len(trim(Wheremet)) ? '' : 'empty'#">#len(trim(Wheremet)) ? HTMLEditFormat(Wheremet) : 'Not recorded'#</p>
-                    </div>
-                    <div class="contact-card">
-                        <h6>Last Meeting</h6>
-                        <p class="#isDate(last_met) ? '' : 'empty'#">
-                            <cfif isDate(last_met)>
-                                #dateFormat(last_met, "mmmm d, yyyy")#
-                            <cfelse>
-                                Not recorded
-                            </cfif>
-                        </p>
-                    </div>
-                    <div class="contact-card">
-                        <h6>Last Meeting Type</h6>
-                        <p class="#len(trim(lasteventtype)) ? '' : 'empty'#">#len(trim(lasteventtype)) ? HTMLEditFormat(lasteventtype) : 'Not recorded'#</p>
-                    </div>
                 </div>
                 <cfif len(trim(tag))>
                     <div class="tag-row">
