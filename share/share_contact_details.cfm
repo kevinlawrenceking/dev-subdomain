@@ -15,30 +15,37 @@
     border-color:  #406e8e !important;
 }
 
+.contact-hero {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+}
+
 .contact-overview {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.75rem 1rem;
+    flex: 1 1 320px;
 }
 
 .contact-card {
-    background: #f4f7fb;
-    border-radius: 12px;
-    padding: 1rem 1.25rem;
+    background: #f5f8fc;
+    border-radius: 10px;
+    padding: 0.85rem 1rem;
     border: 1px solid #e3ebf4;
     height: 100%;
 }
 
 .contact-card h6 {
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: #78879b;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.35rem;
 }
 
 .contact-card p {
-    font-size: 1rem;
+    font-size: 0.98rem;
     color: #2f3c4a;
     margin-bottom: 0;
 }
@@ -68,8 +75,8 @@
 .tag-list {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.4rem;
-    justify-content: center;
+    gap: 0.35rem;
+    justify-content: flex-start;
 }
 
 .tag-list .badge {
@@ -230,8 +237,8 @@ WHERE r.isdeleted = 0
         <h5 class="text-primary">Contact Information</h5>
         <cfif qGetContactDetail.recordCount GT 0>
             <cfoutput query="qGetContactDetail">
-                <div class="d-flex flex-wrap align-items-start mb-4">
-                    <div class="text-center mr-4 mb-3">
+                <div class="contact-hero mb-3">
+                    <div class="text-center mb-2" style="min-width: 140px;">
                         <img src="#share_avatar#"
                              class="rounded-circle img-thumbnail shadow-sm"
                              style="width: 120px; height: 120px; object-fit: cover;"
@@ -239,7 +246,7 @@ WHERE r.isdeleted = 0
                              onerror="this.src='#default_share_avatar#';">
                         <h4 class="mt-3 mb-1 text-primary">#HTMLEditFormat(name)#</h4>
                         <cfif len(trim(tag))>
-                            <div class="tag-list mt-2">
+                            <div class="tag-list mt-2 justify-content-center">
                                 <cfif findNoCase("<", tag)>
                                     #tag#
                                 <cfelse>
@@ -248,7 +255,7 @@ WHERE r.isdeleted = 0
                             </div>
                         </cfif>
                     </div>
-                    <div class="contact-overview flex-grow-1">
+                    <div class="contact-overview">
                         <div class="contact-card">
                             <h6>Title</h6>
                             <p class="#len(trim(Title)) ? '' : 'empty'#">#len(trim(Title)) ? HTMLEditFormat(Title) : 'Not provided'#</p>
