@@ -26,6 +26,7 @@
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 0.75rem 1rem;
     flex: 1 1 320px;
+    max-width: 520px;
 }
 
 .contact-card {
@@ -83,6 +84,12 @@
     border-radius: 999px;
     font-weight: 600;
     padding: 0.35rem 0.9rem;
+}
+
+.modal-body h5 {
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
 }
 
 /* Smooth slide animation for note details */
@@ -238,10 +245,10 @@ WHERE r.isdeleted = 0
         <cfif qGetContactDetail.recordCount GT 0>
             <cfoutput query="qGetContactDetail">
                 <div class="contact-hero mb-3">
-                    <div class="text-center mb-2" style="min-width: 140px;">
+                    <div class="text-center mb-2" style="min-width: 120px;">
                         <img src="#share_avatar#"
                              class="rounded-circle img-thumbnail shadow-sm"
-                             style="width: 120px; height: 120px; object-fit: cover;"
+                             style="width: 108px; height: 108px; object-fit: cover;"
                              alt="Contact Avatar"
                              onerror="this.src='#default_share_avatar#';">
                         <h4 class="mt-3 mb-1 text-primary">#HTMLEditFormat(name)#</h4>
