@@ -92,6 +92,11 @@
     margin-bottom: 0.75rem;
 }
 
+.table.table-sm th,
+.table.table-sm td {
+    padding: 0.55rem 0.75rem;
+}
+
 /* Smooth slide animation for note details */
 .note-details-row {
     display: none;
@@ -317,7 +322,7 @@ WHERE r.isdeleted = 0
     <div class="row mt-3">
         <div class="col-md-12">
             <h5 class="text-primary">Events History</h5>
-            <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+            <div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
                 <table class="table table-sm table-striped">
                     <thead>
                         <tr>
@@ -361,7 +366,7 @@ WHERE r.isdeleted = 0
     <div class="row mt-3">
         <div class="col-md-12">
             <h5 class="text-primary">Notes</h5>
-            <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+            <div class="table-responsive" style="max-height: 220px; overflow-y: auto;">
                 <table class="table table-sm table-striped">
                     <thead>
                         <tr>
