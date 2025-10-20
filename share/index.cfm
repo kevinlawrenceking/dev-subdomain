@@ -123,9 +123,10 @@
         }
 
         #share-header .header-title {
-            font-size: 1.75rem;
+            font-size: 2rem;
             letter-spacing: 0.02em;
             margin-bottom: 0.25rem;
+            color: rgba(255, 255, 255, 0.92);
         }
 
         #share-header .header-meta {
