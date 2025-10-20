@@ -12,16 +12,13 @@
 <cfset pgTitle = "Summary"  />
 <!--- Import debug settings from parent if available --->
 <cfif isDefined("variables.debug") AND variables.debug eq "YES">
-    <cfset debug = "YES">
+       <cfset debug = "YES">
 </cfif>
 <cfset COLORTOPBAR = "##406E8E" />
 <cfset COLORLEFTSIDEBAR = "##284559" />
-<!--- Ensure application variables are set --->
-<cfif not structKeyExists(application, "dsn")>
-    <cfif debug is "YES"><cfoutput><p style="background:##ffe6e6;padding:5px;border:1px solid red">Application DSN not found, initializing...</p></cfoutput></cfif>
-    <cfset onApplicationStart() />
-</cfif>
-<cfset dsn = application.dsn />
+
+<!--- Share portal runs without relying on the Application scope for configuration --->
+<cfparam name="dsn" default="abod">
 
 <!--- Common variable defaults for share index.cfm --->
 <cfparam name="userid" default="0">
