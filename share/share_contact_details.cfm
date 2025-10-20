@@ -91,8 +91,55 @@
 }
 
 .contact-hero h4 {
-    font-size: 1.15rem;
+    font-size: 1.5rem;
     font-weight: 600;
+}
+
+.contact-info-box {
+    background: rgba(116, 192, 252, 0.15);
+    border: 1px solid rgba(116, 192, 252, 0.3);
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 0.75rem 1rem;
+    flex: 1;
+}
+
+.contact-info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.contact-info-item h6 {
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #5a7a8f;
+    margin-bottom: 0;
+    font-weight: 600;
+}
+
+.contact-info-item p {
+    font-size: 0.92rem;
+    color: #24313f;
+    margin-bottom: 0;
+}
+
+.contact-info-item a {
+    color: #406e8e;
+    text-decoration: none;
+}
+
+.contact-info-item a:hover {
+    text-decoration: underline;
+}
+
+.contact-info-item p.empty {
+    color: #7a8fa3;
+    font-style: italic;
+    font-size: 0.88rem;
 }
 
 .modal-body h5 {
