@@ -38,7 +38,7 @@
 <!--- Straightforward handling when no record exists --->
 <cfif qShareUser.recordCount EQ 0>
     <cfoutput><p>No shared data found.</p></cfoutput>
-    <cfabort>
+
 </cfif>
 
 <!--- Expose common variables for downstream templates --->
