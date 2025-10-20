@@ -151,7 +151,7 @@
         <cfoutput>
           <div class="share-link-container">
             <div class="share-link">
-              <a href="https://#host#.theactorsoffice.com/share/?uid=#uid#" 
+              <a href="https://#host#.theactorsoffice.com/share/?shareid=#shareid#" 
                  target="_blank"
                  class="team-share-link"
                  title="View Team Share">

@@ -22,6 +22,7 @@
 <cfset isDemo           = userData.isDemo>
 <cfset isauditionmodule = userData.isauditionmodule>
 <cfset recover          = userData.recover>
+<cfset shareid          = userData.shareid>
 
 <!--- Display / Calendar preferences --->
 <cfset calendarName     = userData.calendarName>
