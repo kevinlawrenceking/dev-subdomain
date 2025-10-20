@@ -74,23 +74,14 @@
     font-weight: 600;
 }
 
-.tag-band {
-    background: rgba(116, 192, 252, 0.12);
-    border-radius: 999px;
-    padding: 0.45rem 0.8rem;
+.tag-row {
     display: flex;
     flex-wrap: wrap;
     gap: 0.35rem;
-    justify-content: flex-start;
-    margin: 0.55rem 0 0.25rem;
-    width: 100%;
+    margin-top: 0.65rem;
 }
 
-.tag-list {
-    display: contents;
-}
-
-.tag-list .badge {
+.tag-row .badge {
     border-radius: 999px;
     font-weight: 600;
     padding: 0.3rem 0.8rem;
@@ -299,17 +290,6 @@ WHERE r.isdeleted = 0
                         </cfif>
                     </div>
                 </div>
-                <cfif len(trim(tag))>
-                    <div class="tag-band">
-                        <div class="tag-list">
-                            <cfif findNoCase("<", tag)>
-                                #tag#
-                            <cfelse>
-                                <span class="badge">#HTMLEditFormat(tag)#</span>
-                            </cfif>
-                        </div>
-                    </div>
-                </cfif>
                 <div class="contact-overview mt-1">
                     <div class="contact-card">
                         <h6>Originally Met</h6>
@@ -330,6 +310,15 @@ WHERE r.isdeleted = 0
                         <p class="#len(trim(lasteventtype)) ? '' : 'empty'#">#len(trim(lasteventtype)) ? HTMLEditFormat(lasteventtype) : 'Not recorded'#</p>
                     </div>
                 </div>
+                <cfif len(trim(tag))>
+                    <div class="tag-row">
+                        <cfif findNoCase("<", tag)>
+                            #tag#
+                        <cfelse>
+                            <span class="badge">#HTMLEditFormat(tag)#</span>
+                        </cfif>
+                    </div>
+                </cfif>
             </cfoutput>
         <cfelse>
             <div class="alert alert-light border text-center mb-4">
