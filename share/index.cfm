@@ -71,6 +71,13 @@
         <script src="#assetBase#/app.min.js?v=#cacheBuster#"></script>
     </cfoutput>
     <style>
+        body {
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            background-color: #f4f7fb;
+            color: #24313f;
+            min-height: 100vh;
+        }
+
         body.loading {
             display: flex;
             justify-content: center;
@@ -85,15 +92,33 @@
         }
 
         #share-header {
-            background-color: #406E8E;
+            background: linear-gradient(135deg, #355a75 0%, #406E8E 60%, #4a87af 100%);
             color: #fff;
             padding: 1.5rem 1rem;
             margin-bottom: 1rem;
+            box-shadow: 0 12px 30px rgba(26, 52, 71, 0.28);
+            border-bottom-left-radius: 18px;
+            border-bottom-right-radius: 18px;
         }
 
         #share-header .logo img {
             height: 32px;
             width: auto;
+        }
+
+        #share-header h1 {
+            font-size: 1.75rem;
+            letter-spacing: 0.02em;
+        }
+
+        #share-header p {
+            opacity: 0.92;
+            font-size: 1rem;
+        }
+
+        main.container-fluid {
+            max-width: 1220px;
+            padding: 0 2.5rem 3rem;
         }
 
         .badge-primary {
@@ -112,6 +137,10 @@
         .btn-outline-primary {
             color: #406E8E !important;
             border-color: #406E8E !important;
+        }
+
+        .btn-outline-primary {
+            color: #406E8E !important;
         }
     </style>
 </head>

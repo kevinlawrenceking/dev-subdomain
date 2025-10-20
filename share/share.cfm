@@ -299,55 +299,188 @@ SELECT DISTINCT
 
 <!--- Optimized DataTables Configuration --->
 <style>
+/* Layout polish */
+.card {
+  border: none;
+  border-radius: 18px;
+  box-shadow: 0 22px 48px rgba(39, 70, 98, 0.16);
+  background: #ffffff;
+}
+
+.card-body {
+  padding: 2.5rem 2.75rem 2rem;
+}
+
+.table thead th {
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  color: #697b8f;
+  border-bottom: 2px solid #e3ecf4;
+  background: #f9fbfd;
+}
+
+.table tbody td {
+  vertical-align: middle;
+  color: #2f3c4a;
+  border-color: #eef2f7;
+}
+
+.table tbody tr:hover {
+  background: #f2f7fb;
+}
+
+.badge-secondary {
+  background-color: #d0e4f6;
+  color: #274562;
+  font-weight: 600;
+}
+
+.view-contact-btn {
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  transition: all 0.2s ease-in-out;
+  border-color: rgba(64, 110, 142, 0.4);
+  color: #406E8E;
+}
+
+.view-contact-btn:hover {
+  background-color: #406E8E !important;
+  color: #fff;
+  box-shadow: 0 8px 18px rgba(64, 110, 142, 0.25);
+}
+
+#contactsTable_filter input {
+  border-radius: 999px;
+  border: 1px solid #cdd9e4;
+  padding: 0.45rem 1.1rem;
+  box-shadow: none;
+}
+
+#contactsTable_filter input:focus {
+  border-color: #406E8E;
+  box-shadow: 0 0 0 0.2rem rgba(64, 110, 142, 0.25);
+}
+
+#contactsTable_length select {
+  border-radius: 12px;
+  border: 1px solid #cdd9e4;
+  padding: 0.4rem 0.75rem;
+}
+
+.dataTables_paginate .pagination .page-item .page-link {
+  border-radius: 10px;
+  border: none;
+  margin: 0 0.1rem;
+  color: #406E8E;
+}
+
+.dataTables_paginate .pagination .page-item.active .page-link,
+.dataTables_paginate .pagination .page-item .page-link:hover {
+  background-color: #406E8E;
+  color: #fff;
+  box-shadow: 0 8px 16px rgba(64, 110, 142, 0.2);
+}
+
+.modal-content {
+  border: none;
+  border-radius: 18px;
+  box-shadow: 0 24px 45px rgba(27, 51, 70, 0.22);
+}
+
+.modal-header,
+.modal-footer {
+  border-color: #eef3f8;
+}
+
+.modal-title {
+  font-weight: 600;
+  color: #274562;
+}
+
+.spinner-border {
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+.note-details-content {
+  background: #f9fbfd;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  border: 1px solid #e0e9f2;
+}
+
+.note-toggle-icon {
+  background: #e7f1f9;
+  border-radius: 50%;
+  padding: 0.25rem;
+  transition: transform 0.3s ease-in-out, background 0.3s ease-in-out;
+  color: #406e8e !important;
+}
+
+.note-toggle-icon:hover {
+  background: #d4e7f8;
+}
+
+.note-toggle-icon.expanded {
+  transform: rotate(45deg);
+}
+
 /* Status Badge Styling */
+.status-badge {
+  padding: 0.375rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .status-callback {
-    background-color: #A1D9EC !important;
-    color: #333 !important;
-    border: 1px solid #A1D9EC !important;
+  background-color: rgba(161, 217, 236, 0.35) !important;
+  color: #246078 !important;
+  border: 1px solid rgba(161, 217, 236, 0.55) !important;
 }
 
 .status-redirect {
-    background-color: #74C0FC !important;
-    color: #333 !important;
-    border: 1px solid #74C0FC !important;
+  background-color: rgba(116, 192, 252, 0.35) !important;
+  color: #134d7c !important;
+  border: 1px solid rgba(116, 192, 252, 0.55) !important;
 }
 
 .status-audition {
-    background-color: #406e8e !important;
-    color: #fff !important;
-    border: 1px solid #406e8e !important;
+  background-color: rgba(64, 110, 142, 0.2) !important;
+  color: #2a4f6c !important;
+  border: 1px solid rgba(64, 110, 142, 0.45) !important;
 }
 
 .status-booking {
-    background-color: #28a745 !important;
-    color: #fff !important;
-    border: 1px solid #28a745 !important;
+  background-color: rgba(40, 167, 69, 0.18) !important;
+  color: #1b5e34 !important;
+  border: 1px solid rgba(40, 167, 69, 0.45) !important;
 }
 
-/* Default status styling for other statuses */
-.status-badge {
-    padding: 0.375rem 0.75rem;
-    border-radius: 0.25rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-/* Custom badge-primary color override */
+/* Generic brand color overrides */
 .badge-primary {
-    background-color: #406e8e !important;
-    color: #fff !important;
-    border: 1px solid #406e8e !important;
+  background-color: #406e8e !important;
+  color: #fff !important;
+  border: 1px solid #406e8e !important;
 }
+
 .text-primary {
-    color: #406e8e !important;
+  color: #406e8e !important;
 }
+
+.btn-outline-primary {
+  color: #406e8e !important;
+  border-color: rgba(64, 110, 142, 0.4);
+}
+
 .btn-outline-primary:hover {
-    color: #fff;
-    background-color:  #406e8e !important;
-    border-color:  #406e8e !important;
+  color: #fff;
+  background-color: #406e8e !important;
+  border-color: #406e8e !important;
 }
 
 </style>
