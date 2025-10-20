@@ -69,7 +69,7 @@ LIMIT 100;
                 `WhenMet`,
                 `NotesLog`
             FROM 
-                sharez
+                sharezz
             WHERE 
                 contactid = <cfqueryparam value="#arguments.contactid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
@@ -106,7 +106,7 @@ LIMIT 100;
                 userid,
                 u
             FROM 
-                sharez
+                sharezz
             WHERE 
                 userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>

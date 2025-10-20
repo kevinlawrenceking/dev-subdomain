@@ -38,7 +38,7 @@ SELECT DISTINCT
       s.lasteventtype,
       s.userid,
       s.userHash 
-    FROM sharez s
+    FROM sharezz s
     WHERE s.userid = <cfqueryparam value="#new_userid#" cfsqltype="cf_sql_integer">
     ORDER BY s.Name
   </cfquery>

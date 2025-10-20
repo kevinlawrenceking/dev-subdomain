@@ -3,7 +3,7 @@
  
 <cfquery name="details" datasource="#dsn#">
 SELECT `Name`,`Company`,`Title`,`WhereMet`,`WhenMet`,`NotesLog`
-FROM sharez where contactid = '#contactid#'
+FROM sharezz where contactid = '#contactid#'
 </cfquery>
 
 <cfoutput query="details">

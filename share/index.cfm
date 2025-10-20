@@ -47,7 +47,7 @@
 <!--- Quick summary stats for header --->
 <cfquery name="qShareSummary" datasource="#dsn#">
     SELECT COUNT(*) AS totalContacts
-    FROM sharez
+    FROM sharezz
     WHERE userid = <cfqueryparam value="#qShareUser.userID#" cfsqltype="cf_sql_integer">
 </cfquery>
 

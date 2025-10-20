@@ -217,7 +217,7 @@ a .note-toggle-icon {
         '/contacts/', c.contactid, 
         '/avatar.jpg'
     ) AS share_avatar
-FROM sharez s
+FROM sharezz s
 INNER JOIN contacts_ss c ON c.contactid = s.contactid
     WHERE s.contactid = <cfqueryparam value="#contactid#" cfsqltype="cf_sql_integer">
     LIMIT 1

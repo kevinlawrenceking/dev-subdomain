@@ -43,7 +43,7 @@
         COALESCE(s.lasteventtype, '') AS 'Meeting_Type',
         s.no_mtgs AS 'Total_Meetings',
         REPLACE(REPLACE(COALESCE(s.NotesLog, ''), '<BR>', ' | '), '\n', ' ') AS 'Notes_Log'
-    FROM sharez s
+    FROM sharezz s
     WHERE s.userid = <cfqueryparam value="#qUser.userid#" cfsqltype="cf_sql_integer">
     ORDER BY s.Name
 </cfquery>
