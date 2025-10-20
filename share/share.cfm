@@ -26,7 +26,7 @@
  
 <!--- OPTIMIZED QUERY: Single JOIN to get shares with event counts --->
 <cfif structKeyExists(variables, 'new_userid') AND len(trim(new_userid))>
-  <cfquery name="sharesWithEvents" datasource="#dsn#">
+  <cfquery name="sharesWithEvents" datasource="#dsn#" cachedwithin="#CreateTimeSpan(0,0,15,0)#">
 SELECT DISTINCT 
       s.contactid,
       s.Name,
@@ -36,10 +36,8 @@ SELECT DISTINCT
       s.last_met,
       s.no_mtgs,
       s.lasteventtype,
-      s.NotesLog,
       s.userid,
       s.userHash 
- 
     FROM sharez s
     WHERE s.userid = <cfqueryparam value="#new_userid#" cfsqltype="cf_sql_integer">
     ORDER BY s.Name
@@ -50,7 +48,7 @@ SELECT DISTINCT
     SELECT 0 as contactid, '' as Name, '' as Company, '' as Title, 
            '' as audition, '' as last_met, 0 as no_Mtgs, 
            <cfqueryparam value="#CreateODBCDate(Now())#" cfsqltype="cf_sql_timestamp"> as lasteventtype, 
-           '' as NotesLog, 0 as userid, '' as userHash
+           0 as userid, '' as userHash
     WHERE 1=0
   </cfquery>
 </cfif>
@@ -97,7 +95,6 @@ SELECT DISTINCT
           data-bs-target="##contactDetailsModal"
                                   data-contactid="#sharesWithEvents.contactid#"
                                   data-contactname="#HTMLEditFormat(sharesWithEvents.Name)#"
-                                  data-notes="#HTMLEditFormat(len(trim(sharesWithEvents.NotesLog)) ? replace(sharesWithEvents.NotesLog, '.', '.', 'all') : '')#"
                                   title="View Contact Details"
                                   aria-label="View details for #HTMLEditFormat(sharesWithEvents.Name)#">
                             <i class="mdi mdi-eye"></i>
