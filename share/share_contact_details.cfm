@@ -387,9 +387,11 @@ LIMIT 50;
                 </table>
                 
                 <cfif qGetContactEvents.recordcount GT 10>
+                    <cfoutput>
                     <div class="text-center mt-2">
                         <small class="text-muted">Showing 10 of #qGetContactEvents.recordcount# events</small>
                     </div>
+                    </cfoutput>
                 </cfif>
             </div>
         </div>

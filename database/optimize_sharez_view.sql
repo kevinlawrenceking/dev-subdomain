@@ -12,28 +12,28 @@
 -- =====================================================
 
 -- Core lookup indexes
-CREATE INDEX IF NOT EXISTS idx_contactdetails_userid_contactid ON contactdetails(userID, contactID);
-CREATE INDEX IF NOT EXISTS idx_fusystemusers_userid_contactid ON fusystemusers(userID, contactID, suStatus, systemID);
+CREATE INDEX idx_contactdetails_userid_contactid ON contactdetails(userID, contactID);
+CREATE INDEX idx_fusystemusers_userid_contactid ON fusystemusers(userID, contactID, suStatus, systemID);
 
 -- ContactItems indexes (critical for the two LEFT JOINs)
-CREATE INDEX IF NOT EXISTS idx_contactitems_lookup ON contactitems(contactID, valueCategory, itemStatus);
+CREATE INDEX idx_contactitems_lookup ON contactitems(contactID, valueCategory, itemStatus);
 
 -- NotesLog index (for public notes aggregation)
-CREATE INDEX IF NOT EXISTS idx_noteslog_contact_public ON noteslog(contactID, isPublic, noteID);
+CREATE INDEX idx_noteslog_contact_public ON noteslog(contactID, isPublic, noteID);
 
 -- EventContactsXref indexes (for meeting counts and last meeting)
-CREATE INDEX IF NOT EXISTS idx_eventcontactsxref_contact ON eventcontactsxref(contactID, eventID);
-CREATE INDEX IF NOT EXISTS idx_events_id_start ON events(eventID, eventStart, eventTypeName);
+CREATE INDEX idx_eventcontactsxref_contact ON eventcontactsxref(contactID, eventID);
+CREATE INDEX idx_events_id_start ON events(eventID, eventStart, eventTypeName);
 
 -- MaxAudition index
-CREATE INDEX IF NOT EXISTS idx_maxaudition_contactid ON maxaudition(contactid);
+CREATE INDEX idx_maxaudition_contactid ON maxaudition(contactid);
 
 
 -- STEP 2: Create materialized helper tables (optional but recommended)
 -- =====================================================
 
 -- Pre-aggregate meeting counts (refresh periodically or via trigger)
-CREATE TABLE IF NOT EXISTS cache_contact_meeting_counts (
+CREATE TABLE cache_contact_meeting_counts (
     contactID INT PRIMARY KEY,
     no_mtgs INT DEFAULT 0,
     last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -48,7 +48,7 @@ GROUP BY contactID
 ON DUPLICATE KEY UPDATE no_mtgs = VALUES(no_mtgs), last_updated = CURRENT_TIMESTAMP;
 
 -- Pre-aggregate last event info (refresh periodically or via trigger)
-CREATE TABLE IF NOT EXISTS cache_contact_last_event (
+CREATE TABLE cache_contact_last_event (
     contactID INT PRIMARY KEY,
     eventTypeName VARCHAR(255),
     eventStart DATETIME,
@@ -118,7 +118,7 @@ LEFT JOIN cache_contact_last_event le ON le.contactID = d.contactID;
 -- STEP 4: Alternative - denormalized table approach (fastest)
 -- =====================================================
 
-CREATE TABLE IF NOT EXISTS sharez_cache (
+CREATE TABLE sharez_cache (
     contactid INT PRIMARY KEY,
     NAME VARCHAR(255),
     Company VARCHAR(255),
