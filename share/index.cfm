@@ -7,7 +7,13 @@
         * Keeps lightweight debug output when url.debug=YESf
         * Delegates data rendering to share.cfm
 --->
-<cfset dsn = "abod">
+<cfset host = ListFirst(cgi.server_name, ".")/>
+
+<cfif host is "app">
+    <cfset dsn = "abo"/>
+<cfelse>
+    <cfset dsn = "abod"/>
+</cfif>
 <cfset shareID = trim(url.shareID)>
 <cfset baseMediaUrl  = "/media-" & dsn>
 <cfset assetBase     = "/share/assets">
