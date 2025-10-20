@@ -7,8 +7,7 @@
     OPTIMIZATIONS: Single JOIN query, Bootstrap 4.6 compliant, secure parameterization
 --->
 
-<!--- Include common variables and settings --->
-<cfinclude template="remote_load_common.cfm">
+ 
 
 <!--- Consolidated cfparam definitions --->
 <cfparam name="contact_expand" default="true">
@@ -31,7 +30,7 @@
 
 <!--- OPTIMIZED QUERY: Single JOIN to get shares with event counts --->
 <cfif structKeyExists(variables, 'new_userid') AND len(trim(new_userid))>
-  <cfquery name="sharesWithEvents" datasource="#application.dsn#">
+  <cfquery name="sharesWithEvents" datasource="#dsn#">
 SELECT DISTINCT 
       s.contactid,
       s.Name,
@@ -51,7 +50,7 @@ SELECT DISTINCT
   </cfquery>
 <cfelse>
   <!--- Fallback empty query if no valid userid --->
-  <cfquery name="sharesWithEvents" datasource="#application.dsn#">
+  <cfquery name="sharesWithEvents" datasource="#dsn#">
     SELECT 0 as contactid, '' as Name, '' as Company, '' as Title, 
            '' as audition, '' as last_met, 0 as no_Mtgs, 
            <cfqueryparam value="#CreateODBCDate(Now())#" cfsqltype="cf_sql_timestamp"> as lasteventtype, 
@@ -73,7 +72,7 @@ SELECT DISTINCT
               <div class="d-flex align-items-center py-4">
                 <cfoutput>
                   <div class="flex-shrink-0 mr-4">
-                    <img src="/media-#application.dsn#/users/#new_userid#/avatar.jpg?ver=#RandRange(1, 1000000)#" 
+                    <img src="/media-#dsn#/users/#new_userid#/avatar.jpg?ver=#RandRange(1, 1000000)#" 
                          class="rounded-circle img-thumbnail" 
                          style="width: 100px; height: 100px; object-fit: cover;" 
                          alt="User Avatar" 
