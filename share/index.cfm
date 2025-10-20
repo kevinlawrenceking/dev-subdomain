@@ -4,13 +4,13 @@
     DATE: 2025-10-19
     NOTES:
         * Relies on permanent shareID instead of legacy tokens
-        * Keeps lightweight debug output when url.debug=YES
+        * Keeps lightweight debug output when url.debug=YESf
         * Delegates data rendering to share.cfm
 --->
 <cfset dsn = "abod">
- 
 <cfset shareID = trim(url.shareID)>
-<cfset baseMediaPath = "C:\home\theactorsoffice.com\media-" & "abod">"
+<cfset baseMediaPath = "C:\home\theactorsoffice.com\media-" & "abod">
+<cfset cacheBuster = RandRange(1, 1000000)>
 <!--- Load common settings (DSN, asset lists, etc.) 
 <cfinclude template="remote_load_common.cfm">
 --->
@@ -65,13 +65,13 @@
         <cfloop query="FindLinksT">
             <cfoutput>
                 <cfif FindLinksT.linktype EQ "script">
-                    <script src="#FindLinksT.linkurl#?v=#application.rev#"></script>
+                    <script src="#FindLinksT.linkurl#?v=#cacheBuster#"></script>
                 <cfelseif FindLinksT.linktype EQ "script_include">
                     <script>
                         <cfinclude template="#FindLinksT.linkurl#?rev=#RandRange(1,1000000)#">
                     </script>
                 <cfelseif FindLinksT.linktype EQ "css" OR FindLinksT.linktype EQ "text/css" OR FindLinksT.linktype EQ "ico">
-                    <link href="#FindLinksT.linkurl#?v=#application.rev#"
+                    <link href="#FindLinksT.linkurl#?v=#cacheBuster#"
                           type="text/css"
                           <cfif len(trim(FindLinksT.rel))>rel="#FindLinksT.rel#"</cfif>
                           <cfif len(trim(FindLinksT.hrefid))>id="#FindLinksT.hrefid#"</cfif>>
@@ -158,13 +158,13 @@
         <cfloop query="FindLinksB">
             <cfoutput>
                 <cfif FindLinksB.linktype EQ "script">
-                    <script src="#FindLinksB.linkurl#?v=#application.rev#"></script>
+                    <script src="#FindLinksB.linkurl#?v=#cacheBuster#"></script>
                 <cfelseif FindLinksB.linktype EQ "script_include">
                     <script>
                         <cfinclude template="#FindLinksB.linkurl#?rev=#RandRange(1,1000000)#">
                     </script>
                 <cfelseif FindLinksB.linktype EQ "css" OR FindLinksB.linktype EQ "text/css" OR FindLinksB.linktype EQ "ico">
-                    <link href="#FindLinksB.linkurl#?v=#application.rev#"
+                    <link href="#FindLinksB.linkurl#?v=#cacheBuster#"
                           type="text/css"
                           <cfif len(trim(FindLinksB.rel))>rel="#FindLinksB.rel#"</cfif>
                           <cfif len(trim(FindLinksB.hrefid))>id="#FindLinksB.hrefid#"</cfif>>
