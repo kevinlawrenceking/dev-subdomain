@@ -18,35 +18,36 @@
 .contact-hero {
     display: flex;
     flex-wrap: wrap;
-    gap: 1.25rem;
+    align-items: flex-start;
+    gap: 1rem;
 }
 
 .contact-overview {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 0.75rem 1rem;
-    flex: 1 1 320px;
-    max-width: 520px;
+    grid-template-columns: repeat(auto-fit, minmax(185px, 1fr));
+    gap: 0.55rem 0.75rem;
+    flex: 1 1 260px;
+    max-width: 440px;
 }
 
 .contact-card {
-    background: #f5f8fc;
-    border-radius: 10px;
-    padding: 0.85rem 1rem;
-    border: 1px solid #e3ebf4;
+    background: #f7f9fc;
+    border-radius: 8px;
+    padding: 0.7rem 0.85rem;
+    border: 1px solid #dde6ef;
     height: 100%;
 }
 
 .contact-card h6 {
-    font-size: 0.78rem;
-    letter-spacing: 0.08em;
+    font-size: 0.75rem;
+    letter-spacing: 0.07em;
     text-transform: uppercase;
     color: #78879b;
-    margin-bottom: 0.35rem;
+    margin-bottom: 0.25rem;
 }
 
 .contact-card p {
-    font-size: 0.98rem;
+    font-size: 0.94rem;
     color: #2f3c4a;
     margin-bottom: 0;
 }
@@ -73,18 +74,33 @@
     font-weight: 600;
 }
 
-.tag-list {
+.tag-band {
+    background: rgba(116, 192, 252, 0.12);
+    border-radius: 999px;
+    padding: 0.45rem 0.8rem;
     display: flex;
     flex-wrap: wrap;
     gap: 0.35rem;
-    justify-content: center;
-    align-items: center;
+    justify-content: flex-start;
+    margin: 0.65rem auto 0.3rem;
+}
+
+.tag-list {
+    display: contents;
 }
 
 .tag-list .badge {
     border-radius: 999px;
     font-weight: 600;
-    padding: 0.35rem 0.9rem;
+    padding: 0.3rem 0.8rem;
+    background-color: rgba(116, 192, 252, 0.22);
+    color: #285a7a;
+    border: 1px solid rgba(116, 192, 252, 0.3);
+}
+
+.contact-hero h4 {
+    font-size: 1.15rem;
+    font-weight: 600;
 }
 
 .modal-body h5 {
@@ -250,17 +266,15 @@ WHERE r.isdeleted = 0
         <h5 class="text-primary">Contact Information</h5>
         <cfif qGetContactDetail.recordCount GT 0>
             <cfoutput query="qGetContactDetail">
-                <div class="contact-hero mb-3">
-                <div class="text-center mb-2" style="min-width: 115px;">
-                        <img src="#share_avatar#"
-                             class="rounded-circle img-thumbnail shadow-sm"
-                        style="width: 105px; height: 105px; object-fit: cover;"
-                             alt="Contact Avatar"
-                             onerror="this.src='#default_share_avatar#';">
-                        <h4 class="mt-3 mb-1 text-primary">#HTMLEditFormat(name)#</h4>
-                        <cfif len(trim(tag))>
-                        </cfif>
-                    </div>
+             <div class="contact-hero mb-2">
+                <div class="text-center" style="min-width: 110px;">
+                    <img src="#share_avatar#"
+                        class="rounded-circle img-thumbnail shadow-sm"
+                        style="width: 96px; height: 96px; object-fit: cover;"
+                        alt="Contact Avatar"
+                        onerror="this.src='#default_share_avatar#';">
+                    <h4 class="mt-2 mb-0 text-primary">#HTMLEditFormat(name)#</h4>
+                </div>
                     <div class="contact-overview">
                         <div class="contact-card">
                             <h6>Title</h6>
@@ -285,15 +299,17 @@ WHERE r.isdeleted = 0
                     </div>
                 </div>
                 <cfif len(trim(tag))>
-                    <div class="tag-list border rounded-pill px-3 py-2 mb-3" style="background: rgba(116,192,252,0.12);">
-                        <cfif findNoCase("<", tag)>
-                            #tag#
-                        <cfelse>
-                            <span class="badge badge-soft-info">#HTMLEditFormat(tag)#</span>
-                        </cfif>
+                    <div class="tag-band">
+                        <div class="tag-list">
+                            <cfif findNoCase("<", tag)>
+                                #tag#
+                            <cfelse>
+                                <span class="badge">#HTMLEditFormat(tag)#</span>
+                            </cfif>
+                        </div>
                     </div>
                 </cfif>
-                <div class="contact-overview mt-2">
+                <div class="contact-overview mt-1">
                     <div class="contact-card">
                         <h6>Originally Met</h6>
                         <p class="#len(trim(Wheremet)) ? '' : 'empty'#">#len(trim(Wheremet)) ? HTMLEditFormat(Wheremet) : 'Not recorded'#</p>
