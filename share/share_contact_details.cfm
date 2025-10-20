@@ -314,23 +314,23 @@ WHERE r.isdeleted = 0
                         onerror="this.src='#default_share_avatar#';">
                     <h4 class="mt-2 mb-0 text-primary">#HTMLEditFormat(name)#</h4>
                 </div>
-                    <div class="contact-overview">
-                        <div class="contact-card">
+                    <div class="contact-info-box">
+                        <div class="contact-info-item">
                             <h6>Title</h6>
                             <p class="#len(trim(Title)) ? '' : 'empty'#">#len(trim(Title)) ? HTMLEditFormat(Title) : 'Not provided'#</p>
                         </div>
-                        <div class="contact-card">
+                        <div class="contact-info-item">
                             <h6>Company</h6>
                             <p class="#len(trim(Company)) ? '' : 'empty'#">#len(trim(Company)) ? HTMLEditFormat(Company) : 'Not provided'#</p>
                         </div>
                         <cfif len(trim(phone))>
-                            <div class="contact-card">
+                            <div class="contact-info-item">
                                 <h6>Phone</h6>
                                 <p>#HTMLEditFormat(phone)#</p>
                             </div>
                         </cfif>
                         <cfif len(trim(email))>
-                            <div class="contact-card">
+                            <div class="contact-info-item">
                                 <h6>Email</h6>
                                 <p><a href="mailto:#HTMLEditFormat(email)#">#HTMLEditFormat(email)#</a></p>
                             </div>
