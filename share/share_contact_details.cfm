@@ -82,7 +82,8 @@
     flex-wrap: wrap;
     gap: 0.35rem;
     justify-content: flex-start;
-    margin: 0.65rem auto 0.3rem;
+    margin: 0.55rem 0 0.25rem;
+    width: 100%;
 }
 
 .tag-list {
@@ -340,7 +341,7 @@ WHERE r.isdeleted = 0
 
 <!--- Events Section --->
 <cfif qGetContactEvents.recordcount GT 0>
-    <div class="row mt-3">
+    <div class="row mt-2">
         <div class="col-md-12">
             <h5 class="text-primary">Events History</h5>
             <div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
@@ -384,7 +385,7 @@ WHERE r.isdeleted = 0
 
 <!--- Notes Section --->
 <cfif qGetContactNotes.recordcount GT 0>
-    <div class="row mt-3">
+    <div class="row mt-2">
         <div class="col-md-12">
             <h5 class="text-primary">Notes</h5>
             <div class="table-responsive" style="max-height: 220px; overflow-y: auto;">
