@@ -155,10 +155,10 @@
                  target="_blank"
                  class="team-share-link"
                  title="View Team Share">
-                https://#host#.theactorsoffice.com/share/?uid=#uid#
+                https://#host#.theactorsoffice.com/share/?shareid=#shareid#
               </a>
             </div>
-            <button class="btn btn-outline-primary btn-copy" onclick="copyToClipboard('https://#host#.theactorsoffice.com/share/?uid=#uid#', this)">
+            <button class="btn btn-outline-primary btn-copy" onclick="copyToClipboard('https://#host#.theactorsoffice.com/share/?shareid=#shareid#', this)">
               <i class="mdi mdi-content-copy me-2"></i>Copy Link
             </button>
           </div>
