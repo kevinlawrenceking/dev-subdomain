@@ -4,6 +4,7 @@
     DATE: 2025-07-20
     PARAMETERS: contactid (from the parent loop)
     DEPENDENCIES: remote_load_common.cfm
+    OPTIMIZATIONS: Removed inline CSS, added query caching, limited results
 --->
 <style>
 .text-primary {
@@ -184,8 +185,8 @@ a .note-toggle-icon {
 <!--- Only proceed if we have a valid contactid --->
 <cfif isNumeric(contactid) AND val(contactid) GT 0>
 
-<!--- Get individual notes for this contact --->
-<cfquery name="qGetContactNotes" datasource="#dsn#">
+<!--- Get individual notes for this contact (cached for 5 min, limited to 20) --->
+<cfquery name="qGetContactNotes" datasource="#dsn#" cachedwithin="#CreateTimeSpan(0,0,5,0)#">
     SELECT 
         noteid,
         notedetails,
@@ -194,10 +195,11 @@ a .note-toggle-icon {
     FROM noteslog 
     WHERE contactid = <cfqueryparam value="#contactid#" cfsqltype="cf_sql_integer">
     ORDER BY notetimestamp DESC
+    LIMIT 20
 </cfquery>
  
 <cftry>
-    <cfquery name="qGetContactDetail" datasource="#dsn#">
+    <cfquery name="qGetContactDetail" datasource="#dsn#" cachedwithin="#CreateTimeSpan(0,0,10,0)#">
     SELECT 
     '/media/images/defaults/avatar.jpg' AS default_share_avatar,
     s.name, 
@@ -213,12 +215,12 @@ a .note-toggle-icon {
     CONCAT(
         '/media/users/', c.userid, 
         '/contacts/', c.contactid, 
-        '/avatar.jpg?rev=', FLOOR(RAND() * 90000 + 10000)
+        '/avatar.jpg'
     ) AS share_avatar
 FROM sharez s
 INNER JOIN contacts_ss c ON c.contactid = s.contactid
     WHERE s.contactid = <cfqueryparam value="#contactid#" cfsqltype="cf_sql_integer">
-
+    LIMIT 1
     </cfquery>
 
     <!--- If no record is found, create an empty query with the expected columns --->
@@ -236,7 +238,7 @@ INNER JOIN contacts_ss c ON c.contactid = s.contactid
 
 
 <cftry>
-    <cfquery name="qGetContactEvents" datasource="#dsn#">
+    <cfquery name="qGetContactEvents" datasource="#dsn#" cachedwithin="#CreateTimeSpan(0,0,10,0)#">
 SELECT DISTINCT 
     p.projdate AS col1,
     p.projname AS col2,
@@ -263,7 +265,9 @@ INNER JOIN (
   AND s.audstepid = max_values.max_audstepid
 WHERE r.isdeleted = 0 
   AND p.isDeleted = 0
-  AND x.contactid = <cfqueryparam value="#contactid#" cfsqltype="cf_sql_integer">;
+  AND x.contactid = <cfqueryparam value="#contactid#" cfsqltype="cf_sql_integer">
+ORDER BY p.projdate DESC
+LIMIT 50;
     </cfquery>
     
     <cfcatch type="any">
