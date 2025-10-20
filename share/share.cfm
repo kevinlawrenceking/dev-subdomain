@@ -388,6 +388,11 @@ SELECT DISTINCT
   box-shadow: 0 24px 45px rgba(27, 51, 70, 0.22);
 }
 
+#contactDetailsModal .modal-dialog {
+  max-width: 960px;
+  width: 95%;
+}
+
 .modal-header,
 .modal-footer {
   border-color: #eef3f8;
