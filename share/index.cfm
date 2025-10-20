@@ -151,23 +151,17 @@
     </div>
 
     <!--- Footer assets --->
-    <cfif isDefined("FindLinksB") AND isQuery(FindLinksB)>
-        <cfloop query="FindLinksB">
-            <cfoutput>
-                <cfif FindLinksB.linktype EQ "script">
-                    <script src="#FindLinksB.linkurl#?v=#cacheBuster#"></script>
-                <cfelseif FindLinksB.linktype EQ "script_include">
-                    <script>
-                        <cfinclude template="#FindLinksB.linkurl#?rev=#RandRange(1,1000000)#">
-                    </script>
-                <cfelseif FindLinksB.linktype EQ "css" OR FindLinksB.linktype EQ "text/css" OR FindLinksB.linktype EQ "ico">
-                    <link href="#FindLinksB.linkurl#?v=#cacheBuster#"
-                          type="text/css"
-                          <cfif len(trim(FindLinksB.rel))>rel="#FindLinksB.rel#"</cfif>
-                          <cfif len(trim(FindLinksB.hrefid))>id="#FindLinksB.hrefid#"</cfif>>
-                </cfif>
-            </cfoutput>
-        </cfloop>
-    </cfif>
+
+
+              <script src="/app/assets/js/setupModalLoading.js?ver=13"></script>
+            
+              <script src="/app/assets/js/datatables.min.js?ver=13"></script>
+            
+              <script src="/app/assets/js/dataTables.checkboxes.min.js?ver=13"></script>
+            
+              <script src="/app/assets/js/app.min.js?ver=13"></script>
+            
+
+        <script src="/app/assets/js/libs/devbridge-autocomplete/jquery.autocomplete.min.js?ver=0.00127548226092"></script>
 </body>
 </html>
