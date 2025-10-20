@@ -49,7 +49,7 @@
 <cfset variables.recordname     = qShareUser.recordname>
 <cfset variables.auditions      = true>
 <cfset mediaBase                = baseMediaUrl>
-<cfabort>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
