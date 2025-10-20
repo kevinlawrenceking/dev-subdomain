@@ -9,17 +9,14 @@
 --->
 <cfset dsn = "abod">
 <cfset shareID = trim(url.shareID)>
-<cfset baseMediaPath = "C:\home\theactorsoffice.com\media-" & dsn>
 <cfset baseMediaUrl  = "/media-" & dsn>
+<cfset assetBase     = "/share/assets">
+<cfset cacheBuster   = RandRange(1, 1000000)>
 
-<cfset cacheBuster = RandRange(1, 1000000)>
-<!--- Load common settings (DSN, asset lists, etc.) 
-<cfinclude template="remote_load_common.cfm">
---->
 <!--- Basic guard: require a shareID value --->
 <cfif NOT len(shareID)>
     <cfoutput><p>Missing shareID.</p></cfoutput>
-
+    <cfabort>
 </cfif>
 
 <!--- Fetch the user tied to this shareID --->
@@ -38,7 +35,7 @@
 <!--- Straightforward handling when no record exists --->
 <cfif qShareUser.recordCount EQ 0>
     <cfoutput><p>No shared data found.</p></cfoutput>
-
+    <cfabort>
 </cfif>
 
 <!--- Expose common variables for downstream templates --->
@@ -57,31 +54,20 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <title><cfoutput>#variables.recordname#</cfoutput> | Shared Contacts</title>
+        <title>#variables.recordname# | Shared Contacts</title>
     </cfoutput>
 
-    <link href="./icons.min.css" rel="stylesheet" type="text/css">
-
-    <!--- Top-of-page assets from remote_load_common.cfm --->
-     
-
-   
-              <link href="/app/assets/images/favicon.ico?ver=13.3.1.20.742284201315" rel="shortcut icon"  type="text/css" />
-            
-              <script src="/app/assets/js/jquery-3.6.0.min.js?ver=13.4.0.854545125944"></script>
-            
-              <link href="/app/assets/css/icons.min.css?ver=13.3.1.20.530602384004" rel="stylesheet"  type="text/css" />
-            
-              <link href="/assets/css/utilityclasses.css?ver=13.3.1.20.346814331621" rel="stylesheet"  type="text/css" />
-            
-              <link href="/app/assets/css/app.min.css?ver=13.3.1.20.789234179323" rel="stylesheet"  type="text/css" id="app-style"/>
-            
-              <link href="/app/assets/css/datatables.min.css?ver=13.3.1.20.416948883" rel="stylesheet"  type="text/css" />
-            
-              <link href="/app/assets/css/dataTables.checkboxes.css?ver=13.3.1.20.963686479537"  type="text/css" />
-            
-              <script src="/app/assets/js/jquery.chained.js?ver=13.4.0.069754786874"></script>
-            
+    <link href="#assetBase#/icons.min.css?v=#cacheBuster#" rel="stylesheet" type="text/css">
+    <link href="#assetBase#/bootstrap.css?v=#cacheBuster#" rel="stylesheet" type="text/css">
+    <link href="#assetBase#/app.min.css?v=#cacheBuster#" rel="stylesheet" type="text/css">
+    <link href="#assetBase#/datatables.min.css?v=#cacheBuster#" rel="stylesheet" type="text/css">
+    <link href="#assetBase#/dataTables.checkboxes.css?v=#cacheBuster#" rel="stylesheet" type="text/css">
+    <link href="#assetBase#/utilityclasses.css?v=#cacheBuster#" rel="stylesheet" type="text/css">
+    <script src="#assetBase#/jquery-3.6.0.min.js?v=#cacheBuster#"></script>
+    <script src="#assetBase#/bootstrap.bundle.js?v=#cacheBuster#"></script>
+    <script src="#assetBase#/datatables.min.js?v=#cacheBuster#"></script>
+    <script src="#assetBase#/dataTables.checkboxes.min.js?v=#cacheBuster#"></script>
+    <script src="#assetBase#/app.min.js?v=#cacheBuster#"></script>
     <style>
         body.loading {
             display: flex;
@@ -151,17 +137,5 @@
     </div>
 
     <!--- Footer assets --->
-
-
-              <script src="/app/assets/js/setupModalLoading.js?ver=13"></script>
-            
-              <script src="/app/assets/js/datatables.min.js?ver=13"></script>
-            
-              <script src="/app/assets/js/dataTables.checkboxes.min.js?ver=13"></script>
-            
-              <script src="/app/assets/js/app.min.js?ver=13"></script>
-            
-
-        <script src="/app/assets/js/libs/devbridge-autocomplete/jquery.autocomplete.min.js?ver=0.00127548226092"></script>
 </body>
 </html>
