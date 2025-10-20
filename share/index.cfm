@@ -19,7 +19,7 @@
 <!--- Basic guard: require a shareID value --->
 <cfif NOT len(shareID)>
     <cfoutput><p>Missing shareID.</p></cfoutput>
-    <cfabort>
+
 </cfif>
 
 <!--- Fetch the user tied to this shareID --->
