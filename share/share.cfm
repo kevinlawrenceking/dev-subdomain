@@ -125,10 +125,12 @@ SELECT DISTINCT
                       <tr>
                         <!--- View Details Button --->
                         <td class="text-center">
-                          <button type="button" 
-                                  class="btn btn-sm btn-outline-primary view-contact-btn" 
-                                  data-toggle="modal" 
-                                  data-target="##contactDetailsModal"
+        <button type="button" 
+          class="btn btn-sm btn-outline-primary view-contact-btn" 
+          data-toggle="modal" 
+          data-target="##contactDetailsModal"
+          data-bs-toggle="modal"
+          data-bs-target="#contactDetailsModal"
                                   data-contactid="#sharesWithEvents.contactid#"
                                   data-contactname="#HTMLEditFormat(sharesWithEvents.Name)#"
                                   data-notes="#HTMLEditFormat(len(trim(sharesWithEvents.NotesLog)) ? replace(sharesWithEvents.NotesLog, '.', '.', 'all') : '')#"
