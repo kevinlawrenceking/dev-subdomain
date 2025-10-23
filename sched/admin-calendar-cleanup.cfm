@@ -5,7 +5,7 @@
     DESCRIPTION: Fixes events with invalid end dates/times that cause calendar display issues
 --->
 
-<cfquery name="qFixEventDates" datasource="#application.dsn#">
+<cfquery name="qFixEventDates" datasource="abod">
     <!--- Fix events where end date is before start date --->
     UPDATE events 
     SET eventstop = eventStart
@@ -52,7 +52,7 @@
       AND isdeleted = 0;
 </cfquery>
 
-<cfquery name="qGetFixedCount" datasource="#application.dsn#">
+<cfquery name="qGetFixedCount" datasource="abod">
     SELECT 
         COUNT(*) as totalEvents,
         SUM(CASE WHEN eventstop IS NULL THEN 1 ELSE 0 END) as nullEndDates,
