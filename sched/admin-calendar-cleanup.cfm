@@ -5,8 +5,23 @@
     DESCRIPTION: Fixes events with invalid end dates/times that cause calendar display issues
 --->
 
+<!--- CRITICAL: Fix existing invalid TIME values (24:00:00 or greater) --->
+<cfquery name="qFixInvalidStopTimes" datasource="abo">
+    UPDATE events 
+    SET eventstopTime = '23:59:00'
+    WHERE TIME(eventstopTime) >= '24:00:00'
+      OR eventstopTime NOT BETWEEN '00:00:00' AND '23:59:59'
+</cfquery>
+
+<cfquery name="qFixInvalidStartTimes" datasource="abo">
+    UPDATE events 
+    SET eventStartTime = '23:00:00'
+    WHERE TIME(eventStartTime) >= '24:00:00'
+      OR eventStartTime NOT BETWEEN '00:00:00' AND '23:59:59'
+</cfquery>
+
 <!--- Fix events where end date is before start date --->
-<cfquery name="qFixEndBeforeStart" datasource="abod">
+<cfquery name="qFixEndBeforeStart" datasource="abo">
     UPDATE events 
     SET eventstop = eventStart
     WHERE eventstop < eventStart 
@@ -16,7 +31,7 @@
 </cfquery>
 
 <!--- Fix events where end date is null but start date exists --->
-<cfquery name="qFixNullEndDate" datasource="abod">
+<cfquery name="qFixNullEndDate" datasource="abo">
     UPDATE events 
     SET eventstop = eventStart  
     WHERE eventstop IS NULL 
@@ -25,9 +40,12 @@
 </cfquery>
 
 <!--- Fix events where end time is before start time on same date --->
-<cfquery name="qFixEndTimeBeforeStart" datasource="abod">
+<cfquery name="qFixEndTimeBeforeStart" datasource="abo">
     UPDATE events 
-    SET eventstopTime = ADDTIME(eventStartTime, '01:00:00')
+    SET eventstopTime = CASE 
+        WHEN TIME(eventStartTime) >= '23:00:00' THEN '23:59:00'
+        ELSE ADDTIME(eventStartTime, '01:00:00')
+    END
     WHERE eventstop = eventStart 
       AND eventStartTime IS NOT NULL 
       AND eventstopTime IS NOT NULL
@@ -36,16 +54,19 @@
 </cfquery>
 
 <!--- Fix events where end time is null --->
-<cfquery name="qFixNullEndTime" datasource="abod">
+<cfquery name="qFixNullEndTime" datasource="abo">
     UPDATE events 
-    SET eventstopTime = ADDTIME(eventStartTime, '01:00:00')
+    SET eventstopTime = CASE 
+        WHEN TIME(eventStartTime) >= '23:00:00' THEN '23:59:00'
+        ELSE ADDTIME(eventStartTime, '01:00:00')
+    END
     WHERE eventstopTime IS NULL 
       AND eventStartTime IS NOT NULL
       AND isdeleted = 0
 </cfquery>
 
 <!--- Fix events where start time is null (set to reasonable default) --->
-<cfquery name="qFixNullStartTime" datasource="abod">
+<cfquery name="qFixNullStartTime" datasource="abo">
     UPDATE events 
     SET eventStartTime = '09:00:00'
     WHERE eventStartTime IS NULL 
@@ -54,7 +75,7 @@
 </cfquery>
 
 <!--- Ensure stop time is set after fixing start time --->
-<cfquery name="qFixStopTimeAfterDefault" datasource="abod">
+<cfquery name="qFixStopTimeAfterDefault" datasource="abo">
     UPDATE events 
     SET eventstopTime = '10:00:00'
     WHERE eventstopTime IS NULL 
@@ -62,7 +83,7 @@
       AND isdeleted = 0
 </cfquery>
 
-<cfquery name="qGetFixedCount" datasource="abod">
+<cfquery name="qGetFixedCount" datasource="abo">
     SELECT 
         COUNT(*) as totalEvents,
         SUM(CASE WHEN eventstop IS NULL THEN 1 ELSE 0 END) as nullEndDates,
