@@ -6,18 +6,21 @@
 --->
 
 <!--- CRITICAL: Fix existing invalid TIME values (24:00:00 or greater) --->
+<!--- Using string comparison since TIME() function may fail on invalid values --->
 <cfquery name="qFixInvalidStopTimes" datasource="abo">
     UPDATE events 
     SET eventstopTime = '23:59:00'
-    WHERE TIME(eventstopTime) >= '24:00:00'
-      OR eventstopTime NOT BETWEEN '00:00:00' AND '23:59:59'
+    WHERE CAST(eventstopTime AS CHAR) >= '24:00:00'
+       OR CAST(eventstopTime AS CHAR) LIKE '24:%'
+       OR CAST(eventstopTime AS CHAR) LIKE '25:%'
 </cfquery>
 
 <cfquery name="qFixInvalidStartTimes" datasource="abo">
     UPDATE events 
     SET eventStartTime = '23:00:00'
-    WHERE TIME(eventStartTime) >= '24:00:00'
-      OR eventStartTime NOT BETWEEN '00:00:00' AND '23:59:59'
+    WHERE CAST(eventStartTime AS CHAR) >= '24:00:00'
+       OR CAST(eventStartTime AS CHAR) LIKE '24:%'
+       OR CAST(eventStartTime AS CHAR) LIKE '25:%'
 </cfquery>
 
 <!--- Fix events where end date is before start date --->
