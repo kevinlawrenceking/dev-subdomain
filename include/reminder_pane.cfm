@@ -56,28 +56,11 @@
 
     // Check if DataTable already exists
     if ($.fn.DataTable.isDataTable('#remindersTable')) {
-      // Just reload the data instead of destroying the whole table
-      const table = $('#remindersTable').DataTable();
-      const newAjaxData = {
-        showInactive: showInactive,
-        currentid: <cfoutput>#contactid#</cfoutput>,
-        userid: <cfoutput>#userid#</cfoutput>
-      };
-      
-      // Update the ajax URL with new parameters and reload
-      const newUrl = "/include/get_reminders.cfm?bypass=1&showInactive=" + showInactive + "&currentid=" + <cfoutput>#contactid#</cfoutput> + "&userid=" + <cfoutput>#userid#</cfoutput>;
-      table.ajax.url(newUrl).load(function(json) {
-        console.log('Data reloaded, updating modals...');
-        injectReminderModals(json);
-        
-        // Only recreate filters if they don't exist or if showInactive changed
-        if (enableFiltering && $('#filterRow').length === 0) {
-          setTimeout(function() {
-            createFilterDropdowns(table);
-          }, 100);
-        }
-      });
-      return;
+      // Destroy and recreate the table when toggling showInactive
+      // This ensures proper reinitialization of filters and empty message
+      $('#remindersTable').DataTable().destroy();
+      $('#filterRow').remove();
+      console.log('Table destroyed, recreating...');
     }
 
     // Remove any existing filter row from previous table
