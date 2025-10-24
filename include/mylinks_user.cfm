@@ -7,6 +7,9 @@
 <cfset mylinks_user = siteLinksService.getSiteLinksByPanelId(dashboards.pnid, userid)>
 <cfset siteurl_list = siteLinksService.getAllUrlsByPanelId(dashboards.pnid, userid)>
 <cfset siteTypeDetails = siteLinksService.getSiteTypeDetailsByPanelId(dashboards.pnid, userid)>
+
+<!--- Only render panel if it has valid site type data --->
+<cfif siteTypeDetails.sitetypeid GT 0 AND len(trim(siteTypeDetails.sitetypename)) GT 0>
 <cfoutput>
 
     <!--- Set modal ID and title for adding a link --->
@@ -252,3 +255,5 @@
         };
     });
 </script>
+
+</cfif><!--- End check for valid site type data --->
