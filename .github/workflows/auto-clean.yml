@@ -1,0 +1,45 @@
+name: Auto Clean
+
+on:
+  schedule:
+    - cron: "17 7 * * *"   # daily 07:17 UTC
+  workflow_dispatch:
+
+jobs:
+  autoclean:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install tools
+        run: |
+          choco install ripgrep -y
+
+      - name: Find orphans
+        run: pwsh ./tools/cleanup/find_orphans.ps1
+
+      - name: Create PR for orphan deletions
+        if: success() && (test-path ./tools/cleanup/orphans.txt) -and ((Get-Content ./tools/cleanup/orphans.txt | Measure-Object).Count -gt 0)
+        run: |
+          $branch = "auto/orphan-deletes/$(Get-Date -Format yyyyMMdd_HHmmss)"
+          git config user.name "auto-clean"
+          git config user.email "auto-clean@users.noreply.github.com"
+          git checkout -b $branch
+
+          $orphans = Get-Content ./tools/cleanup/orphans.txt | Select-Object -First 10
+          foreach ($f in $orphans) {
+            if (Test-Path $f) { git rm $f }
+          }
+          git commit -m "Auto-clean: delete up to 10 orphaned /qry files"
+          git push --set-upstream origin $branch
+
+          gh pr create --fill --title "Auto-clean: delete orphaned /qry files" --body "Deleted up to 10 files. Source: tools/cleanup/find_orphans.ps1" --label auto-cleanup
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

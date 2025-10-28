@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+
+jobs:
+  cfml-ci:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install tools
+        run: |
+          choco install ripgrep -y
+          choco install commandbox -y
+
+      - name: Guards — no legacy /qry includes
+        run: |
+          $count = (rg -n --iglob '*.cfm' --iglob '*.cfc' 'include.*?/qry/.*\.cfm' ./app | Measure-Object).Count
+          if ($count -gt 0) {
+            Write-Error "Found $count legacy /qry includes. Remove before merge."
+          }
+
+      - name: Guards — no raw cfquery outside /services
+        run: |
+          $count = (rg -n --iglob '*.cfm' --iglob '*.cfc' '(<cfquery\b|queryExecute\()' ./app | rg -v '/services/' | Measure-Object).Count
+          if ($count -gt 0) {
+            Write-Error "Found SQL usage outside /services. Move into CFC services."
+          }
+
+      - name: TestBox (if present)
+        run: |
+          if (Test-Path ./tests) {
+            box install
+            box testbox run --verbose
+          } else {
+            Write-Host "No /tests directory. Skipping TestBox."
+          }
+
+      # Optional: CFLint (uncomment when you add cflint.ps1)
+      # - name: CFLint
+      #   run: pwsh ./tools/cleanup/cflint.ps1
