@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(\"C:\\Program Files\\PowerShell\\7\\pwsh.exe\" -Command \"Get-Content tools/cleanup/qry_inventory.csv | Select-Object -First 20\")",
+      "Bash(\"C:\\Program Files\\PowerShell\\7\\pwsh.exe\" -File \"tools/cleanup/propose_mappings.ps1\")",
+      "Bash(\"C:\\Program Files\\PowerShell\\7\\pwsh.exe\" -Command \"Test-Path tools/cleanup/qry_map_proposed.csv; if (Test-Path tools/cleanup/qry_map_proposed.csv) { Write-Host ''File exists''; Get-Content tools/cleanup/qry_map_proposed.csv | Select-Object -First 30 }\")",
+      "Bash(\"C:\\Program Files\\PowerShell\\7\\pwsh.exe\" -Command \"Get-Content tools/cleanup/qry_map_proposed.csv | Select-Object -First 30\")",
+      "Bash(\"C:\\Program Files\\PowerShell\\7\\pwsh.exe\" -Command \"Import-Csv tools/cleanup/qry_map_proposed.csv | Where-Object { $_legacy_qry -like ''*_*_*'' } | Select-Object -First 20 | Format-Table legacy_qry, service, method\")",
+      "Bash(\"C:\\Program Files\\PowerShell\\7\\pwsh.exe\" -Command \"Get-Content tools/cleanup/qry_map_proposed.csv | Select-String ''findDetails_107'' | Select-Object -First 5\")",
+      "Bash(\"C:\\Program Files\\PowerShell\\7\\pwsh.exe\" -Command \"Get-Content tools/cleanup/qry_map_proposed.csv | Select-String ''_318_|_107_|_452_'' | Select-Object -First 15\")",
+      "Bash(\"C:\\Program Files\\PowerShell\\7\\pwsh.exe\" -Command \"Get-Content tools/cleanup/qry_map_proposed.csv | Select-String ''insert_|update_|delete_'' | Select-Object -First 20\")",
+      "Bash(\"C:\\Program Files\\PowerShell\\7\\pwsh.exe\" -Command \"Import-Csv tools/cleanup/qry_map_proposed.csv | Where-Object { $_service -eq ''ContactsService'' } | Format-Table -AutoSize\")",
+      "Bash(\"C:\\Program Files\\PowerShell\\7\\pwsh.exe\" -File \"tools/cleanup/extract_contacts_service.ps1\")",
+      "Bash(\"C:\\Program Files\\PowerShell\\7\\pwsh.exe\" -File \"tools/cleanup/append_contacts_to_map.ps1\")",
+      "Bash(\"C:\\Program Files\\PowerShell\\7\\pwsh.exe\" -Command \"Get-Content tools/cleanup/qry_map.csv\")",
+      "Bash(\"C:\\Program Files\\PowerShell\\7\\pwsh.exe\" -Command \"$csv = Import-Csv tools/cleanup/qry_map.csv; Write-Host ''Total mappings in qry_map.csv:'' $csv.Count -ForegroundColor Green; Write-Host ''''; Write-Host ''ContactsService mappings:'' -ForegroundColor Cyan; $csv | Where-Object { $_service -eq ''ContactsService'' } | Format-Table legacy_qry, method -AutoSize\")",
+      "Bash(\"C:\\Program Files\\PowerShell\\7\\pwsh.exe\" -File \"tools/cleanup/verify_qry_map.ps1\")",
+      "Bash(\"C:\\Program Files\\PowerShell\\7\\pwsh.exe\" -File tools/cleanup/replace_includes.ps1 -DryRun)",
+      "Bash(\"C:\\Program Files\\PowerShell\\7\\pwsh.exe\" -File tools/cleanup/replace_includes.ps1)",
+      "Bash(git checkout:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
