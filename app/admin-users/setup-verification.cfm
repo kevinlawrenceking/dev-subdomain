@@ -5,8 +5,6 @@
     DEPENDENCIES: Application.cfc with DSN configured
 --->
 
-<cfinclude template="/include/qry/core.cfm">
-
 <!--- Check if user has admin access --->
 <cfif not isDefined("session.userid") or session.userrole neq "Admin">
     <cflocation url="/app/" addtoken="false">

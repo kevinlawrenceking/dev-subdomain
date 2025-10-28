@@ -1,2 +1,9 @@
-legacy_qry,service,method,returnVar,argsSnippet
-add_197_3,auditionSubmitSiteUserService,createAuditionSubmitSiteUser,id,"{submitsitename=new_submitsitename,catlist=sortedCatList,userid=userid}"
+legacy_qry,service,method,returnVar,argsSnippet,notes
+eventtypes_user,eventTypesUserService,listEventTypesUser,qEventTypesUser,"{userid=userid}",replace
+contacts,ContactsService,listContacts,qContacts,"{}",
+contacts_333_1,ContactsService,listContacts,qContacts,"{}",
+contacts_334_4,ContactsService,listContacts,qContacts,"{}",
+contacts_335_5,ContactsService,listContacts,qContacts,"{}",
+contacts_336_4,ContactsService,listContacts,qContacts,"{}",
+contacts_all,ContactsService,listAllContacts,qContactsall,"{}",
+fetchUsers,UserService,getUserById,userData,"{userID=userid}",

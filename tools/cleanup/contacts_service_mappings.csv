@@ -1,0 +1,7 @@
+"legacy_qry","service","method","returnVar","argsSnippet","notes"
+"contacts","ContactsService","listContacts","qContacts","{}",""
+"contacts_333_1","ContactsService","listContacts","qContacts","{}",""
+"contacts_334_4","ContactsService","listContacts","qContacts","{}",""
+"contacts_335_5","ContactsService","listContacts","qContacts","{}",""
+"contacts_336_4","ContactsService","listContacts","qContacts","{}",""
+"contacts_all","ContactsService","listAllContacts","qContactsall","{}",""
