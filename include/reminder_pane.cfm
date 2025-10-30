@@ -83,6 +83,7 @@
         {
           data: "id",
           render: function (data, type, row) {
+            console.log('Rendering row:', row.status, row); // Debug log
             if (row.status === "Pending") {
               return `
                 <button class="btn btn-success btn-sm mark-complete" data-id="${data}" data-status="Completed" data-text="${row.reminder_text}" title="Mark Complete">
@@ -93,6 +94,7 @@
                 </button>
               `;
             } else {
+              console.log('Non-pending status:', row.status); // Debug log
               return String(row.status || '-');
             }
           }
