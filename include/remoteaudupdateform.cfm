@@ -9,7 +9,7 @@
 <!--- Include necessary queries and data lookups --->
 <cfinclude template="/include/qry/durations.cfm" />
 <cfinclude template="/include/qry/fetchLocationService.cfm" />
-<cfinclude template="/include/qry/fetchusers.cfm" />
+<cfset userData = application.services.UserService.getUserById({userID=userid})>
 <cfinclude template="/include/qry/audplatforms_user_sel.cfm" />
 <cfinclude template="/include/qry/projectDetails_221_1.cfm" />
 <cfset audroleid = projectDetails.audroleid />
@@ -610,3 +610,4 @@ function handleSelectChange(element, eventId) {
     }
   });
 </script>
+

@@ -15,6 +15,7 @@ Notes:
 param(
   [string]$RepoRoot = "$PSScriptRoot\..\..",
   [string]$AppDirRel = "app",
+  [string[]]$ScanDirs = @(),
   [string]$MapCsv = "$PSScriptRoot\qry_map.csv",
   [switch]$DryRun
 )
@@ -38,7 +39,6 @@ function Load-Map {
   return $dict
 }
 
-$AppDir = Join-Path $RepoRoot $AppDirRel
 $map = Load-Map $MapCsv
 
 # Robust matcher: /include/qry or /app/qry, any slashes, self-closing optional, case-insensitive, dotall
@@ -46,7 +46,19 @@ $pattern = [regex]@'
 (?is)<cfinclude\s+template\s*=\s*["'](?:\\|/)?(?:app|include)?(?:\\|/)?qry(?:\\|/)([^"']+?)\.cfm["']\s*/?>
 '@
 
-$files = Get-ChildItem $AppDir -Recurse -Include *.cfm,*.cfc | Select-Object -ExpandProperty FullName
+# Determine which directories to scan
+$dirsToScan = if ($ScanDirs.Count -gt 0) {
+  $ScanDirs | ForEach-Object { Join-Path $RepoRoot $_ }
+} else {
+  @(Join-Path $RepoRoot $AppDirRel)
+}
+
+# Collect all files from all scan directories
+$files = $dirsToScan | ForEach-Object {
+  if (Test-Path $_) {
+    Get-ChildItem $_ -Recurse -Include *.cfm,*.cfc -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName
+  }
+}
 $changed = 0
 
 foreach ($f in $files) {

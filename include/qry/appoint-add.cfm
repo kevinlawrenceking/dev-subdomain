@@ -1,2 +1,3 @@
-<cfinclude template="/include/qry/contacts_333_1.cfm" />
+<cfset qContacts = application.services.ContactsService.listContacts({})>
 	 <cfinclude template="/include/qry/types_333_2.cfm" />
+

@@ -93,7 +93,8 @@
                 </button>
               `;
             } else {
-              return "-";
+              // Show status for completed/skipped reminders
+              return `<span class="badge bg-secondary">${row.status}</span>`;
             }
           }
         },

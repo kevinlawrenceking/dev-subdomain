@@ -3,7 +3,8 @@
 <cfinclude template="/include/qry/eventdetails_334_3.cfm" />
 
 <cfset new_eventid = eventid />
- <cfinclude template="/include/qry/contacts_334_4.cfm" />
+ <cfset qContacts = application.services.ContactsService.listContacts({})>
 
  <cfinclude template="/include/qry/attendees_334_5.cfm" />
+
 

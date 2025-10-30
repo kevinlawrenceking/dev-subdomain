@@ -1,5 +1,5 @@
 
-<cfinclude template="/include/qry/eventtypes_user.cfm" />
+<cfset qEventTypesUser = application.services.eventTypesUserService.listEventTypesUser({userid=userid})>
  <style>   
 <cfloop query="eventtypes_user">   
      <cfoutput>
@@ -14,3 +14,4 @@ button.colorkey:focus {
 </cfoutput>
 </cfloop> 
 </style>
+

@@ -95,7 +95,7 @@
   <cfif structKeyExists(url, "u") AND isNumeric(url.u)>
     <cfset session.userid = url.u>
     <cfset userid = session.userid>
-    <cfinclude template="/include/qry/fetchUsers.cfm" />
+    <cfset userData = application.services.UserService.getUserById({userID=userid})>
 
     <!--- Set impersonation flag (optional) --->
     <cfset session.impersonating = true>
@@ -132,7 +132,7 @@
   <!--- Setup session user paths if logged in --->
   <cfif structKeyExists(session, "userid")>
     <cfset userid = session.userid>
-    <cfinclude template="/include/qry/fetchUsers.cfm" />
+    <cfset userData = application.services.UserService.getUserById({userID=userid})>
 
     <cfscript>
       session.userMediaPath = application.baseMediaPath & "\users\" & session.userID;

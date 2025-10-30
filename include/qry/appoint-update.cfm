@@ -13,5 +13,6 @@
     
     </cfif>
 
-<cfinclude template="/include/qry/contacts_335_5.cfm" />
+<cfset qContacts = application.services.ContactsService.listContacts({})>
+
 

@@ -20,7 +20,12 @@
       "Bash(git checkout:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(\"C:\\Program Files\\PowerShell\\7\\pwsh.exe\" -Command \"rg -n --iglob ''*.cfm'' --iglob ''*.cfc'' ''include.*?/qry/(contacts|eventtypes_user|fetchUsers)\\.cfm'' | Select-Object -First 20\")",
+      "Bash(\"C:\\Program Files\\PowerShell\\7\\pwsh.exe\" -File tools/cleanup/replace_includes.ps1 -ScanDirs \"app,setup,share,include,sched\" -DryRun)",
+      "Bash(\"C:\\Program Files\\PowerShell\\7\\pwsh.exe\" -File tools/cleanup/replace_includes.ps1 -ScanDirs \"app\",\"setup\",\"share\",\"include\",\"sched\",\".\" -DryRun)",
+      "Bash(\"C:\\Program Files\\PowerShell\\7\\pwsh.exe\" -File tools/cleanup/replace_includes.ps1 -AppDirRel \".\" -DryRun)",
+      "Bash(\"C:\\Program Files\\PowerShell\\7\\pwsh.exe\" -File tools/cleanup/replace_includes.ps1 -AppDirRel \".\")"
     ],
     "deny": [],
     "ask": []

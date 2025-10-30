@@ -38,7 +38,7 @@
 <Cfset cal_root_url = session.userCalendarUrl />
 <Cfset cookie.userid = userid />
 
-<cfinclude template="/include/qry/fetchusers.cfm" />
+<cfset userData = application.services.UserService.getUserById({userID=userid})>
 <cfinclude template="/include/fetchPageService.cfm" />
 
 <cfif pgFilename NEQ "">
@@ -50,3 +50,4 @@
         <cfinclude template="/include/qry/#pgFilename#" />
     </cfif>
 </cfif>
+

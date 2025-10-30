@@ -78,7 +78,7 @@
 
 <cfinclude template="/include/qry/friendfamilycheck.cfm" />
 
-<cfinclude template="/include/qry/contacts.cfm" />
+<cfset qContacts = application.services.ContactsService.listContacts({})>
 
 <cfinclude template="/include/qry/categories.cfm" />
 
@@ -663,4 +663,5 @@
     </div>
 
 <cfset script_name_include="/include/#ListLast(GetCurrentTemplatePath(), " \")#" />
+
 

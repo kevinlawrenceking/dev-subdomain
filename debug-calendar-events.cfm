@@ -4,7 +4,7 @@
     DATE: 2025-08-08
 --->
 
-<cfinclude template="/include/qry/eventtypes_user.cfm" />
+<cfset qEventTypesUser = application.services.eventTypesUserService.listEventTypesUser({userid=userid})>
 <cfinclude template="/include/qry/events_byuser.cfm" />
 
 <h2>Calendar Events Debug Information</h2>
@@ -111,3 +111,4 @@
     <li>Check if any events still show problems after cleanup</li>
     <li>Verify the FullCalendar configuration</li>
 </ol>
+

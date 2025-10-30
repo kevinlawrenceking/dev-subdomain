@@ -1,7 +1,7 @@
 <!--- This ColdFusion page includes various templates related to calendar functionality and event management. --->
 
 <!--- Include event types for user --->
-<cfinclude template="/include/qry/eventtypes_user.cfm" />
+<cfset qEventTypesUser = application.services.eventTypesUserService.listEventTypesUser({userid=userid})>
 
 <!--- Include events by user --->
 <cfinclude template="/include/qry/events_byuser.cfm" />
@@ -20,3 +20,4 @@
 
 <!--- Set script name for include path --->
 <cfset script_name_include="/include/#ListLast(GetCurrentTemplatePath(), " \")#" />
+

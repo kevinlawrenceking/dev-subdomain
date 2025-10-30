@@ -10,7 +10,7 @@
     setclientcookies="true">
 
 
-<cfinclude template="/include/qry/fetchUsers.cfm" />
+<cfset userData = application.services.UserService.getUserById({userID=userid})>
 
 <cfif structKeyExists(variables, "userid")>
     <cfscript>
@@ -83,3 +83,4 @@
         </cfscript>
     </cfif>
 </cfif>
+

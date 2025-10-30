@@ -15,7 +15,7 @@
 <cfset audprojectid = form.audprojectid />
 <cfset rcontactid = form.rcontactid />
 
-<cfinclude template="/include/qry/fetchusers.cfm" />
+<cfset userData = application.services.UserService.getUserById({userID=userid})>
 
 <cfset currentURL = cgi.server_name />
 <cfset host = ListFirst(currentURL, ".") />
@@ -48,4 +48,5 @@
 
 <!--- Redirect to the return URL --->
 <cflocation url="#returnurl#" />
+
 
