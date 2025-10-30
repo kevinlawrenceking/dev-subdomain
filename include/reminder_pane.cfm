@@ -93,7 +93,7 @@
                 </button>
               `;
             } else {
-              return row.status;
+              return "-";
             }
           }
         },
