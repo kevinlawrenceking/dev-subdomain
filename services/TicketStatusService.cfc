@@ -43,39 +43,22 @@
 <cffunction output="false" name="SELticketstatuses_24781" access="public" returntype="query">
     <cfargument name="status" type="string" required="false">
 
-<cfset var sql = "">
-    <cfset var params = []>
-
-<cfset sql = "
+    <cfquery name="result">
         SELECT 'Completed' AS id, 'Completed' AS name 
         FROM ticketstatuses 
-        WHERE 1=1
-    ">
-
-<cfif structKeyExists(arguments, "status") and len(trim(arguments.status))>
-        <cfset sql &= " AND name = ?">
-        <cfset arrayAppend(params, {value=arguments.status, cfsqltype="CF_SQL_VARCHAR"})>
-    </cfif>
-
-<cfset sql &= "
+        <cfif structKeyExists(arguments, "status") and len(trim(arguments.status))>
+            WHERE name = <cfqueryparam value="#arguments.status#" cfsqltype="CF_SQL_VARCHAR">
+        </cfif>
+        
         UNION 
+        
         SELECT 'Pending' AS id, 'Pending' AS name 
         FROM ticketstatuses
-        WHERE 1=1
-    ">
-
-<cfif structKeyExists(arguments, "status") and len(trim(arguments.status))>
-        <cfset sql &= " AND name = ?">
-        <cfset arrayAppend(params, {value=arguments.status, cfsqltype="CF_SQL_VARCHAR"})>
-    </cfif>
-
-<cfquery name="result">
-        #sql#
-        <cfloop array="#params#" index="param">
-            <cfqueryparam value="#param.value#" cfsqltype="#param.cfsqltype#">
-        </cfloop>
+        <cfif structKeyExists(arguments, "status") and len(trim(arguments.status))>
+            WHERE name = <cfqueryparam value="#arguments.status#" cfsqltype="CF_SQL_VARCHAR">
+        </cfif>
     </cfquery>
 
-<cfreturn result>
+    <cfreturn result>
 </cffunction>
 </cfcomponent>
