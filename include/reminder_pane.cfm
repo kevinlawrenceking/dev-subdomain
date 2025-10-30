@@ -37,8 +37,8 @@
           <th style="white-space: nowrap;">Start Date</th>
           <th style="display: none;">End Date</th>
           <th>Reminder</th>
-          <th style="display: none;">Status</th>
           <th style="white-space: nowrap;">Type</th>
+          <th>Status</th>
         </tr>
       </thead>
     </table>
@@ -83,7 +83,6 @@
         {
           data: "id",
           render: function (data, type, row) {
-            console.log('Rendering row:', row.status, row); // Debug log
             if (row.status === "Pending") {
               return `
                 <button class="btn btn-success btn-sm mark-complete" data-id="${data}" data-status="Completed" data-text="${row.reminder_text}" title="Mark Complete">
@@ -94,8 +93,7 @@
                 </button>
               `;
             } else {
-              console.log('Non-pending status:', row.status); // Debug log
-              return String(row.status || '-');
+              return "-";
             }
           }
         },
@@ -112,8 +110,8 @@
         { data: "notStartDatef" },
         { data: "notEndDatef", visible: false },
         { data: "reminder_text" },
-        { data: "status", visible: false },
-        { data: "system_type" }
+        { data: "system_type" },
+        { data: "status" }
       ],
       columnDefs: [
         {
@@ -136,7 +134,7 @@
           }
         },
         {
-          targets: 6, // Type column
+          targets: 5, // Type column
           render: function (data, type, row) {
             if (type === 'display') {
               const systemModalId = `system${row.suid}-modal`;
