@@ -168,67 +168,74 @@
 <cfreturn result>
     </cffunction>
 
-<cffunction name = "INStaoversions" access = "public" returntype = "numeric">
-        <cfargument name = "new_major" type = "numeric" required = "true"/>
-        <cfargument name = "new_minor" type = "numeric" required = "true"/>
-        <cfargument name = "new_patch" type = "numeric" required = "true"/>
-        <cfargument name = "new_versionstatus" type = "string" required = "true"/>
-        <cfargument name = "new_versiontype" type = "string" required = "true"/>
-        <cfargument name = "new_version" type = "numeric" required = "true"/>
-        <cfargument name = "new_build" type = "numeric" required = "true"/>
-        <cfargument name = "new_reviewDate" type = "date" required = "false"/>
-        <cfargument name = "new_releaseDate" type = "date" required = "false"/>
-        <cfargument name = "new_reviewtime" type = "string" required = "false"/>
-        <cfargument name = "new_releasetime" type = "string" required = "false"/>
-        <cfargument name = "new_hoursavail" type = "numeric" required = "false"/>
+<cffunction name="INStaoversions" access="public" returntype="numeric">
+    <cfargument name="new_major"         type="numeric" required="true"/>
+    <cfargument name="new_minor"         type="numeric" required="true"/>
+    <cfargument name="new_patch"         type="numeric" required="true"/>
+    <cfargument name="new_versionstatus" type="string"  required="true"/>
+    <cfargument name="new_versiontype"   type="string"  required="true"/>
+    <cfargument name="new_version"       type="numeric" required="true"/>
+    <cfargument name="new_build"         type="numeric" required="true"/>
 
-<cfquery result="result" >
-            INSERT INTO taoversions (
+    <cfargument name="new_reviewDate"  type="date"   required="false"/>
+    <cfargument name="new_releaseDate" type="date"   required="false"/>
+    <cfargument name="new_reviewtime"  type="string" required="false"/>
+    <cfargument name="new_releasetime" type="string" required="false"/>
+    <cfargument name="new_hoursavail"  type="numeric" required="false"/>
+
+    <cfquery result="result">
+        INSERT INTO taoversions (
             major, minor, patch, versionstatus, versiontype, version, build,
             reviewDate, releaseDate, reviewtime, releasetime, hoursavail
-            ) VALUES
-             (<cfqueryparam cfsqltype = "cf_sql_integer" value = "#arguments.new_major#"/>
-            ,<cfqueryparam cfsqltype = "cf_sql_integer" value = "#arguments.new_minor#"/>
-            ,<cfqueryparam cfsqltype = "cf_sql_integer" value = "#arguments.new_patch#"/>
-            ,<cfqueryparam cfsqltype = "cf_sql_varchar" value = "#arguments.new_versionstatus#"/>
-            ,<cfqueryparam cfsqltype = "cf_sql_varchar" value = "#arguments.new_versiontype#"/>
-            ,<cfqueryparam cfsqltype = "cf_sql_integer" value = "#arguments.new_version#"/>
-            ,<cfqueryparam cfsqltype = "cf_sql_integer" value = "#arguments.new_build#"/>
-            ,
-            <cfif arguments.new_reviewDate neq "">
-                <cfqueryparam cfsqltype = "cf_sql_date" value = "#arguments.new_reviewDate#"/>
-            <cfelse>
-                NULL 
-            </cfif>
-            ,
-            <cfif arguments.new_releaseDate neq "">
-                <cfqueryparam cfsqltype = "cf_sql_date" value = "#arguments.new_releaseDate#"/>
-            <cfelse>
-                NULL 
-            </cfif>
-            ,
-            <cfif arguments.new_reviewtime neq "">
-                <cfqueryparam cfsqltype = "cf_sql_time" value = "#arguments.new_reviewtime#"/>
-            <cfelse>
-                NULL 
-            </cfif>
-            ,
-            <cfif arguments.new_releasetime neq "">
-                <cfqueryparam cfsqltype = "cf_sql_time" value = "#arguments.new_releasetime#"/>
-            <cfelse>
-                NULL 
-            </cfif>
-            ,
-            <cfif arguments.new_hoursavail neq "">
-                <cfqueryparam cfsqltype = "cf_sql_float" 
-                              value = "#numberformat(arguments.new_hoursavail,'9.99')#"/>
-            <cfelse>
-                NULL 
-            </cfif>
-            )
-        </cfquery>
-<cfreturn result.generatedKey>
+        )
+        VALUES (
+            <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.new_major#"/>,
+            <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.new_minor#"/>,
+            <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.new_patch#"/>,
+            <cfqueryparam cfsqltype="cf_sql_varchar" value="#arguments.new_versionstatus#"/>,
+            <cfqueryparam cfsqltype="cf_sql_varchar" value="#arguments.new_versiontype#"/>,
+            <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.new_version#"/>,
+            <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.new_build#"/>,
 
+            <!-- reviewDate -->
+            <cfif structKeyExists(arguments, "new_reviewDate") AND len(arguments.new_reviewDate)>
+                <cfqueryparam cfsqltype="cf_sql_date" value="#arguments.new_reviewDate#"/>
+            <cfelse>
+                NULL
+            </cfif>,
+
+            <!-- releaseDate -->
+            <cfif structKeyExists(arguments, "new_releaseDate") AND len(arguments.new_releaseDate)>
+                <cfqueryparam cfsqltype="cf_sql_date" value="#arguments.new_releaseDate#"/>
+            <cfelse>
+                NULL
+            </cfif>,
+
+            <!-- reviewtime -->
+            <cfif structKeyExists(arguments, "new_reviewtime") AND len(arguments.new_reviewtime)>
+                <cfqueryparam cfsqltype="cf_sql_time" value="#arguments.new_reviewtime#"/>
+            <cfelse>
+                NULL
+            </cfif>,
+
+            <!-- releasetime -->
+            <cfif structKeyExists(arguments, "new_releasetime") AND len(arguments.new_releasetime)>
+                <cfqueryparam cfsqltype="cf_sql_time" value="#arguments.new_releasetime#"/>
+            <cfelse>
+                NULL
+            </cfif>,
+
+            <!-- hoursavail -->
+            <cfif structKeyExists(arguments, "new_hoursavail") AND len(arguments.new_hoursavail)>
+                <cfqueryparam cfsqltype="cf_sql_float" 
+                              value="#numberformat(arguments.new_hoursavail,'9.99')#"/>
+            <cfelse>
+                NULL
+            </cfif>
+        )
+    </cfquery>
+
+    <cfreturn result.generatedKey>
 </cffunction>
 
 <cffunction name="UPDtaoversions" access="public" returntype="void" output="false" hint="Updates a version record in the taoversions table.">
