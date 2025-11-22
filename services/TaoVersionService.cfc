@@ -235,7 +235,7 @@
         )
     </cfquery>
 
-    <cfreturn result.generatedKey>
+    <cfreturn result>
 </cffunction>
 
 <cffunction name="UPDtaoversions" access="public" returntype="void" output="false" hint="Updates a version record in the taoversions table.">
