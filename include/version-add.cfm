@@ -168,19 +168,19 @@
                             </div>
                         </div>
                     </div>
-                </form>
 
-                <div class="row mt-2">
-                    <div class="col-6">
-                        <!--- Empty Column for Alignment --->
+                    <div class="row mt-2">
+                        <div class="col-6">
+                            <!--- Empty Column for Alignment --->
+                        </div>
+                        <div class="col-6 text-right">
+                            <a href="javascript:history.go(-1)">
+                                <button type="button" class="btn btn-light mr-1 btn-sm">Back</button>
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-sm waves-effect waves-light" id="btn-save-event">Add</button>
+                        </div>
                     </div>
-                    <div class="col-6 text-right">
-                        <a href="javascript:history.go(-1)">
-                            <button type="button" class="btn btn-light mr-1 btn-sm">Back</button>
-                        </a>
-                        <button type="submit" class="btn btn-primary btn-sm waves-effect waves-light" id="btn-save-event">Add</button>
-                    </div>
-                </div>
+                </form>
             </div>
         </div>
     </div>
