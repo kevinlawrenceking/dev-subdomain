@@ -197,35 +197,35 @@
             <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.new_version#"/>,
             <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.new_build#"/>,
 
-            <!-- reviewDate -->
+          
             <cfif structKeyExists(arguments, "new_reviewDate") AND len(arguments.new_reviewDate)>
                 <cfqueryparam cfsqltype="cf_sql_date" value="#arguments.new_reviewDate#"/>
             <cfelse>
                 NULL
             </cfif>,
 
-            <!-- releaseDate -->
+      
             <cfif structKeyExists(arguments, "new_releaseDate") AND len(arguments.new_releaseDate)>
                 <cfqueryparam cfsqltype="cf_sql_date" value="#arguments.new_releaseDate#"/>
             <cfelse>
                 NULL
             </cfif>,
 
-            <!-- reviewtime -->
+         
             <cfif structKeyExists(arguments, "new_reviewtime") AND len(arguments.new_reviewtime)>
                 <cfqueryparam cfsqltype="cf_sql_time" value="#arguments.new_reviewtime#"/>
             <cfelse>
                 NULL
             </cfif>,
 
-            <!-- releasetime -->
+            
             <cfif structKeyExists(arguments, "new_releasetime") AND len(arguments.new_releasetime)>
                 <cfqueryparam cfsqltype="cf_sql_time" value="#arguments.new_releasetime#"/>
             <cfelse>
                 NULL
             </cfif>,
 
-            <!-- hoursavail -->
+          
             <cfif structKeyExists(arguments, "new_hoursavail") AND len(arguments.new_hoursavail)>
                 <cfqueryparam cfsqltype="cf_sql_float" 
                               value="#numberformat(arguments.new_hoursavail,'9.99')#"/>
