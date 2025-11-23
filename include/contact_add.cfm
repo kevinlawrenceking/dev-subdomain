@@ -1,5 +1,7 @@
 <!--- This ColdFusion page processes user information and redirects to a contact view page. --->
-<cfinclude template="/include/qry/add_82_1.cfm" />
+<!--- Migrated from /include/qry/add_82_1.cfm - inline service call --->
+<cfset contactService = createObject("component", "services.ContactService")>
+<cfset result = {generated_key: contactService.INScontactdetails_23839(userid=userid, contactfullname="Unknown")}>
 
 <!--- Set current and contact IDs from the result generated key --->
 <cfset currentid = result.generated_key />

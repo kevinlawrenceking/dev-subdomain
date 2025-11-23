@@ -5,9 +5,14 @@
 
 <cfif #new_contactid# is "0" and #cdfullname# is not "">
 
-  <cfinclude template="/include/qry/INScontactdetails.cfm"/>
+  <!--- Migrated from /include/qry/INScontactdetails.cfm - inline service call --->
+  <cfset contactService = createObject("component", "services.ContactService")>
+  <cfset contactId = contactService.INScontactdetails(
+      userid=userid,
+      contactFullName=cdfullname
+  )>
 
-  <cfset new_contactid=contact_id/>
+  <cfset new_contactid=contactId/>
 
   <cfinclude template="/include/qry/insert_367_2.cfm"/>
 

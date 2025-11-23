@@ -1,5 +1,7 @@
 <!--- /include/myteam_pane.cfm --->
-<cfinclude template="/include/qry/getMyTeam.cfm" />
+<!--- Migrated from /include/qry/getMyTeam.cfm - inline service call --->
+<cfset contactService = createObject("component", "services.ContactService")>
+<cfset myteam = contactService.getMyTeam(userId=userid)>
 
 <link href="https://cdn.materialdesignicons.com/6.5.95/css/materialdesignicons.min.css" rel="stylesheet">
 

@@ -21,7 +21,19 @@
     }
 </cfscript>
 
-<cfinclude template="/include/qry/updatecontact_270_1.cfm" />
+<!--- Migrated from /include/qry/updatecontact_270_1.cfm - inline service call --->
+<cfset contactService = createObject("component", "services.ContactService")>
+<cfset contactService.UPDcontactdetails_24202(
+    contactid = contactid,
+    contactfullname = trim(contactfullname),
+    contactPronoun = contactPronoun,
+    custom = trim(custom),
+    contactbirthday = contactbirthday,
+    contactmeetingdate = contactmeetingdate,
+    contactmeetingloc = trim(contactmeetingloc),
+    deleteitem = (deleteitem is "1"),
+    refer_contact_id = refer_contact_id
+)>
 
 <!--- Check if contactbirthday is not empty --->
 <cfif #contactbirthday# is not "">

@@ -17,7 +17,9 @@
 
 <cfinclude template="/include/modal.cfm" />
 
-<cfinclude template="/include/qry/getContactsByAudProject.cfm" />
+<!--- Migrated from /include/qry/getContactsByAudProject.cfm - inline service call --->
+<cfset contactService = createObject("component", "services.ContactService")>
+<cfset audcontacts = contactService.getContactsByAudProject(audprojectid=audprojectid)>
 
 <cfinclude template="/include/qry/audcontacts_sel_349_2.cfm" />
 
