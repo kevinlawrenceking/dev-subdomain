@@ -142,7 +142,9 @@
 <cfinclude template="/include/qry/eventresults.cfm" />
 <cfinclude template="/include/qry/ru.cfm" />
 <cfinclude template="/include/modalRemoteNewForm.cfm" />
-<cfinclude template="/include/qry/contacts_333_1.cfm" />
+<!--- Migrated from /include/qry/contacts_333_1.cfm - inline service call --->
+<cfset contactService = createObject("component", "services.ContactService") />
+<cfset contacts = contactService.SELcontactdetails_24483(userid=userid) />
 <cfinclude template="/include/qry/categories_446_1.cfm" />
 <cfinclude template="/include/qry/items_488_1.cfm" />
 <cfinclude template="/include/qry/notesContact_507_1.cfm" />

@@ -7,7 +7,9 @@
 
 <!--- Include necessary queries --->
 <cfinclude template="/include/qry/FindRefPage_135_1.cfm"/>
-<cfinclude template="/include/qry/FindRefcontacts_135_2.cfm"/>
+<!--- Migrated from /include/qry/FindRefcontacts_135_2.cfm - inline service call --->
+<cfset contactService = createObject("component", "services.ContactService")>
+<cfset FindRefcontacts = contactService.SELcontactdetails_23913(contactid=contactid)>
 
 <!--- Set up dynamic ColdFusion variables --->
 <cfset dir_contact_avatar_filename = session.userContactsUrl & "/" & contactid & "/avatar.jpg"/>

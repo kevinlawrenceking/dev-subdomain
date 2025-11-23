@@ -198,7 +198,12 @@
     </cfoutput>
 
     <!--- Include contacts query --->
-    <cfinclude template="/include/qry/C_318_2.cfm" />
+    <!--- Migrated from /include/qry/C_318_2.cfm - inline service call --->
+    <cfset contactService = createObject("component", "services.ContactService")>
+    <cfset C = contactService.SELcontactdetails_24433(
+        userId = users.userid,
+        selectContactId = select_contactid
+    )>
 
     <!--- Debug output for creating folders for contacts --->
     <cfif #dbug# is "Y">

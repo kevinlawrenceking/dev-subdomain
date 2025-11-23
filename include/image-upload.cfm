@@ -6,7 +6,9 @@
 --->
 
 <cfinclude template="/include/qry/FindRefPage_136_1.cfm"/>
-<cfinclude template="/include/qry/FindRefcontacts_135_2.cfm"/>
+<!--- Migrated from /include/qry/FindRefcontacts_135_2.cfm - inline service call --->
+<cfset contactService = createObject("component", "services.ContactService")>
+<cfset FindRefcontacts = contactService.SELcontactdetails_23913(contactid=contactid)>
 
 <cfoutput>
   <cfset subtitle="#userFirstName# #userLastName#"/>
