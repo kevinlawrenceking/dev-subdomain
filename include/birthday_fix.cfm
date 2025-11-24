@@ -32,6 +32,8 @@
     
     <!--- Check if the final birthday date is valid and include the update template if true --->
     <cfif #isdate(final_birthday)# is "true">
-        <cfinclude template="/include/qry/update_55_2.cfm" />
+        <!--- Migrated from /include/qry/update_55_2.cfm - inline service call --->
+        <cfset contactService = createObject("component", "services.ContactService")>
+        <cfset contactService.UPDcontactdetails(final_birthday=final_birthday, New_contactid=New_contactid)>
     </cfif>
 </cfloop>

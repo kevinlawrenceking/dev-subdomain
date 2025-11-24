@@ -73,7 +73,12 @@
         </cfif>
     <cfelse>
         <!--- Include add template for new relationship --->
-        <cfinclude template="/include/qry/add_14_6.cfm" />
+        <!--- Migrated from /include/qry/add_14_6.cfm - inline service call --->
+        <cfset contactService = createObject("component", "services.ContactService")>
+        <cfset newcontactid = contactService.INScontactdetails(
+            userid = userid,
+            contactFullName = relationship
+        ) />
         
         <cfset currentid = result.generated_key />
         <cfset contactid = result.generated_key />

@@ -178,7 +178,9 @@
                 </cfif>
             </cfoutput>
             
-            <cfinclude template="/include/qry/add_287_20.cfm" />
+            <!--- Migrated from /include/qry/add_287_20.cfm - inline service call --->
+            <cfset contactService = createObject("component", "services.ContactService")>
+            <cfset contactService.INScontactdetails_24294(userid=userid, contactfullname=contactfullname)>
             <cfset new_contactid = result.generated_key />
             
             <cfset select_userid = userid />

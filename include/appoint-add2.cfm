@@ -81,7 +81,12 @@
             <cfset new_contactid = 0 />
         </cfif>
     <cfelse>
-        <cfinclude template="/include/qry/add_14_6.cfm" />
+        <!--- Migrated from /include/qry/add_14_6.cfm - inline service call --->
+        <cfset contactService = createObject("component", "services.ContactService")>
+        <cfset newcontactid = contactService.INScontactdetails(
+            userid = userid,
+            contactFullName = relationship
+        ) />
         <cfset currentid = newcontactid />
         <cfset contactid = newcontactid />
         <cfset new_contactid = newcontactid />

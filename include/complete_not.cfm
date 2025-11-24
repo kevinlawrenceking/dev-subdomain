@@ -104,7 +104,9 @@
     </cfoutput>
   </cfif>
 
-  <cfinclude template="/include/qry/updateContactUnique.cfm"/>
+  <!--- Migrated from /include/qry/updateContactUnique.cfm - inline service call --->
+  <cfset ContactService = createObject("component", "services.ContactService")>
+  <cfset ContactService.updateContactUnique(contactid=contactid, uniquename=uniquename)>
 
   <cfif #dbug# is "Y">
     <Cfoutput>

@@ -45,7 +45,9 @@ Contacts imported: #find#<BR>
 <cfoutput>notes: #new.notes#<BR></cfoutput>
 <cfloop query="new">
 
- <cfinclude template="/include/qry/add_315_6.cfm" />
+ <!--- Migrated from /include/qry/add_315_6.cfm - inline service call --->
+ <cfset contactService = createObject("component", "services.ContactService")>
+ <cfset result = contactService.INScontactdetails_24399(new_x=new_x, userid=userid)>
 
    <cfset select_userid = userid />
         <cfset select_contactid = result.new_contactid />

@@ -28,7 +28,12 @@
             socialmedia_yn
             googlealert_yn
         --->
-        <cfinclude template="/include/qry/checkUnique_5_3.cfm" />
+        <!--- Migrated from /include/qry/checkUnique_5_3.cfm - inline service call --->
+        <cfset contactService = createObject("component", "services.ContactService")>
+        <cfset checkUnique = contactService.SELcontactdetails(
+            addDaysNoUniqueName = adddaysno.uniquename,
+            newContactId = new_contactid
+        )>
         
         <!--- if recordcount is 1, the action has been completed. Don't add action.  --->  
         <cfif #checkunique.recordcount# is "1">

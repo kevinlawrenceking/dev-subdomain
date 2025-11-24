@@ -46,7 +46,9 @@
 
 <!--- If notification status is not pending and unique name is provided, update contact --->
 <cfif #notstatus# is not "Pending" and #uniquename#is not "">
-    <cfinclude template="/include/qry/updateContact_71_2.cfm" />
+    <!--- Migrated from /include/qry/updateContact_71_2.cfm - inline service call --->
+    <cfset contactService = createObject("component", "services.ContactService")>
+    <cfset contactService.UPDcontactdetails_23816(uniquename="Y", contactid=contactid)>
 </cfif>
 
 <!--- If action days recurring is not zero, calculate new start date and include the add notification query --->

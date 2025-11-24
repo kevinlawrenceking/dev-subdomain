@@ -32,7 +32,9 @@
 
         <!--- Check if addDaysNo is unique --->
         <cfif #adddaysno.isunique# is "1">
-            <cfinclude template="/include/qry/checkUnique_157_8.cfm" />
+            <!--- Migrated from /include/qry/checkUnique_157_8.cfm - inline service call --->
+            <cfset contactService = createObject("component", "services.ContactService")>
+            <cfset checkUnique = contactService.SELcontactdetails_23939(addDaysNoUniqueName=adddaysno.uniquename, contactId=contactid)>
 
             <!--- Check if the unique record exists --->
             <cfif #checkunique.recordcount# is "1">
