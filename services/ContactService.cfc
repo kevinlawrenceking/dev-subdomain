@@ -38,41 +38,38 @@
         "isdeleted": "CF_SQL_BIT"
     }>
 
-    <!--- Build dynamic INSERT query --->
+    <!--- Build dynamic INSERT query with named parameters --->
     <cfset var columns = []>
     <cfset var placeholders = []>
-    <cfset var params = []>
+    <cfset var params = {}>
 
     <cfloop collection="#arguments.dataStruct#" item="field">
         <cfif structKeyExists(allowedFields, field)>
             <cfset arrayAppend(columns, field)>
-            <cfset arrayAppend(placeholders, "?")>
-            <cfset arrayAppend(params, {
+            <cfset arrayAppend(placeholders, ":" & field)>
+            <cfset params[field] = {
                 value: arguments.dataStruct[field],
                 cfsqltype: allowedFields[field]
-            })>
+            }>
         </cfif>
     </cfloop>
 
-    <!--- Execute INSERT with dynamic query building --->
+    <!--- Build SQL with named placeholders --->
     <cfset var sql = "INSERT INTO contactdetails (">
     <cfloop from="1" to="#arrayLen(columns)#" index="i">
         <cfif i GT 1><cfset sql &= ", "></cfif>
         <cfset sql &= columns[i]>
     </cfloop>
     <cfset sql &= ") VALUES (">
-    <cfloop from="1" to="#arrayLen(params)#" index="i">
+    <cfloop from="1" to="#arrayLen(placeholders)#" index="i">
         <cfif i GT 1><cfset sql &= ", "></cfif>
-        <cfset sql &= "?">
+        <cfset sql &= placeholders[i]>
     </cfloop>
     <cfset sql &= ")">
 
-    <cfquery name="qCreate" result="insertResult">
-        #preserveSingleQuotes(sql)#
-        <cfloop from="1" to="#arrayLen(params)#" index="i">
-            <cfqueryparam value="#params[i].value#" cfsqltype="#params[i].cfsqltype#" null="#isNull(params[i].value)#">
-        </cfloop>
-    </cfquery>
+    <!--- Execute using queryExecute with named parameters --->
+    <cfset var insertResult = "">
+    <cfset queryExecute(sql, params, {datasource: "reach", result: "insertResult"})>
 
     <cfreturn insertResult.generatedKey>
 </cffunction>
@@ -144,36 +141,37 @@
         "isdeleted": "CF_SQL_BIT"
     }>
 
-    <!--- Build dynamic UPDATE query --->
+    <!--- Build dynamic UPDATE query with named parameters --->
     <cfset var setClauses = []>
-    <cfset var params = []>
+    <cfset var params = {}>
 
     <cfloop collection="#arguments.dataStruct#" item="field">
         <cfif structKeyExists(allowedFields, field)>
-            <cfset arrayAppend(setClauses, "#field# = ?")>
-            <cfset arrayAppend(params, {
+            <cfset arrayAppend(setClauses, "#field# = :" & field)>
+            <cfset params[field] = {
                 value: arguments.dataStruct[field],
                 cfsqltype: allowedFields[field]
-            })>
+            }>
         </cfif>
     </cfloop>
 
     <!--- Only execute if there are fields to update --->
     <cfif arrayLen(setClauses) GT 0>
-        <cfset var updateSql = "UPDATE contactdetails SET ">
+        <cfset var sql = "UPDATE contactdetails SET ">
         <cfloop from="1" to="#arrayLen(setClauses)#" index="i">
-            <cfif i GT 1><cfset updateSql &= ", "></cfif>
-            <cfset updateSql &= setClauses[i]>
+            <cfif i GT 1><cfset sql &= ", "></cfif>
+            <cfset sql &= setClauses[i]>
         </cfloop>
-        <cfset updateSql &= " WHERE contactid = ?">
+        <cfset sql &= " WHERE contactid = :contactid">
 
-        <cfquery name="qUpdate">
-            #preserveSingleQuotes(updateSql)#
-            <cfloop from="1" to="#arrayLen(params)#" index="i">
-                <cfqueryparam value="#params[i].value#" cfsqltype="#params[i].cfsqltype#" null="#isNull(params[i].value)#">
-            </cfloop>
-            <cfqueryparam value="#arguments.contactid#" cfsqltype="CF_SQL_INTEGER">
-        </cfquery>
+        <!--- Add contactid to params --->
+        <cfset params.contactid = {
+            value: arguments.contactid,
+            cfsqltype: "CF_SQL_INTEGER"
+        }>
+
+        <!--- Execute using queryExecute with named parameters --->
+        <cfset queryExecute(sql, params, {datasource: "reach"})>
     </cfif>
 </cffunction>
 
@@ -196,29 +194,31 @@
         <cfthrow message="ContactService.list: userid is required in filtersStruct">
     </cfif>
 
-    <!--- Build base query --->
-    <cfset var sql = "SELECT contactid, userid, contactFullName, contactStatus, recordname, contactCreationDate, contactLastUpdated FROM contactdetails WHERE userid = ?">
-    <cfset var params = [{value: arguments.filtersStruct.userid, cfsqltype: "CF_SQL_INTEGER"}]>
+    <!--- Build base query with named parameters --->
+    <cfset var sql = "SELECT contactid, userid, contactFullName, contactStatus, recordname, contactCreationDate, contactLastUpdated FROM contactdetails WHERE userid = :userid">
+    <cfset var params = {
+        userid: {value: arguments.filtersStruct.userid, cfsqltype: "CF_SQL_INTEGER"}
+    }>
 
     <!--- Apply optional filters --->
     <cfif structKeyExists(arguments.filtersStruct, "contactStatus") AND len(trim(arguments.filtersStruct.contactStatus))>
-        <cfset sql &= " AND contactStatus = ?">
-        <cfset arrayAppend(params, {value: arguments.filtersStruct.contactStatus, cfsqltype: "CF_SQL_VARCHAR"})>
+        <cfset sql &= " AND contactStatus = :contactStatus">
+        <cfset params.contactStatus = {value: arguments.filtersStruct.contactStatus, cfsqltype: "CF_SQL_VARCHAR"}>
     </cfif>
 
     <cfif structKeyExists(arguments.filtersStruct, "isdeleted")>
-        <cfset sql &= " AND isdeleted = ?">
-        <cfset arrayAppend(params, {value: arguments.filtersStruct.isdeleted, cfsqltype: "CF_SQL_BIT"})>
+        <cfset sql &= " AND isdeleted = :isdeleted">
+        <cfset params.isdeleted = {value: arguments.filtersStruct.isdeleted, cfsqltype: "CF_SQL_BIT"}>
     <cfelse>
         <!--- Default: exclude deleted records --->
         <cfset sql &= " AND (isdeleted IS NULL OR isdeleted = 0)">
     </cfif>
 
     <cfif structKeyExists(arguments.filtersStruct, "search") AND len(trim(arguments.filtersStruct.search))>
-        <cfset sql &= " AND (contactFullName LIKE ? OR recordname LIKE ?)">
+        <cfset sql &= " AND (contactFullName LIKE :searchName OR recordname LIKE :searchRecord)">
         <cfset var searchTerm = "%" & trim(arguments.filtersStruct.search) & "%">
-        <cfset arrayAppend(params, {value: searchTerm, cfsqltype: "CF_SQL_VARCHAR"})>
-        <cfset arrayAppend(params, {value: searchTerm, cfsqltype: "CF_SQL_VARCHAR"})>
+        <cfset params.searchName = {value: searchTerm, cfsqltype: "CF_SQL_VARCHAR"}>
+        <cfset params.searchRecord = {value: searchTerm, cfsqltype: "CF_SQL_VARCHAR"}>
     </cfif>
 
     <!--- Apply ordering --->
@@ -233,13 +233,8 @@
         <cfset sql &= " ORDER BY contactFullName ASC">
     </cfif>
 
-    <!--- Execute query --->
-    <cfquery name="qList">
-        #preserveSingleQuotes(sql)#
-        <cfloop from="1" to="#arrayLen(params)#" index="i">
-            <cfqueryparam value="#params[i].value#" cfsqltype="#params[i].cfsqltype#">
-        </cfloop>
-    </cfquery>
+    <!--- Execute using queryExecute with named parameters --->
+    <cfset var qList = queryExecute(sql, params, {datasource: "reach"})>
 
     <cfreturn qList>
 </cffunction>
@@ -536,18 +531,30 @@
 
 <cfreturn result>
 </cffunction>
-<cffunction output="false" name="SELcontactdetails_23722" access="public" returntype="query">
+<cffunction output="false" name="SELcontactdetails_23722" access="public" returntype="query" hint="Legacy wrapper - delegates to list()">
     <cfargument name="userId" type="numeric" required="true">
 
-<cfquery name="result" >
-            SELECT d.contactid, d.recordname
-            FROM contactdetails d 
-            WHERE recordname <> '' 
-              AND userid = <cfqueryparam value="#arguments.userId#" cfsqltype="CF_SQL_INTEGER"> 
-            ORDER BY d.contactfullname
-        </cfquery>
+    <!--- Thin wrapper: delegate to list() and filter for non-empty recordname --->
+    <cfset var filtersStruct = {
+        userid: arguments.userId,
+        orderBy: "contactfullname",
+        orderDir: "ASC"
+    }>
 
-<cfreturn result>
+    <cfset var fullList = this.list(filtersStruct)>
+
+    <!--- Filter for non-empty recordname and return only contactid and recordname columns --->
+    <cfset var result = queryNew("contactid,recordname", "integer,varchar")>
+
+    <cfloop query="fullList">
+        <cfif structKeyExists(fullList, "recordname") AND len(trim(fullList.recordname))>
+            <cfset queryAddRow(result, 1)>
+            <cfset querySetCell(result, "contactid", fullList.contactid, result.recordCount)>
+            <cfset querySetCell(result, "recordname", fullList.recordname, result.recordCount)>
+        </cfif>
+    </cfloop>
+
+    <cfreturn result>
 </cffunction>
 <cffunction output="false" name="SELcontactdetails_23727" access="public" returntype="query" hint="Legacy wrapper - delegates to read() for single record">
     <cfargument name="userid" required="true" type="numeric">
@@ -601,17 +608,23 @@
     <cfreturn this.create(dataStruct)>
 </cffunction>
 
-<cffunction output="false" name="SELcontactdetails_23806" access="public" returntype="query">
+<cffunction output="false" name="SELcontactdetails_23806" access="public" returntype="query" hint="Legacy wrapper - delegates to read()">
     <cfargument name="contactid" type="numeric" required="true">
 
-<cfquery name="result" >
-            SELECT contactid, contactbirthday 
-            FROM contactdetails 
-            WHERE contactbirthday IS NOT NULL 
-            AND contactid = <cfqueryparam value="#arguments.contactid#" cfsqltype="CF_SQL_INTEGER">
-        </cfquery>
+    <!--- Thin wrapper: delegate to read() and filter for non-null birthday --->
+    <cfset var contactStruct = this.read(arguments.contactid)>
 
-<cfreturn result>
+    <!--- Convert struct to query with contactid and contactbirthday columns --->
+    <!--- Only return if contactbirthday IS NOT NULL (preserve legacy behavior) --->
+    <cfset var result = queryNew("contactid,contactbirthday", "integer,date")>
+
+    <cfif NOT structIsEmpty(contactStruct) AND structKeyExists(contactStruct, "contactBirthday") AND NOT isNull(contactStruct.contactBirthday)>
+        <cfset queryAddRow(result, 1)>
+        <cfset querySetCell(result, "contactid", contactStruct.contactid, 1)>
+        <cfset querySetCell(result, "contactbirthday", contactStruct.contactBirthday, 1)>
+    </cfif>
+
+    <cfreturn result>
 </cffunction>
 
 <cffunction output="false" name="UPDcontactdetails" access="public" returntype="void" hint="Legacy wrapper - delegates to update()">
@@ -650,19 +663,40 @@
 
     <cfreturn this.create(dataStruct)>
 </cffunction>
-<cffunction output="false" name="SELcontactdetails_23843" access="public" returntype="query">
+<cffunction output="false" name="SELcontactdetails_23843" access="public" returntype="query" hint="Legacy wrapper - delegates to list() or read()">
     <cfargument name="userid" type="numeric" required="true">
     <cfargument name="select_contactid" type="numeric" default="0">
 
-<cfquery name="result" >
-            SELECT contactid, recordname 
-            FROM contactdetails 
-            WHERE userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
-            <cfif arguments.select_contactid neq 0>
-                AND contactid = <cfqueryparam value="#arguments.select_contactid#" cfsqltype="CF_SQL_INTEGER">
-            </cfif>
-            ORDER BY contactid
-        </cfquery>
+    <!--- Thin wrapper: use read() if specific contactid, otherwise use list() --->
+    <cfif arguments.select_contactid neq 0>
+        <!--- Single record fetch --->
+        <cfset var contactStruct = this.read(arguments.select_contactid)>
+
+        <!--- Verify userid matches --->
+        <cfset var result = queryNew("contactid,recordname", "integer,varchar")>
+        <cfif NOT structIsEmpty(contactStruct) AND contactStruct.userid EQ arguments.userid>
+            <cfset queryAddRow(result, 1)>
+            <cfset querySetCell(result, "contactid", contactStruct.contactid, 1)>
+            <cfset querySetCell(result, "recordname", contactStruct.recordname, 1)>
+        </cfif>
+    <cfelse>
+        <!--- List all for user --->
+        <cfset var filtersStruct = {
+            userid: arguments.userid,
+            orderBy: "contactid",
+            orderDir: "ASC"
+        }>
+        <cfset var fullList = this.list(filtersStruct)>
+
+        <!--- Return only contactid and recordname columns --->
+        <cfset var result = queryNew("contactid,recordname", "integer,varchar")>
+        <cfloop query="fullList">
+            <cfset queryAddRow(result, 1)>
+            <cfset querySetCell(result, "contactid", fullList.contactid, result.recordCount)>
+            <cfset querySetCell(result, "recordname", fullList.recordname, result.recordCount)>
+        </cfloop>
+    </cfif>
+
     <cfreturn result>
 </cffunction>
 <cffunction output="false" name="UPDcontactdetails_23861" access="public" returntype="void">
@@ -729,17 +763,22 @@ ORDER BY contactfullname
 
 </cffunction>
 
-<cffunction output="false" name="SELcontactdetails_23913" access="public" returntype="query">
+<cffunction output="false" name="SELcontactdetails_23913" access="public" returntype="query" hint="Legacy wrapper - delegates to read()">
+    <cfargument name="contactid" type="numeric" required="true">
 
-<cfargument name="contactid" type="numeric" required="true">
+    <!--- Thin wrapper: delegate to read() and return only recordname column --->
+    <cfset var contactStruct = this.read(arguments.contactid)>
 
-<cfquery name="result" >
-            SELECT recordname 
-            FROM contactdetails 
-            WHERE contactid = <cfqueryparam value="#arguments.contactid#" cfsqltype="CF_SQL_INTEGER">
-        </cfquery>
+    <!--- Convert struct to query with only recordname column --->
+    <cfif structIsEmpty(contactStruct)>
+        <cfset var result = queryNew("recordname", "varchar")>
+    <cfelse>
+        <cfset var result = queryNew("recordname", "varchar")>
+        <cfset queryAddRow(result, 1)>
+        <cfset querySetCell(result, "recordname", contactStruct.recordname, 1)>
+    </cfif>
 
-<cfreturn result>
+    <cfreturn result>
 </cffunction>
 
 <cffunction name="getContactRecordName" access="public" returntype="query" output="false">
@@ -792,18 +831,18 @@ ORDER BY contactfullname
 
     <cfreturn this.create(dataStruct)>
 </cffunction>
-<cffunction output="false" name="INScontactdetails_24048" access="public" returntype="numeric">
+<cffunction output="false" name="INScontactdetails_24048" access="public" returntype="numeric" hint="Legacy wrapper - delegates to create()">
     <cfargument name="userid" type="numeric" required="true">
     <cfargument name="contactfullname" type="string" required="true">
 
-<cfquery result="result" >
-            INSERT INTO contactdetails_tbl (userid, contactfullname)
-            VALUES (
-                <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">,
-                <cfqueryparam value="#TRIM(arguments.contactfullname)#" cfsqltype="CF_SQL_VARCHAR">
-            )
-        </cfquery>
-<cfreturn result.generatedKey>
+    <!--- Thin wrapper: map arguments to dataStruct and delegate to create() --->
+    <!--- Note: preserves TRIM() behavior from legacy implementation --->
+    <cfset var dataStruct = {
+        userid: arguments.userid,
+        contactFullName: TRIM(arguments.contactfullname)
+    }>
+
+    <cfreturn this.create(dataStruct)>
 </cffunction>
 <cffunction output="false" name="SELcontactdetails_24069" access="public" returntype="query" hint="Legacy wrapper - delegates to list()">
     <cfargument name="userid" type="numeric" required="true">
@@ -925,18 +964,30 @@ ORDER BY contactfullname
     <cfset this.update(arguments.contactid, dataStruct)>
 </cffunction>
 
-<cffunction output="false" name="SELcontactdetails_24263" access="public" returntype="query">
+<cffunction output="false" name="SELcontactdetails_24263" access="public" returntype="query" hint="Legacy wrapper - delegates to list()">
     <cfargument name="userid" type="numeric" required="true">
 
-<cfquery name="result" >
-            SELECT contactid, recordname
-            FROM contactdetails
-            WHERE userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
-            AND recordname <> ''
-            ORDER BY recordname
-        </cfquery>
+    <!--- Thin wrapper: delegate to list() and filter for non-empty recordname --->
+    <cfset var filtersStruct = {
+        userid: arguments.userid,
+        orderBy: "recordname",
+        orderDir: "ASC"
+    }>
 
-<cfreturn result>
+    <cfset var fullList = this.list(filtersStruct)>
+
+    <!--- Filter for non-empty recordname and return only contactid and recordname columns --->
+    <cfset var result = queryNew("contactid,recordname", "integer,varchar")>
+
+    <cfloop query="fullList">
+        <cfif structKeyExists(fullList, "recordname") AND len(trim(fullList.recordname))>
+            <cfset queryAddRow(result, 1)>
+            <cfset querySetCell(result, "contactid", fullList.contactid, result.recordCount)>
+            <cfset querySetCell(result, "recordname", fullList.recordname, result.recordCount)>
+        </cfif>
+    </cfloop>
+
+    <cfreturn result>
 </cffunction>
 <cffunction output="false" name="DETcontactdetails_24264" access="public" returntype="query" hint="Legacy wrapper - delegates to read() and converts to query">
     <cfargument name="contactid" type="numeric" required="true">
@@ -958,31 +1009,53 @@ ORDER BY contactfullname
 
     <cfreturn result>
 </cffunction>
-<cffunction output="false" name="SELcontactdetails_24293" access="public" returntype="query">
+<cffunction output="false" name="SELcontactdetails_24293" access="public" returntype="query" hint="Legacy wrapper - uses read() for exact recordname match">
     <cfargument name="userid" type="numeric" required="true">
     <cfargument name="referral" type="string" required="true">
 
-<cfquery name="result" maxrows="1" >
-            SELECT * 
-            FROM contactdetails 
-            WHERE userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER"> 
-            AND recordname = <cfqueryparam value="#arguments.referral#" cfsqltype="CF_SQL_VARCHAR">
-        </cfquery>
+    <!--- Thin wrapper: use list() with search filter, then find exact recordname match --->
+    <cfset var filtersStruct = {
+        userid: arguments.userid,
+        search: arguments.referral
+    }>
 
-<cfreturn result>
+    <cfset var searchList = this.list(filtersStruct)>
+
+    <!--- Find first exact match on recordname --->
+    <cfloop query="searchList">
+        <cfif searchList.recordname EQ arguments.referral>
+            <!--- Found exact match - read full record and convert to query --->
+            <cfset var contactStruct = this.read(searchList.contactid)>
+
+            <!--- Verify userid still matches (security check) --->
+            <cfif NOT structIsEmpty(contactStruct) AND contactStruct.userid EQ arguments.userid>
+                <!--- Convert struct to query with all columns --->
+                <cfset var columnList = structKeyList(contactStruct)>
+                <cfset var result = queryNew(columnList)>
+                <cfset queryAddRow(result, 1)>
+                <cfloop collection="#contactStruct#" item="col">
+                    <cfset querySetCell(result, col, contactStruct[col], 1)>
+                </cfloop>
+                <cfreturn result>
+            </cfif>
+        </cfif>
+    </cfloop>
+
+    <!--- No match found - return empty query with all contact columns --->
+    <cfset var result = queryNew("contactid,userid,contactFullName,contacttitle,recordname,contactNickname,contactBirthday,contactMeetingDate,contactMeetingLoc,contactPronoun,refer_contact_id,contactStatus,contactCreationDate,contactLastUpdated,contactphoto,user_yn,newsletter_yn,googlealert_yn,socialmedia_yn,isdeleted")>
+    <cfreturn result>
 </cffunction>
-<cffunction output="false" name="INScontactdetails_24294" access="public" returntype="numeric">
+<cffunction output="false" name="INScontactdetails_24294" access="public" returntype="numeric" hint="Legacy wrapper - delegates to create()">
     <cfargument name="userid" type="numeric" required="true">
     <cfargument name="contactfullname" type="string" required="true">
 
-<cfquery result="result" >
-            INSERT INTO contactdetails (userid, contactfullname) 
-            VALUES (
-                <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">,
-                <cfqueryparam value="#arguments.contactfullname#" cfsqltype="CF_SQL_VARCHAR">
-            )
-        </cfquery>
+    <!--- Thin wrapper: map arguments to dataStruct and delegate to create() --->
+    <cfset var dataStruct = {
+        userid: arguments.userid,
+        contactFullName: arguments.contactfullname
+    }>
 
+    <cfreturn this.create(dataStruct)>
 </cffunction>
 <cffunction output="false" name="DETcontactdetails_24340" access="public" returntype="query">
     <cfargument name="idList" type="string" required="true">
@@ -1124,21 +1197,41 @@ ORDER BY contactfullname
 
 
 
-<cffunction output="false" name="SELcontactdetails_24433" access="public" returntype="query">
+<cffunction output="false" name="SELcontactdetails_24433" access="public" returntype="query" hint="Legacy wrapper - delegates to list() or read()">
     <cfargument name="userId" type="numeric" required="true">
     <cfargument name="selectContactId" type="numeric" required="false" default="0">
 
-<cfquery name="result" >
-            SELECT contactid, recordname
-            FROM contactdetails
-            WHERE userid = <cfqueryparam value="#arguments.userId#" cfsqltype="CF_SQL_INTEGER">
-            <cfif arguments.selectContactId neq 0>
-                AND contactid = <cfqueryparam value="#arguments.selectContactId#" cfsqltype="CF_SQL_INTEGER">
-            </cfif>
-            ORDER BY contactid
-        </cfquery>
+    <!--- Thin wrapper: use read() if specific contactid, otherwise use list() --->
+    <cfif arguments.selectContactId neq 0>
+        <!--- Single record fetch --->
+        <cfset var contactStruct = this.read(arguments.selectContactId)>
 
-<cfreturn result>
+        <!--- Verify userid matches --->
+        <cfset var result = queryNew("contactid,recordname", "integer,varchar")>
+        <cfif NOT structIsEmpty(contactStruct) AND contactStruct.userid EQ arguments.userId>
+            <cfset queryAddRow(result, 1)>
+            <cfset querySetCell(result, "contactid", contactStruct.contactid, 1)>
+            <cfset querySetCell(result, "recordname", contactStruct.recordname, 1)>
+        </cfif>
+    <cfelse>
+        <!--- List all for user --->
+        <cfset var filtersStruct = {
+            userid: arguments.userId,
+            orderBy: "contactid",
+            orderDir: "ASC"
+        }>
+        <cfset var fullList = this.list(filtersStruct)>
+
+        <!--- Return only contactid and recordname columns --->
+        <cfset var result = queryNew("contactid,recordname", "integer,varchar")>
+        <cfloop query="fullList">
+            <cfset queryAddRow(result, 1)>
+            <cfset querySetCell(result, "contactid", fullList.contactid, result.recordCount)>
+            <cfset querySetCell(result, "recordname", fullList.recordname, result.recordCount)>
+        </cfloop>
+    </cfif>
+
+    <cfreturn result>
 </cffunction>
 <cffunction output="false" name="SELcontactdetails_24483" access="public" returntype="query" hint="Legacy wrapper - delegates to list() with Active filter">
     <cfargument name="userid" type="numeric" required="true">
@@ -1263,80 +1356,94 @@ ORDER BY contactfullname
 <cfreturn result>
 
 </cffunction>
-<cffunction output="false" name="DETcontactdetails_24625" access="public" returntype="query">
+<cffunction output="false" name="DETcontactdetails_24625" access="public" returntype="query" hint="Legacy wrapper - delegates to read()">
     <cfargument name="refer_contact_id" type="numeric" required="true">
 
-<cfquery name="result" >
-            SELECT 
-                d.contactid, 
-                d.contacttitle, 
-                d.recordname, 
-                d.contactmeetingdate, 
-                d.contactmeetingloc, 
-                d.refer_contact_id, 
-                d.contactFullName AS fullname, 
-                d.contactNickname, 
-                d.contactID, 
-                d.userID, 
-                d.contactStatus, 
-                d.contactCreationDate, 
-                d.contactLastUpdated, 
-                d.contactphoto, 
-                d.contactBirthday, 
-                d.contactPronoun
-            FROM contactdetails d
-            INNER JOIN taousers u ON u.userid = d.userid
-            WHERE d.contactID = <cfqueryparam value="#arguments.refer_contact_id#" cfsqltype="CF_SQL_INTEGER">
-        </cfquery>
+    <!--- Thin wrapper: delegate to read() and convert struct to query --->
+    <cfset var contactStruct = this.read(arguments.refer_contact_id)>
 
-<cfreturn result>
+    <!--- Convert struct to query with specific columns and aliases --->
+    <cfif structIsEmpty(contactStruct)>
+        <cfset var result = queryNew("contactid,contacttitle,recordname,contactmeetingdate,contactmeetingloc,refer_contact_id,fullname,contactNickname,contactID,userID,contactStatus,contactCreationDate,contactLastUpdated,contactphoto,contactBirthday,contactPronoun")>
+    <cfelse>
+        <cfset var result = queryNew("contactid,contacttitle,recordname,contactmeetingdate,contactmeetingloc,refer_contact_id,fullname,contactNickname,contactID,userID,contactStatus,contactCreationDate,contactLastUpdated,contactphoto,contactBirthday,contactPronoun")>
+        <cfset queryAddRow(result, 1)>
+        <cfset querySetCell(result, "contactid", contactStruct.contactid, 1)>
+        <cfset querySetCell(result, "contacttitle", contactStruct.contacttitle, 1)>
+        <cfset querySetCell(result, "recordname", contactStruct.recordname, 1)>
+        <cfset querySetCell(result, "contactmeetingdate", contactStruct.contactMeetingDate, 1)>
+        <cfset querySetCell(result, "contactmeetingloc", contactStruct.contactMeetingLoc, 1)>
+        <cfset querySetCell(result, "refer_contact_id", contactStruct.refer_contact_id, 1)>
+        <cfset querySetCell(result, "fullname", contactStruct.contactFullName, 1)>
+        <cfset querySetCell(result, "contactNickname", contactStruct.contactNickname, 1)>
+        <cfset querySetCell(result, "contactID", contactStruct.contactid, 1)>
+        <cfset querySetCell(result, "userID", contactStruct.userid, 1)>
+        <cfset querySetCell(result, "contactStatus", contactStruct.contactStatus, 1)>
+        <cfset querySetCell(result, "contactCreationDate", contactStruct.contactCreationDate, 1)>
+        <cfset querySetCell(result, "contactLastUpdated", contactStruct.contactLastUpdated, 1)>
+        <cfset querySetCell(result, "contactphoto", contactStruct.contactphoto, 1)>
+        <cfset querySetCell(result, "contactBirthday", contactStruct.contactBirthday, 1)>
+        <cfset querySetCell(result, "contactPronoun", contactStruct.contactPronoun, 1)>
+    </cfif>
+
+    <cfreturn result>
 </cffunction>
-<cffunction output="false" name="REScontactdetails" access="public" returntype="query">
+<cffunction output="false" name="REScontactdetails" access="public" returntype="query" hint="Legacy wrapper - delegates to list()">
     <cfargument name="userId" type="numeric" required="true">
 
-<cfquery name="result" >
-            SELECT 
-                d.contactid, 
-                d.recordname AS col1 
-            FROM 
-                contactdetails d 
-            WHERE 
-                d.contactstatus = 'Active' 
-                AND d.userid = <cfqueryparam value="#arguments.userId#" cfsqltype="CF_SQL_INTEGER"> 
-            ORDER BY 
-                d.contactfullname
-        </cfquery>
+    <!--- Thin wrapper: delegate to list() with Active filter --->
+    <cfset var filtersStruct = {
+        userid: arguments.userId,
+        contactStatus: "Active",
+        orderBy: "contactfullname",
+        orderDir: "ASC"
+    }>
 
-<cfreturn result>
+    <cfset var fullList = this.list(filtersStruct)>
+
+    <!--- Return only contactid and col1 (recordname alias) columns --->
+    <cfset var result = queryNew("contactid,col1", "integer,varchar")>
+
+    <cfloop query="fullList">
+        <cfset queryAddRow(result, 1)>
+        <cfset querySetCell(result, "contactid", fullList.contactid, result.recordCount)>
+        <cfset querySetCell(result, "col1", fullList.recordname, result.recordCount)>
+    </cfloop>
+
+    <cfreturn result>
 </cffunction>
-<cffunction output="false" name="DETcontactdetails_24629" access="public" returntype="query">
+<cffunction output="false" name="DETcontactdetails_24629" access="public" returntype="query" hint="Legacy wrapper - delegates to read()">
     <cfargument name="refer_contact_id" type="numeric" required="true">
 
-<cfquery name="result" >
-            SELECT 
-                d.contactid, 
-                d.contacttitle, 
-                d.recordname, 
-                d.contactmeetingdate, 
-                d.contactmeetingloc, 
-                d.refer_contact_id, 
-                d.contactFullName AS fullname, 
-                d.contactfullname, 
-                d.contactNickname, 
-                d.contactID, 
-                d.userID, 
-                d.contactStatus, 
-                d.contactCreationDate, 
-                d.contactLastUpdated, 
-                d.contactphoto, 
-                d.contactBirthday, 
-                d.contactPronoun
-            FROM contactdetails d
-            INNER JOIN taousers u ON u.userid = d.userid
-            WHERE d.contactID = <cfqueryparam value="#arguments.refer_contact_id#" cfsqltype="CF_SQL_INTEGER">
-        </cfquery>
+    <!--- Thin wrapper: delegate to read() and convert struct to query --->
+    <cfset var contactStruct = this.read(arguments.refer_contact_id)>
 
-<cfreturn result>
+    <!--- Convert struct to query with specific columns and aliases --->
+    <cfif structIsEmpty(contactStruct)>
+        <cfset var result = queryNew("contactid,contacttitle,recordname,contactmeetingdate,contactmeetingloc,refer_contact_id,fullname,contactfullname,contactNickname,contactID,userID,contactStatus,contactCreationDate,contactLastUpdated,contactphoto,contactBirthday,contactPronoun")>
+    <cfelse>
+        <cfset var result = queryNew("contactid,contacttitle,recordname,contactmeetingdate,contactmeetingloc,refer_contact_id,fullname,contactfullname,contactNickname,contactID,userID,contactStatus,contactCreationDate,contactLastUpdated,contactphoto,contactBirthday,contactPronoun")>
+        <cfset queryAddRow(result, 1)>
+        <cfset querySetCell(result, "contactid", contactStruct.contactid, 1)>
+        <cfset querySetCell(result, "contacttitle", contactStruct.contacttitle, 1)>
+        <cfset querySetCell(result, "recordname", contactStruct.recordname, 1)>
+        <cfset querySetCell(result, "contactmeetingdate", contactStruct.contactMeetingDate, 1)>
+        <cfset querySetCell(result, "contactmeetingloc", contactStruct.contactMeetingLoc, 1)>
+        <cfset querySetCell(result, "refer_contact_id", contactStruct.refer_contact_id, 1)>
+        <cfset querySetCell(result, "fullname", contactStruct.contactFullName, 1)>
+        <cfset querySetCell(result, "contactfullname", contactStruct.contactFullName, 1)>
+        <cfset querySetCell(result, "contactNickname", contactStruct.contactNickname, 1)>
+        <cfset querySetCell(result, "contactID", contactStruct.contactid, 1)>
+        <cfset querySetCell(result, "userID", contactStruct.userid, 1)>
+        <cfset querySetCell(result, "contactStatus", contactStruct.contactStatus, 1)>
+        <cfset querySetCell(result, "contactCreationDate", contactStruct.contactCreationDate, 1)>
+        <cfset querySetCell(result, "contactLastUpdated", contactStruct.contactLastUpdated, 1)>
+        <cfset querySetCell(result, "contactphoto", contactStruct.contactphoto, 1)>
+        <cfset querySetCell(result, "contactBirthday", contactStruct.contactBirthday, 1)>
+        <cfset querySetCell(result, "contactPronoun", contactStruct.contactPronoun, 1)>
+    </cfif>
+
+    <cfreturn result>
 </cffunction>
 <cffunction output="false" name="SELcontactdetails_24674" access="public" returntype="query">
     <cfargument name="userId" type="numeric" required="true">

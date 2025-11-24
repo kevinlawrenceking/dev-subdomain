@@ -52,7 +52,9 @@ Last Updated: 2025
 <!--- Load required data queries --->
 <cfinclude template="/include/qry/pronouns_210_1.cfm" />
 <cfinclude template="/include/qry/refers_210_2.cfm" />
-<cfinclude template="/include/qry/details_269_3.cfm" />
+<!--- Migrated from /include/qry/details_269_3.cfm - inline service call --->
+<cfset contactService = createObject("component", "services.ContactService")>
+<cfset details = contactService.DETcontactdetails(contactid=contactid)>
 
 <!--- Initialize date variables for processing --->
 <cfset contactbirthday = details.contactbirthday />

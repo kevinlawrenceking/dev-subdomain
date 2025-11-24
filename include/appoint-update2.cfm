@@ -63,7 +63,10 @@
     <!--- Check if relationship is numeric --->
     <cfif isNumeric(relationship)>
         <!--- Include find template for relationship --->
-        <cfinclude template="/include/qry/FIND_18_3.cfm" />
+        <!--- Migrated from /include/qry/FIND_18_3.cfm - inline service call --->
+        <cfset contactService = createObject("component", "services.ContactService")>
+        <cfset find = structNew()>
+        <cfset find.recordcount = contactService.getContactCount(userid=userid, relationship=relationship)>
         
         <!--- Check if a record was found --->
         <cfif find.recordcount EQ 1>

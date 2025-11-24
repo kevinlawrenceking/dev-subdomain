@@ -159,7 +159,9 @@
     <cfset new_opencallid = 0 />
     
     <cfif len(referral) gt 0>
-        <cfinclude template="/include/qry/findg_287_19.cfm" />
+        <!--- Migrated from /include/qry/findg_287_19.cfm - inline service call --->
+        <cfset contactService = createObject("component", "services.ContactService")>
+        <cfset findg = contactService.SELcontactdetails_24293(userid=userid, referral=referral)>
         
         <cfif findg.recordcount gt 0>
             <cfset new_contactid = findg.contactid />

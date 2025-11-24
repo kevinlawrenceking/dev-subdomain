@@ -274,7 +274,9 @@ document.addEventListener("DOMContentLoaded", function () {
                         <cfelse>
                             <cfset role_contactid=roledetails.contactid />
                         </cfif>
-                        <cfinclude template="/include/qry/findc_286_4.cfm" />
+                        <!--- Migrated from /include/qry/findc_286_4.cfm - inline service call --->
+                        <cfset contactService = createObject("component", "services.ContactService") />
+                        <cfset findc = contactService.DETcontactdetails_24264(contactid=role_contactid) />
                         <cfif #referrals.contactid# is "#roledetails.contactid#">
                             <cfset new_selectc="selected" />
                         <cfelse>

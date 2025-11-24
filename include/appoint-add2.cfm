@@ -74,7 +74,9 @@
 <!--- Loop through relationships and process each one --->
 <cfloop list="#relationships#" index="relationship">
     <cfif isNumeric(relationship)>
-        <cfinclude template="/include/qry/FIND_14_5.cfm" />
+        <!--- Migrated from /include/qry/FIND_14_5.cfm - inline service call --->
+        <cfset contactService = createObject("component", "services.ContactService")>
+        <cfset FIND = contactService.SELcontactdetails_23727(userid=userid, relationship=relationship)>
         <cfif find.recordcount EQ 1>
             <cfset new_contactid = relationship />
         <cfelse>

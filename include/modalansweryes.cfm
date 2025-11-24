@@ -2,7 +2,9 @@
 
 <cfset sunotes = "Added via past date audition." />
 
-<cfinclude template="/include/qry/fin_recordname_157_1.cfm" />
+<!--- Migrated from /include/qry/fin_recordname_157_1.cfm - inline service call --->
+<cfset contactService = createObject("component", "services.ContactService")>
+<cfset fin_recordname = contactService.getContactRecordName(new_contactid)>
 
 <!--- Check if a record is found in fin_recordname --->
 <cfif #fin_recordname.recordcount# is "1">
