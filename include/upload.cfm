@@ -19,13 +19,67 @@ upload id: #new_uploadid#<BR>
 
 <cffile action="upload" filefield="form.file" destination="#session.userMediaPath#\" nameconflict="MAKEUNIQUE" />
 
-<cfspreadsheet action="read" 
-    
-    src="#session.userMediaPath#\#cffile.serverfile#" 
-    query="importdata" 
-    columnnames="FirstName,LastName,Tag1,Tag2,Tag3,BusinessEmail,PersonalEmail,WorkPhone,MobilePhone,HomePhone,Company,Address,
-    Address2,City,State,Zip,Country,contactMeetingDate,contactMeetingLoc,Birthday,website,Notes" 
-    headerrow="1" />
+<!--- Phase 1: Detect file type and parse accordingly --->
+<cfset fileExtension = lcase(listLast(cffile.serverFile, "."))>
+<cfset templateColumns = "FirstName,LastName,Tag1,Tag2,Tag3,BusinessEmail,PersonalEmail,WorkPhone,MobilePhone,HomePhone,Company,Address,Address2,City,State,Zip,Country,contactMeetingDate,contactMeetingLoc,Birthday,website,Notes">
+
+<cfif fileExtension EQ "csv">
+    <!--- Parse CSV file using CsvParserService --->
+    <cfset csvParser = createObject("component", "services.CsvParserService")>
+    <cfset uploadedFilePath = "#session.userMediaPath#\#cffile.serverfile#">
+
+    <cftry>
+        <cfset importdata = csvParser.csvFileToQuery(uploadedFilePath, templateColumns, true)>
+
+        <cfcatch>
+            <!--- Log error and provide user-friendly message --->
+            <cfoutput>
+                <div class="alert alert-danger">
+                    <h4>CSV Parsing Error</h4>
+                    <p>There was an error parsing your CSV file: #cfcatch.message#</p>
+                    <p>Please ensure your CSV file matches the template format.</p>
+                    <a href="/app/contacts-import/" class="btn btn-primary">Go Back</a>
+                </div>
+            </cfoutput>
+            <cfabort>
+        </cfcatch>
+    </cftry>
+
+<cfelseif fileExtension EQ "xlsx">
+    <!--- Parse XLSX file using existing cfspreadsheet --->
+    <cftry>
+        <cfspreadsheet action="read"
+            src="#session.userMediaPath#\#cffile.serverfile#"
+            query="importdata"
+            columnnames="#templateColumns#"
+            headerrow="1" />
+
+        <cfcatch>
+            <!--- Log error and provide user-friendly message --->
+            <cfoutput>
+                <div class="alert alert-danger">
+                    <h4>Excel File Error</h4>
+                    <p>There was an error reading your Excel file: #cfcatch.message#</p>
+                    <p>Please ensure your file is a valid .xlsx file and matches the template format.</p>
+                    <a href="/app/contacts-import/" class="btn btn-primary">Go Back</a>
+                </div>
+            </cfoutput>
+            <cfabort>
+        </cfcatch>
+    </cftry>
+
+<cfelse>
+    <!--- Unsupported file type --->
+    <cfoutput>
+        <div class="alert alert-danger">
+            <h4>Unsupported File Type</h4>
+            <p>The file type ".<strong>#fileExtension#</strong>" is not supported.</p>
+            <p>Please upload either a <strong>.xlsx</strong> (Excel) or <strong>.csv</strong> file.</p>
+            <a href="/app/contacts-import/" class="btn btn-primary">Go Back</a>
+        </div>
+    </cfoutput>
+    <cfabort>
+</cfif>
 
 
 
@@ -34,6 +88,27 @@ upload id: #new_uploadid#<BR>
 importdata: #importdata.recordcount#<BR>
 </cfoutput>
 
+<!--- ========================================
+      PHASE 1: VALIDATE IMPORT DATA
+     ======================================== --->
+<cfset validationService = createObject("component", "services.ContactImportValidationService")>
+<cfset validationResult = validationService.validateImportData(importdata, userid)>
+
+<!--- Store validation result in session for preview --->
+<cfset session.pendingImport = {
+    uploadid: new_uploadid,
+    validationResult: validationResult,
+    filename: cffile.serverFile,
+    uploadDate: now()
+}>
+
+<!--- If there are errors or this needs user review, redirect to preview --->
+<cfif validationResult.errorCount GT 0 OR validationResult.updateCount GT 0>
+    <cflocation url="/app/contacts-import/?preview=true&uploadid=#new_uploadid#" addtoken="false">
+    <cfabort>
+</cfif>
+
+<!--- Otherwise continue with automatic processing --->
 
 <cfinclude template="/include/qry/find_315_2.cfm" />
 <cfoutput>

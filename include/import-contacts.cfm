@@ -9,8 +9,136 @@
 <cfinclude template="/include/qry/imports.cfm" />
 
 <cfparam name="step" default="1" />
+<cfparam name="url.preview" default="false" />
 
-<cfif isDefined('uploadid')>
+<!--- ========================================
+      PHASE 1: IMPORT PREVIEW
+     ======================================== --->
+<cfif url.preview EQ "true" AND structKeyExists(session, "pendingImport")>
+    <cfset preview = session.pendingImport>
+    <cfset validation = preview.validationResult>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="header-title">Import Preview - Review Before Importing</h4>
+
+                    <!--- Summary Alert --->
+                    <div class="alert <cfif validation.errorCount GT 0>alert-warning<cfelse>alert-info</cfif>">
+                        <h5><i class="fe-info mr-2"></i>Import Summary</h5>
+                        <cfoutput>
+                        <ul class="mb-0">
+                            <li><strong>#validation.newCount#</strong> new contact(s) will be created</li>
+                            <li><strong>#validation.updateCount#</strong> existing contact(s) will be updated (duplicates detected)</li>
+                            <cfif validation.errorCount GT 0>
+                                <li class="text-danger"><strong>#validation.errorCount#</strong> row(s) have errors and will be skipped</li>
+                            </cfif>
+                        </ul>
+                        <p class="mt-2 mb-0"><strong>File:</strong> #preview.filename# | <strong>Uploaded:</strong> #dateFormat(preview.uploadDate, "mm/dd/yyyy")# #timeFormat(preview.uploadDate, "h:mm tt")#</p>
+                        </cfoutput>
+                    </div>
+
+                    <!--- Errors Section --->
+                    <cfif validation.errorCount GT 0>
+                        <div class="alert alert-danger">
+                            <h5><i class="fe-alert-triangle mr-2"></i>Errors Found (#validation.errorCount#)</h5>
+                            <p>The following rows have validation errors and will <strong>not</strong> be imported:</p>
+                            <div style="max-height: 300px; overflow-y: auto;">
+                                <table class="table table-sm table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>Row</th>
+                                            <th>Name</th>
+                                            <th>Errors</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <cfoutput>
+                                        <cfloop array="#validation.errors#" index="error">
+                                            <tr>
+                                                <td>#error.row#</td>
+                                                <td>#error.name#</td>
+                                                <td>
+                                                    <ul class="mb-0 pl-3">
+                                                        <cfloop array="#error.errors#" index="errMsg">
+                                                            <li><small>#errMsg#</small></li>
+                                                        </cfloop>
+                                                    </ul>
+                                                </td>
+                                            </tr>
+                                        </cfloop>
+                                        </cfoutput>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </cfif>
+
+                    <!--- Duplicates Section --->
+                    <cfif validation.updateCount GT 0>
+                        <div class="alert alert-info">
+                            <h5><i class="fe-users mr-2"></i>Duplicates Found (#validation.updateCount#)</h5>
+                            <p>The following contacts already exist and will be <strong>updated</strong> with new information:</p>
+                            <div style="max-height: 300px; overflow-y: auto;">
+                                <table class="table table-sm table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>Row</th>
+                                            <th>Imported Name</th>
+                                            <th>Matches Existing</th>
+                                            <th>Match Type</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <cfoutput>
+                                        <cfloop array="#validation.duplicates#" index="dup">
+                                            <tr>
+                                                <td>#dup.row#</td>
+                                                <td>#dup.name#</td>
+                                                <td>
+                                                    <a href="/app/contact/index.cfm?contactid=#dup.contactid#" target="_blank">
+                                                        #dup.matchedContact#
+                                                    </a>
+                                                </td>
+                                                <td><span class="badge badge-secondary">#dup.matchType#</span></td>
+                                            </tr>
+                                        </cfloop>
+                                        </cfoutput>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </cfif>
+
+                    <!--- Action Buttons --->
+                    <div class="mt-4">
+                        <cfoutput>
+                        <form method="post" action="/include/upload_confirm.cfm" class="d-inline">
+                            <input type="hidden" name="uploadid" value="#preview.uploadid#">
+                            <button type="submit" class="btn btn-success"
+                                    <cfif validation.errorCount EQ validation.newCount + validation.updateCount + validation.errorCount>disabled</cfif>>
+                                <i class="fe-check mr-1"></i>
+                                Confirm and Import
+                                <cfif validation.newCount + validation.updateCount GT 0>
+                                    (#validation.newCount + validation.updateCount# contacts)
+                                </cfif>
+                            </button>
+                        </form>
+                        </cfoutput>
+                        <a href="/app/contacts-import/" class="btn btn-secondary">
+                            <i class="fe-x mr-1"></i> Cancel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!--- Clear the session after showing preview --->
+    <!--- <cfset structDelete(session, "pendingImport")> --->
+
+<cfelseif isDefined('uploadid')>
     <!--- Include upload details if upload ID is defined --->
     <cfinclude template="/include/qry/upload_details_141_1.cfm" />
     
@@ -90,28 +218,76 @@
         <div class="col-12">
             <div class="card mb-3">
                 <div class="card-body">
-                    <h5>Step One: Import Template</h5>    
-                    <p>Download the <a href="/include/download_contact_template.cfm" target="_blank"><strong><i class="fe-upload"></i> Import Template</strong></a> to copy and paste all the contacts you'd like to import. <strong>Imports must be in this format.</strong></p>
+                    <h5>Step One: Download Import Template</h5>
+                    <p>Download the import template in your preferred format:</p>
 
-            
-                
-                    <p></p><p></p><p></p><p></p>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="card border">
+                                <div class="card-body text-center">
+                                    <i class="fe-file-text" style="font-size: 2rem; color: #28a745;"></i>
+                                    <h6 class="mt-2">CSV Template</h6>
+                                    <p class="text-muted small">Works with Excel, Numbers, and Google Sheets</p>
+                                    <a href="/include/download_contact_template.cfm?format=csv" target="_blank" class="btn btn-success btn-sm">
+                                        <i class="fe-download mr-1"></i> Download CSV
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card border">
+                                <div class="card-body text-center">
+                                    <i class="fe-file" style="font-size: 2rem; color: #217346;"></i>
+                                    <h6 class="mt-2">Excel Template</h6>
+                                    <p class="text-muted small">Traditional Excel format (.xlsx)</p>
+                                    <a href="/include/download_contact_template.cfm?format=xlsx" target="_blank" class="btn btn-success btn-sm">
+                                        <i class="fe-download mr-1"></i> Download Excel
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-                    <h5>Step Two: Upload Template</h5>   
-                    <p>Once you've populated and saved the Import Template as an .xlsx file, select the file and upload.</p>
+                    <div class="alert alert-info">
+                        <i class="fe-info mr-2"></i>
+                        <strong>Mac Users:</strong> We recommend using the <strong>CSV template</strong> which opens perfectly in Apple Numbers, Excel, and Google Sheets.
+                    </div>
+
+                    <hr class="my-4">
+
+                    <h5>Step Two: Upload Your Completed File</h5>
+                    <p>Fill in your contacts in the template, save it, and upload the file below.</p>
+                    <p class="text-muted small">Accepted formats: <strong>.xlsx</strong> (Excel) or <strong>.csv</strong> (Comma-separated values)</p>
 
                     <form action="/include/upload.cfm" method="post" enctype="multipart/form-data" id="upload">
                         <cfoutput>
                             <input type="hidden" name="userid" value="#userid#" />
                         </cfoutput>
-                        <input name="file" onchange="unlock();" type="file" />
-                        <p></p><p></p><p></p><p></p>
-                        <input type="submit" value="Upload" class="btn btn-xs btn-primary waves-effect mb-2 waves-light" style="background-color: #406e8e; border: #406e8e" id="buttonSubmit" disabled />
-                    </form>   
 
-                    <div class="dropzone-previews mt-3" id="file-previews"></div>  
+                        <div class="custom-file mb-3">
+                            <input type="file" class="custom-file-input" id="fileUpload" name="file"
+                                   accept=".xlsx,.csv" onchange="unlock(); updateFileName(this);" required>
+                            <label class="custom-file-label" for="fileUpload">Choose file...</label>
+                        </div>
+
+                        <button type="submit" id="buttonSubmit" disabled
+                                class="btn btn-primary waves-effect waves-light"
+                                style="background-color: #406e8e; border: #406e8e">
+                            <i class="fe-upload mr-1"></i> Upload and Preview
+                        </button>
+                    </form>
+
+                    <div class="dropzone-previews mt-3" id="file-previews"></div>
                 </div>
-            </div>    
+            </div>
+
+            <script>
+            function updateFileName(input) {
+                var fileName = input.files[0].name;
+                var label = input.nextElementSibling;
+                label.textContent = fileName;
+            }
+            </script>    
         </div>
     </div>
 

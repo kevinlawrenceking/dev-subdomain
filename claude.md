@@ -101,6 +101,18 @@ Events include:
 * Tables use `int`, `bit`, `datetime`, `varchar(Max)` for text fields
 * Business logic enforced via ColdFusion
 
+**Database and Datasource Naming:**
+
+* **Datasource names** (used in ColdFusion `<cfquery>` tags):
+  * `reach` - Primary datasource for most queries
+  * `abo` - Production datasource reference
+  * `abod` - Development datasource reference
+* **Actual database names** (used in SQL scripts):
+  * `actorsbusinessoffice` - Production database
+  * `new_development` - Development database
+* **Important:** Datasource names (`abo`/`abod`) are variables to enable easy migration between dev and prod
+* **SQL Script Convention:** Always use fully qualified names: `new_development.dbo.tablename` or `actorsbusinessoffice.dbo.tablename`
+
 ### Flutter (future)
 
 * Will wrap core TAO flows: contact management, reminders, event scheduling
