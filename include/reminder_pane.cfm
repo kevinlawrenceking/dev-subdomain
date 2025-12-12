@@ -12,9 +12,20 @@
 <div class="card mt-3">
   <div class="card-header d-flex justify-content-between align-items-center">
     <h5 class="mb-0">Reminders</h5>
-    <div class="form-check">
-      <input class="form-check-input" type="checkbox" id="showInactive" value="1" <cfif showInactive EQ 1>checked</cfif>>
-      <label class="form-check-label" for="showInactive">Show action log</label>
+    <div class="d-flex gap-2 align-items-center">
+      <div id="batchActions" style="display: none;">
+        <button id="batchComplete" class="btn btn-success btn-sm">
+          <i class="fas fa-check"></i> Complete Selected
+        </button>
+        <button id="batchSkip" class="btn btn-secondary btn-sm">
+          <i class="fas fa-circle-minus"></i> Skip Selected
+        </button>
+        <span id="selectedCount" class="badge bg-primary ms-2">0 selected</span>
+      </div>
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" id="showInactive" value="1" <cfif showInactive EQ 1>checked</cfif>>
+        <label class="form-check-label" for="showInactive">Show action log</label>
+      </div>
     </div>
   </div>
 <Cfif showContact eq "N">
@@ -29,11 +40,14 @@
     <table id="remindersTable" class="table table-striped table-bordered table-sm w-100">
       <thead>
         <tr>
+          <th style="width: 30px;">
+            <input type="checkbox" id="selectAll" title="Select All">
+          </th>
           <th style="white-space: nowrap;">Action</th>
-   
-        
+
+
           <th style="display:<cfoutput>#contactVisible#</cfoutput>;">Contact</th>
-     
+
           <th style="white-space: nowrap;">Start Date</th>
           <th style="display: none;">End Date</th>
           <th>Reminder</th>
@@ -81,6 +95,18 @@
       },
       columns: [
         {
+          data: null,
+          orderable: false,
+          className: 'select-checkbox',
+          render: function (data, type, row) {
+            if (row.status === "Pending") {
+              return `<input type="checkbox" class="reminder-checkbox" data-id="${row.id}" data-text="${row.reminder_text}">`;
+            } else {
+              return "";
+            }
+          }
+        },
+        {
           data: "id",
           render: function (data, type, row) {
             if (row.status === "Pending") {
@@ -115,11 +141,11 @@
       ],
       columnDefs: [
         {
-          targets: [0, 2, 6], // Action, Start Date, Type columns
+          targets: [1, 3, 7], // Action, Start Date, Type columns (adjusted for checkbox)
           className: "text-nowrap"
         },
         {
-          targets: 4, // Reminder column
+          targets: 5, // Reminder column (adjusted for checkbox)
           render: function (data, type, row) {
             if (type === 'display') {
               const modalId = `action${row.id}-modal`;
@@ -134,7 +160,7 @@
           }
         },
         {
-          targets: 5, // Type column
+          targets: 6, // Type column (adjusted for checkbox)
           render: function (data, type, row) {
             if (type === 'display') {
               const systemModalId = `system${row.suid}-modal`;
@@ -291,7 +317,7 @@
     $('#confirmReminderButton').click(function () {
       console.log('Submitting reminder completion:', selectedReminder);
       console.log('Posting data:', { notid: selectedReminder.id, notstatus: selectedReminder.status });
-      
+
       $.ajax({
         url: "/include/complete_not_ajax.cfm?bypass=1",
         type: "POST",
@@ -301,13 +327,13 @@
         },
         success: function(response) {
           console.log('Response from complete_not_ajax.cfm:', response);
-          
+
           // Hide the modal first
           const confirmModal = bootstrap.Modal.getInstance(document.getElementById('confirmReminderModal'));
           if (confirmModal) {
             confirmModal.hide();
           }
-          
+
           // Use a more targeted reload that preserves filter state
           if ($.fn.DataTable.isDataTable('#remindersTable')) {
             const table = $('#remindersTable').DataTable();
@@ -331,6 +357,117 @@
         }
       });
     });
+
+    // Batch operations
+    function updateBatchUI() {
+      const checkedBoxes = $('.reminder-checkbox:checked');
+      const count = checkedBoxes.length;
+      $('#selectedCount').text(count + ' selected');
+
+      if (count > 0) {
+        $('#batchActions').show();
+      } else {
+        $('#batchActions').hide();
+      }
+    }
+
+    // Select all checkbox
+    $('#remindersTable').on('change', '#selectAll', function() {
+      const isChecked = $(this).is(':checked');
+      $('.reminder-checkbox').prop('checked', isChecked);
+      updateBatchUI();
+    });
+
+    // Individual checkbox change
+    $('#remindersTable').on('change', '.reminder-checkbox', function() {
+      const allChecked = $('.reminder-checkbox').length === $('.reminder-checkbox:checked').length;
+      $('#selectAll').prop('checked', allChecked);
+      updateBatchUI();
+    });
+
+    // Batch complete
+    $('#batchComplete').click(function() {
+      const selectedIds = [];
+      const selectedTexts = [];
+
+      $('.reminder-checkbox:checked').each(function() {
+        selectedIds.push($(this).data('id'));
+        selectedTexts.push($(this).data('text'));
+      });
+
+      if (selectedIds.length === 0) {
+        alert('No reminders selected');
+        return;
+      }
+
+      const confirmText = selectedIds.length === 1
+        ? `Are you sure you want to mark "${selectedTexts[0]}" as Completed?`
+        : `Are you sure you want to mark ${selectedIds.length} reminders as Completed?`;
+
+      if (confirm(confirmText)) {
+        processBatchReminders(selectedIds, 'Completed');
+      }
+    });
+
+    // Batch skip
+    $('#batchSkip').click(function() {
+      const selectedIds = [];
+      const selectedTexts = [];
+
+      $('.reminder-checkbox:checked').each(function() {
+        selectedIds.push($(this).data('id'));
+        selectedTexts.push($(this).data('text'));
+      });
+
+      if (selectedIds.length === 0) {
+        alert('No reminders selected');
+        return;
+      }
+
+      const confirmText = selectedIds.length === 1
+        ? `Are you sure you want to skip "${selectedTexts[0]}"?`
+        : `Are you sure you want to skip ${selectedIds.length} reminders?`;
+
+      if (confirm(confirmText)) {
+        processBatchReminders(selectedIds, 'Skipped');
+      }
+    });
+
+    function processBatchReminders(notIds, status) {
+      console.log('Processing batch reminders:', notIds, status);
+
+      $.ajax({
+        url: "/include/complete_not_batch.cfm?bypass=1",
+        type: "POST",
+        data: {
+          notids: notIds.join(','),
+          notstatus: status
+        },
+        success: function(response) {
+          console.log('Batch response:', response);
+
+          // Reload table
+          if ($.fn.DataTable.isDataTable('#remindersTable')) {
+            const table = $('#remindersTable').DataTable();
+            table.ajax.reload(function(json) {
+              injectReminderModals(json);
+              // Reset checkboxes
+              $('#selectAll').prop('checked', false);
+              updateBatchUI();
+            }, false);
+          } else {
+            setTimeout(function() {
+              loadReminders();
+            }, 100);
+          }
+        },
+        error: function(xhr, status, error) {
+          console.error('Error processing batch:', error);
+          console.error('Response:', xhr.responseText);
+          alert('Error processing batch reminders: ' + error);
+        }
+      });
+    }
   });
 </script>
 
