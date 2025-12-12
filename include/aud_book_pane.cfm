@@ -115,7 +115,7 @@
             </cfif>
 
             <!--- Check if the project category is Commercial --->
-            <cfif #projectDetails.audcatname# is "Commercial">
+            <cfif projectDetails.audcatname EQ "Commercial" OR projectDetails.audcatname EQ "VO">
                 <div class="col-md-12 col-lg-6 col-xl-4 p-1 text-nowrap"><strong>Buyout: </strong>#dollarformat(roledetails.buyout)#</div>
             </cfif>
             

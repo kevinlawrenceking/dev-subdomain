@@ -258,7 +258,7 @@
 
         <!--- Conditional Buyout Input for Commercial Category --->
         <cfoutput>
-            <cfif #auditionprojectdetails.audcatname# is "Commercial">
+            <cfif auditionprojectdetails.audcatname EQ "Commercial" OR auditionprojectdetails.audcatname EQ "VO">
                 <div class="form-group col-md-6 col-sm-12">
                     <label for="new_buyout">Buyout ($)</label>
                     <input class="form-control" id="new_buyout" name="new_buyout" value="#auditionprojectdetails.buyout#" placeholder="buyout" type="number" data-parsley-type="integer" />

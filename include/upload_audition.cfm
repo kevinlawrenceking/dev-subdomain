@@ -185,11 +185,11 @@ columnnames="projDate,projName,audRoleName,audcatsubname,audsource,cdfirstname,c
             ,<cfqueryparam cfsqltype="cf_sql_char" maxlength="1" value="#left(importdata.pin_yn,1)#"/>
             ,<cfqueryparam cfsqltype="cf_sql_char" maxlength="1" 
                       value="#left(importdata.booked_yn,1)#"/>
-            ,<cfqueryparam cfsqltype="cf_sql_varchar" maxlength="500" 
+            ,<cfqueryparam cfsqltype="cf_sql_longvarchar"
                       value="#TRIM(importdata.projDescription)#"/>
-            ,<cfqueryparam cfsqltype="cf_sql_varchar" maxlength="500" 
+            ,<cfqueryparam cfsqltype="cf_sql_longvarchar"
                       value="#TRIM(importdata.charDescription)#"/>
-            ,<cfqueryparam cfsqltype="cf_sql_varchar" maxlength="500" 
+            ,<cfqueryparam cfsqltype="cf_sql_longvarchar"
                       value="#TRIM(importdata.note)#"/>
             )
         </cfquery>
