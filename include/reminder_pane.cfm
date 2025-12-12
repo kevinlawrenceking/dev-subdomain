@@ -7,6 +7,18 @@
 
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  /* Override DataTables Select extension checkbox styling */
+  #remindersTable th.select-checkbox::before,
+  #remindersTable th.select-checkbox::after,
+  #remindersTable td.select-checkbox::before,
+  #remindersTable td.select-checkbox::after {
+    display: none !important;
+  }
+  #remindersTable .dt-center {
+    text-align: center;
+  }
+</style>
 <cfset showInactive = url.showInactive>
 
 <div class="card mt-3">
@@ -97,7 +109,7 @@
         {
           data: null,
           orderable: false,
-          className: 'select-checkbox',
+          className: 'dt-center',
           render: function (data, type, row) {
             if (row.status === "Pending") {
               return `<input type="checkbox" class="reminder-checkbox" data-id="${row.id}" data-text="${row.reminder_text}">`;
