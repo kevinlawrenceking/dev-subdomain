@@ -7,10 +7,7 @@
 
 <cfset new_uploadid = result.generatedkey />
 
-<cfoutput>
-upload id: #new_uploadid#<BR>
-    <cfset session.userMediaPath = "C:\home\theactorsoffice.com\wwwroot\#host#-subdomain\media-#host#\users\#userid#" />
-</cfoutput>
+<cfset session.userMediaPath = "C:\home\theactorsoffice.com\wwwroot\#host#-subdomain\media-#host#\users\#userid#" />
 
 <!--- Check if the user media path exists, if not, create it --->
 <CFIF not DirectoryExists("#session.userMediaPath#")>
@@ -27,22 +24,10 @@ upload id: #new_uploadid#<BR>
     Address2,City,State,Zip,Country,contactMeetingDate,contactMeetingLoc,Birthday,website,Notes" 
     headerrow="1" />
 
-
-
-
-<cfoutput>
-importdata: #importdata.recordcount#<BR>
-</cfoutput>
-
-
 <cfinclude template="/include/qry/find_315_2.cfm" />
-<cfoutput>
-Contacts imported: #find#<BR>
-</cfoutput>
 
 <cfinclude template="/include/qry/getContactsImportByUploadID.cfm" />
-<cfoutput>contactimports to loop: #new.recordcount#<BR></cfoutput>
-<cfoutput>notes: #new.notes#<BR></cfoutput>
+
 <cfloop query="new">
 
  <cfinclude template="/include/qry/add_315_6.cfm" />
@@ -52,8 +37,7 @@ Contacts imported: #find#<BR>
         <cfinclude template="/include/folder_setup.cfm" />
 
 
-     <cfif #new.notes# is not ""> 
-New notes arent empty <BR>
+     <cfif #new.notes# is not "">
         <cfinclude template="/include/qry/find_note_315_7.cfm" />
         
         <cfif #find_Note.recordcount# is "0">

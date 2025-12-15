@@ -4,4 +4,3 @@
     select_contactid = select_contactid,
     noteDetailsPrefix = left(new.notes, 8)
 )>
-<cfdump var="#find_note#" label="notes" >
