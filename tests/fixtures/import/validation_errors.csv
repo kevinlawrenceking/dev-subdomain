@@ -1,0 +1,7 @@
+First Name,Last Name,Email,Phone,Company,Website
+John,Doe,invalid-email,123,Acme,not-a-url
+,Smith,jane@test.org,555-1234,Widget,https://widget.com
+Bob,,bob@email.com,abc-def-ghij,Tech,http://tech.io
+,,,,,
+Alice,Williams,alice@@company.net,(555) 999-9999,Creative,ftp://files.creative.com
+Tom,Baker,tom@email,5555-12345-67890,Agency,www.agency.com
