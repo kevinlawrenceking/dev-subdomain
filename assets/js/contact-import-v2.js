@@ -171,7 +171,7 @@
         formData.append('file', file);
 
         $.ajax({
-            url: '/ajax/import/upload.cfm',
+            url: '/ajax/import/upload.cfm?bypass=1',
             type: 'POST',
             data: formData,
             processData: false,
@@ -230,7 +230,7 @@
         $('#parse-progress').show();
 
         $.ajax({
-            url: '/ajax/import/parse.cfm',
+            url: '/ajax/import/parse.cfm?bypass=1',
             type: 'POST',
             contentType: 'application/json',
             data: JSON.stringify({ job_id: state.jobId }),
@@ -253,7 +253,7 @@
     }
 
     function loadColumnMappings() {
-        $.get('/ajax/import/columns.cfm?job_id=' + state.jobId, function(response) {
+        $.get('/ajax/import/columns.cfm?job_id=' + state.jobId + '&bypass=1', function(response) {
             if (response.success) {
                 renderColumnMappings(response.columns, response.available_fields);
             } else {
@@ -306,7 +306,7 @@
         $('#btn-confirm-mapping').prop('disabled', true);
 
         $.ajax({
-            url: '/ajax/import/parse.cfm',
+            url: '/ajax/import/parse.cfm?bypass=1',
             type: 'POST',
             contentType: 'application/json',
             data: JSON.stringify({ job_id: state.jobId, options: {} }),
@@ -369,7 +369,8 @@
         var url = '/ajax/import/rows.cfm?job_id=' + state.jobId +
             '&status=' + encodeURIComponent(state.currentFilter) +
             '&page=' + state.currentPage +
-            '&limit=' + state.pageSize;
+            '&limit=' + state.pageSize +
+            '&bypass=1';
 
         $.get(url, function(response) {
             if (response.success) {
@@ -515,7 +516,7 @@
     }
 
     function updateStats() {
-        $.get('/ajax/import/status.cfm?job_id=' + state.jobId, function(response) {
+        $.get('/ajax/import/status.cfm?job_id=' + state.jobId + '&bypass=1', function(response) {
             if (response.success) {
                 state.stats = response.stats;
                 $('#stat-total').text(response.stats.total || 0);
@@ -550,7 +551,7 @@
         if (state.selectedRows.size === 0) return;
 
         $.ajax({
-            url: '/ajax/import/bulk-action.cfm',
+            url: '/ajax/import/bulk-action.cfm?bypass=1',
             type: 'POST',
             contentType: 'application/json',
             data: JSON.stringify({
@@ -599,14 +600,14 @@
         currentEditRowId = rowId;
 
         // Find row data - fetch the specific row
-        $.get('/ajax/import/rows.cfm?job_id=' + state.jobId + '&row_id=' + rowId, function(response) {
+        $.get('/ajax/import/rows.cfm?job_id=' + state.jobId + '&row_id=' + rowId + '&bypass=1', function(response) {
             var row = null;
             if (response.rows && response.rows.length > 0) {
                 row = response.rows.find(function(r) { return r.row_id === rowId; });
             }
             if (!row) {
                 // Fallback: try fetching from problem status
-                $.get('/ajax/import/rows.cfm?job_id=' + state.jobId + '&status=problem', function(resp2) {
+                $.get('/ajax/import/rows.cfm?job_id=' + state.jobId + '&status=problem&bypass=1', function(resp2) {
                     row = resp2.rows.find(function(r) { return r.row_id === rowId; });
                     if (row) {
                         renderEditModal(row);
@@ -830,7 +831,7 @@
         $btn.prop('disabled', true).html('<i class="fe-loader fe-spin"></i> Saving...');
 
         $.ajax({
-            url: '/ajax/import/update-row.cfm',
+            url: '/ajax/import/update-row.cfm?bypass=1',
             type: 'POST',
             contentType: 'application/json',
             data: JSON.stringify({
@@ -868,7 +869,7 @@
     function resolveDupe(rowId) {
         currentDupeRowId = rowId;
 
-        $.get('/ajax/import/rows.cfm?job_id=' + state.jobId + '&status=dupe', function(response) {
+        $.get('/ajax/import/rows.cfm?job_id=' + state.jobId + '&status=dupe&bypass=1', function(response) {
             var row = response.rows.find(function(r) { return r.row_id === rowId; });
             if (!row) return;
 
@@ -915,7 +916,7 @@
 
     function setDupeAction(action) {
         $.ajax({
-            url: '/ajax/import/row-action.cfm',
+            url: '/ajax/import/row-action.cfm?bypass=1',
             type: 'POST',
             contentType: 'application/json',
             data: JSON.stringify({
@@ -946,7 +947,7 @@
         $('#finalize-progress').show();
 
         $.ajax({
-            url: '/ajax/import/finalize.cfm',
+            url: '/ajax/import/finalize.cfm?bypass=1',
             type: 'POST',
             contentType: 'application/json',
             data: JSON.stringify({ job_id: state.jobId }),
