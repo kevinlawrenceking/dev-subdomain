@@ -389,8 +389,9 @@
     }>
 
     <cftry>
-        <!--- Get sheet info --->
-        <cfspreadsheet action="info" name="spreadsheetInfo" src="#arguments.filePath#">
+        <!--- Get sheet info using SpreadsheetRead and SpreadsheetInfo functions --->
+        <cfset var spreadsheetObj = SpreadsheetRead(arguments.filePath)>
+        <cfset var spreadsheetInfo = SpreadsheetInfo(spreadsheetObj)>
 
         <!--- Store available sheets --->
         <cfset result.sheets = listToArray(spreadsheetInfo.sheetNames)>
