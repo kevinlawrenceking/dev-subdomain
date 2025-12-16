@@ -34,7 +34,7 @@
     <!--- Set up upload directory --->
     <cfset currentURL = cgi.server_name>
     <cfset host = ListFirst(currentURL, ".")>
-    <cfset uploadDir = "C:\home\theactorsoffice.com\wwwroot\#host#-subdomain\media-#host#\users\#userid#\imports">
+    <cfset uploadDir = "C:\home\theactorsoffice.com\wwwroot\" & host & "-subdomain\media-" & host & "\users\" & userid & "\imports">
 
     <!--- Create directory if needed --->
     <cfif not directoryExists(uploadDir)>

@@ -41,7 +41,7 @@
     <!--- Validate action --->
     <cfset validActions = "import_new,skip,update_existing">
     <cfif not structKeyExists(requestData, "action") or not listFindNoCase(validActions, requestData.action)>
-        <cfset response.message = "Invalid action. Must be one of: #validActions#">
+        <cfset response.message = "Invalid action. Must be one of: " & validActions>
         <cfoutput>#serializeJSON(response)#</cfoutput>
         <cfabort>
     </cfif>

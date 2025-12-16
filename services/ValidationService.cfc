@@ -114,10 +114,10 @@
     <!--- Format based on length --->
     <cfif len(digitsOnly) eq 10 and not hasPlus>
         <!--- US format: (XXX) XXX-XXXX --->
-        <cfset result.normalized = "(#left(digitsOnly, 3)#) #mid(digitsOnly, 4, 3)#-#right(digitsOnly, 4)#">
+        <cfset result.normalized = "(" & left(digitsOnly, 3) & ") " & mid(digitsOnly, 4, 3) & "-" & right(digitsOnly, 4)>
     <cfelseif len(digitsOnly) eq 11 and left(digitsOnly, 1) eq "1" and not hasPlus>
         <!--- US with country code: +1 (XXX) XXX-XXXX --->
-        <cfset result.normalized = "+1 (#mid(digitsOnly, 2, 3)#) #mid(digitsOnly, 5, 3)#-#right(digitsOnly, 4)#">
+        <cfset result.normalized = "+1 (" & mid(digitsOnly, 2, 3) & ") " & mid(digitsOnly, 5, 3) & "-" & right(digitsOnly, 4)>
     <cfelseif hasPlus>
         <!--- International format: +XX XXX XXX XXXX --->
         <cfset result.normalized = "+" & digitsOnly>
@@ -350,14 +350,14 @@
     <!--- Check minimum length --->
     <cfif len(trimmed) lt arguments.minLength>
         <cfset result.valid = false>
-        <cfset result.error = "Must be at least #arguments.minLength# characters">
+        <cfset result.error = "Must be at least " & arguments.minLength & " characters">
         <cfreturn result>
     </cfif>
 
     <!--- Check maximum length --->
     <cfif len(trimmed) gt arguments.maxLength>
         <cfset result.valid = false>
-        <cfset result.error = "Exceeds maximum length of #arguments.maxLength# characters">
+        <cfset result.error = "Exceeds maximum length of " & arguments.maxLength & " characters">
         <cfset result.warning = "Value will be truncated">
         <!--- Truncate --->
         <cfset result.normalized = left(trimmed, arguments.maxLength)>
@@ -381,7 +381,7 @@
 
     <cfif not len(trim(arguments.value))>
         <cfset result.valid = false>
-        <cfset result.error = "#arguments.fieldName# is required">
+        <cfset result.error = arguments.fieldName & " is required">
     </cfif>
 
     <cfreturn result>
@@ -615,13 +615,13 @@
 
     <!--- If we have full name but not parts, try to split --->
     <cfif len(result.fullName) and not len(result.firstName) and not len(result.lastName)>
-        <cfset var parts = listToArray(result.fullName, " ")>
-        <cfif arrayLen(parts) gte 2>
-            <cfset result.firstName = parts[1]>
-            <cfset arrayDeleteAt(parts, 1)>
-            <cfset result.lastName = arrayToList(parts, " ")>
-        <cfelseif arrayLen(parts) eq 1>
-            <cfset result.firstName = parts[1]>
+        <cfset var nameParts = listToArray(result.fullName, " ")>
+        <cfif arrayLen(nameParts) gte 2>
+            <cfset result.firstName = nameParts[1]>
+            <cfset arrayDeleteAt(nameParts, 1)>
+            <cfset result.lastName = arrayToList(nameParts, " ")>
+        <cfelseif arrayLen(nameParts) eq 1>
+            <cfset result.firstName = nameParts[1]>
         </cfif>
     </cfif>
 

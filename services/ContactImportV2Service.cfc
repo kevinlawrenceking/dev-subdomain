@@ -775,7 +775,7 @@
     <cfset result.ready_count = readyCount + dupeWithActionCount>
 
     <cfif problemCount gt 0>
-        <cfset arrayAppend(result.issues, "#problemCount# rows have validation errors")>
+        <cfset arrayAppend(result.issues, problemCount & " rows have validation errors")>
     </cfif>
 
     <!--- Check for dupes without action --->
@@ -787,7 +787,7 @@
           AND (user_action IS NULL OR user_action = '')
     </cfquery>
     <cfif qDupeNoAction.cnt gt 0>
-        <cfset arrayAppend(result.issues, "#qDupeNoAction.cnt# duplicate rows need action selection")>
+        <cfset arrayAppend(result.issues, qDupeNoAction.cnt & " duplicate rows need action selection")>
     </cfif>
 
     <cfif result.ready_count gt 0 and arrayLen(result.issues) eq 0>
@@ -895,7 +895,7 @@
                         </cfquery>
 
                         <cfset result.failed++>
-                        <cfset arrayAppend(result.errors, "Row #qRows.row_num#: #cfcatch.message#")>
+                        <cfset arrayAppend(result.errors, "Row " & qRows.row_num & ": " & cfcatch.message)>
 
                         <cfset logEvent(arguments.job_id, "row_failed", {
                             row_id: qRows.row_id,

@@ -49,7 +49,7 @@
     <!--- Validate action --->
     <cfset validActions = "import_new,skip,update_existing,ignore">
     <cfif not structKeyExists(requestData, "action") or not listFindNoCase(validActions, requestData.action)>
-        <cfset response.message = "Invalid action. Must be one of: #validActions#">
+        <cfset response.message = "Invalid action. Must be one of: " & validActions>
         <cfoutput>#serializeJSON(response)#</cfoutput>
         <cfabort>
     </cfif>
@@ -80,7 +80,7 @@
     <!--- Return success --->
     <cfset response.success = true>
     <cfset response.affected = arrayLen(requestData.row_ids)>
-    <cfset response.message = "Action set for #arrayLen(requestData.row_ids)# rows">
+    <cfset response.message = "Action set for " & arrayLen(requestData.row_ids) & " rows">
 
     <cfcatch type="any">
         <cfset response.message = "Error: " & cfcatch.message>

@@ -107,12 +107,12 @@
         </cfloop>
 
         <!--- Count occurrences of common delimiters --->
-        <cfset var delimiters = {
-            ",": 0,
-            chr(9): 0,
-            ";": 0,
-            "|": 0
-        }>
+        <cfset var tabChar = chr(9)>
+        <cfset var delimiters = structNew()>
+        <cfset delimiters[","] = 0>
+        <cfset delimiters[tabChar] = 0>
+        <cfset delimiters[";"] = 0>
+        <cfset delimiters["|"] = 0>
 
         <cfloop array="#sampleLines#" index="line">
             <cfloop collection="#delimiters#" item="delim">
@@ -204,7 +204,7 @@
             <!--- Generate column headers --->
             <cfif arrayLen(allRows) gt 0>
                 <cfloop from="1" to="#arrayLen(allRows[1])#" index="i">
-                    <cfset arrayAppend(result.headers, "Column_#i#")>
+                    <cfset arrayAppend(result.headers, "Column_" & i)>
                 </cfloop>
             </cfif>
             <cfset var dataStartRow = 1>
@@ -242,7 +242,7 @@
                 <cfset arrayAppend(result.errors, {
                     row_num: rowNum,
                     error_type: "extra_columns",
-                    error_message: "Row has #arrayLen(row)# columns, expected #expectedColumns#. Extra data ignored.",
+                    error_message: "Row has " & arrayLen(row) & " columns, expected " & expectedColumns & ". Extra data ignored.",
                     severity: "warning"
                 })>
             </cfif>
@@ -261,7 +261,7 @@
             <cfset arrayAppend(result.errors, {
                 row_num: 0,
                 error_type: "file_error",
-                error_message: "Failed to parse file: #cfcatch.message#",
+                error_message: "Failed to parse file: " & cfcatch.message,
                 severity: "error"
             })>
         </cfcatch>
@@ -444,7 +444,7 @@
         <cfelse>
             <!--- Generate column headers --->
             <cfloop from="1" to="#arrayLen(columnArray)#" index="i">
-                <cfset arrayAppend(result.headers, "Column_#i#")>
+                <cfset arrayAppend(result.headers, "Column_" & i)>
             </cfloop>
             <cfset var dataStartRow = 1>
         </cfif>
@@ -480,7 +480,7 @@
                             column_index: colIdx - 1,
                             column_name: result.headers[colIdx],
                             error_type: "cell_parse_error",
-                            error_message: "Could not read cell value: #cfcatch.message#",
+                            error_message: "Could not read cell value: " & cfcatch.message,
                             severity: "warning"
                         })>
                     </cfcatch>
@@ -507,7 +507,7 @@
             <cfset arrayAppend(result.errors, {
                 row_num: 0,
                 error_type: "file_error",
-                error_message: "Failed to parse Excel file: #cfcatch.message#",
+                error_message: "Failed to parse Excel file: " & cfcatch.message,
                 severity: "error"
             })>
         </cfcatch>
@@ -591,20 +591,22 @@
             <cfset result.fileType = fileType>
         </cfcase>
         <cfdefaultcase>
+            <cfset var errorMsg = "Unsupported file type: " & fileType & ". Please upload CSV, XLS, or XLSX files.">
             <cfset var result = {
                 success: false,
                 headers: [],
                 rows: [],
-                errors: [{
-                    row_num: 0,
-                    error_type: "unsupported_type",
-                    error_message: "Unsupported file type: #fileType#. Please upload CSV, XLS, or XLSX files.",
-                    severity: "error"
-                }],
+                errors: [],
                 totalRows: 0,
                 parsedRows: 0,
                 fileType: fileType
             }>
+            <cfset arrayAppend(result.errors, {
+                row_num: 0,
+                error_type: "unsupported_type",
+                error_message: errorMsg,
+                severity: "error"
+            })>
         </cfdefaultcase>
     </cfswitch>
 
@@ -663,7 +665,7 @@
     <cfset var fileInfo = getFileInfo(arguments.filePath)>
     <cfif fileInfo.size gt arguments.maxSizeBytes>
         <cfset result.valid = false>
-        <cfset arrayAppend(result.errors, "File too large. Maximum size is #numberFormat(arguments.maxSizeBytes / 1048576, '0')# MB")>
+        <cfset arrayAppend(result.errors, "File too large. Maximum size is " & numberFormat(arguments.maxSizeBytes / 1048576, "0") & " MB")>
     </cfif>
 
     <!--- Check file type --->

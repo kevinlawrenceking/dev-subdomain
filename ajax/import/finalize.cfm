@@ -93,9 +93,9 @@
     <cfset response.errors = importResult.errors>
 
     <cfif importResult.success>
-        <cfset response.message = "Import completed. #importResult.imported# contacts imported.">
+        <cfset response.message = "Import completed. " & importResult.imported & " contacts imported.">
     <cfelse>
-        <cfset response.message = "Import completed with errors. #importResult.imported# imported, #importResult.failed# failed.">
+        <cfset response.message = "Import completed with errors. " & importResult.imported & " imported, " & importResult.failed & " failed.">
     </cfif>
 
     <cfcatch type="any">
