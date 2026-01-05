@@ -1,5 +1,5 @@
 <cfset taoVersionService = createObject("component", "services.TaoVersionService")>
-<cfset taoVersionService.INStaoversions(
+<cfset insertedId = taoVersionService.INStaoversions(
     new_major = new_major,
     new_minor = new_minor,
     new_patch = new_patch,
@@ -13,3 +13,4 @@
     new_releasetime = (new_releasetime neq "") ? new_releasetime : javaCast("null", ""),
     new_hoursavail = (new_hoursavail neq "") ? numberformat(new_hoursavail, '9.99') : javaCast("null", "")
 )>
+<cfset insertResult = {GENERATEDKEY: insertedId}>
