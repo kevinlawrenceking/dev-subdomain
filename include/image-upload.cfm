@@ -6,7 +6,10 @@
 --->
 
 <cfinclude template="/include/qry/FindRefPage_136_1.cfm"/>
-<cfinclude template="/include/qry/FindRefcontacts_135_2.cfm"/>
+<cfparam name="contactid" default="0"/>
+<cfif isNumeric(contactid) AND contactid GT 0>
+    <cfinclude template="/include/qry/FindRefcontacts_135_2.cfm"/>
+</cfif>
 
 <cfoutput>
   <cfset subtitle="#userFirstName# #userLastName#"/>
