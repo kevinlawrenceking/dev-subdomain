@@ -40,13 +40,11 @@
 
     <!--- Build dynamic INSERT query --->
     <cfset var columns = []>
-    <cfset var placeholders = []>
     <cfset var params = []>
 
     <cfloop collection="#arguments.dataStruct#" item="field">
         <cfif structKeyExists(allowedFields, field)>
             <cfset arrayAppend(columns, field)>
-            <cfset arrayAppend(placeholders, "?")>
             <cfset arrayAppend(params, {
                 value: arguments.dataStruct[field],
                 cfsqltype: allowedFields[field]
@@ -54,18 +52,15 @@
         </cfif>
     </cfloop>
 
-    <!--- Validate arrays have matching lengths --->
-    <cfif arrayLen(columns) NEQ arrayLen(params)>
-        <cfthrow message="ContactService.create: Internal error - column/param count mismatch (columns=#arrayLen(columns)#, params=#arrayLen(params)#)">
-    </cfif>
-
-    <!--- Execute INSERT with simple SQL construction --->
+    <!--- Execute INSERT - cfqueryparam tags create the placeholders --->
     <cfquery name="qCreate" result="insertResult">
         INSERT INTO contactdetails (#arrayToList(columns)#)
-        VALUES (#arrayToList(placeholders)#)
-        <cfloop from="1" to="#arrayLen(params)#" index="i">
-            <cfqueryparam value="#params[i].value#" cfsqltype="#params[i].cfsqltype#" null="#(NOT len(trim(params[i].value)))#">
-        </cfloop>
+        VALUES (
+            <cfloop from="1" to="#arrayLen(params)#" index="i">
+                <cfif i GT 1>,</cfif>
+                <cfqueryparam value="#params[i].value#" cfsqltype="#params[i].cfsqltype#" null="#(NOT len(trim(params[i].value)))#">
+            </cfloop>
+        )
     </cfquery>
 
     <cfreturn insertResult.generatedKey>
