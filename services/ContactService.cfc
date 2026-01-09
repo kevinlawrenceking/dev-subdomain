@@ -54,23 +54,17 @@
         </cfif>
     </cfloop>
 
-    <!--- Execute INSERT with dynamic query building --->
-    <cfset var sql = "INSERT INTO contactdetails (">
-    <cfloop from="1" to="#arrayLen(columns)#" index="i">
-        <cfif i GT 1><cfset sql &= ", "></cfif>
-        <cfset sql &= columns[i]>
-    </cfloop>
-    <cfset sql &= ") VALUES (">
-    <cfloop from="1" to="#arrayLen(params)#" index="i">
-        <cfif i GT 1><cfset sql &= ", "></cfif>
-        <cfset sql &= "?">
-    </cfloop>
-    <cfset sql &= ")">
+    <!--- Validate arrays have matching lengths --->
+    <cfif arrayLen(columns) NEQ arrayLen(params)>
+        <cfthrow message="ContactService.create: Internal error - column/param count mismatch (columns=#arrayLen(columns)#, params=#arrayLen(params)#)">
+    </cfif>
 
+    <!--- Execute INSERT with simple SQL construction --->
     <cfquery name="qCreate" result="insertResult">
-        #preserveSingleQuotes(sql)#
+        INSERT INTO contactdetails (#arrayToList(columns)#)
+        VALUES (#arrayToList(placeholders)#)
         <cfloop from="1" to="#arrayLen(params)#" index="i">
-            <cfqueryparam value="#params[i].value#" cfsqltype="#params[i].cfsqltype#" null="#isNull(params[i].value)#">
+            <cfqueryparam value="#params[i].value#" cfsqltype="#params[i].cfsqltype#" null="#(NOT len(trim(params[i].value)))#">
         </cfloop>
     </cfquery>
 

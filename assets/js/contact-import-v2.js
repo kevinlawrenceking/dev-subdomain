@@ -46,6 +46,11 @@
             { value: 'industry', label: 'Industry' },
             { value: 'personal', label: 'Personal' },
             { value: 'vendor', label: 'Vendor' }
+        ]},
+        relationship_system: { type: 'select', label: 'Relationship System', group: 'classification', options: [
+            { value: '', label: '(None)' },
+            { value: 'Target', label: 'Target (Targeted List)' },
+            { value: 'Maintenance', label: 'Maintenance (Maintenance List)' }
         ]}
     };
 
@@ -145,14 +150,15 @@
     }
 
     function uploadFile(file) {
-        // Validate file type
+        // Validate file type (CSV, XLS, XLSX, VCF)
         var validTypes = ['text/csv', 'application/vnd.ms-excel',
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
-        var validExts = ['csv', 'xls', 'xlsx'];
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'text/vcard', 'text/x-vcard'];
+        var validExts = ['csv', 'xls', 'xlsx', 'vcf'];
         var ext = file.name.split('.').pop().toLowerCase();
 
         if (!validTypes.includes(file.type) && !validExts.includes(ext)) {
-            showAlert('error', 'Invalid file type. Please upload CSV, XLS, or XLSX files.');
+            showAlert('error', 'Invalid file type. Please upload CSV, XLS, XLSX, or VCF files.');
             return;
         }
 
@@ -188,6 +194,15 @@
             },
             success: function(response) {
                 if (response.success) {
+                    // Check if this is a duplicate file
+                    if (response.is_duplicate_file && response.existing_job) {
+                        // Show warning but still allow proceeding
+                        var msg = 'Warning: This file was previously imported on ' +
+                            response.existing_job.created_at +
+                            ' (' + response.existing_job.imported_rows + ' contacts imported). ' +
+                            'You can still proceed with this import.';
+                        showAlert('warning', msg);
+                    }
                     // Redirect to job page
                     window.location.href = '/app/contacts-import-v2/?job_id=' + response.job_id;
                 } else {
@@ -222,6 +237,11 @@
         // Finalize button
         $('#btn-finalize').click(function() {
             finalizeImport();
+        });
+
+        // Dry-run button
+        $('#btn-dry-run').click(function() {
+            dryRun();
         });
     }
 
@@ -972,6 +992,119 @@
         });
     }
 
+    function dryRun() {
+        $('#btn-dry-run').prop('disabled', true);
+        $('#dry-run-progress').show();
+
+        $.ajax({
+            url: '/ajax/import/dry-run.cfm?bypass=1',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ job_id: state.jobId }),
+            success: function(response) {
+                $('#dry-run-progress').hide();
+                $('#btn-dry-run').prop('disabled', false);
+
+                if (response.success) {
+                    showDryRunResults(response);
+                } else {
+                    showAlert('error', response.message || 'Dry run failed');
+                }
+            },
+            error: function() {
+                showAlert('error', 'Dry run failed. Please try again.');
+                $('#dry-run-progress').hide();
+                $('#btn-dry-run').prop('disabled', false);
+            }
+        });
+    }
+
+    function showDryRunResults(response) {
+        var summary = response.summary;
+        var warnings = response.warnings || [];
+        var preview = response.preview || [];
+
+        var html = '<div class="dry-run-results">';
+
+        // Summary stats
+        html += '<div class="dry-run-summary">';
+        html += '<h5>Import Summary</h5>';
+        html += '<ul class="list-unstyled">';
+        html += '<li><strong>Will Import:</strong> ' + summary.will_import + ' new contacts</li>';
+        if (summary.will_update > 0) {
+            html += '<li><strong>Will Update:</strong> ' + summary.will_update + ' existing contacts</li>';
+        }
+        if (summary.will_skip > 0) {
+            html += '<li><strong>Will Skip:</strong> ' + summary.will_skip + ' rows</li>';
+        }
+        if (summary.problems_remaining > 0) {
+            html += '<li class="text-danger"><strong>Problems:</strong> ' + summary.problems_remaining + ' rows have errors</li>';
+        }
+        if (summary.dupes_unresolved > 0) {
+            html += '<li class="text-warning"><strong>Unresolved Duplicates:</strong> ' + summary.dupes_unresolved + ' rows</li>';
+        }
+        html += '</ul></div>';
+
+        // Warnings
+        if (warnings.length > 0) {
+            html += '<div class="dry-run-warnings alert alert-warning">';
+            html += '<strong>Warnings:</strong><ul>';
+            for (var i = 0; i < warnings.length; i++) {
+                html += '<li>' + escapeHtml(warnings[i]) + '</li>';
+            }
+            html += '</ul></div>';
+        }
+
+        // Preview (first 20)
+        if (preview.length > 0) {
+            html += '<div class="dry-run-preview">';
+            html += '<h6>Preview (first ' + preview.length + ' contacts):</h6>';
+            html += '<table class="table table-sm table-bordered"><thead><tr>';
+            html += '<th>#</th><th>Name</th><th>Email</th><th>Company</th><th>Action</th>';
+            html += '</tr></thead><tbody>';
+            for (var j = 0; j < preview.length; j++) {
+                var row = preview[j];
+                html += '<tr>';
+                html += '<td>' + row.row_num + '</td>';
+                html += '<td>' + escapeHtml(row.name) + '</td>';
+                html += '<td>' + escapeHtml(row.email) + '</td>';
+                html += '<td>' + escapeHtml(row.company) + '</td>';
+                html += '<td>' + escapeHtml(row.action) + '</td>';
+                html += '</tr>';
+            }
+            html += '</tbody></table></div>';
+        }
+
+        html += '</div>';
+
+        // Show in modal or container
+        var modalHtml = '<div class="modal fade" id="dryRunModal" tabindex="-1">' +
+            '<div class="modal-dialog modal-lg"><div class="modal-content">' +
+            '<div class="modal-header"><h5 class="modal-title">Dry Run Results</h5>' +
+            '<button type="button" class="close" data-dismiss="modal">&times;</button></div>' +
+            '<div class="modal-body">' + html + '</div>' +
+            '<div class="modal-footer">' +
+            '<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>';
+
+        if (summary.will_import + summary.will_update > 0 && summary.problems_remaining === 0 && summary.dupes_unresolved === 0) {
+            modalHtml += '<button type="button" class="btn btn-primary" id="btn-proceed-import">Proceed with Import</button>';
+        }
+
+        modalHtml += '</div></div></div></div>';
+
+        // Remove existing modal if any
+        $('#dryRunModal').remove();
+        $('body').append(modalHtml);
+
+        // Wire up proceed button
+        $('#btn-proceed-import').click(function() {
+            $('#dryRunModal').modal('hide');
+            finalizeImport();
+        });
+
+        $('#dryRunModal').modal('show');
+    }
+
     // ========================================
     // UTILITIES
     // ========================================
@@ -991,8 +1124,16 @@
     }
 
     function showAlert(type, message) {
-        var alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
-        var icon = type === 'success' ? 'fe-check-circle' : 'fe-alert-circle';
+        var alertClass = 'alert-danger';
+        var icon = 'fe-alert-circle';
+
+        if (type === 'success') {
+            alertClass = 'alert-success';
+            icon = 'fe-check-circle';
+        } else if (type === 'warning') {
+            alertClass = 'alert-warning';
+            icon = 'fe-alert-triangle';
+        }
 
         var html = '<div class="alert ' + alertClass + ' alert-dismissible fade show" role="alert">' +
             '<i class="' + icon + '"></i> ' + escapeHtml(message) +

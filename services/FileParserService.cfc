@@ -28,6 +28,9 @@
         <cfcase value="xlsx">
             <cfreturn "xlsx">
         </cfcase>
+        <cfcase value="vcf">
+            <cfreturn "vcf">
+        </cfcase>
         <cfdefaultcase>
             <!--- Try to detect by content --->
             <cftry>
@@ -37,6 +40,9 @@
                     <cfreturn "xlsx">
                 <cfelseif left(content, 8) contains chr(208) & chr(207)>
                     <cfreturn "xls">
+                <cfelseif findNoCase("BEGIN:VCARD", left(content, 100)) gt 0>
+                    <!--- VCF file detected by vCard header --->
+                    <cfreturn "vcf">
                 <cfelse>
                     <!--- Assume CSV for text files --->
                     <cfreturn "csv">
@@ -570,11 +576,316 @@
 
 
 <!--- ========================================
+      VCARD (VCF) PARSING
+     ======================================== --->
+
+<cffunction name="parseVCF" access="public" returntype="struct" output="false"
+    hint="Parse vCard (.vcf) file exported from Apple/iCloud Contacts">
+    <cfargument name="filePath" type="string" required="true">
+    <cfargument name="options" type="struct" required="false" default="#{}#">
+
+    <!--- Initialize result --->
+    <cfset var result = {
+        success: true,
+        headers: [],
+        rows: [],
+        errors: [],
+        totalRows: 0,
+        parsedRows: 0
+    }>
+
+    <!--- VCF field mapping to internal headers --->
+    <cfset var headerOrder = [
+        "fn", "n_family", "n_given", "email_work", "email_home",
+        "tel_work", "tel_cell", "tel_home", "org", "title",
+        "adr_street", "adr_city", "adr_region", "adr_postal", "adr_country",
+        "bday", "note", "url"
+    ]>
+    <cfset result.headers = headerOrder>
+
+    <cfset var opts = {
+        maxRows: structKeyExists(arguments.options, "maxRows") ? arguments.options.maxRows : 0
+    }>
+
+    <cftry>
+        <!--- Read file content --->
+        <cffile action="read" file="#arguments.filePath#" variable="fileContent" charset="utf-8">
+
+        <!--- Handle BOM if present --->
+        <cfif len(fileContent) gte 1 and asc(left(fileContent, 1)) eq 65279>
+            <cfset fileContent = mid(fileContent, 2, len(fileContent) - 1)>
+        </cfif>
+
+        <!--- Normalize line endings to LF --->
+        <cfset fileContent = replace(fileContent, chr(13) & chr(10), chr(10), "all")>
+        <cfset fileContent = replace(fileContent, chr(13), chr(10), "all")>
+
+        <!--- RFC 6350: Unfold lines (lines starting with space/tab are continuations) --->
+        <!--- Process line folding BEFORE splitting into vCards for proper handling --->
+        <cfset fileContent = reReplace(fileContent, "#chr(10)#[ #chr(9)#]", "", "all")>
+
+        <!--- Handle quoted-printable soft line breaks (=\n continuation) --->
+        <cfset fileContent = replace(fileContent, "=" & chr(10), "", "all")>
+
+        <!--- Split into individual vCards --->
+        <cfset var vcards = []>
+        <cfset var currentVcard = "">
+        <cfset var inVcard = false>
+
+        <cfloop list="#fileContent#" delimiters="#chr(10)#" index="line">
+            <cfset line = trim(line)>
+
+            <cfif findNoCase("BEGIN:VCARD", line) gt 0>
+                <cfset inVcard = true>
+                <cfset currentVcard = "">
+            <cfelseif findNoCase("END:VCARD", line) gt 0>
+                <cfif inVcard and len(currentVcard)>
+                    <cfset arrayAppend(vcards, currentVcard)>
+                </cfif>
+                <cfset inVcard = false>
+            <cfelseif inVcard>
+                <cfset currentVcard = currentVcard & chr(10) & line>
+            </cfif>
+        </cfloop>
+
+        <cfset result.totalRows = arrayLen(vcards)>
+
+        <!--- Parse each vCard --->
+        <cfloop from="1" to="#arrayLen(vcards)#" index="vcardIdx">
+            <!--- Apply max rows limit --->
+            <cfif opts.maxRows gt 0 and vcardIdx gt opts.maxRows>
+                <cfbreak>
+            </cfif>
+
+            <cfset var vcardContent = vcards[vcardIdx]>
+            <cfset var rowData = {}>
+
+            <!--- Initialize all fields to empty --->
+            <cfloop from="0" to="#arrayLen(headerOrder) - 1#" index="i">
+                <cfset rowData[i] = "">
+            </cfloop>
+
+            <cftry>
+                <!--- Parse vCard properties --->
+                <cfloop list="#vcardContent#" delimiters="#chr(10)#" index="propLine">
+                    <cfset propLine = trim(propLine)>
+                    <cfif not len(propLine)>
+                        <cfcontinue>
+                    </cfif>
+
+                    <!--- Split property into name and value --->
+                    <cfset var colonPos = find(":", propLine)>
+                    <cfif colonPos eq 0>
+                        <cfcontinue>
+                    </cfif>
+
+                    <cfset var propName = ucase(left(propLine, colonPos - 1))>
+                    <cfset var propValue = mid(propLine, colonPos + 1, len(propLine) - colonPos)>
+
+                    <!--- Decode quoted-printable if needed --->
+                    <cfif findNoCase("ENCODING=QUOTED-PRINTABLE", propName) gt 0>
+                        <cfset propValue = decodeQuotedPrintable(propValue)>
+                    </cfif>
+
+                    <!--- Extract base property name (before any parameters) --->
+                    <cfset var baseProp = listFirst(propName, ";")>
+                    <cfset var propParams = mid(propName, len(baseProp) + 1, len(propName))>
+
+                    <!--- Map vCard properties to our fields --->
+                    <cfswitch expression="#baseProp#">
+                        <cfcase value="FN">
+                            <cfset rowData[0] = propValue>
+                        </cfcase>
+                        <cfcase value="N">
+                            <!--- N format: family;given;middle;prefix;suffix --->
+                            <cfset var nameParts = listToArray(propValue, ";", true)>
+                            <cfif arrayLen(nameParts) gte 1>
+                                <cfset rowData[1] = nameParts[1]><!--- family --->
+                            </cfif>
+                            <cfif arrayLen(nameParts) gte 2>
+                                <cfset rowData[2] = nameParts[2]><!--- given --->
+                            </cfif>
+                        </cfcase>
+                        <cfcase value="EMAIL">
+                            <!--- Check type parameter --->
+                            <cfif findNoCase("TYPE=WORK", propParams) gt 0 or findNoCase("WORK", propParams) gt 0>
+                                <cfset rowData[3] = propValue>
+                            <cfelseif findNoCase("TYPE=HOME", propParams) gt 0 or findNoCase("HOME", propParams) gt 0>
+                                <cfset rowData[4] = propValue>
+                            <cfelseif not len(rowData[3])>
+                                <!--- Default to business email if no type --->
+                                <cfset rowData[3] = propValue>
+                            <cfelseif not len(rowData[4])>
+                                <cfset rowData[4] = propValue>
+                            </cfif>
+                        </cfcase>
+                        <cfcase value="TEL">
+                            <!--- Check type parameter --->
+                            <cfif findNoCase("TYPE=WORK", propParams) gt 0 or findNoCase("WORK", propParams) gt 0>
+                                <cfset rowData[5] = propValue>
+                            <cfelseif findNoCase("TYPE=CELL", propParams) gt 0 or findNoCase("CELL", propParams) gt 0 or findNoCase("MOBILE", propParams) gt 0>
+                                <cfset rowData[6] = propValue>
+                            <cfelseif findNoCase("TYPE=HOME", propParams) gt 0 or findNoCase("HOME", propParams) gt 0>
+                                <cfset rowData[7] = propValue>
+                            <cfelseif not len(rowData[5])>
+                                <!--- Default to work phone if no type --->
+                                <cfset rowData[5] = propValue>
+                            <cfelseif not len(rowData[6])>
+                                <cfset rowData[6] = propValue>
+                            <cfelseif not len(rowData[7])>
+                                <cfset rowData[7] = propValue>
+                            </cfif>
+                        </cfcase>
+                        <cfcase value="ORG">
+                            <!--- ORG can have multiple components separated by ; --->
+                            <cfset rowData[8] = listFirst(propValue, ";")>
+                        </cfcase>
+                        <cfcase value="TITLE">
+                            <cfset rowData[9] = propValue>
+                        </cfcase>
+                        <cfcase value="ADR">
+                            <!--- ADR format: PO;ext;street;city;region;postal;country --->
+                            <cfset var adrParts = listToArray(propValue, ";", true)>
+                            <cfif arrayLen(adrParts) gte 3>
+                                <cfset rowData[10] = adrParts[3]><!--- street --->
+                            </cfif>
+                            <cfif arrayLen(adrParts) gte 4>
+                                <cfset rowData[11] = adrParts[4]><!--- city --->
+                            </cfif>
+                            <cfif arrayLen(adrParts) gte 5>
+                                <cfset rowData[12] = adrParts[5]><!--- region --->
+                            </cfif>
+                            <cfif arrayLen(adrParts) gte 6>
+                                <cfset rowData[13] = adrParts[6]><!--- postal --->
+                            </cfif>
+                            <cfif arrayLen(adrParts) gte 7>
+                                <cfset rowData[14] = adrParts[7]><!--- country --->
+                            </cfif>
+                        </cfcase>
+                        <cfcase value="BDAY">
+                            <!--- Birthday can be in various formats --->
+                            <cfset var bdayValue = propValue>
+                            <!--- Handle --MMDD format (no year) --->
+                            <cfif left(bdayValue, 2) eq "--">
+                                <cfset bdayValue = "1900" & mid(bdayValue, 3, len(bdayValue))>
+                            </cfif>
+                            <!--- Try to normalize to yyyy-mm-dd --->
+                            <cfset bdayValue = reReplace(bdayValue, "^(\d{4})(\d{2})(\d{2})$", "\1-\2-\3")>
+                            <cfset rowData[15] = bdayValue>
+                        </cfcase>
+                        <cfcase value="NOTE">
+                            <!--- Notes may have escaped newlines --->
+                            <cfset propValue = replace(propValue, "\n", chr(10), "all")>
+                            <cfset rowData[16] = propValue>
+                        </cfcase>
+                        <cfcase value="URL">
+                            <cfset rowData[17] = propValue>
+                        </cfcase>
+                    </cfswitch>
+                </cfloop>
+
+                <!--- Check if row has any data --->
+                <cfset var hasData = false>
+                <cfloop collection="#rowData#" item="key">
+                    <cfif len(trim(rowData[key]))>
+                        <cfset hasData = true>
+                        <cfbreak>
+                    </cfif>
+                </cfloop>
+
+                <cfif hasData>
+                    <!--- Check for blank-name contacts and add warning --->
+                    <cfset var hasName = len(trim(rowData[0])) gt 0 or len(trim(rowData[1])) gt 0 or len(trim(rowData[2])) gt 0>
+                    <cfif not hasName>
+                        <!--- Try to generate a name from email or phone --->
+                        <cfif len(trim(rowData[3]))>
+                            <cfset rowData[0] = listFirst(rowData[3], "@")><!--- Use email prefix as name --->
+                        <cfelseif len(trim(rowData[4]))>
+                            <cfset rowData[0] = listFirst(rowData[4], "@")>
+                        <cfelseif len(trim(rowData[8]))>
+                            <cfset rowData[0] = rowData[8]><!--- Use org as name --->
+                        </cfif>
+
+                        <cfset arrayAppend(result.errors, {
+                            row_num: vcardIdx,
+                            error_type: "missing_name",
+                            error_message: "vCard " & vcardIdx & " has no name (FN or N fields). " & (len(trim(rowData[0])) ? "Generated name from available data." : "Contact may import without a name."),
+                            severity: "warning"
+                        })>
+                    </cfif>
+
+                    <cfset arrayAppend(result.rows, rowData)>
+                    <cfset result.parsedRows++>
+                </cfif>
+
+                <cfcatch type="any">
+                    <cfset arrayAppend(result.errors, {
+                        row_num: vcardIdx,
+                        error_type: "vcard_parse_error",
+                        error_message: "Failed to parse vCard " & vcardIdx & ": " & cfcatch.message,
+                        severity: "warning"
+                    })>
+                </cfcatch>
+            </cftry>
+        </cfloop>
+
+        <cfcatch type="any">
+            <cfset result.success = false>
+            <cfset arrayAppend(result.errors, {
+                row_num: 0,
+                error_type: "file_error",
+                error_message: "Failed to parse VCF file: " & cfcatch.message,
+                severity: "error"
+            })>
+        </cfcatch>
+    </cftry>
+
+    <cfreturn result>
+</cffunction>
+
+
+<cffunction name="decodeQuotedPrintable" access="private" returntype="string" output="false"
+    hint="Decode quoted-printable encoded string">
+    <cfargument name="str" type="string" required="true">
+
+    <cfset var result = arguments.str>
+
+    <!--- Replace =XX hex codes --->
+    <cfset var pos = 1>
+    <cfloop condition="pos lte len(result)">
+        <cfset var eqPos = find("=", result, pos)>
+        <cfif eqPos eq 0>
+            <cfbreak>
+        </cfif>
+
+        <!--- Check if this is a soft line break (= at end of line) --->
+        <cfif eqPos eq len(result)>
+            <cfset result = left(result, eqPos - 1)>
+            <cfbreak>
+        </cfif>
+
+        <!--- Get the two characters after = --->
+        <cfset var hexChars = mid(result, eqPos + 1, 2)>
+
+        <!--- Check if valid hex --->
+        <cfif reFindNoCase("^[0-9A-F]{2}$", hexChars)>
+            <cfset var charCode = inputBaseN(hexChars, 16)>
+            <cfset result = left(result, eqPos - 1) & chr(charCode) & mid(result, eqPos + 3, len(result))>
+        </cfif>
+
+        <cfset pos = eqPos + 1>
+    </cfloop>
+
+    <cfreturn result>
+</cffunction>
+
+
+<!--- ========================================
       UNIFIED PARSING INTERFACE
      ======================================== --->
 
 <cffunction name="parseFile" access="public" returntype="struct" output="false"
-    hint="Parse any supported file type (CSV, XLS, XLSX)">
+    hint="Parse any supported file type (CSV, XLS, XLSX, VCF)">
     <cfargument name="filePath" type="string" required="true">
     <cfargument name="options" type="struct" required="false" default="#{}#">
 
@@ -591,8 +902,12 @@
             <cfset var result = parseExcel(arguments.filePath, arguments.options)>
             <cfset result.fileType = fileType>
         </cfcase>
+        <cfcase value="vcf">
+            <cfset var result = parseVCF(arguments.filePath, arguments.options)>
+            <cfset result.fileType = "vcf">
+        </cfcase>
         <cfdefaultcase>
-            <cfset var errorMsg = "Unsupported file type: " & fileType & ". Please upload CSV, XLS, or XLSX files.">
+            <cfset var errorMsg = "Unsupported file type: " & fileType & ". Please upload CSV, XLS, XLSX, or VCF files.">
             <cfset var result = {
                 success: false,
                 headers: [],
@@ -671,9 +986,9 @@
 
     <!--- Check file type --->
     <cfset var fileType = detectFileType(arguments.filePath)>
-    <cfif not listFindNoCase("csv,xls,xlsx", fileType)>
+    <cfif not listFindNoCase("csv,xls,xlsx,vcf", fileType)>
         <cfset result.valid = false>
-        <cfset arrayAppend(result.errors, "Unsupported file type. Please upload CSV, XLS, or XLSX files")>
+        <cfset arrayAppend(result.errors, "Unsupported file type. Please upload CSV, XLS, XLSX, or VCF files")>
     </cfif>
 
     <!--- Check for potentially malicious content --->

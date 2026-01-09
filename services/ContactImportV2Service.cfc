@@ -18,6 +18,83 @@
       JOB MANAGEMENT
      ======================================== --->
 
+<cffunction name="computeFileHash" access="public" returntype="string" output="false"
+    hint="Compute SHA-256 hash of file contents for idempotency">
+    <cfargument name="filePath" type="string" required="true">
+
+    <cftry>
+        <!--- Read file as binary --->
+        <cffile action="readbinary" file="#arguments.filePath#" variable="fileBytes">
+
+        <!--- Use Java MessageDigest for SHA-256 --->
+        <cfset var md = createObject("java", "java.security.MessageDigest").getInstance("SHA-256")>
+        <cfset var hashBytes = md.digest(fileBytes)>
+
+        <!--- Convert to hex string --->
+        <cfset var hexChars = "0123456789abcdef">
+        <cfset var result = "">
+        <cfloop from="1" to="#arrayLen(hashBytes)#" index="i">
+            <cfset var b = hashBytes[i]>
+            <cfif b lt 0>
+                <cfset b = b + 256>
+            </cfif>
+            <cfset result &= mid(hexChars, int(b / 16) + 1, 1) & mid(hexChars, (b mod 16) + 1, 1)>
+        </cfloop>
+
+        <cfreturn result>
+
+        <cfcatch type="any">
+            <!--- Return empty on error - hash is optional --->
+            <cfreturn "">
+        </cfcatch>
+    </cftry>
+</cffunction>
+
+
+<cffunction name="findDuplicateJob" access="public" returntype="struct" output="false"
+    hint="Check if file was already imported by hash">
+    <cfargument name="userid" type="numeric" required="true">
+    <cfargument name="fileHash" type="string" required="true">
+
+    <cfset var result = {
+        isDuplicate: false,
+        existingJob: {}
+    }>
+
+    <cfif not len(arguments.fileHash)>
+        <cfreturn result>
+    </cfif>
+
+    <cfquery name="qExisting">
+        SELECT
+            job_id,
+            source_filename,
+            status,
+            created_at,
+            imported_rows
+        FROM import_jobs
+        WHERE userid = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.userid#">
+          AND file_hash = <cfqueryparam cfsqltype="cf_sql_varchar" value="#arguments.fileHash#">
+          AND status IN ('completed', 'importing', 'reviewing')
+        ORDER BY created_at DESC
+        LIMIT 1
+    </cfquery>
+
+    <cfif qExisting.recordCount gt 0>
+        <cfset result.isDuplicate = true>
+        <cfset result.existingJob = {
+            job_id: qExisting.job_id,
+            filename: qExisting.source_filename,
+            status: qExisting.status,
+            created_at: qExisting.created_at,
+            imported_rows: qExisting.imported_rows
+        }>
+    </cfif>
+
+    <cfreturn result>
+</cffunction>
+
+
 <cffunction name="createJob" access="public" returntype="struct" output="false"
     hint="Create a new import job">
     <cfargument name="userid" type="numeric" required="true">
@@ -25,13 +102,27 @@
     <cfargument name="filetype" type="string" required="true">
     <cfargument name="filesize" type="numeric" required="false" default="0">
     <cfargument name="storedFilePath" type="string" required="false" default="">
+    <cfargument name="fileHash" type="string" required="false" default="">
     <cfargument name="options" type="struct" required="false" default="#{}#">
 
     <cfset var result = {
         success: false,
         job_id: 0,
-        message: ""
+        message: "",
+        isDuplicateFile: false,
+        existingJob: {}
     }>
+
+    <!--- Check for duplicate file by hash --->
+    <cfif len(arguments.fileHash)>
+        <cfset var dupeCheck = findDuplicateJob(arguments.userid, arguments.fileHash)>
+        <cfif dupeCheck.isDuplicate>
+            <cfset result.isDuplicateFile = true>
+            <cfset result.existingJob = dupeCheck.existingJob>
+            <cfset result.message = "This file was already imported on " & dateFormat(dupeCheck.existingJob.created_at, "mm/dd/yyyy")>
+            <!--- Still allow creation, but flag it --->
+        </cfif>
+    </cfif>
 
     <cftry>
         <cfquery name="qInsert" result="insertResult">
@@ -41,6 +132,7 @@
                 file_type,
                 file_size,
                 stored_file_path,
+                file_hash,
                 status,
                 options_json,
                 created_at
@@ -50,6 +142,7 @@
                 <cfqueryparam cfsqltype="cf_sql_varchar" value="#arguments.filetype#">,
                 <cfqueryparam cfsqltype="cf_sql_bigint" value="#arguments.filesize#">,
                 <cfqueryparam cfsqltype="cf_sql_varchar" value="#arguments.storedFilePath#">,
+                <cfqueryparam cfsqltype="cf_sql_varchar" value="#arguments.fileHash#" null="#not len(arguments.fileHash)#">,
                 'pending',
                 <cfqueryparam cfsqltype="cf_sql_longvarchar" value="#serializeJSON(arguments.options)#">,
                 NOW()
@@ -92,6 +185,7 @@
         source_filename: qJob.source_filename,
         file_type: qJob.file_type,
         file_size: qJob.file_size,
+        file_hash: structKeyExists(qJob, "file_hash") ? qJob.file_hash : "",
         status: qJob.status,
         error_message: qJob.error_message,
         created_at: qJob.created_at,
@@ -1018,6 +1112,17 @@
         <cfset addNote(contactid, arguments.userid, arguments.rowData.notes)>
     </cfif>
 
+    <!--- Create contact folders --->
+    <cfset createContactFolders(contactid, arguments.userid)>
+
+    <!--- Enroll in relationship system if specified --->
+    <cfif structKeyExists(arguments.rowData, "relationship_system") and len(arguments.rowData.relationship_system)>
+        <cfset var relSystem = trim(arguments.rowData.relationship_system)>
+        <cfif listFindNoCase("Target,Maintenance", relSystem)>
+            <cfset enrollInRelationshipSystem(contactid, arguments.userid, relSystem)>
+        </cfif>
+    </cfif>
+
     <cfreturn contactid>
 </cffunction>
 
@@ -1084,6 +1189,14 @@
     <!--- Notes --->
     <cfif structKeyExists(arguments.rowData, "notes") and len(arguments.rowData.notes)>
         <cfset addNote(arguments.contactid, arguments.userid, arguments.rowData.notes)>
+    </cfif>
+
+    <!--- Enroll in relationship system if specified (for updates too) --->
+    <cfif structKeyExists(arguments.rowData, "relationship_system") and len(arguments.rowData.relationship_system)>
+        <cfset var relSystem = trim(arguments.rowData.relationship_system)>
+        <cfif listFindNoCase("Target,Maintenance", relSystem)>
+            <cfset enrollInRelationshipSystem(arguments.contactid, arguments.userid, relSystem)>
+        </cfif>
     </cfif>
 </cffunction>
 
@@ -1188,7 +1301,7 @@
     <cfargument name="value" type="string" required="true">
 
     <cfquery name="qCheck">
-        SELECT 1
+        SELECT 1 AS cnt
         FROM contactitems
         WHERE contactid = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.contactid#">
           AND valueCategory = <cfqueryparam cfsqltype="cf_sql_varchar" value="#arguments.category#">
@@ -1201,6 +1314,284 @@
     </cfquery>
 
     <cfreturn qCheck.recordCount gt 0>
+</cffunction>
+
+
+<!--- ========================================
+      RELATIONSHIP SYSTEM ENROLLMENT
+     ======================================== --->
+
+<cffunction name="enrollInRelationshipSystem" access="private" returntype="struct" output="false"
+    hint="Enroll contact in a relationship system (Target or Maintenance)">
+    <cfargument name="contactid" type="numeric" required="true">
+    <cfargument name="userid" type="numeric" required="true">
+    <cfargument name="systemType" type="string" required="true" hint="Target or Maintenance">
+
+    <cfset var result = {
+        success: false,
+        systemid: 0,
+        fusystemuserid: 0,
+        message: ""
+    }>
+
+    <cfif not listFindNoCase("Target,Maintenance", arguments.systemType)>
+        <cfset result.message = "Invalid system type. Must be Target or Maintenance.">
+        <cfreturn result>
+    </cfif>
+
+    <cftry>
+        <!--- Determine system type and scope based on V1 logic --->
+        <cfif arguments.systemType eq "Target">
+            <cfset var newSystemType = "Targeted List">
+        <cfelse>
+            <cfset var newSystemType = "Maintenance List">
+        </cfif>
+
+        <!--- Check if contact has Casting Director tag to determine scope --->
+        <cfquery name="qFindScope">
+            SELECT 1 AS cnt
+            FROM contactitems
+            WHERE valuecategory = 'Tag'
+              AND LOWER(valuetext) = 'casting director'
+              AND contactid = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.contactid#">
+              AND itemstatus = 'Active'
+              AND (isDeleted IS NULL OR isDeleted = 0)
+            LIMIT 1
+        </cfquery>
+
+        <cfif qFindScope.recordCount gt 0>
+            <cfset var newSystemScope = "Casting Director">
+        <cfelse>
+            <cfset var newSystemScope = "Industry">
+        </cfif>
+
+        <!--- Find the appropriate system --->
+        <cfquery name="qFindSystem">
+            SELECT systemid
+            FROM fusystems
+            WHERE systemtype = <cfqueryparam cfsqltype="cf_sql_varchar" value="#newSystemType#">
+              AND systemscope = <cfqueryparam cfsqltype="cf_sql_varchar" value="#newSystemScope#">
+              AND (isActive = 1 OR isActive IS NULL)
+            LIMIT 1
+        </cfquery>
+
+        <cfif qFindSystem.recordCount eq 0>
+            <cfset result.message = "No matching relationship system found for #newSystemType# / #newSystemScope#">
+            <cfreturn result>
+        </cfif>
+
+        <cfset var systemid = qFindSystem.systemid>
+        <cfset result.systemid = systemid>
+
+        <!--- Check if already enrolled --->
+        <cfquery name="qCheckEnrollment">
+            SELECT fusystemuserid
+            FROM fusystemusers
+            WHERE systemid = <cfqueryparam cfsqltype="cf_sql_integer" value="#systemid#">
+              AND contactid = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.contactid#">
+              AND userid = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.userid#">
+              AND (isdeleted IS NULL OR isdeleted = 0)
+            LIMIT 1
+        </cfquery>
+
+        <cfif qCheckEnrollment.recordCount gt 0>
+            <cfset result.success = true>
+            <cfset result.fusystemuserid = qCheckEnrollment.fusystemuserid>
+            <cfset result.message = "Contact already enrolled in system">
+            <cfreturn result>
+        </cfif>
+
+        <!--- Create fusystemusers record --->
+        <cfset var startDate = dateFormat(now(), "yyyy-mm-dd")>
+
+        <cfquery name="qInsertEnrollment" result="insertResult">
+            INSERT INTO fusystemusers (
+                systemid,
+                userid,
+                contactid,
+                enrollmentdate,
+                sustartdate,
+                sustatus
+            ) VALUES (
+                <cfqueryparam cfsqltype="cf_sql_integer" value="#systemid#">,
+                <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.userid#">,
+                <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.contactid#">,
+                NOW(),
+                <cfqueryparam cfsqltype="cf_sql_date" value="#startDate#">,
+                'Active'
+            )
+        </cfquery>
+
+        <cfset var fusystemuserid = insertResult.generatedKey>
+        <cfset result.fusystemuserid = fusystemuserid>
+
+        <!--- Create initial notifications for the system actions --->
+        <cfset createSystemNotifications(systemid, arguments.contactid, arguments.userid, fusystemuserid, startDate)>
+
+        <cfset result.success = true>
+        <cfset result.message = "Successfully enrolled in #newSystemType# (#newSystemScope#)">
+
+        <cfcatch type="any">
+            <cfset result.message = "Enrollment failed: " & cfcatch.message>
+        </cfcatch>
+    </cftry>
+
+    <cfreturn result>
+</cffunction>
+
+
+<cffunction name="createSystemNotifications" access="private" returntype="void" output="false"
+    hint="Create initial notifications for a system enrollment">
+    <cfargument name="systemid" type="numeric" required="true">
+    <cfargument name="contactid" type="numeric" required="true">
+    <cfargument name="userid" type="numeric" required="true">
+    <cfargument name="fusystemuserid" type="numeric" required="true">
+    <cfargument name="startDate" type="date" required="true">
+
+    <cftry>
+        <!--- Get actions for this system --->
+        <cfquery name="qActions">
+            SELECT
+                a.actionid,
+                a.actionname,
+                a.actionDaysNo,
+                a.actionDaysRecurring,
+                a.isUnique,
+                a.actiontext
+            FROM fuactions a
+            WHERE a.systemid = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.systemid#">
+              AND (a.isActive = 1 OR a.isActive IS NULL)
+            ORDER BY a.actionDaysNo
+        </cfquery>
+
+        <cfloop query="qActions">
+            <cfset var addAction = true>
+
+            <!--- Check uniqueness if required --->
+            <cfif qActions.isUnique eq 1>
+                <cfquery name="qCheckUnique">
+                    SELECT 1 AS cnt
+                    FROM funotifications
+                    WHERE actionid = <cfqueryparam cfsqltype="cf_sql_integer" value="#qActions.actionid#">
+                      AND contactid = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.contactid#">
+                      AND userid = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.userid#">
+                    LIMIT 1
+                </cfquery>
+
+                <cfif qCheckUnique.recordCount gt 0>
+                    <cfset addAction = false>
+                </cfif>
+            </cfif>
+
+            <cfif addAction>
+                <!--- Calculate notification start date --->
+                <cfset var notStartDate = dateAdd("d", qActions.actionDaysNo, arguments.startDate)>
+
+                <!--- Create notification --->
+                <cfquery>
+                    INSERT INTO funotifications (
+                        actionid,
+                        contactid,
+                        userid,
+                        fusystemuserid,
+                        notstartdate,
+                        notstatus,
+                        nottext
+                    ) VALUES (
+                        <cfqueryparam cfsqltype="cf_sql_integer" value="#qActions.actionid#">,
+                        <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.contactid#">,
+                        <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.userid#">,
+                        <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.fusystemuserid#">,
+                        <cfqueryparam cfsqltype="cf_sql_date" value="#notStartDate#">,
+                        'Pending',
+                        <cfqueryparam cfsqltype="cf_sql_varchar" value="#qActions.actiontext#" null="#not len(qActions.actiontext)#">
+                    )
+                </cfquery>
+            </cfif>
+        </cfloop>
+
+        <cfcatch type="any">
+            <!--- Log but don't fail the import for notification errors --->
+        </cfcatch>
+    </cftry>
+</cffunction>
+
+
+<!--- ========================================
+      FOLDER CREATION
+     ======================================== --->
+
+<cffunction name="createContactFolders" access="private" returntype="struct" output="false"
+    hint="Create folder structure for a newly imported contact">
+    <cfargument name="contactid" type="numeric" required="true">
+    <cfargument name="userid" type="numeric" required="true">
+
+    <cfset var result = {
+        success: false,
+        contactFolder: "",
+        message: ""
+    }>
+
+    <cftry>
+        <!--- Determine media path based on server --->
+        <cfset var currentURL = cgi.server_name>
+        <cfset var host = listFirst(currentURL, ".")>
+
+        <!--- Base media path --->
+        <cfset var mediaRoot = "C:\home\theactorsoffice.com\wwwroot\" & host & "-subdomain\media-" & host>
+
+        <!--- User folder path --->
+        <cfset var userFolder = mediaRoot & "\users\" & arguments.userid>
+
+        <!--- Contacts folder path --->
+        <cfset var contactsFolder = userFolder & "\contacts">
+
+        <!--- Contact-specific folder --->
+        <cfset var contactFolder = contactsFolder & "\" & arguments.contactid>
+
+        <!--- Attachments folder --->
+        <cfset var attachmentsFolder = contactFolder & "\attachments">
+
+        <!--- Create user folder if needed --->
+        <cfif not directoryExists(userFolder)>
+            <cfdirectory directory="#userFolder#" action="create">
+        </cfif>
+
+        <!--- Create contacts folder if needed --->
+        <cfif not directoryExists(contactsFolder)>
+            <cfdirectory directory="#contactsFolder#" action="create">
+        </cfif>
+
+        <!--- Create contact folder if needed --->
+        <cfif not directoryExists(contactFolder)>
+            <cfdirectory directory="#contactFolder#" action="create">
+        </cfif>
+
+        <!--- Create attachments folder if needed --->
+        <cfif not directoryExists(attachmentsFolder)>
+            <cfdirectory directory="#attachmentsFolder#" action="create">
+        </cfif>
+
+        <!--- Copy default avatar if not exists --->
+        <cfset var avatarPath = contactFolder & "\avatar.jpg">
+        <cfset var defaultAvatarPath = mediaRoot & "\defaults\avatar.jpg">
+
+        <cfif not fileExists(avatarPath) and fileExists(defaultAvatarPath)>
+            <cffile action="copy" source="#defaultAvatarPath#" destination="#contactFolder#\">
+        </cfif>
+
+        <cfset result.success = true>
+        <cfset result.contactFolder = contactFolder>
+        <cfset result.message = "Folders created successfully">
+
+        <cfcatch type="any">
+            <!--- Don't fail import for folder errors, just log --->
+            <cfset result.message = "Folder creation warning: " & cfcatch.message>
+            <cfset result.success = true>
+        </cfcatch>
+    </cftry>
+
+    <cfreturn result>
 </cffunction>
 
 

@@ -4,14 +4,14 @@ This repo is TAO. Use this file as the default operating guide for planning, cod
 
 ## Purpose
 
-TAO is a ColdFusion + MSSQL web app that helps actors run the admin side of their careers: contacts, reminders, relationship workflows, scheduling, and project tracking. Users live inside contacts and notifications.
+TAO is a ColdFusion + MySQL web app that helps actors run the admin side of their careers: contacts, reminders, relationship workflows, scheduling, and project tracking. Users live inside contacts and notifications.
 
 ## Tech stack and environment
 
 - Backend: ColdFusion (CFML)
-- Database: Microsoft SQL Server
-  - Production DB: `abo`
-  - Test DB: `abod`
+- Database: **MySQL** (NOT SQL Server - verified January 2026)
+  - Production schema: `actorsbusinessoffice`
+  - Development schema: `new_development`
 - ColdFusion datasource name: `reach`
 - Frontend: HTML, JS, CSS with heavy AJAX patterns
 - AJAX endpoints typically under `/ajax/...`
@@ -34,7 +34,7 @@ Critical tables (treat as infrastructure):
 
 ### Notification Engine
 Notifications drive daily user activity.
-- Reminders are surfaced when `notstartdate <= GETDATE()`.
+- Reminders are surfaced when `notstartdate <= NOW()`.
 - Completion typically schedules the next action, creates recurring items, or starts another system (example: maintenance after follow-up).
 
 ### Action lifecycle rules
@@ -94,11 +94,22 @@ Use it when a task touches systems, actions, scheduling, recurrence, or notifica
 - Keep endpoints predictable: return JSON with `success`, `message`, and `data`.
 - Keep functions small and readable. Prefer shared helpers over copy-paste logic.
 
-### SQL Server
+### MySQL (CRITICAL - TAO uses MySQL, not SQL Server)
+
+**Use MySQL syntax patterns:**
+- `NOW()` for current datetime (NOT `GETDATE()`)
+- `LIMIT n` at end of query (NOT `SELECT TOP n`)
+- `AUTO_INCREMENT` for identity columns (NOT `IDENTITY(1,1)`)
+- `information_schema` for metadata queries (NOT `sys.columns`)
+- `INSERT IGNORE` or `ON DUPLICATE KEY UPDATE` for upserts (NOT `MERGE`)
+- `DELIMITER //` for stored procedures (NOT `GO` batch separator)
+
+**General MySQL rules:**
 - Use transactions for multi-table writes.
 - Design idempotency for any endpoint that can be double-submitted.
 - Avoid schema changes that require long locks during business hours unless requested.
 - Prefer set-based operations when safe, but do not sacrifice clarity or safety.
+- Use `ENGINE=InnoDB` for tables requiring transactions and foreign keys.
 
 ### JavaScript and UI
 - Prefer AJAX-driven filtering, paging, and modal editing.
@@ -121,7 +132,7 @@ When touching any importer (contacts or otherwise), use a two-phase pattern:
 
 ## Contact importer requirements pattern (use for the new importer)
 
-- Accept CSV, XLS, XLSX.
+- Accept CSV, XLS, XLSX, **VCF** (vCard from Apple/iCloud).
 - Tolerate malformed values with row-level error capture.
 - Provide a review grid:
   - Problems tab
@@ -130,6 +141,8 @@ When touching any importer (contacts or otherwise), use a two-phase pattern:
   - Bulk actions (ignore, approve, finalize)
 - Finalize imports only approved rows and never double-inserts.
 - Provide an import summary: total, ready, problem, dupes, imported.
+- Support `relationship_system` field to enroll contacts in Target or Maintenance systems.
+- File hash-based duplicate detection to prevent re-importing same file.
 
 ## Output requirements when you deliver work
 

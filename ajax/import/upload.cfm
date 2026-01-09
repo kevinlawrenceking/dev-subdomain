@@ -13,6 +13,9 @@
     filename: "",
     file_type: "",
     file_size: 0,
+    file_hash: "",
+    is_duplicate_file: false,
+    existing_job: {},
     message: ""
 }>
 
@@ -47,7 +50,7 @@
         filefield="form.file"
         destination="#uploadDir#\"
         nameconflict="MAKEUNIQUE"
-        accept=".csv,.xls,.xlsx,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+        accept=".csv,.xls,.xlsx,.vcf,text/csv,text/vcard,text/x-vcard,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
 
     <!--- Get file info --->
     <cfset uploadedFile = cffile.serverfile>
@@ -60,10 +63,10 @@
     <cfset fileType = fileExtension>
 
     <!--- Validate file type --->
-    <cfif not listFindNoCase("csv,xls,xlsx", fileType)>
+    <cfif not listFindNoCase("csv,xls,xlsx,vcf", fileType)>
         <!--- Delete invalid file --->
         <cffile action="delete" file="#uploadedPath#">
-        <cfset response.message = "Invalid file type. Please upload CSV, XLS, or XLSX files.">
+        <cfset response.message = "Invalid file type. Please upload CSV, XLS, XLSX, or VCF files.">
         <cfoutput>#serializeJSON(response)#</cfoutput>
         <cfabort>
     </cfif>
@@ -76,14 +79,18 @@
         <cfabort>
     </cfif>
 
-    <!--- Create import job --->
+    <!--- Compute file hash for idempotency --->
     <cfset importService = new services.ContactImportV2Service()>
+    <cfset fileHash = importService.computeFileHash(uploadedPath)>
+
+    <!--- Create import job --->
     <cfset jobResult = importService.createJob(
         userid = userid,
         filename = cffile.clientfile,
         filetype = fileType,
         filesize = fileSize,
         storedFilePath = uploadedPath,
+        fileHash = fileHash,
         options = {}
     )>
 
@@ -99,7 +106,14 @@
     <cfset response.filename = cffile.clientfile>
     <cfset response.file_type = fileType>
     <cfset response.file_size = fileSize>
-    <cfset response.message = "File uploaded successfully">
+    <cfset response.file_hash = fileHash>
+    <cfset response.is_duplicate_file = jobResult.isDuplicateFile>
+    <cfif jobResult.isDuplicateFile>
+        <cfset response.existing_job = jobResult.existingJob>
+        <cfset response.message = jobResult.message>
+    <cfelse>
+        <cfset response.message = "File uploaded successfully">
+    </cfif>
 
     <cfcatch type="any">
         <cfset response.message = "Upload failed: " & cfcatch.message>

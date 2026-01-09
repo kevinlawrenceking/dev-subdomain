@@ -1,10 +1,13 @@
 <!---
     Contact Import V2 - Main Import Page
     Features:
-    - File upload (CSV, XLS, XLSX)
-    - Column mapping review
+    - File upload (CSV, XLS, XLSX, VCF/vCard)
+    - Google Contacts CSV and Apple/iCloud vCard support
+    - Column mapping review with auto-detection
     - Review grid with inline editing
     - Duplicate detection and resolution
+    - Dry-run preview before import
+    - Relationship system enrollment (Target/Maintenance)
     - Finalize import
 --->
 
@@ -206,13 +209,14 @@ input[type="date"].form-control-sm {
     <!--- UPLOAD STEP --->
     <div class="import-step" id="step-upload">
         <h5><span class="step-number">1</span> Upload File</h5>
-        <p class="text-muted">Upload your contacts file. Supported formats: CSV, XLS, XLSX (max 50MB)</p>
+        <p class="text-muted">Upload your contacts file (max 50MB)</p>
 
         <div class="upload-area" id="upload-area">
             <div class="upload-icon"><i class="fe-upload-cloud"></i></div>
             <p><strong>Drag and drop your file here</strong></p>
             <p class="text-muted">or click to browse</p>
-            <input type="file" id="file-input" accept=".csv,.xls,.xlsx" style="display:none">
+            <p class="text-muted small">Supported formats: CSV, XLS, XLSX, VCF (vCard)<br>Google Contacts and Apple/iCloud exports supported</p>
+            <input type="file" id="file-input" accept=".csv,.xls,.xlsx,.vcf" style="display:none">
         </div>
 
         <div class="import-progress" id="upload-progress" style="display:none">
@@ -438,14 +442,25 @@ input[type="date"].form-control-sm {
         <!--- Finalize step --->
         <cfif activeJob.status neq "completed">
         <div class="import-step" id="step-finalize">
-            <h5><span class="step-number">4</span> Finalize Import</h5>
-            <p class="text-muted">When ready, click to import all ready contacts into your account.</p>
+            <h5><span class="step-number">4</span> Preview & Finalize Import</h5>
+            <p class="text-muted">Review what will be imported, then finalize to import contacts into your account.</p>
             <div class="alert alert-warning" id="finalize-warning" style="display:none">
                 <i class="fe-alert-triangle"></i> <span id="finalize-warning-text"></span>
             </div>
-            <button class="btn btn-success btn-lg" id="btn-finalize" <cfif activeJob.status eq "importing">disabled</cfif>>
-                <i class="fe-check-circle"></i> Import <span id="import-count">#activeJob.valid_rows#</span> Contacts
-            </button>
+            <div class="btn-toolbar mb-3">
+                <button class="btn btn-outline-primary btn-lg mr-2" id="btn-dry-run">
+                    <i class="fe-eye"></i> Preview Import (Dry Run)
+                </button>
+                <button class="btn btn-success btn-lg" id="btn-finalize" <cfif activeJob.status eq "importing">disabled</cfif>>
+                    <i class="fe-check-circle"></i> Import <span id="import-count">#activeJob.valid_rows#</span> Contacts
+                </button>
+            </div>
+            <div class="import-progress mt-3" id="dry-run-progress" style="display:none">
+                <div class="progress">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated bg-info" role="progressbar" style="width: 100%"></div>
+                </div>
+                <p class="mt-2 text-center">Analyzing import...</p>
+            </div>
             <div class="import-progress mt-3" id="finalize-progress" style="display:none">
                 <div class="progress">
                     <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" style="width: 100%"></div>
