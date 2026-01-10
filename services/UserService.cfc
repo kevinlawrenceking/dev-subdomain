@@ -122,44 +122,42 @@
         <cfargument name="userid" type="numeric" required="yes">
 
 <cfquery result="result" name="details">
-            SELECT 
-                u.viewtypeid, 
+            SELECT
+                u.viewtypeid,
                 tz.tzgeneral,
-                u.add1, 
-                u.add2, 
-                u.city, 
-                u.region_id AS new_region_id, 
+                u.add1,
+                u.add2,
+                u.city,
+                u.region_id AS new_region_id,
                 u.region_id,
-                u.zip, 
-                u.tzid, 
+                r.regionname AS region,
+                u.zip,
+                u.tzid,
                 u.defRows,
-                u.calstarttime, 
-                u.calendtime, 
-                u.avatarname, 
-                u.userfirstname, 
-                u.userlastname, 
-                u.useremail, 
+                u.calstarttime,
+                u.calendtime,
+                u.avatarname,
+                u.userfirstname,
+                u.userlastname,
+                u.useremail,
                 u.nletter_yn,
-                u.nletter_link, 
+                u.nletter_link,
                 v.viewtype,
                 u.defcountry,
                 u.defstate,
                 c.countryid,
                 c.countryid AS new_countryid,
-                u.add1,
-                u.add2,
-                u.city,
-                u.zip,
+                c.countryname,
                 u.dateformatid,
                 df.*
-            FROM 
-                taousers u 
+            FROM
+                taousers u
                 LEFT JOIN dateformats df ON df.id = u.dateFormatid
                 LEFT OUTER JOIN viewtypes v ON v.viewtypeid = u.viewtypeid
                 LEFT JOIN regions r ON r.region_id = u.region_id
                 LEFT JOIN countries c ON c.countryid = r.countryid
                 LEFT JOIN timezones tz ON tz.tzid = u.tzid
-            WHERE 
+            WHERE
                 u.userid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#">
         </cfquery>
 
