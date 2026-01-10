@@ -1,1 +1,1 @@
-<cfinclude template="/include/import-contacts-v2.cfm" />
+<cfinclude template="/include/import-contacts.cfm" />
