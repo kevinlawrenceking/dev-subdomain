@@ -91,7 +91,7 @@
                             <div class="detail-row">
                                 <div class="detail-label">State/Region</div>
                                 <div class="detail-value">
-                                    <i class="mdi mdi-map me-2 text-muted"></i>[#new_region#]<cfif len(trim(region))>#region#<cfelse><span class="text-muted">Not specified</span></cfif>
+                                    <i class="mdi mdi-map me-2 text-muted"></i><cfif len(trim(Details.region))>#Details.region#<cfelse><span class="text-muted">Not specified</span></cfif>
                                 </div>
                             </div>
                         </div>
@@ -99,7 +99,7 @@
                             <div class="detail-row">
                                 <div class="detail-label">Country</div>
                                 <div class="detail-value">
-                                    <i class="mdi mdi-earth me-2 text-muted"></i><cfif len(trim(countryname))>#countryname#<cfelse><span class="text-muted">Not specified</span></cfif>
+                                    <i class="mdi mdi-earth me-2 text-muted"></i><cfif len(trim(Details.countryname))>#Details.countryname#<cfelse><span class="text-muted">Not specified</span></cfif>
                                 </div>
                             </div>
                         </div>

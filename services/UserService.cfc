@@ -131,7 +131,7 @@
                 u.region_id AS new_region_id,
                 u.region_id,
                 r.regionname AS region,
-                r.regionname AS New_region,
+                r.regionname AS new_region,
                 u.zip,
                 u.tzid,
                 u.defRows,
