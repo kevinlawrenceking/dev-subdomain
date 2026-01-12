@@ -61,7 +61,7 @@
             </cfif>
             title: "#JSStringFormat(events.col1)#",
             start: "#dateFormat(eventStartDate, "yyyy-mm-dd")# #timeformat(eventStartTime, 'HH:mm')#",
-            end: "#dateFormat(eventStopDate, "yyyy-mm-dd")# #timeformat(eventStopTime, 'HH:mm')#",
+            end: "#dateFormat(eventStartDate, "yyyy-mm-dd")# #timeformat(eventStopTime, 'HH:mm')#",
             url: "<cfif events.audprojectid eq "">/app/appoint/?eventid=#events.eventid#&returnurl=calendar-appoint&rcontactid=0<cfelse>/app/audition/?focusid=#events.eventid#&audprojectid=#events.audprojectid#</cfif>",
             description: "#JSStringFormat(events.col5)#",
             className: "colorkey-#events.id#"
