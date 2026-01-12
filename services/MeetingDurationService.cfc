@@ -1,4 +1,4 @@
-<cfcomponent displayname="MeetingDurationService" hint="Handles operations for MeetingDuration table" > 
+ad<cfcomponent displayname="MeetingDurationService" hint="Handles operations for MeetingDuration table" > 
 <cffunction output="false" name="SELmtgdurations" access="public" returntype="query">
     <cfargument name="new_durhours" type="numeric" required="true">
 

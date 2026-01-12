@@ -1358,6 +1358,17 @@ audzip = <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#trim(arguments.new_aud
             LEFT JOIN audroles r ON r.audroleid = a.audroleid
             WHERE e.userid = <cfqueryparam value="#arguments.sessionUserID#" cfsqltype="CF_SQL_INTEGER">
             AND t.userid = <cfqueryparam value="#arguments.sessionUserID#" cfsqltype="CF_SQL_INTEGER">
+            AND e.isdeleted = 0
+            AND e.eventid = (
+                SELECT MIN(e2.eventid)
+                FROM events e2
+                WHERE e2.eventtitle = e.eventtitle
+                AND e2.eventstart = e.eventstart
+                AND (e2.eventstarttime = e.eventstarttime OR (e2.eventstarttime IS NULL AND e.eventstarttime IS NULL))
+                AND e2.eventstatus = e.eventstatus
+                AND e2.userid = e.userid
+                AND e2.isdeleted = 0
+            )
             <cfif arguments.currentID gt 0>
                 AND e.eventid IN (
                     SELECT eventid FROM eventcontactsxref WHERE contactid = <cfqueryparam value="#arguments.currentID#" cfsqltype="CF_SQL_INTEGER">

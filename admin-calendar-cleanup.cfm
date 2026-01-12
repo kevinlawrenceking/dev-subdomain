@@ -5,51 +5,61 @@
     DESCRIPTION: Fixes events with invalid end dates/times that cause calendar display issues
 --->
 
-<cfquery name="qFixEventDates" datasource="#application.dsn#">
-    <!--- Fix events where end date is before start date --->
-    UPDATE events 
+<!--- Fix events where end date is before start date --->
+<cfquery name="qFixEndBeforeStart" datasource="#application.dsn#">
+    UPDATE events
     SET eventstop = eventStart
-    WHERE eventstop < eventStart 
-      AND eventStart IS NOT NULL 
-      AND eventstop IS NOT NULL
-      AND isdeleted = 0;
-      
-    <!--- Fix events where end date is null but start date exists --->
-    UPDATE events 
-    SET eventstop = eventStart  
-    WHERE eventstop IS NULL 
+    WHERE eventstop < eventStart
       AND eventStart IS NOT NULL
-      AND isdeleted = 0;
-      
-    <!--- Fix events where end time is before start time on same date --->
-    UPDATE events 
+      AND eventstop IS NOT NULL
+      AND isdeleted = 0
+</cfquery>
+
+<!--- Fix events where end date is null but start date exists --->
+<cfquery name="qFixNullEndDate" datasource="#application.dsn#">
+    UPDATE events
+    SET eventstop = eventStart
+    WHERE eventstop IS NULL
+      AND eventStart IS NOT NULL
+      AND isdeleted = 0
+</cfquery>
+
+<!--- Fix events where end time is before start time on same date --->
+<cfquery name="qFixEndTimeBeforeStart" datasource="#application.dsn#">
+    UPDATE events
     SET eventstopTime = ADDTIME(eventStartTime, '01:00:00')
-    WHERE eventstop = eventStart 
-      AND eventStartTime IS NOT NULL 
+    WHERE eventstop = eventStart
+      AND eventStartTime IS NOT NULL
       AND eventstopTime IS NOT NULL
       AND TIME(eventstopTime) <= TIME(eventStartTime)
-      AND isdeleted = 0;
-      
-    <!--- Fix events where end time is null --->
-    UPDATE events 
+      AND isdeleted = 0
+</cfquery>
+
+<!--- Fix events where end time is null --->
+<cfquery name="qFixNullEndTime" datasource="#application.dsn#">
+    UPDATE events
     SET eventstopTime = ADDTIME(eventStartTime, '01:00:00')
-    WHERE eventstopTime IS NULL 
+    WHERE eventstopTime IS NULL
       AND eventStartTime IS NOT NULL
-      AND isdeleted = 0;
-      
-    <!--- Fix events where start time is null (set to reasonable default) --->
-    UPDATE events 
+      AND isdeleted = 0
+</cfquery>
+
+<!--- Fix events where start time is null (set to reasonable default) --->
+<cfquery name="qFixNullStartTime" datasource="#application.dsn#">
+    UPDATE events
     SET eventStartTime = '09:00:00'
-    WHERE eventStartTime IS NULL 
+    WHERE eventStartTime IS NULL
       AND eventStart IS NOT NULL
-      AND isdeleted = 0;
-      
-    <!--- Ensure stop time is set after fixing start time --->
-    UPDATE events 
+      AND isdeleted = 0
+</cfquery>
+
+<!--- Ensure stop time is set after fixing start time --->
+<cfquery name="qFixStopTimeAfterDefault" datasource="#application.dsn#">
+    UPDATE events
     SET eventstopTime = '10:00:00'
-    WHERE eventstopTime IS NULL 
+    WHERE eventstopTime IS NULL
       AND eventStartTime = '09:00:00'
-      AND isdeleted = 0;
+      AND isdeleted = 0
 </cfquery>
 
 <cfquery name="qGetFixedCount" datasource="#application.dsn#">
