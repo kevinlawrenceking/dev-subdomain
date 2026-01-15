@@ -175,25 +175,38 @@
     </cfif>
 
     <!--- Check if value looks like an Excel date serial --->
-    <cfif isNumeric(trimmed) and val(trimmed) gt 1 and val(trimmed) lt 100000>
-        <cftry>
-            <!--- Convert Excel serial to date --->
-            <!--- Excel base date is Jan 1, 1900 (serial 1) --->
-            <!--- But there's a bug where Excel thinks 1900 was a leap year --->
-            <cfset var excelBase = createDate(1899, 12, 30)>
-            <cfset var parsedDate = dateAdd("d", val(trimmed), excelBase)>
+    <cfif isNumeric(trimmed)>
+        <cfset var numVal = val(trimmed)>
 
-            <!--- Validate reasonable range --->
-            <cfif year(parsedDate) gte 1900 and year(parsedDate) lte 2100>
-                <cfset result.normalized = dateFormat(parsedDate, "yyyy-mm-dd")>
-                <cfset result.originalFormat = "Excel serial">
-                <cfreturn result>
-            </cfif>
+        <!--- Excel serial 0, 1, negative, or very small decimals are invalid/empty dates --->
+        <!--- Serial 0 = 1899-12-30, Serial 1 = 1899-12-31 (both pre-1900, invalid) --->
+        <cfif numVal lte 1 or (numVal gt 0 and numVal lt 2)>
+            <cfset result.normalized = "">
+            <cfset result.originalFormat = "Excel serial (invalid)">
+            <cfreturn result>
+        </cfif>
 
-            <cfcatch>
-                <!--- Not a valid Excel date --->
-            </cfcatch>
-        </cftry>
+        <!--- Valid Excel serial range: 2 to ~60000 covers 1900-2063 --->
+        <cfif numVal gte 2 and numVal lt 100000>
+            <cftry>
+                <!--- Convert Excel serial to date --->
+                <!--- Excel base date is 1899-12-30 (accounts for Excel's 1900 leap year bug) --->
+                <!--- Serial 2 = 1900-01-01, Serial 60000 ~ 2063 --->
+                <cfset var excelBase = createDate(1899, 12, 30)>
+                <cfset var parsedDate = dateAdd("d", int(numVal), excelBase)>
+
+                <!--- Validate reasonable range (1900-2100) --->
+                <cfif year(parsedDate) gte 1900 and year(parsedDate) lte 2100>
+                    <cfset result.normalized = dateFormat(parsedDate, "yyyy-mm-dd")>
+                    <cfset result.originalFormat = "Excel serial">
+                    <cfreturn result>
+                </cfif>
+
+                <cfcatch>
+                    <!--- Not a valid Excel date, fall through to standard parsing --->
+                </cfcatch>
+            </cftry>
+        </cfif>
     </cfif>
 
     <!--- Try parsing with ColdFusion's isDate --->

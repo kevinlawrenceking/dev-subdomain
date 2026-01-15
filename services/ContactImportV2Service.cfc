@@ -145,7 +145,7 @@
                 <cfqueryparam cfsqltype="cf_sql_varchar" value="#arguments.fileHash#" null="#not len(arguments.fileHash)#">,
                 'pending',
                 <cfqueryparam cfsqltype="cf_sql_longvarchar" value="#serializeJSON(arguments.options)#">,
-                NOW()
+                GETDATE()
             )
         </cfquery>
 
@@ -253,14 +253,71 @@
                 error_message = <cfqueryparam cfsqltype="cf_sql_longvarchar" value="#arguments.errorMessage#">,
             </cfif>
             <cfif arguments.status eq "parsing">
-                started_at = NOW(),
+                started_at = GETDATE(),
             </cfif>
             <cfif arguments.status eq "completed" or arguments.status eq "failed">
-                finished_at = NOW(),
+                finished_at = GETDATE(),
             </cfif>
-            updated_at = NOW()
+            updated_at = GETDATE()
         WHERE job_id = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.job_id#">
     </cfquery>
+</cffunction>
+
+
+<cffunction name="tryAcquireImportLock" access="public" returntype="struct" output="false"
+    hint="Atomically try to acquire import lock. Prevents concurrent double-finalize.">
+    <cfargument name="job_id" type="numeric" required="true">
+
+    <cfset var result = {
+        acquired: false,
+        current_status: "",
+        message: ""
+    }>
+
+    <!--- Atomic conditional UPDATE - only succeeds if status allows import (MSSQL syntax) --->
+    <cfquery result="lockResult">
+        UPDATE import_jobs
+        SET
+            status = 'importing',
+            started_at = ISNULL(started_at, GETDATE()),
+            updated_at = GETDATE()
+        WHERE job_id = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.job_id#">
+          AND status NOT IN ('completed', 'importing', 'failed')
+    </cfquery>
+
+    <!--- Check affected rows using CFQUERY result.recordCount --->
+    <cfif lockResult.recordCount gt 0>
+        <!--- Lock acquired successfully --->
+        <cfset result.acquired = true>
+        <cfset result.current_status = "importing">
+    <cfelse>
+        <!--- Lock not acquired - check current status --->
+        <cfquery name="qStatus">
+            SELECT status
+            FROM import_jobs
+            WHERE job_id = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.job_id#">
+        </cfquery>
+
+        <cfif qStatus.recordCount gt 0>
+            <cfset result.current_status = qStatus.status>
+
+            <!--- Set appropriate message based on status --->
+            <cfif qStatus.status eq "completed">
+                <cfset result.message = "Import already completed">
+            <cfelseif qStatus.status eq "importing">
+                <cfset result.message = "Import already in progress">
+            <cfelseif qStatus.status eq "failed">
+                <cfset result.message = "Import previously failed. Please create a new import job.">
+            <cfelse>
+                <cfset result.message = "Import cannot be finalized in current status: " & qStatus.status>
+            </cfif>
+        <cfelse>
+            <cfset result.current_status = "not_found">
+            <cfset result.message = "Job not found">
+        </cfif>
+    </cfif>
+
+    <cfreturn result>
 </cffunction>
 
 
@@ -337,7 +394,7 @@
                     <cfqueryparam cfsqltype="cf_sql_integer" value="#rowNum#">,
                     <cfqueryparam cfsqltype="cf_sql_longvarchar" value="#rawJson#">,
                     'pending',
-                    NOW()
+                    GETDATE()
                 )
             </cfquery>
         </cfloop>
@@ -349,7 +406,7 @@
                 total_rows = <cfqueryparam cfsqltype="cf_sql_integer" value="#parseResult.totalRows#">,
                 parsed_rows = <cfqueryparam cfsqltype="cf_sql_integer" value="#parseResult.parsedRows#">,
                 status = 'parsed',
-                updated_at = NOW()
+                updated_at = GETDATE()
             WHERE job_id = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.job_id#">
         </cfquery>
 
@@ -403,7 +460,7 @@
                 <cfqueryparam cfsqltype="cf_sql_varchar" value="#mapping.field#" null="#not len(mapping.field)#">,
                 <cfqueryparam cfsqltype="cf_sql_decimal" value="#mapping.confidence#">,
                 0,
-                NOW()
+                GETDATE()
             )
         </cfquery>
     </cfloop>
@@ -569,7 +626,7 @@
                 warning_count = <cfqueryparam cfsqltype="cf_sql_integer" value="#validation.warningCount#">,
                 matched_contactid = <cfqueryparam cfsqltype="cf_sql_integer" value="#dupeResult.bestMatchContactId#" null="#dupeResult.bestMatchContactId eq 0#">,
                 best_match_score = <cfqueryparam cfsqltype="cf_sql_integer" value="#dupeResult.bestMatchScore#" null="#dupeResult.bestMatchScore eq 0#">,
-                updated_at = NOW()
+                updated_at = GETDATE()
             WHERE row_id = <cfqueryparam cfsqltype="cf_sql_integer" value="#qRows.row_id#">
         </cfquery>
 
@@ -578,7 +635,7 @@
 
     <!--- Update job counts --->
     <cfquery>
-        CALL sp_update_import_job_counts(<cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.job_id#">)
+        EXEC sp_update_import_job_counts <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.job_id#">
     </cfquery>
 
     <!--- Update job status --->
@@ -748,13 +805,13 @@
             warning_count = <cfqueryparam cfsqltype="cf_sql_integer" value="#validation.warningCount#">,
             matched_contactid = <cfqueryparam cfsqltype="cf_sql_integer" value="#dupeResult.bestMatchContactId#" null="#dupeResult.bestMatchContactId eq 0#">,
             best_match_score = <cfqueryparam cfsqltype="cf_sql_integer" value="#dupeResult.bestMatchScore#" null="#dupeResult.bestMatchScore eq 0#">,
-            updated_at = NOW()
+            updated_at = GETDATE()
         WHERE row_id = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.row_id#">
     </cfquery>
 
     <!--- Update job counts --->
     <cfquery>
-        CALL sp_update_import_job_counts(<cfqueryparam cfsqltype="cf_sql_integer" value="#qRow.job_id#">)
+        EXEC sp_update_import_job_counts <cfqueryparam cfsqltype="cf_sql_integer" value="#qRow.job_id#">
     </cfquery>
 
     <cfset logEvent(qRow.job_id, "row_updated", {row_id: arguments.row_id})>
@@ -784,13 +841,13 @@
             <cfif arguments.action eq "skip">
                 status = 'ignored',
             </cfif>
-            updated_at = NOW()
+            updated_at = GETDATE()
         WHERE row_id = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.row_id#">
     </cfquery>
 
     <cfif qRow.recordCount>
         <cfquery>
-            CALL sp_update_import_job_counts(<cfqueryparam cfsqltype="cf_sql_integer" value="#qRow.job_id#">)
+            EXEC sp_update_import_job_counts <cfqueryparam cfsqltype="cf_sql_integer" value="#qRow.job_id#">
         </cfquery>
         <cfset logEvent(qRow.job_id, "row_action_set", {row_id: arguments.row_id, action: arguments.action})>
     </cfif>
@@ -814,13 +871,13 @@
             <cfif arguments.action eq "skip">
                 status = 'ignored',
             </cfif>
-            updated_at = NOW()
+            updated_at = GETDATE()
         WHERE job_id = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.job_id#">
           AND row_id IN (<cfqueryparam cfsqltype="cf_sql_integer" value="#arrayToList(arguments.row_ids)#" list="true">)
     </cfquery>
 
     <cfquery>
-        CALL sp_update_import_job_counts(<cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.job_id#">)
+        EXEC sp_update_import_job_counts <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.job_id#">
     </cfquery>
 
     <cfset logEvent(arguments.job_id, "bulk_action_set", {count: arrayLen(arguments.row_ids), action: arguments.action})>
@@ -915,8 +972,7 @@
         <cfreturn result>
     </cfif>
 
-    <!--- Update status --->
-    <cfset updateJobStatus(arguments.job_id, "importing")>
+    <!--- Status already set to 'importing' by tryAcquireImportLock() --->
     <cfset logEvent(arguments.job_id, "import_started", {})>
 
     <!--- Get rows to import --->
@@ -964,7 +1020,7 @@
                         SET
                             status = 'imported',
                             created_contactid = <cfqueryparam cfsqltype="cf_sql_integer" value="#contactid#">,
-                            updated_at = NOW()
+                            updated_at = GETDATE()
                         WHERE row_id = <cfqueryparam cfsqltype="cf_sql_integer" value="#qRows.row_id#">
                     </cfquery>
 
@@ -984,7 +1040,7 @@
                             SET
                                 status = 'failed',
                                 import_error = <cfqueryparam cfsqltype="cf_sql_longvarchar" value="#cfcatch.message#">,
-                                updated_at = NOW()
+                                updated_at = GETDATE()
                             WHERE row_id = <cfqueryparam cfsqltype="cf_sql_integer" value="#qRows.row_id#">
                         </cfquery>
 
@@ -999,9 +1055,9 @@
                 </cftry>
             </cfloop>
 
-            <!--- Update job counts and status --->
+            <!--- Update job counts and status (MSSQL syntax) --->
             <cfquery>
-                CALL sp_update_import_job_counts(<cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.job_id#">)
+                EXEC sp_update_import_job_counts <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.job_id#">
             </cfquery>
 
             <cfset updateJobStatus(arguments.job_id, "completed")>
@@ -1013,8 +1069,15 @@
             <cfset result.success = true>
 
             <cfcatch type="any">
-                <cftransaction action="rollback">
-                <cfset updateJobStatus(arguments.job_id, "failed", cfcatch.message)>
+                <!--- Force rollback of the active transaction --->
+                <cftransaction action="rollback" />
+
+                <!--- Post-rollback cleanup MUST be outside the rolled-back scope --->
+                <cftransaction>
+                    <cfset updateJobStatus(arguments.job_id, "reviewing")>
+                    <cfset logEvent(arguments.job_id, "import_failed", {error: cfcatch.message})>
+                </cftransaction>
+
                 <cfset arrayAppend(result.errors, "Import failed: " & cfcatch.message)>
             </cfcatch>
         </cftry>
@@ -1288,7 +1351,7 @@
             <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.contactid#">,
             <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.userid#">,
             <cfqueryparam cfsqltype="cf_sql_longvarchar" value="#arguments.noteText#">,
-            NOW()
+            GETDATE()
         )
     </cfquery>
 </cffunction>
@@ -1416,7 +1479,7 @@
                 <cfqueryparam cfsqltype="cf_sql_integer" value="#systemid#">,
                 <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.userid#">,
                 <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.contactid#">,
-                NOW(),
+                GETDATE(),
                 <cfqueryparam cfsqltype="cf_sql_date" value="#startDate#">,
                 'Active'
             )
@@ -1613,7 +1676,7 @@
                 <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.job_id#">,
                 <cfqueryparam cfsqltype="cf_sql_varchar" value="#arguments.event_type#">,
                 <cfqueryparam cfsqltype="cf_sql_longvarchar" value="#serializeJSON(arguments.detail)#">,
-                NOW()
+                GETDATE()
             )
         </cfquery>
         <cfcatch>

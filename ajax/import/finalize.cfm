@@ -58,30 +58,29 @@
         <cfabort>
     </cfif>
 
-    <!--- Check if already completed or importing --->
-    <cfif job.status eq "completed">
-        <cfset response.message = "Import already completed">
+    <!--- Acquire atomic import lock (prevents concurrent double-finalize) --->
+    <cfset lockResult = importService.tryAcquireImportLock(requestData.job_id)>
+
+    <cfif not lockResult.acquired>
+        <!--- Lock not acquired - return appropriate message --->
+        <cfset response.message = lockResult.message>
         <cfoutput>#serializeJSON(response)#</cfoutput>
         <cfabort>
     </cfif>
 
-    <cfif job.status eq "importing">
-        <cfset response.message = "Import already in progress">
-        <cfoutput>#serializeJSON(response)#</cfoutput>
-        <cfabort>
-    </cfif>
-
-    <!--- Validate job is ready for import --->
+    <!--- Lock acquired (status is now 'importing') - validate job is ready --->
     <cfset validation = importService.validateForImport(requestData.job_id)>
 
     <cfif not validation.can_import>
+        <!--- Release lock by resetting status to 'reviewing' --->
+        <cfset importService.updateJobStatus(requestData.job_id, "reviewing")>
         <cfset response.message = "Cannot import: " & arrayToList(validation.issues, "; ")>
         <cfset response.errors = validation.issues>
         <cfoutput>#serializeJSON(response)#</cfoutput>
         <cfabort>
     </cfif>
 
-    <!--- Execute import --->
+    <!--- Execute import (lock held, status is 'importing') --->
     <cfset importResult = importService.executeImport(requestData.job_id, userid)>
 
     <!--- Return result --->

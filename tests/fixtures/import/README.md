@@ -87,6 +87,35 @@ CSV with various date formats:
 - Invalid: invalid-date
 Tests date parsing and normalization.
 
+### excel_serial_dates.csv
+CSV simulating Excel serial date numbers:
+- Valid serial: 30987 (1984-10-15), 44927 (2023-01-01)
+- Zero serial: 0 (should become empty)
+- One serial: 1 (should become empty)
+- Negative serial: -5 (should become empty)
+- Decimal serial: 44927.5 (date with time, normalized to date only)
+- Very old: 367 (1901-01-01), 730 (1901-12-31)
+- Future: 55000 (~2050), 58000 (~2058)
+- Mixed: ISO string + serial number
+
+Tests Excel serial date conversion. Expected results:
+| Input     | Output      | Notes                           |
+|-----------|-------------|----------------------------------|
+| 30987     | 1984-10-15  | Valid serial                     |
+| 44927     | 2023-01-01  | Valid serial                     |
+| 45292     | 2024-01-01  | Valid serial                     |
+| 0         | (empty)     | Invalid serial, treated as blank |
+| 1         | (empty)     | Invalid serial, treated as blank |
+| -5        | (empty)     | Negative, treated as blank       |
+| 44927.5   | 2023-01-01  | Decimal truncated to date        |
+| 367       | 1901-01-01  | Very old but valid               |
+
+**To create actual XLSX test files manually:**
+1. Open Excel, enter values from this CSV
+2. For "excel_serial_dates.xlsx": enter raw numbers (30987, 44927) in date columns
+3. For "excel_date_cells.xlsx": enter same values but format cells as Date
+4. Save both as .xlsx files in this directory
+
 ### phone_formats.csv
 CSV with various phone formats:
 - Parentheses: (555) 123-4567

@@ -1,0 +1,10 @@
+First Name,Last Name,Email,Birthday,Meeting Date
+John,Valid Serial,john@example.com,30987,45292
+Jane,Recent Date,jane@test.org,44927,45000
+Bob,Zero Serial,bob@email.com,0,0
+Alice,One Serial,alice@company.net,1,1
+Tom,Negative Serial,tom@email.com,-5,
+Charlie,Decimal Serial,charlie@email.com,44927.5,45000.75
+David,Very Old,david@test.com,367,730
+Eve,Future Date,eve@test.org,55000,58000
+Frank,Mixed,frank@email.com,1985-03-15,44927
