@@ -43,10 +43,9 @@
   <!--- Select Existing Relationship Column --->
   <div class="col-12 col-md-6 mb-2">
     <p class="fw-semibold">Or select an existing relationship:</p>
-    <form class="sel_client" action="/app/audition/?secid=175" method="POST">
-       <cfoutput>  
+    <form class="sel_client" action="/app/audition/?secid=175&audprojectid=<cfoutput>#audprojectid#</cfoutput>" method="POST">
+       <cfoutput>
         <input type="hidden" name="ctaction" value="addmember" />
-        <input type="hidden" name="audprojectid" value="#audprojectid#" />
     </cfoutput>
       <div class="input-group">
          <select class="form-control" name="autocomplete_aud" id="autocomplete_audx">
