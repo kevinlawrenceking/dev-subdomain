@@ -24,11 +24,12 @@
 <cftry>
     <cfset response.debug_step = "init">
     <!--- Validate user session --->
-    <cfif not isDefined("userid") or not isNumeric(userid)>
+    <cfif not structKeyExists(session, "userid") or not isNumeric(session.userid)>
         <cfset response.message = "Authentication required">
         <cfoutput>#serializeJSON(response)#</cfoutput>
         <cfabort>
     </cfif>
+    <cfset userid = session.userid>
 
     <!--- Check if file was uploaded --->
     <cfif not structKeyExists(form, "file") or not len(form.file)>
