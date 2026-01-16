@@ -19,7 +19,7 @@
 <cfset response.step = "V2_0: Check import_jobs table">
 
 <!--- Check if import_jobs table exists --->
-<cfquery name="qCheckTable" datasource="#dsn#">
+<cfquery name="qCheckTable"  >
 SELECT COUNT(*) AS cnt FROM information_schema.tables
 WHERE table_schema = <cfqueryparam cfsqltype="cf_sql_varchar" value="#schema#">
   AND table_name = 'import_jobs'
@@ -27,7 +27,7 @@ WHERE table_schema = <cfqueryparam cfsqltype="cf_sql_varchar" value="#schema#">
 
 <cfif qCheckTable.cnt eq 0>
     <cfset response.step = "V2_0: Create import_jobs table">
-    <cfquery datasource="#dsn#">
+    <cfquery  >
     CREATE TABLE import_jobs (
         job_id INT AUTO_INCREMENT PRIMARY KEY,
         userid INT NOT NULL,
@@ -61,7 +61,7 @@ WHERE table_schema = <cfqueryparam cfsqltype="cf_sql_varchar" value="#schema#">
 
 <!--- Check import_job_columns table --->
 <cfset response.step = "V2_0: Check import_job_columns table">
-<cfquery name="qCheckColumns" datasource="#dsn#">
+<cfquery name="qCheckColumns"  >
 SELECT COUNT(*) AS cnt FROM information_schema.tables
 WHERE table_schema = <cfqueryparam cfsqltype="cf_sql_varchar" value="#schema#">
   AND table_name = 'import_job_columns'
@@ -69,7 +69,7 @@ WHERE table_schema = <cfqueryparam cfsqltype="cf_sql_varchar" value="#schema#">
 
 <cfif qCheckColumns.cnt eq 0>
     <cfset response.step = "V2_0: Create import_job_columns table">
-    <cfquery datasource="#dsn#">
+    <cfquery  >
     CREATE TABLE import_job_columns (
         column_id INT AUTO_INCREMENT PRIMARY KEY,
         job_id INT NOT NULL,
@@ -91,7 +91,7 @@ WHERE table_schema = <cfqueryparam cfsqltype="cf_sql_varchar" value="#schema#">
 
 <!--- Check import_job_rows table --->
 <cfset response.step = "V2_0: Check import_job_rows table">
-<cfquery name="qCheckRows" datasource="#dsn#">
+<cfquery name="qCheckRows"  >
 SELECT COUNT(*) AS cnt FROM information_schema.tables
 WHERE table_schema = <cfqueryparam cfsqltype="cf_sql_varchar" value="#schema#">
   AND table_name = 'import_job_rows'
@@ -99,7 +99,7 @@ WHERE table_schema = <cfqueryparam cfsqltype="cf_sql_varchar" value="#schema#">
 
 <cfif qCheckRows.cnt eq 0>
     <cfset response.step = "V2_0: Create import_job_rows table">
-    <cfquery datasource="#dsn#">
+    <cfquery  >
     CREATE TABLE import_job_rows (
         row_id INT AUTO_INCREMENT PRIMARY KEY,
         job_id INT NOT NULL,
@@ -130,7 +130,7 @@ WHERE table_schema = <cfqueryparam cfsqltype="cf_sql_varchar" value="#schema#">
 
 <!--- Check import_job_events table --->
 <cfset response.step = "V2_0: Check import_job_events table">
-<cfquery name="qCheckEvents" datasource="#dsn#">
+<cfquery name="qCheckEvents"  >
 SELECT COUNT(*) AS cnt FROM information_schema.tables
 WHERE table_schema = <cfqueryparam cfsqltype="cf_sql_varchar" value="#schema#">
   AND table_name = 'import_job_events'
@@ -138,7 +138,7 @@ WHERE table_schema = <cfqueryparam cfsqltype="cf_sql_varchar" value="#schema#">
 
 <cfif qCheckEvents.cnt eq 0>
     <cfset response.step = "V2_0: Create import_job_events table">
-    <cfquery datasource="#dsn#">
+    <cfquery  >
     CREATE TABLE import_job_events (
         event_id INT AUTO_INCREMENT PRIMARY KEY,
         job_id INT NOT NULL,
@@ -158,7 +158,7 @@ WHERE table_schema = <cfqueryparam cfsqltype="cf_sql_varchar" value="#schema#">
 
 <!--- Check import_field_mappings table --->
 <cfset response.step = "V2_0: Check import_field_mappings table">
-<cfquery name="qCheckMappings" datasource="#dsn#">
+<cfquery name="qCheckMappings"  >
 SELECT COUNT(*) AS cnt FROM information_schema.tables
 WHERE table_schema = <cfqueryparam cfsqltype="cf_sql_varchar" value="#schema#">
   AND table_name = 'import_field_mappings'
@@ -166,7 +166,7 @@ WHERE table_schema = <cfqueryparam cfsqltype="cf_sql_varchar" value="#schema#">
 
 <cfif qCheckMappings.cnt eq 0>
     <cfset response.step = "V2_0: Create import_field_mappings table">
-    <cfquery datasource="#dsn#">
+    <cfquery  >
     CREATE TABLE import_field_mappings (
         mapping_id INT AUTO_INCREMENT PRIMARY KEY,
         canonical_field VARCHAR(50) NOT NULL,
@@ -187,7 +187,7 @@ WHERE table_schema = <cfqueryparam cfsqltype="cf_sql_varchar" value="#schema#">
 
 <!--- Check import_field_aliases table --->
 <cfset response.step = "V2_0: Check import_field_aliases table">
-<cfquery name="qCheckAliases" datasource="#dsn#">
+<cfquery name="qCheckAliases"  >
 SELECT COUNT(*) AS cnt FROM information_schema.tables
 WHERE table_schema = <cfqueryparam cfsqltype="cf_sql_varchar" value="#schema#">
   AND table_name = 'import_field_aliases'
@@ -195,7 +195,7 @@ WHERE table_schema = <cfqueryparam cfsqltype="cf_sql_varchar" value="#schema#">
 
 <cfif qCheckAliases.cnt eq 0>
     <cfset response.step = "V2_0: Create import_field_aliases table">
-    <cfquery datasource="#dsn#">
+    <cfquery  >
     CREATE TABLE import_field_aliases (
         alias_id INT AUTO_INCREMENT PRIMARY KEY,
         canonical_field VARCHAR(50) NOT NULL,
@@ -214,12 +214,12 @@ WHERE table_schema = <cfqueryparam cfsqltype="cf_sql_varchar" value="#schema#">
      V2_0: Seed Field Mappings
      ============================================================ --->
 <cfset response.step = "V2_0: Seed field mappings">
-<cfquery name="qCheckMappingData" datasource="#dsn#">
+<cfquery name="qCheckMappingData"  >
 SELECT COUNT(*) AS cnt FROM import_field_mappings
 </cfquery>
 
 <cfif qCheckMappingData.cnt eq 0>
-    <cfquery datasource="#dsn#">
+    <cfquery  >
     INSERT INTO import_field_mappings
         (canonical_field, display_name, field_category, field_type, is_required, max_length, sort_order)
     VALUES
@@ -258,12 +258,12 @@ SELECT COUNT(*) AS cnt FROM import_field_mappings
      V2_0: Seed Field Aliases
      ============================================================ --->
 <cfset response.step = "V2_0: Seed field aliases">
-<cfquery name="qCheckAliasData" datasource="#dsn#">
+<cfquery name="qCheckAliasData"  >
 SELECT COUNT(*) AS cnt FROM import_field_aliases
 </cfquery>
 
 <cfif qCheckAliasData.cnt eq 0>
-    <cfquery datasource="#dsn#">
+    <cfquery  >
     INSERT INTO import_field_aliases (canonical_field, alias_pattern, confidence) VALUES
     ('firstName', 'first name', 0.95),
     ('firstName', 'firstname', 0.95),
@@ -332,7 +332,7 @@ SELECT COUNT(*) AS cnt FROM import_field_aliases
      V2_1: Add file_hash column
      ============================================================ --->
 <cfset response.step = "V2_1: Check file_hash column">
-<cfquery name="qCheckColumn" datasource="#dsn#">
+<cfquery name="qCheckColumn"  >
 SELECT COLUMN_NAME, DATA_TYPE FROM information_schema.columns
 WHERE table_schema = <cfqueryparam cfsqltype="cf_sql_varchar" value="#schema#">
   AND table_name = 'import_jobs'
@@ -341,7 +341,7 @@ WHERE table_schema = <cfqueryparam cfsqltype="cf_sql_varchar" value="#schema#">
 
 <cfif qCheckColumn.recordCount eq 0>
     <cfset response.step = "V2_1: Add file_hash column">
-    <cfquery datasource="#dsn#">ALTER TABLE import_jobs ADD COLUMN file_hash VARCHAR(64) NULL</cfquery>
+    <cfquery  >ALTER TABLE import_jobs ADD COLUMN file_hash VARCHAR(64) NULL</cfquery>
     <cfset arrayAppend(response.results, "Added file_hash column")>
 <cfelse>
     <cfset arrayAppend(response.results, "file_hash column exists: " & qCheckColumn.DATA_TYPE)>
@@ -349,7 +349,7 @@ WHERE table_schema = <cfqueryparam cfsqltype="cf_sql_varchar" value="#schema#">
 
 <!--- V2_1: Add unique index on userid + file_hash --->
 <cfset response.step = "V2_1: Check unique index">
-<cfquery name="qCheckIdx" datasource="#dsn#">
+<cfquery name="qCheckIdx"  >
 SELECT COUNT(*) AS cnt FROM information_schema.statistics
 WHERE table_schema = <cfqueryparam cfsqltype="cf_sql_varchar" value="#schema#">
   AND table_name = 'import_jobs'
@@ -358,7 +358,7 @@ WHERE table_schema = <cfqueryparam cfsqltype="cf_sql_varchar" value="#schema#">
 
 <cfif qCheckIdx.cnt eq 0>
     <cfset response.step = "V2_1: Create unique index">
-    <cfquery datasource="#dsn#">CREATE UNIQUE INDEX UX_import_jobs_userid_file_hash ON import_jobs(userid, file_hash)</cfquery>
+    <cfquery  >CREATE UNIQUE INDEX UX_import_jobs_userid_file_hash ON import_jobs(userid, file_hash)</cfquery>
     <cfset arrayAppend(response.results, "Created unique index UX_import_jobs_userid_file_hash")>
 <cfelse>
     <cfset arrayAppend(response.results, "Unique index exists")>
@@ -366,13 +366,13 @@ WHERE table_schema = <cfqueryparam cfsqltype="cf_sql_varchar" value="#schema#">
 
 <!--- V2_1: Add relationship_system field mapping --->
 <cfset response.step = "V2_1: Check relationship_system mapping">
-<cfquery name="qCheckMap" datasource="#dsn#">
+<cfquery name="qCheckMap"  >
 SELECT COUNT(*) AS cnt FROM import_field_mappings WHERE canonical_field = 'relationship_system'
 </cfquery>
 
 <cfif qCheckMap.cnt eq 0>
     <cfset response.step = "V2_1: Insert relationship_system mapping">
-    <cfquery datasource="#dsn#">
+    <cfquery  >
     INSERT INTO import_field_mappings (canonical_field, display_name, field_category, field_type, is_required, max_length, sort_order)
     VALUES ('relationship_system', 'Relationship System', 'contact', 'select', 0, 50, 90)
     </cfquery>
@@ -383,7 +383,7 @@ SELECT COUNT(*) AS cnt FROM import_field_mappings WHERE canonical_field = 'relat
 
 <!--- V2_1: Add additional aliases (Google Contacts, vCard) --->
 <cfset response.step = "V2_1: Add extra aliases">
-<cfquery datasource="#dsn#">
+<cfquery  >
 INSERT IGNORE INTO import_field_aliases (canonical_field, alias_pattern, confidence) VALUES
 ('relationship_system', 'relationship_system', 0.95),
 ('relationship_system', 'relationship system', 0.95),
