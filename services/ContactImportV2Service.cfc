@@ -114,13 +114,15 @@
     }>
 
     <!--- Check for duplicate file by hash --->
+    <cfset var hashToStore = arguments.fileHash>
     <cfif len(arguments.fileHash)>
         <cfset var dupeCheck = findDuplicateJob(arguments.userid, arguments.fileHash)>
         <cfif dupeCheck.isDuplicate>
             <cfset result.isDuplicateFile = true>
             <cfset result.existingJob = dupeCheck.existingJob>
             <cfset result.message = "This file was already imported on " & dateFormat(dupeCheck.existingJob.created_at, "mm/dd/yyyy")>
-            <!--- Still allow creation, but flag it --->
+            <!--- Set hash to NULL to avoid unique constraint violation, allowing re-import --->
+            <cfset hashToStore = "">
         </cfif>
     </cfif>
 
@@ -142,7 +144,7 @@
                 <cfqueryparam cfsqltype="cf_sql_varchar" value="#arguments.filetype#">,
                 <cfqueryparam cfsqltype="cf_sql_bigint" value="#arguments.filesize#">,
                 <cfqueryparam cfsqltype="cf_sql_varchar" value="#arguments.storedFilePath#">,
-                <cfqueryparam cfsqltype="cf_sql_varchar" value="#arguments.fileHash#" null="#not len(arguments.fileHash)#">,
+                <cfqueryparam cfsqltype="cf_sql_varchar" value="#hashToStore#" null="#not len(hashToStore)#">,
                 'pending',
                 <cfqueryparam cfsqltype="cf_sql_longvarchar" value="#serializeJSON(arguments.options)#">,
                 NOW()
