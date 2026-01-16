@@ -121,7 +121,7 @@
     <!--- Build SET clause dynamically so partial updates do not crash or overwrite --->
     <cfset var comma = "">
 
-    <cfquery datasource="reach">
+    <cfquery >
         UPDATE contactdetails
         SET
             <cfif structKeyExists(arguments.data, "contactFullName")>
