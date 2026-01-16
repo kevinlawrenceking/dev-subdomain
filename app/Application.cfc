@@ -54,8 +54,14 @@
       };
     }
 
-    // Media paths
-    application.baseMediaPath = "C:\\home\\theactorsoffice.com\\media-" & this.datasource;
+    // Media paths - detect environment based on dsn
+    if (application.dsn == "abo") {
+      // Production server
+      application.baseMediaPath = "C:\\home\\theactorsoffice.com\\media-" & this.datasource;
+    } else {
+      // Development - use path relative to application root
+      application.baseMediaPath = getDirectoryFromPath(getCurrentTemplatePath()) & "..\\media-" & this.datasource;
+    }
     application.baseMediaUrl  = "/media-" & this.datasource;
 
     application.auditionimporttemplate = application.baseMediaUrl & "/auditionimporttemplates.xlsx";

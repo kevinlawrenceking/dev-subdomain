@@ -34,10 +34,13 @@
         <cfabort>
     </cfif>
 
-    <!--- Set up upload directory --->
-    <cfset currentURL = cgi.server_name>
-    <cfset host = ListFirst(currentURL, ".")>
-    <cfset uploadDir = "C:\home\theactorsoffice.com\wwwroot\" & host & "-subdomain\media-" & host & "\users\" & userid & "\imports">
+    <!--- Set up upload directory using session path from Application.cfc --->
+    <cfif structKeyExists(session, "userImportsPath") and len(session.userImportsPath)>
+        <cfset uploadDir = session.userImportsPath>
+    <cfelse>
+        <!--- Fallback: construct path using application settings --->
+        <cfset uploadDir = application.baseMediaPath & "\users\" & userid & "\imports">
+    </cfif>
 
     <!--- Create directory if needed --->
     <cfif not directoryExists(uploadDir)>
