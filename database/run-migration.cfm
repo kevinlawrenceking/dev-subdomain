@@ -10,7 +10,7 @@
 </cfif>
 
 <!--- Use application datasource --->
-<cfset dsn = application.dsn>
+ 
 <cfset schema = application.information_schema>
 
 <!--- ============================================================
