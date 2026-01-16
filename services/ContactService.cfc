@@ -108,7 +108,65 @@
 
     <cfreturn result>
 </cffunction>
-<cffunction name="update" access="public" returntype="void" output="false">
+<cffunction name="update" access="public" returntype="void" output="false" hint="Update an existing contact record">
+    <cfargument name="contactid" type="numeric" required="true" hint="Contact ID to update">
+    <cfargument name="dataStruct" type="struct" required="true" hint="Fields to update">
+
+    <!--- Define allowed fields for updates --->
+    <cfset var allowedFields = {
+        "contactFullName": "CF_SQL_VARCHAR",
+        "contacttitle": "CF_SQL_VARCHAR",
+        "recordname": "CF_SQL_VARCHAR",
+        "contactNickname": "CF_SQL_VARCHAR",
+        "contactBirthday": "CF_SQL_DATE",
+        "contactMeetingDate": "CF_SQL_DATE",
+        "contactMeetingLoc": "CF_SQL_VARCHAR",
+        "contactPronoun": "CF_SQL_VARCHAR",
+        "refer_contact_id": "CF_SQL_INTEGER",
+        "contactStatus": "CF_SQL_VARCHAR",
+        "contactphoto": "CF_SQL_VARCHAR",
+        "user_yn": "CF_SQL_CHAR",
+        "newsletter_yn": "CF_SQL_CHAR",
+        "googlealert_yn": "CF_SQL_CHAR",
+        "socialmedia_yn": "CF_SQL_CHAR",
+        "isdeleted": "CF_SQL_BIT"
+    }>
+
+    <!--- Build dynamic UPDATE query --->
+    <cfset var setClauses = []>
+    <cfset var params = []>
+
+    <cfloop collection="#arguments.dataStruct#" item="field">
+        <cfif structKeyExists(allowedFields, field)>
+            <cfset arrayAppend(setClauses, "#field# = ?")>
+            <cfset arrayAppend(params, {
+                value: arguments.dataStruct[field],
+                cfsqltype: allowedFields[field]
+            })>
+        </cfif>
+    </cfloop>
+
+    <!--- Only execute if there are fields to update --->
+    <cfif arrayLen(setClauses) GT 0>
+        <cfset var updateSql = "UPDATE contactdetails SET ">
+        <cfloop from="1" to="#arrayLen(setClauses)#" index="i">
+            <cfif i GT 1><cfset updateSql &= ", "></cfif>
+            <cfset updateSql &= setClauses[i]>
+        </cfloop>
+        <cfset updateSql &= " WHERE contactid = ?">
+
+        <cfquery name="qUpdate">
+            #preserveSingleQuotes(updateSql)#
+            <cfloop from="1" to="#arrayLen(params)#" index="i">
+                <cfqueryparam value="#params[i].value#" cfsqltype="#params[i].cfsqltype#" null="#isNull(params[i].value)#">
+            </cfloop>
+            <cfqueryparam value="#arguments.contactid#" cfsqltype="CF_SQL_INTEGER">
+        </cfquery>
+    </cfif>
+</cffunction>
+
+
+<cffunction name="updatebad" access="public" returntype="void" output="false">
     <cfargument name="contactid" type="numeric" required="true">
     <cfargument name="data" type="struct" required="true">
 
