@@ -108,8 +108,35 @@
 
     <cfreturn result>
 </cffunction>
+<cffunction name="update" access="public" returntype="void" output="false">
+    <cfargument name="contactid" type="numeric" required="true">
+    <cfargument name="data" type="struct" required="true">
 
-<cffunction name="update" access="public" returntype="void" output="false" hint="Update an existing contact record">
+    <cfquery datasource="reach">
+        UPDATE contactdetails
+        SET
+            contactFullName    = <cfqueryparam value="#data.contactFullName#"    cfsqltype="CF_SQL_VARCHAR" null="#isNull(data.contactFullName)#">,
+            contacttitle       = <cfqueryparam value="#data.contacttitle#"       cfsqltype="CF_SQL_VARCHAR" null="#isNull(data.contacttitle)#">,
+            recordname         = <cfqueryparam value="#data.recordname#"         cfsqltype="CF_SQL_VARCHAR" null="#isNull(data.recordname)#">,
+            contactNickname    = <cfqueryparam value="#data.contactNickname#"    cfsqltype="CF_SQL_VARCHAR" null="#isNull(data.contactNickname)#">,
+            contactBirthday    = <cfqueryparam value="#data.contactBirthday#"    cfsqltype="CF_SQL_DATE"    null="#isNull(data.contactBirthday)#">,
+            contactMeetingDate = <cfqueryparam value="#data.contactMeetingDate#" cfsqltype="CF_SQL_DATE"    null="#isNull(data.contactMeetingDate)#">,
+            contactMeetingLoc  = <cfqueryparam value="#data.contactMeetingLoc#"  cfsqltype="CF_SQL_VARCHAR" null="#isNull(data.contactMeetingLoc)#">,
+            contactPronoun     = <cfqueryparam value="#data.contactPronoun#"     cfsqltype="CF_SQL_VARCHAR" null="#isNull(data.contactPronoun)#">,
+            refer_contact_id   = <cfqueryparam value="#data.refer_contact_id#"   cfsqltype="CF_SQL_INTEGER" null="#isNull(data.refer_contact_id)#">,
+            contactStatus      = <cfqueryparam value="#data.contactStatus#"      cfsqltype="CF_SQL_VARCHAR" null="#isNull(data.contactStatus)#">,
+            contactphoto       = <cfqueryparam value="#data.contactphoto#"       cfsqltype="CF_SQL_VARCHAR" null="#isNull(data.contactphoto)#">,
+            user_yn            = <cfqueryparam value="#data.user_yn#"            cfsqltype="CF_SQL_CHAR"    null="#isNull(data.user_yn)#">,
+            newsletter_yn      = <cfqueryparam value="#data.newsletter_yn#"      cfsqltype="CF_SQL_CHAR"    null="#isNull(data.newsletter_yn)#">,
+            googlealert_yn     = <cfqueryparam value="#data.googlealert_yn#"     cfsqltype="CF_SQL_CHAR"    null="#isNull(data.googlealert_yn)#">,
+            socialmedia_yn     = <cfqueryparam value="#data.socialmedia_yn#"     cfsqltype="CF_SQL_CHAR"    null="#isNull(data.socialmedia_yn)#">,
+            isdeleted          = <cfqueryparam value="#data.isdeleted#"          cfsqltype="CF_SQL_BIT"     null="#isNull(data.isdeleted)#">
+        WHERE contactid = <cfqueryparam value="#arguments.contactid#" cfsqltype="CF_SQL_INTEGER">
+    </cfquery>
+</cffunction>
+
+<!---
+<cffunction name="updatse" access="public" returntype="void" output="false" hint="Update an existing contact record">
     <cfargument name="contactid" type="numeric" required="true" hint="Contact ID to update">
     <cfargument name="dataStruct" type="struct" required="true" hint="Fields to update">
 
@@ -133,7 +160,7 @@
         "isdeleted": "CF_SQL_BIT"
     }>
 
-    <!--- Build dynamic UPDATE query --->
+
     <cfset var setClauses = []>
     <cfset var params = []>
 
@@ -165,6 +192,8 @@
         </cfquery>
     </cfif>
 </cffunction>
+
+--->
 
 <cffunction name="delete" access="public" returntype="void" output="false" hint="Soft-delete a contact record">
     <cfargument name="contactid" type="numeric" required="true" hint="Contact ID to delete">

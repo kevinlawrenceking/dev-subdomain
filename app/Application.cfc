@@ -59,8 +59,9 @@
       // Production server
       application.baseMediaPath = "C:\\home\\theactorsoffice.com\\media-" & this.datasource;
     } else {
-      // Development - use path relative to application root
-      application.baseMediaPath = getDirectoryFromPath(getCurrentTemplatePath()) & "..\\media-" & this.datasource;
+      // Development - use expandPath to get absolute path from app root
+      // expandPath("/") gives the web root, which is the dev-subdomain folder
+      application.baseMediaPath = expandPath("/media-" & this.datasource);
     }
     application.baseMediaUrl  = "/media-" & this.datasource;
 
@@ -236,11 +237,37 @@
     <cfinclude template="#arguments.targetPage#" />
   </cffunction>
 
-  <!--- simple debug trap during triage; remove when stable --->
+  <!--- Error handler that returns JSON for AJAX requests --->
   <cffunction name="onError" access="public" returntype="void" output="true">
     <cfargument name="exception" />
     <cfargument name="eventName" />
-    <cfdump var="#arguments.exception#" label="CF Error" top="2" />
+
+    <!--- Detect if this is an AJAX request --->
+    <cfset var isAjax = (
+      structKeyExists(cgi, "HTTP_X_REQUESTED_WITH") AND lcase(cgi.HTTP_X_REQUESTED_WITH) eq "xmlhttprequest"
+    ) OR (
+      structKeyExists(cgi, "HTTP_ACCEPT") AND findNoCase("application/json", cgi.HTTP_ACCEPT)
+    ) OR (
+      findNoCase("/ajax/", cgi.SCRIPT_NAME)
+    )>
+
+    <cfif isAjax>
+      <!--- Return JSON error for AJAX requests --->
+      <cfset var errorResponse = {
+        success: false,
+        message: "Server error: " & arguments.exception.message,
+        detail: arguments.exception.detail ?: "",
+        type: arguments.exception.type ?: "unknown"
+      }>
+      <cfif structKeyExists(arguments.exception, "sql")>
+        <cfset errorResponse.sql = left(arguments.exception.sql, 300)>
+      </cfif>
+      <cfcontent type="application/json" reset="true">
+      <cfoutput>#serializeJSON(errorResponse)#</cfoutput>
+    <cfelse>
+      <!--- HTML dump for browser requests (debug mode) --->
+      <cfdump var="#arguments.exception#" label="CF Error" top="2" />
+    </cfif>
     <cfabort />
   </cffunction>
 
