@@ -108,7 +108,106 @@
 
     <cfreturn result>
 </cffunction>
-<cffunction name="update" access="public" returntype="void" output="false" hint="Update an existing contact record">
+
+<cffunction name="update" access="public" returntype="void" output="false">
+    <cfargument name="contactid" type="numeric" required="true">
+    <cfargument name="data" type="struct" required="true">
+
+    <!--- No-op if caller passed no fields --->
+    <cfif structIsEmpty(arguments.data)>
+        <cfreturn>
+    </cfif>
+
+    <!--- Build SET clause dynamically so partial updates do not crash or overwrite --->
+    <cfset var comma = "">
+
+    <cfquery datasource="reach">
+        UPDATE contactdetails
+        SET
+            <cfif structKeyExists(arguments.data, "contactFullName")>
+                #comma# contactFullName = <cfqueryparam value="#arguments.data.contactFullName#" cfsqltype="CF_SQL_VARCHAR" null="#isNull(arguments.data.contactFullName)#">
+                <cfset comma = ",">
+            </cfif>
+
+            <cfif structKeyExists(arguments.data, "contacttitle")>
+                #comma# contacttitle = <cfqueryparam value="#arguments.data.contacttitle#" cfsqltype="CF_SQL_VARCHAR" null="#isNull(arguments.data.contacttitle)#">
+                <cfset comma = ",">
+            </cfif>
+
+            <cfif structKeyExists(arguments.data, "recordname")>
+                #comma# recordname = <cfqueryparam value="#arguments.data.recordname#" cfsqltype="CF_SQL_VARCHAR" null="#isNull(arguments.data.recordname)#">
+                <cfset comma = ",">
+            </cfif>
+
+            <cfif structKeyExists(arguments.data, "contactNickname")>
+                #comma# contactNickname = <cfqueryparam value="#arguments.data.contactNickname#" cfsqltype="CF_SQL_VARCHAR" null="#isNull(arguments.data.contactNickname)#">
+                <cfset comma = ",">
+            </cfif>
+
+            <cfif structKeyExists(arguments.data, "contactBirthday")>
+                #comma# contactBirthday = <cfqueryparam value="#arguments.data.contactBirthday#" cfsqltype="CF_SQL_DATE" null="#isNull(arguments.data.contactBirthday)#">
+                <cfset comma = ",">
+            </cfif>
+
+            <cfif structKeyExists(arguments.data, "contactMeetingDate")>
+                #comma# contactMeetingDate = <cfqueryparam value="#arguments.data.contactMeetingDate#" cfsqltype="CF_SQL_DATE" null="#isNull(arguments.data.contactMeetingDate)#">
+                <cfset comma = ",">
+            </cfif>
+
+            <cfif structKeyExists(arguments.data, "contactMeetingLoc")>
+                #comma# contactMeetingLoc = <cfqueryparam value="#arguments.data.contactMeetingLoc#" cfsqltype="CF_SQL_VARCHAR" null="#isNull(arguments.data.contactMeetingLoc)#">
+                <cfset comma = ",">
+            </cfif>
+
+            <cfif structKeyExists(arguments.data, "contactPronoun")>
+                #comma# contactPronoun = <cfqueryparam value="#arguments.data.contactPronoun#" cfsqltype="CF_SQL_VARCHAR" null="#isNull(arguments.data.contactPronoun)#">
+                <cfset comma = ",">
+            </cfif>
+
+            <cfif structKeyExists(arguments.data, "refer_contact_id")>
+                #comma# refer_contact_id = <cfqueryparam value="#arguments.data.refer_contact_id#" cfsqltype="CF_SQL_INTEGER" null="#isNull(arguments.data.refer_contact_id)#">
+                <cfset comma = ",">
+            </cfif>
+
+            <cfif structKeyExists(arguments.data, "contactStatus")>
+                #comma# contactStatus = <cfqueryparam value="#arguments.data.contactStatus#" cfsqltype="CF_SQL_VARCHAR" null="#isNull(arguments.data.contactStatus)#">
+                <cfset comma = ",">
+            </cfif>
+
+            <cfif structKeyExists(arguments.data, "contactphoto")>
+                #comma# contactphoto = <cfqueryparam value="#arguments.data.contactphoto#" cfsqltype="CF_SQL_VARCHAR" null="#isNull(arguments.data.contactphoto)#">
+                <cfset comma = ",">
+            </cfif>
+
+            <cfif structKeyExists(arguments.data, "user_yn")>
+                #comma# user_yn = <cfqueryparam value="#arguments.data.user_yn#" cfsqltype="CF_SQL_CHAR" null="#isNull(arguments.data.user_yn)#">
+                <cfset comma = ",">
+            </cfif>
+
+            <cfif structKeyExists(arguments.data, "newsletter_yn")>
+                #comma# newsletter_yn = <cfqueryparam value="#arguments.data.newsletter_yn#" cfsqltype="CF_SQL_CHAR" null="#isNull(arguments.data.newsletter_yn)#">
+                <cfset comma = ",">
+            </cfif>
+
+            <cfif structKeyExists(arguments.data, "googlealert_yn")>
+                #comma# googlealert_yn = <cfqueryparam value="#arguments.data.googlealert_yn#" cfsqltype="CF_SQL_CHAR" null="#isNull(arguments.data.googlealert_yn)#">
+                <cfset comma = ",">
+            </cfif>
+
+            <cfif structKeyExists(arguments.data, "socialmedia_yn")>
+                #comma# socialmedia_yn = <cfqueryparam value="#arguments.data.socialmedia_yn#" cfsqltype="CF_SQL_CHAR" null="#isNull(arguments.data.socialmedia_yn)#">
+                <cfset comma = ",">
+            </cfif>
+
+            <cfif structKeyExists(arguments.data, "isdeleted")>
+                #comma# isdeleted = <cfqueryparam value="#arguments.data.isdeleted#" cfsqltype="CF_SQL_BIT" null="#isNull(arguments.data.isdeleted)#">
+                <cfset comma = ",">
+            </cfif>
+        WHERE contactid = <cfqueryparam value="#arguments.contactid#" cfsqltype="CF_SQL_INTEGER">
+    </cfquery>
+</cffunction>
+
+<cffunction name="update22" access="public" returntype="void" output="false" hint="Update an existing contact record">
     <cfargument name="contactid" type="numeric" required="true" hint="Contact ID to update">
     <cfargument name="dataStruct" type="struct" required="true" hint="Fields to update">
 
