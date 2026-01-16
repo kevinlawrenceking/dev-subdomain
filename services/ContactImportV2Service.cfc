@@ -553,7 +553,7 @@
     <cfargument name="column_id" type="numeric" required="true">
     <cfargument name="normalized_field" type="string" required="true">
 
-    <cfquery  >
+    <cfquery datasource="reach">
         UPDATE import_job_columns
         SET
             normalized_field = <cfqueryparam cfsqltype="cf_sql_varchar" value="#arguments.normalized_field#" null="#not len(arguments.normalized_field)#">,
@@ -568,7 +568,7 @@
     <cfargument name="job_id" type="numeric" required="true">
 
     <!--- Mark all as confirmed --->
-    <cfquery  >
+    <cfquery datasource="reach">
         UPDATE import_job_columns
         SET user_confirmed = 1
         WHERE job_id = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.job_id#">
