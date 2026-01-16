@@ -61,7 +61,7 @@
         filefield="form.file"
         destination="#uploadDir#\"
         nameconflict="MAKEUNIQUE"
-        accept=".csv,.xls,.xlsx,.vcf,text/csv,text/vcard,text/x-vcard,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+        accept=".csv,.xls,.xlsx,.vcf,text/csv,text/plain,text/vcard,text/x-vcard,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/octet-stream">
 
     <!--- Get file info --->
     <cfset uploadedFile = cffile.serverfile>
