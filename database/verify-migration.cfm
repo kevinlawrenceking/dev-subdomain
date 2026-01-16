@@ -3,7 +3,7 @@
 </cfsilent>
 <cfset response = {success: false, message: "", checks: {}}>
 <cftry>
-<cfset dsn = "reach">
+<cfset dsn = "abod">
 <!--- Check 1: file_hash column --->
 <cfquery name="q1" datasource="#dsn#">
 SELECT COLUMN_NAME, DATA_TYPE FROM information_schema.columns

@@ -206,13 +206,29 @@
                     // Redirect to job page
                     window.location.href = '/app/contacts-import-v2/?job_id=' + response.job_id;
                 } else {
-                    showAlert('error', response.message || 'Upload failed');
+                    var errMsg = response.message || 'Upload failed';
+                    if (response.debug_step) {
+                        errMsg += ' [Step: ' + response.debug_step + ']';
+                    }
+                    if (response.debug_path) {
+                        errMsg += ' [Path: ' + response.debug_path + ']';
+                    }
+                    showAlert('error', errMsg);
                     $('#upload-area').show();
                     $('#upload-progress').hide();
                 }
             },
-            error: function() {
-                showAlert('error', 'Upload failed. Please try again.');
+            error: function(xhr, status, error) {
+                var errMsg = 'Upload failed. Please try again.';
+                if (xhr.responseText) {
+                    try {
+                        var resp = JSON.parse(xhr.responseText);
+                        if (resp.message) errMsg = resp.message;
+                    } catch(e) {
+                        errMsg += ' (Response: ' + xhr.responseText.substring(0, 200) + ')';
+                    }
+                }
+                showAlert('error', errMsg);
                 $('#upload-area').show();
                 $('#upload-progress').hide();
             }

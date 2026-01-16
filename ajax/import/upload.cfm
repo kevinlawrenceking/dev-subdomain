@@ -16,10 +16,13 @@
     file_hash: "",
     is_duplicate_file: false,
     existing_job: {},
-    message: ""
+    message: "",
+    debug_step: "",
+    debug_path: ""
 }>
 
 <cftry>
+    <cfset response.debug_step = "init">
     <!--- Validate user session --->
     <cfif not isDefined("userid") or not isNumeric(userid)>
         <cfset response.message = "Authentication required">
@@ -34,6 +37,7 @@
         <cfabort>
     </cfif>
 
+    <cfset response.debug_step = "setup_dir">
     <!--- Set up upload directory using session path from Application.cfc --->
     <cfif structKeyExists(session, "userImportsPath") and len(session.userImportsPath)>
         <cfset uploadDir = session.userImportsPath>
@@ -42,11 +46,14 @@
         <cfset uploadDir = application.baseMediaPath & "\users\" & userid & "\imports">
     </cfif>
 
+    <cfset response.debug_step = "create_dir">
+    <cfset response.debug_path = uploadDir>
     <!--- Create directory if needed --->
     <cfif not directoryExists(uploadDir)>
         <cfdirectory directory="#uploadDir#" action="create">
     </cfif>
 
+    <cfset response.debug_step = "upload_file">
     <!--- Upload file --->
     <cffile
         action="upload"
@@ -82,10 +89,14 @@
         <cfabort>
     </cfif>
 
+    <cfset response.debug_step = "init_service">
     <!--- Compute file hash for idempotency --->
     <cfset importService = new services.ContactImportV2Service()>
+
+    <cfset response.debug_step = "compute_hash">
     <cfset fileHash = importService.computeFileHash(uploadedPath)>
 
+    <cfset response.debug_step = "create_job">
     <!--- Create import job --->
     <cfset jobResult = importService.createJob(
         userid = userid,
@@ -119,7 +130,13 @@
     </cfif>
 
     <cfcatch type="any">
-        <cfset response.message = "Upload failed: " & cfcatch.message>
+        <cfset response.message = "Upload failed at step [" & response.debug_step & "]: " & cfcatch.message>
+        <cfif len(cfcatch.detail)>
+            <cfset response.message = response.message & " | Detail: " & cfcatch.detail>
+        </cfif>
+        <cfif structKeyExists(cfcatch, "sql") and len(cfcatch.sql)>
+            <cfset response.message = response.message & " | SQL: " & left(cfcatch.sql, 200)>
+        </cfif>
     </cfcatch>
 </cftry>
 </cfsilent>
