@@ -129,7 +129,54 @@
 
         <script>
           window.onerror = function (message, source, lineno, colno, error) {
-            console.error(`Error: ${message}\nSource: ${source}\nLine: ${lineno}\nColumn: ${colno}\nError object: ${JSON.stringify(error)}`);
+            // Filter out errors from browser extensions and third-party scripts
+            // These are outside our control and don't affect app functionality
+            var isThirdPartyError = false;
+
+            // Check for common browser extension patterns in source
+            if (source) {
+              var extPatterns = [
+                'web-client-content-script', // Specific extension causing the error
+                'content-script',      // Generic extension content scripts
+                'chrome-extension://', // Chrome extensions
+                'moz-extension://',    // Firefox extensions
+                'safari-extension://', // Safari extensions
+                'edge-extension://',   // Edge extensions
+                'extension://',        // Generic extension URLs
+                'cdn.helpwise.io',     // Helpwise livechat (third-party)
+                'livechat'             // Livechat scripts
+              ];
+
+              for (var i = 0; i < extPatterns.length; i++) {
+                if (source.toLowerCase().indexOf(extPatterns[i].toLowerCase()) !== -1) {
+                  isThirdPartyError = true;
+                  break;
+                }
+              }
+            }
+
+            // Check for known third-party error messages from extensions
+            // These errors originate from extension scripts trying to interact with page content
+            if (!isThirdPartyError && message && source) {
+              // Specific check for MutationObserver errors from content scripts
+              if (message.indexOf('MutationObserver') !== -1 &&
+                  message.indexOf('parameter 1 is not of type') !== -1 &&
+                  source.indexOf('content-script') !== -1) {
+                isThirdPartyError = true;
+              }
+              // Check for ResizeObserver errors (common with extensions)
+              if (!isThirdPartyError &&
+                  message.indexOf('ResizeObserver') !== -1 &&
+                  source.indexOf('content-script') !== -1) {
+                isThirdPartyError = true;
+              }
+            }
+
+            // Suppress third-party errors silently, log app errors
+            if (!isThirdPartyError) {
+              console.error('Error: ' + message + '\nSource: ' + source + '\nLine: ' + lineno + '\nColumn: ' + colno + '\nError object: ' + JSON.stringify(error));
+            }
+
             return true; // Prevents the default browser error handling
           };
         </script>
