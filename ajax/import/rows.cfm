@@ -17,11 +17,12 @@
 
 <cftry>
     <!--- Validate user session --->
-    <cfif not isDefined("userid") or not isNumeric(userid)>
+    <cfif not structKeyExists(session, "userid") or not isNumeric(session.userid)>
         <cfset response.message = "Authentication required">
         <cfoutput>#serializeJSON(response)#</cfoutput>
         <cfabort>
     </cfif>
+    <cfset userid = session.userid>
 
     <!--- Validate and set parameters --->
     <cfparam name="url.job_id" default="0">

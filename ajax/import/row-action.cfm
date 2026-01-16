@@ -15,11 +15,12 @@
 
 <cftry>
     <!--- Validate user session --->
-    <cfif not isDefined("userid") or not isNumeric(userid)>
+    <cfif not structKeyExists(session, "userid") or not isNumeric(session.userid)>
         <cfset response.message = "Authentication required">
         <cfoutput>#serializeJSON(response)#</cfoutput>
         <cfabort>
     </cfif>
+    <cfset userid = session.userid>
 
     <!--- Parse request body --->
     <cfset requestBody = toString(getHTTPRequestData().content)>
