@@ -520,4 +520,4 @@ input[type="date"].form-control-sm {
     </div>
 </div>
 
-<script src="/assets/js/contact-import-v2.js"></script>
+<script src="/app/assets/js/contact-import-v2.js"></script>
