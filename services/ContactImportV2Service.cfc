@@ -75,7 +75,6 @@
         FROM import_jobs
         WHERE userid = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.userid#">
           AND file_hash = <cfqueryparam cfsqltype="cf_sql_varchar" value="#arguments.fileHash#">
-          AND status IN ('completed', 'importing', 'reviewing')
         ORDER BY created_at DESC
         LIMIT 1
     </cfquery>
