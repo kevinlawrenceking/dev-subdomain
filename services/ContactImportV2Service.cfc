@@ -81,7 +81,7 @@
         <cfreturn result>
     </cfif>
 
-    <cfquery name="qExisting"  >
+    <cfquery name="qExisting" datasource="reach">
         SELECT
             job_id,
             source_filename,
@@ -142,7 +142,7 @@
     </cfif>
 
     <cftry>
-        <cfquery name="qInsert" result="insertResult"  >
+        <cfquery name="qInsert" result="insertResult" datasource="reach">
             INSERT INTO import_jobs (
                 userid,
                 source_filename,
@@ -170,7 +170,7 @@
         <cfif structKeyExists(insertResult, "generatedKey") and len(insertResult.generatedKey)>
             <cfset result.job_id = insertResult.generatedKey>
         <cfelse>
-            <cfquery name="qLastId"  >
+            <cfquery name="qLastId" datasource="reach">
                 SELECT LAST_INSERT_ID() AS lastid
             </cfquery>
             <cfset result.job_id = qLastId.lastid>
@@ -199,7 +199,7 @@
     hint="Get job details by ID">
     <cfargument name="job_id" type="numeric" required="true">
 
-    <cfquery name="qJob"  >
+    <cfquery name="qJob" datasource="reach">
         SELECT *
         FROM import_jobs
         WHERE job_id = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.job_id#">
@@ -244,7 +244,7 @@
     <cfargument name="statusFilter" type="string" required="false" default="">
     <cfargument name="limit" type="numeric" required="false" default="50">
 
-    <cfquery name="qJobs"  >
+    <cfquery name="qJobs" datasource="reach">
         SELECT
             job_id,
             source_filename,
@@ -276,7 +276,7 @@
     <cfargument name="status" type="string" required="true">
     <cfargument name="errorMessage" type="string" required="false" default="">
 
-    <cfquery  >
+    <cfquery datasource="reach">
         UPDATE import_jobs
         SET
             status = <cfqueryparam cfsqltype="cf_sql_varchar" value="#arguments.status#">,
@@ -306,7 +306,7 @@
     }>
 
     <!--- Atomic conditional UPDATE - only succeeds if status allows import (MSSQL syntax) --->
-    <cfquery result="lockResult"  >
+    <cfquery result="lockResult" datasource="reach">
         UPDATE import_jobs
         SET
             status = 'importing',
@@ -323,7 +323,7 @@
         <cfset result.current_status = "importing">
     <cfelse>
         <!--- Lock not acquired - check current status --->
-        <cfquery name="qStatus"  >
+        <cfquery name="qStatus" datasource="reach">
             SELECT status
             FROM import_jobs
             WHERE job_id = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.job_id#">
@@ -357,7 +357,7 @@
     <cfargument name="job_id" type="numeric" required="true">
 
     <!--- Cascade delete will handle rows, columns, events --->
-    <cfquery  >
+    <cfquery datasource="reach">
         DELETE FROM import_jobs
         WHERE job_id = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.job_id#">
     </cfquery>
@@ -413,7 +413,7 @@
             <cfset var rawJson = serializeJSON(rowData)>
 
             <!--- Insert row --->
-            <cfquery  >
+            <cfquery datasource="reach">
                 INSERT INTO import_job_rows (
                     job_id,
                     row_num,
@@ -431,7 +431,7 @@
         </cfloop>
 
         <!--- Update job counts --->
-        <cfquery  >
+        <cfquery datasource="reach">
             UPDATE import_jobs
             SET
                 total_rows = <cfqueryparam cfsqltype="cf_sql_integer" value="#parseResult.totalRows#">,
@@ -475,7 +475,7 @@
         <cfset var header = arguments.headers[i]>
         <cfset var mapping = autoMapColumn(header)>
 
-        <cfquery  >
+        <cfquery datasource="reach">
             INSERT INTO import_job_columns (
                 job_id,
                 source_column_index,
@@ -510,7 +510,7 @@
     <cfset var cleanHeader = lcase(trim(arguments.header))>
 
     <!--- Look up in aliases table --->
-    <cfquery name="qAlias"  >
+    <cfquery name="qAlias" datasource="reach">
         SELECT canonical_field, confidence
         FROM import_field_aliases
         WHERE LOWER(alias_pattern) = <cfqueryparam cfsqltype="cf_sql_varchar" value="#cleanHeader#">
@@ -531,7 +531,7 @@
     hint="Get column mappings for a job">
     <cfargument name="job_id" type="numeric" required="true">
 
-    <cfquery name="qColumns"  >
+    <cfquery name="qColumns" datasource="reach">
         SELECT
             column_id,
             source_column_index,
@@ -607,7 +607,7 @@
     </cfloop>
 
     <!--- Get all pending rows --->
-    <cfquery name="qRows"  >
+    <cfquery name="qRows" datasource="reach">
         SELECT row_id, row_num, raw_json
         FROM import_job_rows
         WHERE job_id = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.job_id#">
@@ -696,7 +696,7 @@
 
     <!--- If fetching specific row by row_id --->
     <cfif arguments.row_id gt 0>
-        <cfquery name="qRows"  >
+        <cfquery name="qRows" datasource="reach">
             SELECT
                 row_id,
                 row_num,
@@ -719,7 +719,7 @@
         <cfset result.pages = 1>
     <cfelse>
         <!--- Get total count --->
-        <cfquery name="qCount"  >
+        <cfquery name="qCount" datasource="reach">
             SELECT COUNT(*) AS cnt
             FROM import_job_rows
             WHERE job_id = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.job_id#">
@@ -731,7 +731,7 @@
         <cfset result.pages = ceiling(result.total / arguments.limit)>
 
         <!--- Get rows --->
-        <cfquery name="qRows"  >
+        <cfquery name="qRows" datasource="reach">
             SELECT
                 row_id,
                 row_num,
@@ -793,7 +793,7 @@
     }>
 
     <!--- Get current row --->
-    <cfquery name="qRow"  >
+    <cfquery name="qRow" datasource="reach">
         SELECT job_id, normalized_json
         FROM import_job_rows
         WHERE row_id = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.row_id#">
@@ -825,7 +825,7 @@
     </cfif>
 
     <!--- Update row --->
-    <cfquery  >
+    <cfquery datasource="reach">
         UPDATE import_job_rows
         SET
             normalized_json = <cfqueryparam cfsqltype="cf_sql_longvarchar" value="#serializeJSON(validation.normalized)#">,
@@ -841,7 +841,7 @@
     </cfquery>
 
     <!--- Update job counts --->
-    <cfquery  >
+    <cfquery datasource="reach">
         CALL sp_update_import_job_counts(<cfqueryparam cfsqltype="cf_sql_integer" value="#qRow.job_id#">)
     </cfquery>
 
@@ -860,12 +860,12 @@
     <cfargument name="row_id" type="numeric" required="true">
     <cfargument name="action" type="string" required="true">
 
-    <cfquery name="qRow"  >
+    <cfquery name="qRow" datasource="reach">
         SELECT job_id FROM import_job_rows
         WHERE row_id = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.row_id#">
     </cfquery>
 
-    <cfquery  >
+    <cfquery datasource="reach">
         UPDATE import_job_rows
         SET
             user_action = <cfqueryparam cfsqltype="cf_sql_varchar" value="#arguments.action#">,
@@ -930,7 +930,7 @@
     }>
 
     <!--- Count rows by status --->
-    <cfquery name="qCounts"  >
+    <cfquery name="qCounts">
         SELECT
             status,
             user_action,
@@ -961,7 +961,7 @@
     </cfif>
 
     <!--- Check for dupes without action --->
-    <cfquery name="qDupeNoAction"  >
+    <cfquery name="qDupeNoAction">
         SELECT COUNT(*) AS cnt
         FROM import_job_rows
         WHERE job_id = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.job_id#">
@@ -1007,7 +1007,7 @@
     <cfset logEvent(arguments.job_id, "import_started", {})>
 
     <!--- Get rows to import --->
-    <cfquery name="qRows"  >
+    <cfquery name="qRows">
         SELECT
             row_id,
             row_num,
@@ -1394,7 +1394,7 @@
     <cfargument name="category" type="string" required="true">
     <cfargument name="value" type="string" required="true">
 
-    <cfquery name="qCheck"  >
+    <cfquery name="qCheck">
         SELECT 1 AS cnt
         FROM contactitems
         WHERE contactid = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.contactid#">
@@ -1442,7 +1442,7 @@
         </cfif>
 
         <!--- Check if contact has Casting Director tag to determine scope --->
-        <cfquery name="qFindScope"  >
+        <cfquery name="qFindScope">
             SELECT 1 AS cnt
             FROM contactitems
             WHERE valuecategory = 'Tag'
@@ -1460,7 +1460,7 @@
         </cfif>
 
         <!--- Find the appropriate system --->
-        <cfquery name="qFindSystem"  >
+        <cfquery name="qFindSystem">
             SELECT systemid
             FROM fusystems
             WHERE systemtype = <cfqueryparam cfsqltype="cf_sql_varchar" value="#newSystemType#">
@@ -1478,7 +1478,7 @@
         <cfset result.systemid = systemid>
 
         <!--- Check if already enrolled --->
-        <cfquery name="qCheckEnrollment"  >
+        <cfquery name="qCheckEnrollment">
             SELECT fusystemuserid
             FROM fusystemusers
             WHERE systemid = <cfqueryparam cfsqltype="cf_sql_integer" value="#systemid#">
@@ -1520,7 +1520,7 @@
         <cfif structKeyExists(insertResult, "generatedKey") and len(insertResult.generatedKey)>
             <cfset var fusystemuserid = insertResult.generatedKey>
         <cfelse>
-            <cfquery name="qLastId"  >
+            <cfquery name="qLastId" datasource="reach">
                 SELECT LAST_INSERT_ID() AS lastid
             </cfquery>
             <cfset var fusystemuserid = qLastId.lastid>
@@ -1552,7 +1552,7 @@
 
     <cftry>
         <!--- Get actions for this system --->
-        <cfquery name="qActions"  >
+        <cfquery name="qActions">
             SELECT
                 a.actionid,
                 a.actionname,
@@ -1571,7 +1571,7 @@
 
             <!--- Check uniqueness if required --->
             <cfif qActions.isUnique eq 1>
-                <cfquery name="qCheckUnique"  >
+                <cfquery name="qCheckUnique">
                     SELECT 1 AS cnt
                     FROM funotifications
                     WHERE actionid = <cfqueryparam cfsqltype="cf_sql_integer" value="#qActions.actionid#">
@@ -1729,7 +1729,7 @@
     hint="Get events for a job">
     <cfargument name="job_id" type="numeric" required="true">
 
-    <cfquery name="qEvents"  >
+    <cfquery name="qEvents">
         SELECT
             event_id,
             event_type,
@@ -1751,7 +1751,7 @@
 <cffunction name="getAvailableFields" access="public" returntype="query" output="false"
     hint="Get list of available fields for mapping">
 
-    <cfquery name="qFields"  >
+    <cfquery name="qFields">
         SELECT
             canonical_field,
             display_name,
@@ -1783,7 +1783,7 @@
         failed: 0
     }>
 
-    <cfquery name="qStats"  >
+    <cfquery name="qStats">
         SELECT status, COUNT(*) AS cnt
         FROM import_job_rows
         WHERE job_id = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.job_id#">
