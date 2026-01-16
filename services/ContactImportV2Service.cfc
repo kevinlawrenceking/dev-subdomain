@@ -159,6 +159,12 @@
 
         <cfcatch type="any">
             <cfset result.message = cfcatch.message>
+            <cfif structKeyExists(cfcatch, "detail") and len(cfcatch.detail)>
+                <cfset result.message &= " | Detail: " & cfcatch.detail>
+            </cfif>
+            <cfif structKeyExists(cfcatch, "sql") and len(cfcatch.sql)>
+                <cfset result.message &= " | SQL: " & cfcatch.sql>
+            </cfif>
         </cfcatch>
     </cftry>
 
