@@ -99,6 +99,7 @@
 
     <cfset response.debug_step = "create_job">
     <!--- Create import job --->
+    <cftry>
     <cfset jobResult = importService.createJob(
         userid = userid,
         filename = cffile.clientfile,
@@ -108,6 +109,18 @@
         fileHash = fileHash,
         options = {}
     )>
+    <cfcatch type="any">
+        <cfset response.message = "createJob error: " & cfcatch.message>
+        <cfif structKeyExists(cfcatch, "detail") and len(cfcatch.detail)>
+            <cfset response.message &= " | " & cfcatch.detail>
+        </cfif>
+        <cfif structKeyExists(cfcatch, "sql") and len(cfcatch.sql)>
+            <cfset response.message &= " | SQL: " & cfcatch.sql>
+        </cfif>
+        <cfoutput>#serializeJSON(response)#</cfoutput>
+        <cfabort>
+    </cfcatch>
+    </cftry>
 
     <cfif not jobResult.success>
         <cfset response.message = jobResult.message>
