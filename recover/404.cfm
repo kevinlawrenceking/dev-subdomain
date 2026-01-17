@@ -110,7 +110,7 @@ INSERT INTO [dbo].[errors]<BR>
 		 
 <CFTRY>   
      
-      <CFQUERY name="UPDATE" datasource="Reach" result="emp_id"  >   
+      <CFQUERY name="UPDATE"  result="emp_id"  >   
     INSERT INTO [dbo].[errors]
            ([browser]
            ,[diagnostics]

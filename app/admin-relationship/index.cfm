@@ -13,7 +13,7 @@ Security: Requires admin session (add appropriate check)
 </cfif>
 --->
 
-<cfparam name="dsn" default="reach" />
+
 <cfparam name="action" default="dashboard" />
 
 <!--- Load RelationshipService for health metrics --->

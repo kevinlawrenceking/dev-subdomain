@@ -269,7 +269,7 @@
     <cfargument name="contactid" type="numeric" required="true">
     <cfargument name="data" type="struct" required="true">
 
-    <cfquery datasource="reach">
+    <cfquery >
         UPDATE contactdetails
         SET
             contactFullName    = <cfqueryparam value="#data.contactFullName#"    cfsqltype="CF_SQL_VARCHAR" null="#isNull(data.contactFullName)#">,
