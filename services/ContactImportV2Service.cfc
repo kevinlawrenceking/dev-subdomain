@@ -13,7 +13,6 @@
 <cfset variables.duplicateMatcherService = new DuplicateMatcherService()>
 <cfset variables.contactService = new ContactService()>
 <cfset variables.contactItemService = new ContactItemService()>
-<cfset variables.dsn = "reach">
 
 <!--- Safe JSON parser to handle NULL/blank/invalid JSON --->
 <cffunction name="safeDeserializeJSON" access="private" returntype="any" output="false">
