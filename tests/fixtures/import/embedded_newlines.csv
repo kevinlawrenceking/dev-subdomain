@@ -1,9 +1,0 @@
-First Name,Last Name,Email,Notes
-John,Doe,john@example.com,"This note has
-a line break in it"
-Jane,Smith,jane@test.org,"Line 1
-Line 2
-Line 3"
-Bob,Johnson,bob@email.com,"Single line note"
-Alice,Williams,alice@company.net,"Note with ""quotes"" and
-newlines together"

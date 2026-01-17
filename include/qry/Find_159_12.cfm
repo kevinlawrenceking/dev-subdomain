@@ -1,2 +1,0 @@
-<cfset contactItemService = createObject("component", "services.ContactItemService")>
-<cfset Find = contactItemService.SELcontactitems_23954(currentid=currentid, valuecategory=categories.valuecategory)>

@@ -1,7 +1,0 @@
-First Name,Last Name,Email,Company,Notes
-John,"Doe,john.doe@example.com,Acme Corp,Missing end quote
-Jane,Smith,jane@test.org,"Widget, Inc","Has ""nested"" quotes"
-Bob,"John"son",bob@email.com,Tech,"Quote in middle of field
-Alice,Williams,alice@company.net,"Creative "Agency"",Mismatched quotes
-"Tom,Baker,tom@email.com,Starts with quote,No ending
-Charlie,"Brown,charlie@email.com,"Good Grief, Inc",Embedded unescaped

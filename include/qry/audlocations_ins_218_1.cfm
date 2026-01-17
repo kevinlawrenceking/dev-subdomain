@@ -1,2 +1,0 @@
-<cfset AuditionLocationService = createObject("component", "services.AuditionLocationService")>
-<cfset new_audlocid = objAuditiAuditionLocationServiceonLocationService.INSaudlocations(userid=userid, custom=custom)>

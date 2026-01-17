@@ -1,2 +1,0 @@
-<cfset contactAuditionService = createObject("component", "services.ContactAuditionService")>
-<cfset contactAuditionService.INSaudcontacts_auditions_xref_23780(audprojectid=audprojectid, new_contactid=new_contactid)>

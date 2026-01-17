@@ -1,2 +1,0 @@
-<cfset eventContactsXRefService = createObject("component", "services.EventContactsXRefService")>
-<cfset eventContactsXRefService.INSeventcontactsxref_24020(audProjectID=audProjectID, audStepID=audStepID)>

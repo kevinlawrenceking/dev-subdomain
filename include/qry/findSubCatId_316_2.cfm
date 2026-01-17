@@ -1,2 +1,0 @@
-<cfset auditionCategoryService = createObject("component", "services.AuditionCategoryService")>
-<cfset findSubCatId = auditionCategoryService.SELaudcategories_24389(audcatname="#audcatname#", audsubcatname="#audsubcatname#")>

@@ -1,7 +1,0 @@
-First Name,Last Name,Email,Birthday,Relationship Start
-John,Doe,john@example.com,1985-03-15,2020-01-01
-Jane,Smith,jane@test.org,03/20/1990,01-15-2021
-Bob,Johnson,bob@email.com,March 5 1988,Jan 1 2019
-Alice,Williams,alice@company.net,5/10/92,2018
-Tom,Baker,tom@email.com,19850315,20200101
-Charlie,Brown,charlie@email.com,invalid-date,also-invalid

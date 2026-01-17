@@ -1,8 +1,0 @@
-BEGIN:VCARD
-VERSION:3.0
-FN:Bob Testproducer
-N:Testproducer;Bob;;;
-EMAIL;TYPE=WORK:bob@example.com
-TEL;TYPE=CELL:555-9999
-ORG:Big Studio
-END:VCARD

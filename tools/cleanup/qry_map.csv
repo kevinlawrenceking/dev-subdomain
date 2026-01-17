@@ -1,2 +1,0 @@
-legacy_qry,service,method,returnVar,argsSnippet
-add_197_3,auditionSubmitSiteUserService,createAuditionSubmitSiteUser,id,"{submitsitename=new_submitsitename,catlist=sortedCatList,userid=userid}"
