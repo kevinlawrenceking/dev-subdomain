@@ -1,0 +1,51 @@
+first_name,last_name,email,phone,company,title,address,city,state,zip,notes
+Alexander,Reed,alex.reed@email.com,555-234-5001,Showtime,Series Producer,101 Sunset Blvd,Los Angeles,CA,90028,Premium cable contact
+Olivia,Cook,olivia.cook@gmail.com,555-234-5002,Starz,Development Exec,202 Highland Ave,Hollywood,CA,90038,Original series
+William,Bailey,will.bailey@yahoo.com,555-234-5003,FX,Casting Director,303 Vine St,West Hollywood,CA,90069,Drama specialist
+Sophia,Rivera,sophia.r@hotmail.com,555-234-5004,AMC,Showrunner,404 Cahuenga Blvd,Studio City,CA,91604,Walking Dead team
+James,Cooper,james.cooper@email.com,555-234-5005,TNT,Line Producer,505 Lankershim Blvd,North Hollywood,CA,91601,Action series
+Isabella,Richardson,isabella.r@gmail.com,555-234-5006,USA Network,Talent Exec,606 Ventura Blvd,Sherman Oaks,CA,91403,Character dramas
+Benjamin,Cox,ben.cox@yahoo.com,555-234-5007,Syfy,Genre Producer,707 Laurel Canyon,Valley Village,CA,91607,Sci-fi specialist
+Emma,Howard,emma.howard@email.com,555-234-5008,Bravo,Unscripted Exec,808 Coldwater Canyon,Beverly Hills,CA,90210,Reality programming
+Ethan,Ward,ethan.ward@hotmail.com,555-234-5009,E! Entertainment,Development,909 Robertson Blvd,West Hollywood,CA,90048,Pop culture focus
+Ava,Torres,ava.torres@gmail.com,555-234-5010,Lifetime,Movie Producer,1010 La Cienega,Los Angeles,CA,90035,TV movies
+Mason,Peterson,mason.p@email.com,555-234-5011,Hallmark,Family Content,1111 Wilshire Blvd,Santa Monica,CA,90401,Seasonal films
+Mia,Gray,mia.gray@yahoo.com,555-234-5012,BET,Urban Producer,1212 Olympic Blvd,Los Angeles,CA,90064,Diverse content
+Logan,Ramirez,logan.r@hotmail.com,555-234-5013,Comedy Central,Comedy Exec,1313 Pico Blvd,Los Angeles,CA,90025,Stand-up specials
+Charlotte,James,charlotte.j@email.com,555-234-5014,MTV,Youth Content,1414 Santa Monica Blvd,West LA,CA,90025,Gen Z programming
+Lucas,Watson,lucas.watson@gmail.com,555-234-5015,VH1,Music Producer,1515 Melrose Ave,Hollywood,CA,90038,Music docs
+Amelia,Brooks,amelia.b@yahoo.com,555-234-5016,Nickelodeon,Kids Casting,1616 Beverly Blvd,Los Angeles,CA,90036,Animation voice
+Henry,Kelly,henry.kelly@email.com,555-234-5017,Cartoon Network,Animation Dir,1717 Fairfax Ave,Los Angeles,CA,90046,Adult swim
+Harper,Sanders,harper.s@hotmail.com,555-234-5018,Disney Channel,Tween Producer,1818 La Brea Ave,Hollywood,CA,90028,Family series
+Sebastian,Price,seb.price@gmail.com,555-234-5019,Freeform,Young Adult,1919 Highland Ave,Hollywood,CA,90028,Coming of age
+Evelyn,Bennett,evelyn.b@email.com,555-234-5020,CW,DC Producer,2020 Gower St,Hollywood,CA,90028,Superhero shows
+Jack,Wood,jack.wood@yahoo.com,555-234-5021,Peacock,Streaming Exec,2121 Barham Blvd,Los Angeles,CA,90068,NBC streaming
+Abigail,Barnes,abby.barnes@hotmail.com,555-234-5022,Paramount Plus,Trek Producer,2222 Radford Ave,Studio City,CA,91604,Star Trek franchise
+Aiden,Ross,aiden.ross@email.com,555-234-5023,Discovery Plus,Doc Producer,2323 Cahuenga Blvd W,Hollywood,CA,90068,Nature content
+Emily,Henderson,emily.h@gmail.com,555-234-5024,HBO Max,Original Films,2424 Warner Blvd,Burbank,CA,91505,Streaming movies
+Owen,Coleman,owen.c@yahoo.com,555-234-5025,Tubi,AVOD Content,2525 Colorado Ave,Santa Monica,CA,90404,Free streaming
+Ella,Jenkins,ella.jenkins@email.com,555-234-5026,Pluto TV,Channel Curator,2626 Olympic Blvd,Santa Monica,CA,90404,FAST channels
+Jackson,Perry,jackson.p@hotmail.com,555-234-5027,Roku Channel,Original Series,2727 Sawtelle Blvd,Los Angeles,CA,90064,Streaming originals
+Scarlett,Powell,scarlett.p@gmail.com,555-234-5028,Crackle,Action Content,2828 Arizona Ave,Santa Monica,CA,90404,Genre films
+Liam,Long,liam.long@email.com,555-234-5029,IMDB TV,Acquisitions,2929 Main St,Santa Monica,CA,90405,Library content
+Grace,Patterson,grace.p@yahoo.com,555-234-5030,Shudder,Horror Curator,3030 Abbot Kinney,Venice,CA,90291,Horror streaming
+Noah,Hughes,noah.hughes@email.com,555-234-5031,Sundance Now,Indie Content,3131 Rose Ave,Venice,CA,90291,Art house streaming
+Chloe,Flores,chloe.flores@hotmail.com,555-234-5032,Britbox,UK Content,3232 Lincoln Blvd,Marina del Rey,CA,90292,British imports
+Elijah,Washington,elijah.w@gmail.com,555-234-5033,Acorn TV,Mystery Producer,3333 Washington Blvd,Culver City,CA,90232,Cozy mysteries
+Lily,Butler,lily.butler@email.com,555-234-5034,Criterion,Classic Films,3434 Culver Blvd,Culver City,CA,90232,Film preservation
+Carter,Simmons,carter.s@yahoo.com,555-234-5035,Mubi,Curated Cinema,3535 Overland Ave,Los Angeles,CA,90034,Art cinema
+Zoey,Foster,zoey.foster@hotmail.com,555-234-5036,Kanopy,Educational,3636 Motor Ave,Los Angeles,CA,90034,Library streaming
+Jayden,Gonzales,jayden.g@email.com,555-234-5037,Vimeo,Creator Tools,3737 Sepulveda Blvd,Los Angeles,CA,90034,Indie platform
+Penelope,Bryant,penny.b@gmail.com,555-234-5038,YouTube Originals,Digital Producer,3838 Slauson Ave,Los Angeles,CA,90043,Creator content
+Grayson,Alexander,gray.alex@email.com,555-234-5039,Facebook Watch,Social Video,3939 Jefferson Blvd,Los Angeles,CA,90016,Social streaming
+Layla,Russell,layla.r@yahoo.com,555-234-5040,Snap Originals,Short Form,4040 Venice Blvd,Los Angeles,CA,90019,Mobile content
+Gabriel,Griffin,gabe.griffin@email.com,555-234-5041,Quibi Archive,Mobile Content,4141 La Cienega Blvd,Los Angeles,CA,90016,Quick bites
+Riley,Diaz,riley.diaz@hotmail.com,555-234-5042,Twitch,Live Content,4242 Crenshaw Blvd,Los Angeles,CA,90008,Gaming streams
+Nora,Hayes,nora.hayes@gmail.com,555-234-5043,Spotify Video,Podcast Video,4343 MLK Blvd,Los Angeles,CA,90008,Audio visual
+Lincoln,Myers,lincoln.m@email.com,555-234-5044,Audible,Audio Drama,4444 Adams Blvd,Los Angeles,CA,90018,Voice acting
+Hannah,Ford,hannah.ford@yahoo.com,555-234-5045,Wondery,Podcast Prod,4545 Washington Blvd,Los Angeles,CA,90016,True crime
+Leo,Hamilton,leo.hamilton@email.com,555-234-5046,Gimlet,Scripted Audio,4646 Pico Blvd,Los Angeles,CA,90019,Audio fiction
+Stella,Graham,stella.g@hotmail.com,555-234-5047,iHeart,Radio Content,4747 Olympic Blvd,Los Angeles,CA,90019,Broadcast radio
+Caleb,Sullivan,caleb.s@gmail.com,555-234-5048,SiriusXM,Satellite Prog,4848 Wilshire Blvd,Los Angeles,CA,90010,Satellite radio
+Aurora,Murphy,aurora.m@email.com,555-234-5049,NPR,Public Media,4949 Sunset Blvd,Los Angeles,CA,90027,Public radio
+Isaac,Rivera,isaac.rivera@yahoo.com,555-234-5050,PBS,Documentary,5050 Hollywood Blvd,Los Angeles,CA,90028,Public television
