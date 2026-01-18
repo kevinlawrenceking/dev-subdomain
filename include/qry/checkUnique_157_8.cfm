@@ -1,0 +1,2 @@
+<cfset contactService = createObject("component", "services.ContactService")>
+<cfset checkUnique = contactService.SELcontactdetails_23939(addDaysNoUniqueName=adddaysno.uniquename, contactId=contactid)>

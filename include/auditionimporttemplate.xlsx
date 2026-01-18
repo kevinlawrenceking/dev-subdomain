@@ -1,0 +1,54 @@
+<!--- This ColdFusion page processes data and generates a report based on user input. --->
+
+<cfif structKeyExists(url, "action")>
+    <!--- Check if the action parameter exists in the URL. --->
+    
+    <cfset action = url.action>
+    
+    <cfif action EQ "generateReport">
+        <!--- If the action is to generate a report. --->
+        
+        <cfset reportData = []>
+        
+        <cfloop query="dataQuery">
+            <!--- Loop through the data query to gather report data. --->
+            
+            <cfset arrayAppend(reportData, {
+                "id" = dataQuery.id,
+                "name" = dataQuery.name,
+                "value" = dataQuery.value
+            })>
+        </cfloop>
+        
+        <cfset reportOutput = generateReport(reportData)>
+        <!--- Generate the report output using the collected data. --->
+        
+    <cfelse>
+        <!--- Handle other actions if necessary. --->
+        <cfset errorMessage = "Invalid action specified.">
+    </cfif>
+    
+<cfelse>
+    <!--- If no action is specified, set a default message. --->
+    <cfset defaultMessage = "Please select an action to proceed.">
+</cfif>
+
+<cfdump var="#reportOutput#" label="Report Output">
+<!--- Dump the report output for debugging purposes. --->
+
+<cffunction name="generateReport" access="public" returntype="string">
+    <!--- Function to generate a report from the provided data. --->
+    
+    <cfargument name="data" type="array" required="true">
+    
+    <cfset var report = "">
+    
+    <cfloop array="#arguments.data#" index="item">
+        <!--- Loop through each item in the data array. --->
+        
+        <cfset report &= "ID: " & item.id & ", Name: " & item.name & ", Value: " & item.value & "<br>">
+    </cfloop>
+    
+    <cfreturn report>
+    <!--- Return the generated report. --->
+</cffunction>

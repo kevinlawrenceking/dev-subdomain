@@ -1,0 +1,2 @@
+<cfset auditionOpenCallOptionUserService = createObject("component", "services.AuditionOpenCallOptionUserService")>
+<cfset findit2 = auditionOpenCallOptionUserService.SELaudopencalloptions_user_24280(new_opencallname=new_opencallname, userid=userid)>

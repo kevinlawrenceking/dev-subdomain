@@ -1,0 +1,9 @@
+contactFullName,email,phone,company,title,tags,contactPronoun,contactBirthday,contactMeetingDate,contactMeetingLoc,relationship_system
+"John Smith",john.smith@example.com,555-123-4567,ABC Productions,Casting Director,Target,He/Him,1985-03-15,2025-01-10,Coffee Shop,Target
+"Jane Doe",jane.doe@example.com,555-234-5678,XYZ Studios,Agent,Maintenance,She/Her,1990-07-22,2025-02-14,Zoom Call,Maintenance
+"Alex Johnson",alex.j@example.com,555-345-6789,Independent,,My Team,They/Them,,,Office,
+"Maria Garcia",maria.garcia@example.com,555-456-7890,Warner Bros,Producer,Target,She/Her,1978-11-30,2024-12-01,Industry Event,Target
+"Robert Chen",,555-567-8901,Netflix,Director,,He/Him,,2025-03-20,Set Visit,
+"Empty Email Test",,,Test Company,Tester,,,,,
+"Sarah Williams",sarah.w@example.com,555-678-9012,Paramount,Casting Associate,Maintenance,She/Her,1992-05-18,,Virtual,Maintenance
+"Duplicate Test",john.smith@example.com,555-999-0000,Duplicate Co,Manager,,,,,Should flag as duplicate,

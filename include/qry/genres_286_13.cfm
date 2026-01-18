@@ -1,0 +1,2 @@
+<cfset auditionGenreUserService = createObject("component", "services.AuditionGenreUserService")>
+<cfset genres = auditionGenreUserService.SELaudgenres_user_24273(userid=userid, new_audcatid=new_audcatid)>

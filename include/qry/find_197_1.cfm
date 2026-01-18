@@ -1,0 +1,2 @@
+<cfset auditionSubmitSiteUserService = createObject("component", "services.AuditionSubmitSiteUserService")>
+<cfset find = auditionSubmitSiteUserService.SELaudsubmitsites_user_24034(userid=userid, new_submitsitename=new_submitsitename)>
