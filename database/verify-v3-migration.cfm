@@ -63,7 +63,7 @@
      ============================================================ --->
 <cfloop array="#expectedTables#" index="tableName">
     <cfquery name="qCreate">
-        SHOW CREATE TABLE #tableName#
+        SHOW CREATE TABLE #schema#.#tableName#
     </cfquery>
     <cfset response.tables[tableName] = {
         exists: true,
@@ -72,7 +72,7 @@
 
     <!--- Also get index info --->
     <cfquery name="qIndexes">
-        SHOW INDEX FROM #tableName#
+        SHOW INDEX FROM #schema#.#tableName#
     </cfquery>
     <cfset indexList = []>
     <cfloop query="qIndexes">

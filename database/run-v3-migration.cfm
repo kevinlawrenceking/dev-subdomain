@@ -41,7 +41,7 @@
         </cfquery>
 
         <cfif qCheck.cnt gt 0>
-            <cfquery>DROP TABLE IF EXISTS #tableName#</cfquery>
+            <cfquery>DROP TABLE IF EXISTS #schema#.#tableName#</cfquery>
             <cfset arrayAppend(response.results, "Dropped table: #tableName#")>
             <cfset arrayAppend(response.tables_affected, tableName)>
         <cfelse>
@@ -68,7 +68,7 @@
     <cfif qCheck.cnt eq 0>
         <cfset response.step = "V3_0: Create import_v3_jobs table">
         <cfquery>
-            CREATE TABLE import_v3_jobs (
+            CREATE TABLE #schema#.import_v3_jobs (
                 job_id INT AUTO_INCREMENT PRIMARY KEY,
                 userid INT NOT NULL COMMENT 'Owner FK to taousers.userid',
                 source_filename VARCHAR(255) NOT NULL,
@@ -118,7 +118,7 @@
     <cfif qCheck.cnt eq 0>
         <cfset response.step = "V3_0: Create import_v3_columns table">
         <cfquery>
-            CREATE TABLE import_v3_columns (
+            CREATE TABLE #schema#.import_v3_columns (
                 column_id INT AUTO_INCREMENT PRIMARY KEY,
                 job_id INT NOT NULL COMMENT 'FK to import_v3_jobs.job_id',
                 source_column_index INT NOT NULL COMMENT '0-based index from file',
@@ -152,7 +152,7 @@
     <cfif qCheck.cnt eq 0>
         <cfset response.step = "V3_0: Create import_v3_rows table">
         <cfquery>
-            CREATE TABLE import_v3_rows (
+            CREATE TABLE #schema#.import_v3_rows (
                 row_id INT AUTO_INCREMENT PRIMARY KEY,
                 job_id INT NOT NULL COMMENT 'FK to import_v3_jobs.job_id',
                 row_num INT NOT NULL COMMENT '1-based row number from file',
@@ -196,7 +196,7 @@
     <cfif qCheck.cnt eq 0>
         <cfset response.step = "V3_0: Create import_v3_facts table">
         <cfquery>
-            CREATE TABLE import_v3_facts (
+            CREATE TABLE #schema#.import_v3_facts (
                 fact_id INT AUTO_INCREMENT PRIMARY KEY,
                 row_id INT NOT NULL COMMENT 'FK to import_v3_rows.row_id',
                 column_id INT NOT NULL COMMENT 'FK to import_v3_columns.column_id',
@@ -234,7 +234,7 @@
     <cfif qCheck.cnt eq 0>
         <cfset response.step = "V3_0: Create import_v3_row_results table">
         <cfquery>
-            CREATE TABLE import_v3_row_results (
+            CREATE TABLE #schema#.import_v3_row_results (
                 result_id INT AUTO_INCREMENT PRIMARY KEY,
                 row_id INT NOT NULL COMMENT 'FK to import_v3_rows.row_id',
                 job_id INT NOT NULL COMMENT 'FK to import_v3_jobs.job_id (denormalized for queries)',
@@ -273,7 +273,7 @@
     <cfif qCheck.cnt eq 0>
         <cfset response.step = "V3_0: Create import_v3_events table">
         <cfquery>
-            CREATE TABLE import_v3_events (
+            CREATE TABLE #schema#.import_v3_events (
                 event_id INT AUTO_INCREMENT PRIMARY KEY,
                 job_id INT NOT NULL COMMENT 'FK to import_v3_jobs.job_id',
                 event_type VARCHAR(50) NOT NULL COMMENT 'created|parsing_started|parsing_completed|...',
@@ -304,7 +304,7 @@
     <cfif qCheck.cnt eq 0>
         <cfset response.step = "V3_0: Create contact_custom_fields table">
         <cfquery>
-            CREATE TABLE contact_custom_fields (
+            CREATE TABLE #schema#.contact_custom_fields (
                 field_id INT AUTO_INCREMENT PRIMARY KEY,
                 userid INT NOT NULL COMMENT 'Owner FK to taousers.userid',
                 field_key VARCHAR(50) NOT NULL COMMENT 'Internal key (e.g., custom_assistant_name)',
