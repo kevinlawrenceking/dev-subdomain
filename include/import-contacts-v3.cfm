@@ -405,7 +405,7 @@ input[type="date"].form-control-sm {
                     </div>
                 </div>
                 <div class="col">
-                    <div class="card card-body p-2 text-center" style="background: linear-gradient(135deg, ##667eea 0%, ##764ba2 100%); color:#fff;">
+                    <div class="card card-body p-2 text-center" style="background: linear-gradient(135deg, ##667eea 0%, ##764ba2 100%); color:##fff;">
                         <div class="h4 mb-0" id="stat-imported">#activeJob.imported_rows#</div>
                         <small>Imported</small>
                     </div>
