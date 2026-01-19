@@ -116,12 +116,97 @@
         // contactService = new services.ContactService()
         // projectService = new services.ProjectService()
       };
+
+      // Initialize feature flags with DB-driven values (cached)
+      loadFeatureFlags();
     </cfscript>
     <cfreturn true />
   </cffunction>
 
+  <!--- ============================================================
+        FEATURE FLAGS - DB-driven rollout control
+        ============================================================ --->
+
+  <cffunction name="loadFeatureFlags" access="public" returntype="void" output="false"
+              hint="Load feature flags from database into application scope with caching">
+    <cfscript>
+      // Initialize features struct if missing
+      if (!structKeyExists(application, "features")) {
+        application.features = {};
+      }
+
+      // Set cache TTL (60 seconds default)
+      application.featureFlagCacheTTL = 60;
+
+      try {
+        // Load global flags from database
+        var qFlags = queryExecute(
+          "SELECT flag_key, is_enabled FROM feature_flags",
+          {},
+          { datasource: application.datasource }
+        );
+
+        // Reset all flags to false first (safe default)
+        application.features.importV3Enabled = false;
+        application.features.importV3AllowedUsers = [];
+
+        // Apply loaded flags
+        for (var row in qFlags) {
+          if (row.flag_key eq "import_v3_enabled") {
+            application.features.importV3Enabled = (row.is_enabled eq 1);
+          }
+        }
+
+        // Load per-user allowlist for import_v3
+        var qAllowed = queryExecute(
+          "SELECT userid FROM feature_flag_users
+           WHERE flag_key = 'import_v3_enabled' AND is_enabled = 1",
+          {},
+          { datasource: application.datasource }
+        );
+        application.features.importV3AllowedUsers = [];
+        for (var row in qAllowed) {
+          arrayAppend(application.features.importV3AllowedUsers, row.userid);
+        }
+
+        // Record cache timestamp
+        application.featureFlagCacheTime = now();
+
+      } catch (any e) {
+        // On error, maintain safe defaults (features disabled)
+        application.features.importV3Enabled = false;
+        application.features.importV3AllowedUsers = [];
+        application.featureFlagCacheTime = now();
+      }
+    </cfscript>
+  </cffunction>
+
+  <cffunction name="refreshFeatureFlagsIfStale" access="public" returntype="void" output="false"
+              hint="Refresh feature flags if cache has expired">
+    <cfscript>
+      // Check if cache exists and is still valid
+      if (!structKeyExists(application, "featureFlagCacheTime")
+          || !structKeyExists(application, "featureFlagCacheTTL")
+          || dateDiff("s", application.featureFlagCacheTime, now()) > application.featureFlagCacheTTL) {
+        loadFeatureFlags();
+      }
+    </cfscript>
+  </cffunction>
+
+  <cffunction name="forceRefreshFeatureFlags" access="public" returntype="void" output="false"
+              hint="Force immediate refresh of feature flags (admin action)">
+    <cfscript>
+      loadFeatureFlags();
+    </cfscript>
+  </cffunction>
+
   <cffunction name="onRequestStart" returntype="boolean" output="false">
     <cfargument name="targetPage" type="string" required="true" />
+
+    <!--- Refresh feature flags if cache expired (DB-driven rollout control) --->
+    <cfscript>
+      refreshFeatureFlagsIfStale();
+    </cfscript>
 
     <!--- 1) Normalize request inputs and provide permissive defaults --->
     <cfscript>

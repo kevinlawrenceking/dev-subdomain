@@ -1,0 +1,59 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Anderson;Chris;;;
+FN:Chris Anderson
+ORG:Test Company Inc.
+TEL;TYPE=CELL:+1-555-123-4567
+TEL;TYPE=WORK:+1-555-987-6543
+TEL;TYPE=HOME:+1-555-456-7890
+EMAIL;TYPE=WORK:chris.anderson@testcompany.com
+EMAIL;TYPE=HOME:chris.personal@gmail.com
+ADR;TYPE=WORK:;;123 Business Ave;Los Angeles;CA;90001;USA
+ADR;TYPE=HOME:;;456 Home Street;Pasadena;CA;91101;USA
+NOTE:Test contact with multiple phones, emails, and addresses. Special chars: cafe, resume, nino.
+END:VCARD
+BEGIN:VCARD
+VERSION:3.0
+N:Martinez;Sofia;;;
+FN:Sofia Martinez
+ORG:Creative Studios
+TEL;TYPE=CELL:+1-555-234-5678
+EMAIL:sofia.martinez@creativestudios.com
+ADR:;;789 Art Lane;San Francisco;CA;94102;USA
+NOTE:Simple contact with one phone and email.
+END:VCARD
+BEGIN:VCARD
+VERSION:3.0
+N:Chen;Wei;;;
+FN:Wei Chen
+ORG:Tech Innovations LLC
+TITLE:Senior Developer
+TEL;TYPE=WORK:+1-555-345-6789
+TEL;TYPE=CELL:+1-555-456-7891
+EMAIL:wei.chen@techinnovations.com
+ADR;TYPE=WORK:;;100 Tech Park Drive;San Jose;CA;95110;USA
+URL:https://www.techinnovations.com
+NOTE:Contact with Chinese name - testing unicode handling.
+END:VCARD
+BEGIN:VCARD
+VERSION:3.0
+N:O'Brien;Patrick;;;
+FN:Patrick O'Brien
+ORG:Dublin Actors Agency
+TEL;TYPE=CELL:+1-555-567-8901
+EMAIL:patrick.obrien@dublinactors.com
+ADR:;;42 Theatre Row;New York;NY;10036;USA
+NOTE:Name with apostrophe - testing special character handling.
+END:VCARD
+BEGIN:VCARD
+VERSION:3.0
+N:Nakamura;Yuki;;;
+FN:Yuki Nakamura
+ORG:Rising Star Talent
+TEL;TYPE=CELL:+1-555-678-9012
+TEL;TYPE=WORK:+1-555-789-0123
+EMAIL;TYPE=WORK:yuki@risingstartalent.com
+EMAIL;TYPE=HOME:yuki.nakamura.personal@email.com
+ADR;TYPE=WORK:;;500 Talent Ave;Los Angeles;CA;90028;USA
+NOTE:Contact with Japanese name.
+END:VCARD
