@@ -58,7 +58,7 @@ try {
         { datasource: datasource }
     );
     application.features.importV3AllowedUsers = [];
-    for (var row in qAllowed) {
+    for (row in qAllowed) {
         arrayAppend(application.features.importV3AllowedUsers, row.userid);
     }
     writeOutput("<p style='color:green;'>Loaded " & arrayLen(application.features.importV3AllowedUsers) & " allowed users</p>");
