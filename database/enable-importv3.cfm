@@ -39,21 +39,32 @@ try {
         writeOutput("<p style='color:green;'>Already ENABLED.</p>");
     }
 
-    // Refresh application scope
+    // Refresh application scope - FORCE it regardless of existing state
     writeOutput("<h3>Refreshing Application Scope...</h3>");
 
-    // Call the refresh function if it exists
-    if (structKeyExists(application, "loadFeatureFlags") && isCustomFunction(application.loadFeatureFlags)) {
-        application.loadFeatureFlags();
-        writeOutput("<p style='color:green;'>Called application.loadFeatureFlags()</p>");
-    } else {
-        // Manually set the flag
-        if (!structKeyExists(application, "features")) {
-            application.features = {};
-        }
-        application.features.importV3Enabled = true;
-        writeOutput("<p style='color:green;'>Manually set application.features.importV3Enabled = true</p>");
+    // Initialize features struct if needed
+    if (!structKeyExists(application, "features")) {
+        application.features = {};
     }
+
+    // Force set the flag directly
+    application.features.importV3Enabled = true;
+    writeOutput("<p style='color:green;'>Set application.features.importV3Enabled = true</p>");
+
+    // Also load the allowed users list from DB
+    qAllowed = queryExecute(
+        "SELECT userid FROM feature_flag_users WHERE flag_key = 'import_v3_enabled' AND is_enabled = 1",
+        {},
+        { datasource: datasource }
+    );
+    application.features.importV3AllowedUsers = [];
+    for (var row in qAllowed) {
+        arrayAppend(application.features.importV3AllowedUsers, row.userid);
+    }
+    writeOutput("<p style='color:green;'>Loaded " & arrayLen(application.features.importV3AllowedUsers) & " allowed users</p>");
+
+    // Update cache timestamp
+    application.featureFlagCacheTime = now();
 
     // Verify
     writeOutput("<h3>Verification:</h3>");
