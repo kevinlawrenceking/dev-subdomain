@@ -759,6 +759,59 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
     }
 
     // ============================================================
+    // USER JOB HISTORY
+    // ============================================================
+
+    /**
+     * Get import job history for a specific user.
+     * Returns a query object for template iteration.
+     *
+     * @param userid The user ID to filter by
+     * @param limit Maximum number of jobs to return (default 25)
+     * @return query object with job records
+     */
+    public query function getUserJobHistory(required numeric userid, numeric limit = 25) {
+        return queryExecute(
+            "SELECT
+                job_id,
+                source_filename,
+                file_type,
+                status,
+                created_at,
+                finished_at,
+                total_rows,
+                parsed_rows,
+                valid_rows,
+                problem_rows,
+                dupe_rows AS duplicate_rows,
+                skipped_rows,
+                imported_rows,
+                updated_rows,
+                error_message
+            FROM import_v3_jobs
+            WHERE userid = :userid
+            ORDER BY created_at DESC
+            LIMIT :limit",
+            {
+                userid: { value: arguments.userid, cfsqltype: "cf_sql_integer" },
+                limit: { value: arguments.limit, cfsqltype: "cf_sql_integer" }
+            },
+            { datasource: application.datasource }
+        );
+    }
+
+    /**
+     * Alias for getUserJobHistory for backward compatibility.
+     *
+     * @param userid The user ID to filter by
+     * @param limit Maximum number of jobs to return (default 25)
+     * @return query object with job records
+     */
+    public query function getJobHistory(required numeric userid, numeric limit = 25) {
+        return getUserJobHistory(arguments.userid, arguments.limit);
+    }
+
+    // ============================================================
     // ADMIN DASHBOARD - Job observability
     // ============================================================
 
