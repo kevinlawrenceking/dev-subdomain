@@ -33,17 +33,6 @@
     "data": {}
 }>
 
-<!--- Feature flag check --->
-<cfif NOT structKeyExists(application, "features")
-    OR NOT structKeyExists(application.features, "importV3Enabled")
-    OR NOT application.features.importV3Enabled>
-    <cfset response.code = "FEATURE_DISABLED">
-    <cfset response.message = "Contact Import V3 is not enabled">
-    <cfcontent type="application/json" reset="true">
-    <cfoutput>#serializeJSON(response)#</cfoutput>
-    <cfabort>
-</cfif>
-
 <cftry>
     <!--- A) Auth: Require logged-in session userid --->
     <cfif NOT structKeyExists(session, "userid") OR NOT isNumeric(session.userid) OR session.userid LTE 0>

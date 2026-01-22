@@ -25,19 +25,6 @@
     "message": "",
     "data": {}
 }>
-<!--- Feature flag check --->
-<cfif NOT structKeyExists(application, "features") 
-    OR NOT structKeyExists(application.features, "importV3Enabled")
-    OR NOT application.features.importV3Enabled>
-    <cfcontent type="application/json" reset="true">
-    <cfoutput>#serializeJSON({
-        success: false,
-        code: "FEATURE_DISABLED",
-        message: "Contact Import V3 is not enabled"
-    })#</cfoutput>
-    <cfabort>
-</cfif>
-
 
 <cftry>
     <!--- A) Auth: Require logged-in session userid --->

@@ -1,18 +1,6 @@
 <cfscript>
 cfcontent(type="application/json");
 
-// Feature flag check
-if (NOT structKeyExists(application, "features") 
-    OR NOT structKeyExists(application.features, "importV3Enabled")
-    OR NOT application.features.importV3Enabled) {
-    writeOutput(serializeJSON({
-        success: false,
-        error: "FEATURE_DISABLED",
-        message: "Contact Import V3 is not enabled"
-    }));
-    abort;
-}
-
 // Auth check
 if (NOT structKeyExists(session, "userid") OR NOT isNumeric(session.userid)) {
     writeOutput(serializeJSON({success: false, error: "AUTH_REQUIRED", message: "Authentication required"}));

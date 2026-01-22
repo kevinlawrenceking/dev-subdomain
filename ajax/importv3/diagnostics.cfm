@@ -22,30 +22,6 @@
         "data": {}
     }>
 
-    <!--- Feature flag check --->
-    <cfif NOT structKeyExists(application, "features")
-        OR NOT structKeyExists(application.features, "importV3Enabled")
-        OR NOT application.features.importV3Enabled>
-
-        <!--- Also check allowlist for current user --->
-        <cfset userAllowed = false>
-        <cfif structKeyExists(session, "userid") AND isNumeric(session.userid)>
-            <cfif structKeyExists(application.features, "importV3AllowedUsers")
-                AND isArray(application.features.importV3AllowedUsers)
-                AND arrayFind(application.features.importV3AllowedUsers, session.userid) GT 0>
-                <cfset userAllowed = true>
-            </cfif>
-        </cfif>
-
-        <cfif NOT userAllowed>
-            <cfset response.code = "FEATURE_DISABLED">
-            <cfset response.message = "Contact Import V3 is not enabled">
-            <cfcontent type="application/json" reset="true">
-            <cfoutput>#serializeJSON(response)#</cfoutput>
-            <cfabort>
-        </cfif>
-    </cfif>
-
     <!--- Auth check --->
     <cfif NOT structKeyExists(session, "userid") OR NOT isNumeric(session.userid) OR session.userid LTE 0>
         <cfset response.code = "AUTH_REQUIRED">

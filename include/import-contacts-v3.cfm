@@ -13,23 +13,6 @@
 
 <cfparam name="url.job_id" default="0">
 
-<!--- Feature flag check - user must be enabled for V3 --->
-<cfset canUseV3 = false>
-<cfif structKeyExists(application, "features") AND structKeyExists(application.features, "importV3Enabled")>
-    <cfif application.features.importV3Enabled>
-        <cfset canUseV3 = true>
-    <cfelseif structKeyExists(application.features, "importV3AllowedUsers") AND isArray(application.features.importV3AllowedUsers)>
-        <cfset canUseV3 = arrayFind(application.features.importV3AllowedUsers, session.userid) GT 0>
-    </cfif>
-</cfif>
-
-<cfif NOT canUseV3>
-    <div class="alert alert-danger m-4">
-        <strong>Access Denied</strong> - Contact Import V3 is not enabled for your account.
-    </div>
-    <cfabort>
-</cfif>
-
 <!--- Check for existing job --->
 <cfset hasActiveJob = false>
 <cfset activeJob = {}>
