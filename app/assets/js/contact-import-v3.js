@@ -91,8 +91,8 @@
         stats: {}
     };
 
-    // Initialize on DOM ready
-    $(document).ready(function() {
+    // Initialize on DOM ready - wait for jQuery if not yet loaded
+    function initV3() {
         console.log('[V3] Initializing Contact Import V3...');
         initUpload();
         initJobActions();
@@ -112,7 +112,21 @@
                 loadRows();
             }
         }
-    });
+    }
+
+    // Wait for jQuery to be available before initializing
+    function waitForJQuery(callback) {
+        if (typeof window.jQuery !== 'undefined') {
+            window.jQuery(document).ready(callback);
+        } else {
+            // jQuery not loaded yet, wait and retry
+            setTimeout(function() {
+                waitForJQuery(callback);
+            }, 50);
+        }
+    }
+
+    waitForJQuery(initV3);
 
     // ========================================
     // FILE UPLOAD - V3 ENDPOINTS
