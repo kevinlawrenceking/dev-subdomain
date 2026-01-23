@@ -277,8 +277,13 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
             return ok(data = { "job": queryGetRow(qJob, 1) }, message = "");
             
         } catch (any e) {
-            logEvent(job_id = arguments.job_id, userid = arguments.userid, event_type = "error_get_job", detail = { error: e.message, detail: e.detail });
-            return fail(code = "INTERNAL_ERROR", message = "An error occurred: " & e.message, data = { job_id: arguments.job_id, error_detail: e.detail });
+            // Don't let logging failure mask the real error
+            try {
+                logEvent(job_id = arguments.job_id, userid = arguments.userid, event_type = "error_get_job", detail = { error: e.message, detail: e.detail });
+            } catch (any logErr) {
+                // Ignore logging errors
+            }
+            return fail(code = "INTERNAL_ERROR", message = "An error occurred: " & e.message & " | SQL Detail: " & e.detail, data = { job_id: arguments.job_id, error_detail: e.detail, error_type: e.type });
         }
     }
 
