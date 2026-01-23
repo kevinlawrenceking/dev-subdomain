@@ -100,12 +100,24 @@
 
     <!--- A) Get job with ownership verification --->
     <cfset addDebug("Getting job for user...")>
-    <cfset jobResult = v3Service.getJobForUser(jobId, userid)>
-    <cfset addDebug("getJobForUser result: success=" & jobResult.success)>
+    <cftry>
+        <cfset jobResult = v3Service.getJobForUser(jobId, userid)>
+        <cfset addDebug("getJobForUser result: success=" & jobResult.success)>
+        <cfcatch type="any">
+            <cfset addDebug("getJobForUser EXCEPTION: " & cfcatch.message & " | " & cfcatch.detail)>
+            <cfset response.code = "SERVICE_ERROR">
+            <cfset response.message = "Service error: " & cfcatch.message & " | Detail: " & cfcatch.detail>
+            <cfcontent type="application/json" reset="true"><cfoutput>#serializeJSON(response)#</cfoutput><cfabort>
+        </cfcatch>
+    </cftry>
     <cfif not jobResult.success>
         <cfset addDebug("Job fetch failed: code=" & jobResult.code & " msg=" & jobResult.message)>
+        <cfif structKeyExists(jobResult, "data") and structKeyExists(jobResult.data, "error_detail")>
+            <cfset addDebug("Error detail: " & jobResult.data.error_detail)>
+        </cfif>
         <cfset response.code = jobResult.code>
         <cfset response.message = jobResult.message>
+        <cfset response.data = jobResult.data>
         <cfcontent type="application/json" reset="true"><cfoutput>#serializeJSON(response)#</cfoutput><cfabort>
     </cfif>
     <cfset job = jobResult.data.job>
