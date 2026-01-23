@@ -1,1 +1,1 @@
-<cflocation url="/app/contacts-import-v3">
+<cfinclude template="/include/core.cfm" />
