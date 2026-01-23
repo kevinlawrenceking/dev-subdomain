@@ -325,7 +325,7 @@ input[type="date"].form-control-sm {
     </div>
 
     <!--- Show appropriate step based on status --->
-    <cfif activeJob.status eq "created" or activeJob.status eq "pending">
+    <cfif activeJob.status eq "created" or activeJob.status eq "pending" or activeJob.status eq "uploaded">
         <!--- Need to parse --->
         <div class="import-step" id="step-parse">
             <h5><span class="step-number">2</span> Parsing File</h5>

@@ -238,7 +238,8 @@
                         showAlert('warning', msg);
                     }
                     // Redirect to V3 job page
-                    window.location.href = '/app/contacts-import-v3/?job_id=' + response.data.job_id;
+                    var jobId = response.data.job_id || (response.data.job && response.data.job.job_id);
+                    window.location.href = '/app/contacts-import-v3/?job_id=' + jobId;
                 } else {
                     var errMsg = response.message || 'Upload failed';
                     showAlert('error', errMsg);
