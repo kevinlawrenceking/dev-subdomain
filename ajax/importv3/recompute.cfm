@@ -35,13 +35,33 @@
     </cfif>
     <cfset userid = session.userid>
 
-    <!--- Validate job_id parameter --->
+    <!--- Parse JSON body first (for JSON content type requests) --->
+    <cfset requestBody = "">
+    <cfset jsonData = {}>
+    <cftry>
+        <cfset requestBody = toString(getHTTPRequestData().content)>
+        <cfif len(requestBody)>
+            <cfset jsonData = deserializeJSON(requestBody)>
+        </cfif>
+        <cfcatch type="any"><!--- ignore if no body or invalid JSON ---></cfcatch>
+    </cftry>
+
+    <!--- Validate job_id parameter (check JSON body, then form, then url) --->
     <cfparam name="form.job_id" default="">
     <cfparam name="url.job_id" default="">
-    <cfset jobId = val(url.job_id)>
+    <cfset jobId = 0>
+
+    <!--- Priority: JSON body > form > url --->
+    <cfif structKeyExists(jsonData, "job_id")>
+        <cfset jobId = val(jsonData.job_id)>
+    </cfif>
     <cfif jobId eq 0>
         <cfset jobId = val(form.job_id)>
     </cfif>
+    <cfif jobId eq 0>
+        <cfset jobId = val(url.job_id)>
+    </cfif>
+
     <cfif jobId lte 0>
         <cfset response.code = "MISSING_JOB_ID">
         <cfset response.message = "job_id is required">
@@ -71,6 +91,95 @@
         <cfcontent type="application/json" reset="true"><cfoutput>#serializeJSON(response)#</cfoutput><cfabort>
     </cfif>
 
+    <!--- Process incoming mappings from JSON body if provided --->
+    <cfif structCount(jsonData) gt 0>
+        <cftry>
+            <!--- Process mappings array if provided --->
+            <cfif structKeyExists(jsonData, "mappings") and isArray(jsonData.mappings)>
+                <cfloop array="#jsonData.mappings#" index="mapping">
+                    <cfif structKeyExists(mapping, "column_id") and structKeyExists(mapping, "field")>
+                        <cfset colId = val(mapping.column_id)>
+                        <cfset targetField = trim(mapping.field)>
+
+                        <!--- Map JS camelCase field names to snake_case for validation --->
+                        <cfset fieldNameMap = {
+                            "firstName": "first_name",
+                            "lastName": "last_name",
+                            "contactFullName": "full_name",
+                            "email_business": "email_business",
+                            "email_personal": "email_personal",
+                            "phone_work": "phone_work",
+                            "phone_mobile": "phone_mobile",
+                            "phone_home": "phone_home",
+                            "company": "company",
+                            "title": "title",
+                            "address1": "address1",
+                            "address2": "address2",
+                            "city": "city",
+                            "state": "state",
+                            "zip": "zip",
+                            "country": "country",
+                            "birthday": "birthday",
+                            "relationship_start": "relationship_start",
+                            "website": "website",
+                            "linkedin": "linkedin",
+                            "twitter": "twitter",
+                            "instagram": "instagram",
+                            "notes": "notes",
+                            "tags": "tags",
+                            "category": "category",
+                            "contactType": "contact_type",
+                            "relationship_system": "relationship_system"
+                        }>
+
+                        <!--- Convert to snake_case if mapped, otherwise use as-is --->
+                        <cfset normalizedField = structKeyExists(fieldNameMap, targetField) ? fieldNameMap[targetField] : targetField>
+
+                        <!--- Determine intent based on field --->
+                        <cfset intent = len(normalizedField) ? "contact_field" : "ignore">
+
+                        <!--- Update column mapping in DB --->
+                        <cfif colId gt 0>
+                            <cfset queryExecute(
+                                "UPDATE import_v3_columns
+                                 SET intent = :intent,
+                                     target_key = :target_key,
+                                     user_confirmed = 1,
+                                     updated_at = NOW()
+                                 WHERE column_id = :column_id
+                                   AND job_id = :job_id",
+                                {
+                                    column_id: { value: colId, cfsqltype: "cf_sql_integer" },
+                                    job_id: { value: jobId, cfsqltype: "cf_sql_integer" },
+                                    intent: { value: intent, cfsqltype: "cf_sql_varchar", maxlength: 20 },
+                                    target_key: { value: normalizedField, cfsqltype: "cf_sql_varchar", maxlength: 100, null: !len(normalizedField) }
+                                },
+                                { datasource: application.datasource }
+                            )>
+                        </cfif>
+                    </cfif>
+                </cfloop>
+
+                <!--- Log mappings applied --->
+                <cfset v3Service.logEvent(
+                    job_id = jobId,
+                    userid = userid,
+                    event_type = "mappings_applied",
+                    detail = { mappings_count: arrayLen(jsonData.mappings) }
+                )>
+            </cfif>
+            <cfcatch type="any">
+                <!--- Log JSON parse error but continue --->
+                <cfset v3Service.logEvent(
+                    job_id = jobId,
+                    userid = userid,
+                    event_type = "mappings_parse_error",
+                    detail = { error: cfcatch.message }
+                )>
+            </cfcatch>
+        </cftry>
+    </cfif>
+
     <!--- Log recompute started --->
     <cfset v3Service.logEvent(
         job_id = jobId,
@@ -79,7 +188,7 @@
         detail = { previous_status: job.status }
     )>
 
-    <!--- D) Load column mappings for this job --->
+    <!--- D) Load column mappings for this job (reload after applying incoming mappings) --->
     <cfset qColumns = queryExecute(
         "SELECT column_id, source_column_index, source_column_name,
                 intent, target_key, transform_json

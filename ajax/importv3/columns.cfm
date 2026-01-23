@@ -160,6 +160,37 @@
             <cfset arrayAppend(columnsArray, columnData)>
         </cfloop>
 
+        <!--- Define available fields for mapping dropdown --->
+        <cfset availableFields = [
+            { "field": "firstName", "display_name": "First Name" },
+            { "field": "lastName", "display_name": "Last Name" },
+            { "field": "contactFullName", "display_name": "Full Name" },
+            { "field": "email_business", "display_name": "Business Email" },
+            { "field": "email_personal", "display_name": "Personal Email" },
+            { "field": "phone_work", "display_name": "Work Phone" },
+            { "field": "phone_mobile", "display_name": "Mobile Phone" },
+            { "field": "phone_home", "display_name": "Home Phone" },
+            { "field": "company", "display_name": "Company" },
+            { "field": "title", "display_name": "Title" },
+            { "field": "address1", "display_name": "Address Line 1" },
+            { "field": "address2", "display_name": "Address Line 2" },
+            { "field": "city", "display_name": "City" },
+            { "field": "state", "display_name": "State" },
+            { "field": "zip", "display_name": "Zip Code" },
+            { "field": "country", "display_name": "Country" },
+            { "field": "birthday", "display_name": "Birthday" },
+            { "field": "relationship_start", "display_name": "Relationship Start" },
+            { "field": "website", "display_name": "Website" },
+            { "field": "linkedin", "display_name": "LinkedIn" },
+            { "field": "twitter", "display_name": "Twitter" },
+            { "field": "instagram", "display_name": "Instagram" },
+            { "field": "notes", "display_name": "Notes" },
+            { "field": "tags", "display_name": "Tags" },
+            { "field": "category", "display_name": "Category" },
+            { "field": "contactType", "display_name": "Contact Type" },
+            { "field": "relationship_system", "display_name": "Relationship System" }
+        ]>
+
         <!--- Build success response --->
         <cfset response.success = true>
         <cfset response.message = "">
@@ -168,7 +199,8 @@
                 "job_id": jobId,
                 "status": job.status
             },
-            "columns": columnsArray
+            "columns": columnsArray,
+            "available_fields": availableFields
         }>
 
     <!--- ======================= POST: Update column mapping ======================= --->

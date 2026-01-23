@@ -1,0 +1,1805 @@
+
+
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+
+    <script> helpwiseSettings = { widget_id: '65958ef4eb602', align: 'right' } </script>
+
+<script src="https://cdn.helpwise.io/assets/js/livechat.js"></script>
+    
+      <meta charset="utf-8"/>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+        <title>TAO | Import Relationships</title>
+        <meta content="TAO Application" name="description"/>
+        <meta content="Jodie Bentley" name="author"/>
+        <meta name="robots" content="noindex">
+        
+              <link href="/app/assets/images/favicon.ico?ver=13.3.1.20.416852220538" rel="shortcut icon"  type="text/css" />
+            
+              <script src="/app/assets/js/jquery-3.6.0.min.js?ver=13.4.0.416215667768"></script>
+            
+              <link href="/app/assets/css/icons.min.css?ver=13.3.1.20.292172986753" rel="stylesheet"  type="text/css" />
+            
+              <link href="/assets/css/utilityclasses.css?ver=13.3.1.20.669653352062" rel="stylesheet"  type="text/css" />
+            
+              <link href="/app/assets/css/app.min.css?ver=13.3.1.20.0870417834007" rel="stylesheet"  type="text/css" id="app-style"/>
+            <script>
+$(function() {
+    $("#autocomplete").autocomplete({
+        source: function(request, response) {
+            $.ajax({
+                url: '/app/autolookup.cfm',
+                dataType: 'json',
+                data: {
+                    userid: '30',
+                    searchTerm: request.term
+                },
+                success: function(data) {
+                    response($.map(data.suggestions, function(item) {
+                        return {
+                            label: item.value + " (" + item.data.category + ")",
+                            value: item.value,
+                            id: item.id,
+                            category: item.data.category
+                        };
+                    }));
+                }
+            });
+        },
+        minLength: 2,
+        select: function(event, ui) {
+
+            $("#selectedId").val(ui.item.id);
+            $("#category").val(ui.item.category);
+
+            $("#submitform").submit();
+        },
+        open: function() {
+            var inputWidth = $("#autocomplete").outerWidth();
+            $(".ui-autocomplete").css({
+                "width": (inputWidth * 1.5) + "px",
+                "white-space": "nowrap" 
+            });
+        }
+    });
+});
+
+</script>
+
+<script>
+$(function() {
+    $("#autocomplete2").autocomplete({
+        source: function(request, response) {
+            $.ajax({
+                url: '/app/autolookup2.cfm',
+                dataType: 'json',
+                data: {
+                    userid: '30',
+                    searchTerm: request.term
+                },
+                success: function(data) {
+                    response($.map(data.suggestions, function(item) {
+                        return {
+                            label: item.value + " (" + item.data.category + ")",
+                            value: item.value,
+                            id: item.id,
+                            category: item.data.category
+                        };
+                    }));
+                }
+            });
+        },
+        minLength: 2,
+        select: function(event, ui) {
+
+            $("#selectedId").val(ui.item.id);
+            $("#category").val(ui.item.category);
+
+           // $("#submitform").submit();
+        },
+        open: function() {
+            var inputWidth = $("#autocomplete").outerWidth();
+            $(".ui-autocomplete").css({
+                "width": (inputWidth * 1.5) + "px",
+                "white-space": "nowrap" 
+            });
+        }
+    });
+});
+
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    window.Parsley.addValidator('phone', {
+        validateString: function(value) {
+            // Simple regex for US phone numbers (e.g., 123-456-7890 or (123) 456-7890)
+            const phoneRegex = /^(?:\(?\d{3}\)?[-.\s]?)?\d{3}[-.\s]?\d{4}$/;
+            return phoneRegex.test(value);
+        },
+        messages: {
+            en: 'Please enter a valid phone number (e.g., 123-456-7890)',
+        }
+    });
+});
+</script>
+
+
+              <script src="/app/assets/js/jquery.chained.js?ver=13.4.0.703380356559"></script>
+            
+
+        <style>
+          body.authentication-bg {
+            background-color: #8b0000;
+            background-size: cover;
+            background-position: center;
+          }
+          .navbar-custom {
+            background-color: #8b0000;
+          }
+        </style>
+      </head>
+
+      <body style="overflow-y: scroll!important;">
+        <div id="wrapper">
+          
+
+<div class="navbar-custom">
+    <div class="container-fluid">
+        <!-- Right Side Menu Items -->
+        <ul class="list-unstyled topnav-menu float-end mb-0">
+            
+            <!-- Desktop Search -->
+            <li class="d-none d-lg-block">
+                <form class="app-search" id="submitform" action="/include/process.cfm" method="POST">
+                    <div class="app-search-box dropdown">
+                        <div class="input-group">
+                            <input 
+                                type="text" 
+                                required 
+                                class="form-control" 
+                                name="topsearch" 
+                                id="autocomplete" 
+                                placeholder="Search contacts..." 
+                                autocomplete="off" 
+                                aria-label="Search contacts"
+                            />
+                            <input type="hidden" name="selectedId" id="selectedId" />
+                            <input type="hidden" name="category" id="category" />
+                            <div class="input-group-append">
+                                <button class="btn btn-light" id="mybtn" type="submit" aria-label="Search">
+                                    <i class="fe-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <ul id="contact-suggestions" class="dropdown-menu" role="listbox"></ul>
+                    </div>
+                </form>
+            </li>
+
+
+            <!-- Mobile Search -->
+            <li class="dropdown d-inline-block d-lg-none">
+                <a class="nav-link dropdown-toggle arrow-none waves-effect waves-light" 
+                   data-bs-toggle="dropdown" 
+                   href="#" 
+                   role="button" 
+                   aria-haspopup="false" 
+                   aria-expanded="false"
+                   aria-label="Mobile search">
+                    <i class="fe-search noti-icon"></i>
+                </a>
+                <div class="dropdown-menu dropdown-lg dropdown-menu-end p-0">
+                    <form class="p-3" id="submitform_mobile" action="/include/process.cfm" method="POST">
+                        <input 
+                            type="search" 
+                            class="form-control" 
+                            name="topsearch" 
+                            id="autocomplete_mobile" 
+                            placeholder="Search contacts..." 
+                            aria-label="Search contacts"
+                        />
+                        <input type="hidden" name="selectedId" id="selectedId_mobile" />
+                        <input type="hidden" name="category" id="category_mobile" />
+                    </form>
+                </div>
+            </li>
+
+            <!-- Help & Support Menu -->
+            <li class="dropdown d-none d-lg-inline-block topbar-dropdown">
+                <a class="nav-link dropdown-toggle arrow-none waves-effect waves-light" 
+                   data-bs-toggle="dropdown" 
+                   href="#" 
+                   role="button" 
+                   aria-haspopup="false" 
+                   aria-expanded="false"
+                   aria-label="Help and support">
+                    <i class="fe-help-circle noti-icon"></i>
+                </a>
+                <div class="dropdown-menu dropdown-lg dropdown-menu-end">
+                    <div class="dropdown-header">
+                        <h6 class="text-overflow m-0">Help & Support</h6>
+                    </div>
+                    <div class="p-2">
+                        <div class="row g-0">
+                            <div class="col-6">
+                                
+                                    <a class="dropdown-icon-item text-center py-2" 
+                                       href="https://theactorsoffice.helpwise.help/" 
+                                       target="_blank"
+                                       rel="noopener noreferrer">
+                                        <img src="/media-abod/images/faq.png?ver=3" alt="" class="mb-1" />
+                                        <small class="d-block">FAQ</small>
+                                    </a>
+                                
+                            </div>
+                            <div class="col-6">
+                                
+                                    <a class="dropdown-icon-item text-center py-2" 
+                                       href="https://www.facebook.com/groups/taousercommunity" 
+                                       target="_blank"
+                                       rel="noopener noreferrer">
+                                        <img src="/media-abod/images/usercom.png?ver=3" alt="" class="mb-1" />
+                                        <small class="d-block">Community</small>
+                                    </a>
+                                
+                            </div>
+                            
+                                <div class="col-6">
+                                    
+                                        <a href="remoteSupportForm.cfm" 
+                                           data-bs-remote="true" 
+                                           data-bs-toggle="modal" 
+                                           data-bs-target="#remoteSupportForm" 
+                                           class="dropdown-icon-item text-center py-2">
+                                            <img src="/media-abod/images/feedback.png?ver=3" alt="" class="mb-1" />
+                                            <small class="d-block">Create Ticket</small>
+                                        </a>
+                                    
+                                </div>
+                            
+                            <div class="col-6">
+                                
+                                    <a class="dropdown-icon-item text-center py-2" 
+                                       href="mailto:support@theactorsoffice.com?subject=Support%20Request%20for%20TAO">
+                                        <img src="/media-abod/images/contact.png?ver=3" alt="" class="mb-1" />
+                                        <small class="d-block">Contact</small>
+                                    </a>
+                                
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </li>
+
+            <!-- User Profile Menu -->
+            <li class="dropdown notification-list topbar-dropdown">
+                <a class="nav-link dropdown-toggle nav-user me-0 waves-effect waves-light" 
+                   data-bs-toggle="dropdown" 
+                   href="#" 
+                   role="button" 
+                   aria-haspopup="false" 
+                   aria-expanded="false"
+                   aria-label="User menu">
+                    <i class="fe-user noti-icon"></i>
+                </a>
+                <div class="dropdown-menu dropdown-menu-end profile-dropdown">
+                    <div class="dropdown-header noti-title">
+                        <h6 class="text-overflow m-0">Welcome!</h6>
+                    </div>
+                    <a href="/app/myaccount/" class="dropdown-item notify-item">
+                        <i class="fe-user me-2"></i>
+                        <span>My Account</span>
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a href="/app/logout.cfm" class="dropdown-item notify-item">
+                        <i class="fe-log-out me-2"></i>
+                        <span>Logout</span>
+                    </a>
+                </div>
+            </li>
+        </ul>
+
+        <!-- Logo Section -->
+        
+            <div class="logo-box">
+                <a href="/app/" class="logo logo-dark text-center" aria-label="Home">
+                    <span class="logo-sm">
+                        <img src="/media-abod/images/logo-sm.png" alt="TAO Logo" height="30" />
+                    </span>
+                    <span class="logo-lg">
+                        <img src="/media-abod/images/logo-sm.png" alt="TAO Logo" height="30" />
+                    </span>
+                </a>
+                
+                <a href="/app/" class="logo logo-light text-center" aria-label="Home">
+                    <span class="logo-sm">
+                        <img src="/media-abod/images/logo-sm.png" alt="TAO Logo" height="30" />
+                    </span>
+                    <span class="logo-lg">
+                        <img src="/media-abod/images/logo-light.png" alt="TAO Logo" height="30" />
+                    </span>
+                </a>
+            </div>
+        
+
+        <!-- Left Side Menu Controls -->
+        <ul class="list-unstyled topnav-menu topnav-menu-left m-0">
+            <li>
+                <button class="button-menu-mobile waves-effect waves-light" 
+                        aria-label="Toggle mobile menu">
+                    <i class="fe-menu"></i>
+                </button>
+            </li>
+            <li>
+                <a class="navbar-toggle nav-link" 
+                   data-bs-toggle="collapse" 
+                   data-bs-target="#topnav-menu-content"
+                   aria-label="Toggle navigation menu">
+                    <div class="lines">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </a>
+            </li>
+        </ul>
+
+        <div class="clearfix"></div>
+    </div>
+</div>
+
+
+<div class="left-side-menu left-side-menu-light">
+    <div class="h-100" data-simplebar>
+        
+        <div id="sidebar-menu">
+            <ul id="side-menu">
+                
+                <li>
+                    <div class="user-lg text-center" >
+                        <a href="/app/image-upload/?ref_pgid=7" class="text-center">
+                            
+                                <img src="/media-abod/users/30/avatar.jpg?ver=0.1926487956" 
+                                     alt="user-image" 
+                                     class="rounded-circle avatar-md" />
+                                <br />
+                                <span class="pro-user-name mt-2 d-block">Kevy</span>
+                            
+                        </a>
+                    </div>
+                </li>
+                
+                
+                
+                    <li>
+                        <a href="/app/dashboard_new/">
+                            <i data-feather="airplay"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                
+                    <li>
+                        <a href="/app/calendar-appoint/">
+                            <i data-feather="calendar"></i>
+                            <span>Calendar</span>
+                        </a>
+                    </li>
+                
+                    <li>
+                        <a href="/app/reminders/">
+                            <i data-feather="user-plus"></i>
+                            <span>Reminders</span>
+                        </a>
+                    </li>
+                
+                    <li>
+                        <a href="/app/contacts/">
+                            <i data-feather="users"></i>
+                            <span>Relationships</span>
+                        </a>
+                    </li>
+                
+                    <li>
+                        <a href="/app/casting-networks-notifications/">
+                            <i data-feather="bell"></i>
+                            <span>Casting Networks - Notifications</span>
+                        </a>
+                    </li>
+                
+                    <li>
+                        <a href="/app/auditions/">
+                            <i data-feather="film"></i>
+                            <span>Auditions</span>
+                        </a>
+                    </li>
+                
+                    <li>
+                        <a href="/app/casting-networks-auditions/">
+                            <i data-feather="film"></i>
+                            <span>Casting Networks - Auditions</span>
+                        </a>
+                    </li>
+                
+                    <li>
+                        <a href="/app/reports/">
+                            <i data-feather="code"></i>
+                            <span>Reports</span>
+                        </a>
+                    </li>
+                
+                    <li>
+                        <a href="/app/myaccount/">
+                            <i data-feather="stop-circle"></i>
+                            <span>My Account</span>
+                        </a>
+                    </li>
+                
+                    
+                    <li>
+                        <a href="#sidebara" data-bs-toggle="collapse" aria-expanded="false">
+                            <i data-feather="users"></i>
+                            <span>Relationships - Admin</span>
+                            <span class="menu-arrow"></span>
+                        </a>
+                        <div class="collapse" id="sidebara">
+                            <ul class="nav-second-level">
+                                    
+                                    <li>
+                                        <a href="/app/admin-support/">
+                                            <span>Admin Support</span>
+                                        </a>
+                                    </li>
+                                    
+                                    <li>
+                                        <a href="/app/admin-users/">
+                                            <span>Users</span>
+                                        </a>
+                                    </li>
+                                    
+                                    <li>
+                                        <a href="/app/systems/">
+                                            <span>Follow up Systems</span>
+                                        </a>
+                                    </li>
+                                    
+                                    <li>
+                                        <a href="/app/admin-update-log/">
+                                            <span>Updates</span>
+                                        </a>
+                                    </li>
+                                    
+                                    <li>
+                                        <a href="/app/applications/">
+                                            <span>Applications</span>
+                                        </a>
+                                    </li>
+                                    
+                                    <li>
+                                        <a href="/app/components/">
+                                            <span>Components</span>
+                                        </a>
+                                    </li>
+                                    
+                                    <li>
+                                        <a href="/app/pages/">
+                                            <span>Pages</span>
+                                        </a>
+                                    </li>
+                                    
+                                    <li>
+                                        <a href="/app/fields/">
+                                            <span>Fields</span>
+                                        </a>
+                                    </li>
+                                    
+                                    <li>
+                                        <a href="/app/appointment-types/">
+                                            <span>Appointment Types</span>
+                                        </a>
+                                    </li>
+                                    
+                                    <li>
+                                        <a href="/app/notifications/">
+                                            <span>Relationship Reminders</span>
+                                        </a>
+                                    </li>
+                                    
+                                    <li>
+                                        <a href="/app/system-types/">
+                                            <span>Follow up System Types</span>
+                                        </a>
+                                    </li>
+                                    
+                                    <li>
+                                        <a href="/app/categories/">
+                                            <span>Item Categories</span>
+                                        </a>
+                                    </li>
+                                    
+                                    <li>
+                                        <a href="/app/types/">
+                                            <span>Item Types</span>
+                                        </a>
+                                    </li>
+                                    
+                                    <li>
+                                        <a href="/app/notes/">
+                                            <span>Notes</span>
+                                        </a>
+                                    </li>
+                                    
+                                    <li>
+                                        <a href="/app/auditlog/">
+                                            <span>Audit Log</span>
+                                        </a>
+                                    </li>
+                                    
+                                    <li>
+                                        <a href="/app/versions/">
+                                            <span>Version</span>
+                                        </a>
+                                    </li>
+                                    
+                                    <li>
+                                        <a href="/app/cancellations/">
+                                            <span>Cancellations</span>
+                                        </a>
+                                    </li>
+                                    
+                                    <li>
+                                        <a href="/app/imports/">
+                                            <span>Import History</span>
+                                        </a>
+                                    </li>
+                                    
+                                    <li>
+                                        <a href="/app/share/">
+                                            <span>Team Share</span>
+                                        </a>
+                                    </li>
+                                
+                            </ul>
+                        </div>
+                    </li>
+
+                    
+                    <li>
+                        <a href="#sidebarAudition" data-bs-toggle="collapse" aria-expanded="false">
+                            <i data-feather="film"></i>
+                            <span>Audition - Admin</span>
+                            <span class="menu-arrow"></span>
+                        </a>
+                        <div class="collapse" id="sidebarAudition">
+                            <ul class="nav-second-level">
+                                    
+                                    <li>
+                                        <a href="/app/aud-ageranges-results/">
+                                            <span>Age Ranges</span>
+                                        </a>
+                                    </li>
+                                    
+                                    <li>
+                                        <a href="/app/aud-categories-results/">
+                                            <span>Categories</span>
+                                        </a>
+                                    </li>
+                                    
+                                    <li>
+                                        <a href="/app/aud-contracttypes-results/">
+                                            <span>Contract Types</span>
+                                        </a>
+                                    </li>
+                                    
+                                    <li>
+                                        <a href="/app/aud-dialects-results/">
+                                            <span>Dialects</span>
+                                        </a>
+                                    </li>
+                                    
+                                    <li>
+                                        <a href="/app/aud-genres-results/">
+                                            <span>Genres</span>
+                                        </a>
+                                    </li>
+                                    
+                                    <li>
+                                        <a href="/app/aud-mediatypes-results/">
+                                            <span>Media Types</span>
+                                        </a>
+                                    </li>
+                                    
+                                    <li>
+                                        <a href="/app/aud-networks-results/">
+                                            <span>Networks</span>
+                                        </a>
+                                    </li>
+                                    
+                                    <li>
+                                        <a href="/app/aud-platforms-results/">
+                                            <span>Platforms</span>
+                                        </a>
+                                    </li>
+                                    
+                                    <li>
+                                        <a href="/app/aud-qtypes-results/">
+                                            <span>Question Types</span>
+                                        </a>
+                                    </li>
+                                    
+                                    <li>
+                                        <a href="/app/aud-questions-default-results/">
+                                            <span>Questions Default</span>
+                                        </a>
+                                    </li>
+                                    
+                                    <li>
+                                        <a href="/app/aud-roletypes-results/">
+                                            <span>Role Types</span>
+                                        </a>
+                                    </li>
+                                    
+                                    <li>
+                                        <a href="/app/aud-sources-results/">
+                                            <span>Sources</span>
+                                        </a>
+                                    </li>
+                                    
+                                    <li>
+                                        <a href="/app/aud-subcategories-results/">
+                                            <span>Subcategories</span>
+                                        </a>
+                                    </li>
+                                    
+                                    <li>
+                                        <a href="/app/aud-tones-results/">
+                                            <span>Tones</span>
+                                        </a>
+                                    </li>
+                                    
+                                    <li>
+                                        <a href="/app/aud-types-results/">
+                                            <span>Types</span>
+                                        </a>
+                                    </li>
+                                    
+                                    <li>
+                                        <a href="/app/aud-unions-results/">
+                                            <span>Unions</span>
+                                        </a>
+                                    </li>
+                                    
+                                    <li>
+                                        <a href="/app/aud-vocaltypes-results/">
+                                            <span>Vocal Types</span>
+                                        </a>
+                                    </li>
+                                    
+                                    <li>
+                                        <a href="/app/aud-steps-results/">
+                                            <span>Audition Steps</span>
+                                        </a>
+                                    </li>
+                                
+                            </ul>
+                        </div>
+                    </li>
+                
+            </ul>
+        </div>
+        
+        <div class="clearfix"></div>
+    </div>
+    
+</div>
+
+
+<style>
+    /* Left Sidebar Scrolling */
+    .left-side-menu {
+        height: 100vh;
+        position: fixed;
+        overflow: hidden;
+        width: 280px; /* Increased from 260px for better text visibility */
+    }
+    
+    .left-side-menu .h-100 {
+        height: 100vh !important;
+        overflow-y: auto;
+        overflow-x: hidden;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(0,0,0,0.2) transparent;
+    }
+    
+    /* Hide scrollbar for webkit browsers when not needed */
+    .left-side-menu .h-100::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    .left-side-menu .h-100::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    
+    .left-side-menu .h-100::-webkit-scrollbar-thumb {
+        background-color: rgba(0,0,0,0.2);
+        border-radius: 3px;
+        transition: background-color 0.2s ease;
+    }
+    
+    .left-side-menu .h-100::-webkit-scrollbar-thumb:hover {
+        background-color: rgba(0,0,0,0.4);
+    }
+    
+    /* For light theme, adjust scrollbar colors */
+    .left-side-menu-light .h-100::-webkit-scrollbar-thumb {
+        background-color: rgba(0,0,0,0.15);
+    }
+    
+    .left-side-menu-light .h-100::-webkit-scrollbar-thumb:hover {
+        background-color: rgba(0,0,0,0.3);
+    }
+    
+    #sidebar-menu {
+        padding-bottom: 20px;
+    }
+
+    /* Alternative Light Theme for Left Sidebar */
+    .left-side-menu-light {
+        background-color: #E9EAEC !important;
+    }
+    
+    .left-side-menu-light .pro-user-name {
+        color: #2c3e50 !important;
+    }
+    
+    .left-side-menu-light #side-menu > li > a {
+        color: #2c3e50 !important;
+        border-bottom: 1px solid #d0d1d3 !important;
+    }
+    
+    .left-side-menu-light #side-menu > li > a:hover,
+    .left-side-menu-light #side-menu > li > a:focus,
+    .left-side-menu-light #side-menu > li > a.active {
+        color: #1a252f !important;
+        background-color: #dce0e3 !important;
+    }
+    
+    .left-side-menu-light #side-menu > li > a i {
+        color: #495057 !important;
+    }
+    
+    .left-side-menu-light #side-menu > li > a:hover i,
+    .left-side-menu-light #side-menu > li > a:focus i,
+    .left-side-menu-light #side-menu > li > a.active i {
+        color: #1a252f !important;
+    }
+    
+    .left-side-menu-light .menu-arrow {
+        color: #495057 !important;
+    }
+    
+    .left-side-menu-light .nav-second-level a {
+        color: #495057 !important;
+        border-bottom: 1px solid #d0d1d3 !important;
+    }
+    
+    .left-side-menu-light .nav-second-level a:hover,
+    .left-side-menu-light .nav-second-level a:active {
+        color: #1a252f !important;
+        background-color: #dce0e3 !important;
+        text-decoration: none;
+    }
+
+    /* Original Dark Theme Styles (default) */
+    .nav-second-level {
+        list-style-type: none !important;
+        padding-left: 0;
+        margin-left: 20px;
+    }
+
+    .nav-second-level li {
+        margin: 5px 0;
+    }
+
+    .nav-second-level a {
+        color: #f8f8ff;
+        font-size: 0.9em;
+        padding: 5px 10px;
+        border-radius: 4px;
+        transition: all 0.2s ease-in-out;
+        text-decoration: none;
+    }
+
+    .nav-second-level a:hover,
+    .nav-second-level a:active {
+        color: #dece8e !important;
+        background-color: rgba(222, 206, 142, 0.1);
+        text-decoration: none;
+    }
+
+    .pro-user-name {
+        font-size: 0.9em;
+        font-weight: 500;
+    }
+
+    .user-lg .avatar-md {
+        width: 60px;
+        height: 60px;
+        margin-bottom: 15px;
+    }
+
+    /* Add space between user profile and menu */
+    .user-lg {
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .left-side-menu-light .user-lg {
+        border-bottom: 0px solid #d0d1d3;
+    }
+
+    #side-menu .menu-arrow {
+        float: right;
+        margin-top: 2px;
+        margin-right: 10px;
+        margin-left: 10px;
+    }
+    
+    /* Ensure menu text doesn't overlap with arrow */
+    #side-menu > li > a {
+        padding-right: 45px !important;
+        position: relative;
+    }
+    
+    #side-menu > li > a .menu-arrow {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+</style>
+
+          <div class="content-page">
+            <div class="content">
+              
+              <div class="container-fluid">
+                
+                <div class="row">
+                  
+
+<div class="col-12">
+    <div class="page-title-box">
+        <div class="page-title-right">
+            <ol class="breadcrumb m-0">
+                
+                        <li class="breadcrumb-item">
+                            
+                                <a href="/app/dashboard" title="Go to TAO">
+                                    TAO
+                                </a>
+                            
+                        </li>
+                    
+                        <li class="breadcrumb-item">
+                            
+                                <a href="/app/contacts" title="Go to Relationships">
+                                    Relationships
+                                </a>
+                            
+                        </li>
+                    
+                        <li class="breadcrumb-item active">
+                            Import Relationships 
+                        </li>
+                    
+            </ol>
+        </div>
+
+        <h4 class="page-title">
+            Import Relationships 
+        </h4>
+    </div>
+</div>
+
+                </div>
+
+                
+
+<style>
+/* V3 Indicator Badge */
+.v3-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    font-weight: bold;
+    font-size: 14px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-left: 10px;
+    vertical-align: middle;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 2px 4px rgba(102, 126, 234, 0.4);
+}
+.v3-banner {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    font-weight: 500;
+}
+
+.import-step {
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    background: #fff;
+    border: 1px solid #e3e3e3;
+}
+.import-step.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+.import-step h5 {
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+.import-step .step-number {
+    display: inline-block;
+    width: 28px;
+    height: 28px;
+    background: #667eea;
+    color: #fff;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 28px;
+    margin-right: 10px;
+    font-size: 14px;
+}
+.import-step.completed .step-number {
+    background: #28a745;
+}
+
+/* File upload area */
+.upload-area {
+    border: 2px dashed #667eea;
+    border-radius: 8px;
+    padding: 40px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.upload-area:hover, .upload-area.dragover {
+    border-color: #764ba2;
+    background: #f8f5ff;
+}
+.upload-area .upload-icon {
+    font-size: 48px;
+    color: #667eea;
+    margin-bottom: 10px;
+}
+
+/* Review grid */
+.review-tabs {
+    margin-bottom: 20px;
+}
+.review-tabs .nav-link {
+    font-weight: 500;
+}
+.review-tabs .nav-link .badge {
+    margin-left: 5px;
+}
+
+.review-table {
+    font-size: 14px;
+}
+.review-table th {
+    white-space: nowrap;
+}
+.review-table td {
+    vertical-align: middle;
+}
+.review-table .field-error {
+    border-color: #dc3545 !important;
+}
+.review-table .field-warning {
+    border-color: #ffc107 !important;
+}
+
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+}
+.status-ready { background: #d4edda; color: #155724; }
+.status-problem { background: #f8d7da; color: #721c24; }
+.status-dupe { background: #fff3cd; color: #856404; }
+.status-ignored { background: #e2e3e5; color: #383d41; }
+.status-imported { background: #cce5ff; color: #004085; }
+
+/* Duplicate panel */
+.dupe-panel {
+    background: #fffcf0;
+    border: 1px solid #ffc107;
+    border-radius: 4px;
+    padding: 10px;
+    margin-top: 10px;
+}
+.dupe-candidate {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px;
+    background: #fff;
+    border-radius: 4px;
+    margin-bottom: 8px;
+}
+.dupe-score {
+    font-weight: bold;
+    color: #856404;
+}
+
+/* Progress */
+.import-progress {
+    margin: 20px 0;
+}
+.import-progress .progress {
+    height: 10px;
+}
+
+/* Inline editing */
+.inline-edit {
+    cursor: pointer;
+    padding: 2px 5px;
+    border-radius: 3px;
+}
+.inline-edit:hover {
+    background: #f0f0f0;
+}
+.inline-edit.editing {
+    background: #fff;
+    border: 1px solid #667eea;
+}
+
+/* Warning state for validation warnings */
+.is-warning {
+    border-color: #ffc107 !important;
+    background-color: #fffdf5 !important;
+}
+.text-warning {
+    color: #856404 !important;
+}
+
+/* Edit modal field groups */
+.edit-field-group h6 {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.edit-field-group .form-label {
+    margin-bottom: 2px;
+    font-weight: 500;
+}
+
+/* Phone input styling */
+.phone-input::placeholder {
+    color: #adb5bd;
+}
+
+/* Date input */
+input[type="date"].form-control-sm {
+    padding-top: 0.2rem;
+    padding-bottom: 0.2rem;
+}
+</style>
+
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box">
+            <h4 class="page-title">
+                Import Contacts
+                <span class="v3-badge">V3</span>
+            </h4>
+        </div>
+    </div>
+</div>
+
+
+<div class="v3-banner">
+    <i class="fe-zap"></i> <strong>Contact Import V3</strong> - You are using the new import system. Please report any issues.
+</div>
+
+
+    
+    <div class="import-step" id="step-upload">
+        <h5><span class="step-number">1</span> Upload File</h5>
+        <p class="text-muted">Upload your contacts file (max 50MB)</p>
+
+        <div class="upload-area" id="upload-area">
+            <div class="upload-icon"><i class="fe-upload-cloud"></i></div>
+            <p><strong>Drag and drop your file here</strong></p>
+            <p class="text-muted">or click to browse</p>
+            <p class="text-muted small">Supported formats: CSV, XLS, XLSX, VCF (vCard)<br>Google Contacts and Apple/iCloud exports supported</p>
+            <input type="file" id="file-input" accept=".csv,.xls,.xlsx,.vcf" style="display:none">
+        </div>
+
+        <div class="import-progress" id="upload-progress" style="display:none">
+            <div class="progress">
+                <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+            </div>
+            <p class="mt-2 text-center" id="upload-status">Uploading...</p>
+        </div>
+    </div>
+
+    
+    <div class="text-center mb-4">
+        <a href="/include/download_contact_template.cfm" class="btn btn-outline-secondary btn-sm">
+            <i class="fe-download"></i> Download Import Template
+        </a>
+    </div>
+
+    
+    
+    <div class="card">
+        <div class="card-body">
+            <h5>Import History <span class="v3-badge" style="font-size:10px;">V3</span></h5>
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>File</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Rows</th>
+                        <th>Imported</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                    <tr>
+                        <td>sample-contacts44.csv</td>
+                        <td>01/22/2026 4:43 PM</td>
+                        <td>
+                            <span class="status-badge status-uploaded">uploaded</span>
+                        </td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>
+                            
+                                <a href="?job_id=4" class="btn btn-xs btn-primary">Continue</a>
+                            
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td>sample-contacts.csv</td>
+                        <td>01/22/2026 4:17 PM</td>
+                        <td>
+                            <span class="status-badge status-uploaded">uploaded</span>
+                        </td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>
+                            
+                                <a href="?job_id=3" class="btn btn-xs btn-primary">Continue</a>
+                            
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td>sample_contacts_2.csv</td>
+                        <td>01/22/2026 4:12 PM</td>
+                        <td>
+                            <span class="status-badge status-uploaded">uploaded</span>
+                        </td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>
+                            
+                                <a href="?job_id=2" class="btn btn-xs btn-primary">Continue</a>
+                            
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td>sample_contacts.csv</td>
+                        <td>01/22/2026 4:10 PM</td>
+                        <td>
+                            <span class="status-badge status-uploaded">uploaded</span>
+                        </td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>
+                            
+                                <a href="?job_id=1" class="btn btn-xs btn-primary">Continue</a>
+                            
+                        </td>
+                    </tr>
+                    
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+
+
+<div class="modal fade" id="dupe-modal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #667eea22 0%, #764ba222 100%);">
+                <h5 class="modal-title">Resolve Duplicate <span class="v3-badge" style="font-size:10px;">V3</span></h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body" id="dupe-modal-body">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-outline-danger" id="dupe-skip">Skip This Row</button>
+                <button type="button" class="btn btn-warning" id="dupe-update">Update Existing</button>
+                <button type="button" class="btn btn-primary" id="dupe-import-new" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border:none;">Import as New</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="edit-modal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #667eea22 0%, #764ba222 100%);">
+                <h5 class="modal-title"><i class="fe-edit"></i> Edit Row <span class="v3-badge" style="font-size:10px;">V3</span></h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body" id="edit-modal-body" style="max-height: 60vh; overflow-y: auto;">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="edit-save" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border:none;"><i class="fe-check"></i> Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/app/assets/js/contact-import-v3.js?v=20260122170029"></script>
+
+              </div>
+            </div>
+
+            
+<div id="diagnostics" class="modal fade" tabindex="-1" role="dialog" >
+
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">
+                    Diagnostics
+                </h4>
+                <button type="button" class="close" data-bs-dismiss="modal" >
+
+                    <i class="mdi mdi-close-thick"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                
+                    <p>
+                            pgid: 10<br />
+                        
+                            userid: 30<br />
+                        </p>
+                
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer class="footer">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-6">
+                Desktop version. 01/22/2026 &reg; The Actor's Office LLC - All rights reserved
+            </div>
+            <div class="col-md-6">
+                <div class="text-md-end footer-links d-none d-sm-block">
+                    <a href="https://www.theactorsoffice.com" target="_blank">TAO Website</a>
+                    <a href="javascript:;" data-bs-remote="true" data-bs-toggle="modal" data-bs-target="#diagnostics" data-bs-placement="top" title="Diagnostics">Diagnostics</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
+
+          </div>
+        </div>
+
+        
+
+        
+        <div id="z" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="standard-modalLabel">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header" >
+                <h4 class="modal-title" id="standard-modalLabel">Support Center</h4>
+                <button type="button" class="close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body">
+                Click icon on the bottom right of the TAO program window
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <script>
+          $(document).ready(function () {
+            $("#remoteSupportForm").on("show.bs.modal", function (event) {
+
+              $(this)
+                .find(".modal-body")
+                .load("/include/RemoteSupportForm.cfm?pgid=10&pgdir=contacts-import-v3&qstring=&userrole=Administrator");
+            });
+          });
+        </script>
+
+
+        <div id="remoteSupportForm" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="standard-modalLabel">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header" >
+                <h4 class="modal-title" id="standard-modalLabel">Support Center</h4>
+                <button type="button" class="close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body"></div>
+            </div>
+          </div>
+        </div>
+
+        <script>
+          window.onerror = function (message, source, lineno, colno, error) {
+            // Filter out errors from browser extensions and third-party scripts
+            // These are outside our control and don't affect app functionality
+            var isThirdPartyError = false;
+
+            // Check for common browser extension patterns in source
+            if (source) {
+              var extPatterns = [
+                'web-client-content-script', // Specific extension causing the error
+                'content-script',      // Generic extension content scripts
+                'chrome-extension://', // Chrome extensions
+                'moz-extension://',    // Firefox extensions
+                'safari-extension://', // Safari extensions
+                'edge-extension://',   // Edge extensions
+                'extension://',        // Generic extension URLs
+                'cdn.helpwise.io',     // Helpwise livechat (third-party)
+                'livechat'             // Livechat scripts
+              ];
+
+              for (var i = 0; i < extPatterns.length; i++) {
+                if (source.toLowerCase().indexOf(extPatterns[i].toLowerCase()) !== -1) {
+                  isThirdPartyError = true;
+                  break;
+                }
+              }
+            }
+
+            // Check for known third-party error messages from extensions
+            // These errors originate from extension scripts trying to interact with page content
+            if (!isThirdPartyError && message && source) {
+              // Specific check for MutationObserver errors from content scripts
+              if (message.indexOf('MutationObserver') !== -1 &&
+                  message.indexOf('parameter 1 is not of type') !== -1 &&
+                  source.indexOf('content-script') !== -1) {
+                isThirdPartyError = true;
+              }
+              // Check for ResizeObserver errors (common with extensions)
+              if (!isThirdPartyError &&
+                  message.indexOf('ResizeObserver') !== -1 &&
+                  source.indexOf('content-script') !== -1) {
+                isThirdPartyError = true;
+              }
+            }
+
+            // Suppress third-party errors silently, log app errors
+            if (!isThirdPartyError) {
+              console.error('Error: ' + message + '\nSource: ' + source + '\nLine: ' + lineno + '\nColumn: ' + colno + '\nError object: ' + JSON.stringify(error));
+            }
+
+            return true; // Prevents the default browser error handling
+          };
+        </script>
+
+        
+        
+              <script src="/app/assets/js/googletagmanager.js?ver=13"></script>
+            
+              <script src="/app/assets/js/vendor.min.js?ver=13"></script>
+            
+              <script src="/app/assets/js/libs/moment/min/moment.min.js?ver=13"></script>
+            
+              <script src="/app/assets/js/libs/parsleyjs/parsley.min.js?ver=13"></script>
+            
+              <script src="/app/assets/js/jquery-ui.js?ver=13"></script>
+            
+              <script src="/app/assets/js/remotesupportform.js?ver=13"></script>
+            
+              <script src="/app/assets/js/sweetalert2.min.js?ver=13"></script>
+            
+              <script src="https://www.googletagmanager.com/gtag/js?id=G-RCZH0ZKQZS?ver=13"></script>
+            
+              <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js?ver=13"></script>
+            
+              <script src="/app/assets/js/setupModalLoading.js?ver=13"></script>
+            
+              <script src="/app/assets/js/app.min.js?ver=13"></script>
+            
+
+        <script src="/app/assets/js/libs/devbridge-autocomplete/jquery.autocomplete.min.js?ver=0.00127548226092"></script>
+        
+
+      </body>
+    </html>
+
+
+<style>
+/* V3 Indicator Badge */
+.v3-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    font-weight: bold;
+    font-size: 14px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-left: 10px;
+    vertical-align: middle;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 2px 4px rgba(102, 126, 234, 0.4);
+}
+.v3-banner {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    font-weight: 500;
+}
+
+.import-step {
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    background: #fff;
+    border: 1px solid #e3e3e3;
+}
+.import-step.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+.import-step h5 {
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+.import-step .step-number {
+    display: inline-block;
+    width: 28px;
+    height: 28px;
+    background: #667eea;
+    color: #fff;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 28px;
+    margin-right: 10px;
+    font-size: 14px;
+}
+.import-step.completed .step-number {
+    background: #28a745;
+}
+
+/* File upload area */
+.upload-area {
+    border: 2px dashed #667eea;
+    border-radius: 8px;
+    padding: 40px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.upload-area:hover, .upload-area.dragover {
+    border-color: #764ba2;
+    background: #f8f5ff;
+}
+.upload-area .upload-icon {
+    font-size: 48px;
+    color: #667eea;
+    margin-bottom: 10px;
+}
+
+/* Review grid */
+.review-tabs {
+    margin-bottom: 20px;
+}
+.review-tabs .nav-link {
+    font-weight: 500;
+}
+.review-tabs .nav-link .badge {
+    margin-left: 5px;
+}
+
+.review-table {
+    font-size: 14px;
+}
+.review-table th {
+    white-space: nowrap;
+}
+.review-table td {
+    vertical-align: middle;
+}
+.review-table .field-error {
+    border-color: #dc3545 !important;
+}
+.review-table .field-warning {
+    border-color: #ffc107 !important;
+}
+
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+}
+.status-ready { background: #d4edda; color: #155724; }
+.status-problem { background: #f8d7da; color: #721c24; }
+.status-dupe { background: #fff3cd; color: #856404; }
+.status-ignored { background: #e2e3e5; color: #383d41; }
+.status-imported { background: #cce5ff; color: #004085; }
+
+/* Duplicate panel */
+.dupe-panel {
+    background: #fffcf0;
+    border: 1px solid #ffc107;
+    border-radius: 4px;
+    padding: 10px;
+    margin-top: 10px;
+}
+.dupe-candidate {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px;
+    background: #fff;
+    border-radius: 4px;
+    margin-bottom: 8px;
+}
+.dupe-score {
+    font-weight: bold;
+    color: #856404;
+}
+
+/* Progress */
+.import-progress {
+    margin: 20px 0;
+}
+.import-progress .progress {
+    height: 10px;
+}
+
+/* Inline editing */
+.inline-edit {
+    cursor: pointer;
+    padding: 2px 5px;
+    border-radius: 3px;
+}
+.inline-edit:hover {
+    background: #f0f0f0;
+}
+.inline-edit.editing {
+    background: #fff;
+    border: 1px solid #667eea;
+}
+
+/* Warning state for validation warnings */
+.is-warning {
+    border-color: #ffc107 !important;
+    background-color: #fffdf5 !important;
+}
+.text-warning {
+    color: #856404 !important;
+}
+
+/* Edit modal field groups */
+.edit-field-group h6 {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.edit-field-group .form-label {
+    margin-bottom: 2px;
+    font-weight: 500;
+}
+
+/* Phone input styling */
+.phone-input::placeholder {
+    color: #adb5bd;
+}
+
+/* Date input */
+input[type="date"].form-control-sm {
+    padding-top: 0.2rem;
+    padding-bottom: 0.2rem;
+}
+</style>
+
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box">
+            <h4 class="page-title">
+                Import Contacts
+                <span class="v3-badge">V3</span>
+            </h4>
+        </div>
+    </div>
+</div>
+
+
+<div class="v3-banner">
+    <i class="fe-zap"></i> <strong>Contact Import V3</strong> - You are using the new import system. Please report any issues.
+</div>
+
+
+    
+    <div class="import-step" id="step-upload">
+        <h5><span class="step-number">1</span> Upload File</h5>
+        <p class="text-muted">Upload your contacts file (max 50MB)</p>
+
+        <div class="upload-area" id="upload-area">
+            <div class="upload-icon"><i class="fe-upload-cloud"></i></div>
+            <p><strong>Drag and drop your file here</strong></p>
+            <p class="text-muted">or click to browse</p>
+            <p class="text-muted small">Supported formats: CSV, XLS, XLSX, VCF (vCard)<br>Google Contacts and Apple/iCloud exports supported</p>
+            <input type="file" id="file-input" accept=".csv,.xls,.xlsx,.vcf" style="display:none">
+        </div>
+
+        <div class="import-progress" id="upload-progress" style="display:none">
+            <div class="progress">
+                <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+            </div>
+            <p class="mt-2 text-center" id="upload-status">Uploading...</p>
+        </div>
+    </div>
+
+    
+    <div class="text-center mb-4">
+        <a href="/include/download_contact_template.cfm" class="btn btn-outline-secondary btn-sm">
+            <i class="fe-download"></i> Download Import Template
+        </a>
+    </div>
+
+    
+    
+    <div class="card">
+        <div class="card-body">
+            <h5>Import History <span class="v3-badge" style="font-size:10px;">V3</span></h5>
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>File</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Rows</th>
+                        <th>Imported</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                    <tr>
+                        <td>sample-contacts44.csv</td>
+                        <td>01/22/2026 4:43 PM</td>
+                        <td>
+                            <span class="status-badge status-uploaded">uploaded</span>
+                        </td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>
+                            
+                                <a href="?job_id=4" class="btn btn-xs btn-primary">Continue</a>
+                            
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td>sample-contacts.csv</td>
+                        <td>01/22/2026 4:17 PM</td>
+                        <td>
+                            <span class="status-badge status-uploaded">uploaded</span>
+                        </td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>
+                            
+                                <a href="?job_id=3" class="btn btn-xs btn-primary">Continue</a>
+                            
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td>sample_contacts_2.csv</td>
+                        <td>01/22/2026 4:12 PM</td>
+                        <td>
+                            <span class="status-badge status-uploaded">uploaded</span>
+                        </td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>
+                            
+                                <a href="?job_id=2" class="btn btn-xs btn-primary">Continue</a>
+                            
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td>sample_contacts.csv</td>
+                        <td>01/22/2026 4:10 PM</td>
+                        <td>
+                            <span class="status-badge status-uploaded">uploaded</span>
+                        </td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>
+                            
+                                <a href="?job_id=1" class="btn btn-xs btn-primary">Continue</a>
+                            
+                        </td>
+                    </tr>
+                    
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+
+
+<div class="modal fade" id="dupe-modal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #667eea22 0%, #764ba222 100%);">
+                <h5 class="modal-title">Resolve Duplicate <span class="v3-badge" style="font-size:10px;">V3</span></h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body" id="dupe-modal-body">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-outline-danger" id="dupe-skip">Skip This Row</button>
+                <button type="button" class="btn btn-warning" id="dupe-update">Update Existing</button>
+                <button type="button" class="btn btn-primary" id="dupe-import-new" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border:none;">Import as New</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="edit-modal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #667eea22 0%, #764ba222 100%);">
+                <h5 class="modal-title"><i class="fe-edit"></i> Edit Row <span class="v3-badge" style="font-size:10px;">V3</span></h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body" id="edit-modal-body" style="max-height: 60vh; overflow-y: auto;">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="edit-save" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border:none;"><i class="fe-check"></i> Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/app/assets/js/contact-import-v3.js?v=20260122170029"></script>
