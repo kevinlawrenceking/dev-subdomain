@@ -93,6 +93,7 @@
 
     // Initialize on DOM ready
     $(document).ready(function() {
+        console.log('[V3] ========== DOCUMENT READY ==========');
         console.log('[V3] Initializing Contact Import V3...');
         initUpload();
         initJobActions();
@@ -101,10 +102,15 @@
 
         // Check for active job
         var jobIdInput = document.getElementById('job-id');
+        var jobStatusInput = document.getElementById('job-status');
+        console.log('[V3] job-id element:', jobIdInput);
+        console.log('[V3] job-status element:', jobStatusInput);
+
         if (jobIdInput) {
             state.jobId = parseInt(jobIdInput.value);
-            var status = document.getElementById('job-status').value;
+            var status = jobStatusInput ? jobStatusInput.value : 'unknown';
             console.log('[V3] Active job:', state.jobId, 'Status:', status);
+            console.log('[V3] state object:', JSON.stringify(state));
 
             if (status === 'parsed' || status === 'mapping') {
                 loadColumnMappings();
@@ -244,8 +250,12 @@
     // ========================================
 
     function initJobActions() {
+        console.log('[V3] initJobActions called');
         // Parse button
-        $('#btn-parse').click(function() {
+        var parseBtn = $('#btn-parse');
+        console.log('[V3] Parse button found:', parseBtn.length > 0);
+        parseBtn.click(function() {
+            console.log('[V3] Parse button CLICKED!');
             parseFile();
         });
 
@@ -266,7 +276,19 @@
     }
 
     function parseFile() {
-        console.log('[V3] Parsing file for job:', state.jobId);
+        console.log('[V3] ========== PARSE STARTED ==========');
+        console.log('[V3] state.jobId =', state.jobId);
+        console.log('[V3] typeof state.jobId =', typeof state.jobId);
+
+        if (!state.jobId || state.jobId <= 0) {
+            console.error('[V3] ERROR: Invalid job ID!');
+            alert('DEBUG: Invalid job ID: ' + state.jobId);
+            return;
+        }
+
+        console.log('[V3] Sending request to /ajax/importv3/parse.cfm');
+        alert('DEBUG: Starting parse for job_id=' + state.jobId);
+
         $('#btn-parse').prop('disabled', true);
         $('#parse-progress').show();
 
@@ -276,35 +298,51 @@
             contentType: 'application/json',
             data: JSON.stringify({ job_id: state.jobId }),
             success: function(response) {
-                console.log('[V3] Parse response:', response);
+                console.log('[V3] ========== PARSE RESPONSE ==========');
+                console.log('[V3] Full response:', JSON.stringify(response, null, 2));
+                alert('DEBUG: Parse response received. success=' + response.success + ', check console for details');
+
                 // Log debug array if present
                 if (response.debug && response.debug.length > 0) {
-                    console.log('[V3] Parse debug log:');
-                    response.debug.forEach(function(line) {
-                        console.log('  ' + line);
+                    console.log('[V3] Parse debug log (' + response.debug.length + ' entries):');
+                    response.debug.forEach(function(line, idx) {
+                        console.log('  [' + idx + '] ' + line);
                     });
+                } else {
+                    console.log('[V3] No debug array in response');
                 }
+
                 if (response.success) {
+                    console.log('[V3] Parse successful, reloading page...');
                     // Reload page to show mapping step
                     window.location.reload();
                 } else {
+                    console.log('[V3] Parse failed:', response.message);
                     showAlert('error', response.message || 'Parsing failed');
                     $('#btn-parse').prop('disabled', false);
                     $('#parse-progress').hide();
                 }
             },
-            error: function(xhr) {
-                console.error('[V3] Parse error:', xhr.responseText);
+            error: function(xhr, status, error) {
+                console.error('[V3] ========== PARSE ERROR ==========');
+                console.error('[V3] Status:', status);
+                console.error('[V3] Error:', error);
+                console.error('[V3] Response text:', xhr.responseText);
+                alert('DEBUG: Parse AJAX error! status=' + status + ', error=' + error);
+
                 // Try to parse debug from error response
                 try {
                     var errResp = JSON.parse(xhr.responseText);
+                    console.log('[V3] Parsed error response:', errResp);
                     if (errResp.debug && errResp.debug.length > 0) {
                         console.log('[V3] Parse error debug log:');
                         errResp.debug.forEach(function(line) {
                             console.log('  ' + line);
                         });
                     }
-                } catch(e) {}
+                } catch(e) {
+                    console.error('[V3] Could not parse error response as JSON:', e);
+                }
                 showAlert('error', 'Parsing failed. Please try again.');
                 $('#btn-parse').prop('disabled', false);
                 $('#parse-progress').hide();

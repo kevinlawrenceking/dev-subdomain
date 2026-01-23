@@ -19,8 +19,10 @@
 
 <cfif isNumeric(url.job_id) and url.job_id gt 0>
     <cfset importService = new services.ContactImportV3Service()>
-    <cfset activeJob = importService.getJob(url.job_id)>
-    <cfif structKeyExists(activeJob, "found") and activeJob.found and structKeyExists(activeJob, "userid") and activeJob.userid eq session.userid>
+    <cfset jobResult = importService.getJob(url.job_id)>
+    <!--- getJob() returns { found: true/false, job: {...} } - extract job data --->
+    <cfif structKeyExists(jobResult, "found") and jobResult.found and structKeyExists(jobResult, "job") and jobResult.job.userid eq session.userid>
+        <cfset activeJob = jobResult.job>
         <cfset hasActiveJob = true>
     </cfif>
 </cfif>
