@@ -26,57 +26,90 @@
     "success": false,
     "code": "",
     "message": "",
-    "data": {}
+    "data": {},
+    "debug": []
 }>
 
+<!--- Debug helper --->
+<cffunction name="addDebug" access="public" returntype="void" output="false">
+    <cfargument name="msg" type="string" required="true">
+    <cfset arrayAppend(response.debug, "[" & timeFormat(now(), "HH:mm:ss") & "] " & arguments.msg)>
+</cffunction>
+
 <cftry>
+    <cfset addDebug("Parse endpoint called")>
     <!--- A) Auth: Require logged-in session userid --->
     <cfif not structKeyExists(session, "userid") or not isNumeric(session.userid) or session.userid lte 0>
+        <cfset addDebug("AUTH FAILED - no session.userid")>
         <cfset response.code = "AUTH_REQUIRED">
         <cfset response.message = "Authentication required">
         <cfcontent type="application/json" reset="true"><cfoutput>#serializeJSON(response)#</cfoutput><cfabort>
     </cfif>
     <cfset userid = session.userid>
+    <cfset addDebug("Auth OK - userid=" & userid)>
 
     <!--- Validate job_id parameter - check JSON body, form, and URL --->
     <cfset requestBody = {}>
+    <cfset rawBodyStr = "">
     <cftry>
-        <cfset rawBody = toString(getHttpRequestData().content)>
-        <cfif len(trim(rawBody)) gt 0>
-            <cfset requestBody = deserializeJSON(rawBody)>
+        <cfset rawBody = getHttpRequestData().content>
+        <cfif isBinary(rawBody)>
+            <cfset rawBodyStr = toString(rawBody)>
+        <cfelseif isSimpleValue(rawBody)>
+            <cfset rawBodyStr = rawBody>
         </cfif>
-        <cfcatch></cfcatch>
+        <cfset addDebug("Raw body length=" & len(rawBodyStr) & " content=" & left(rawBodyStr, 200))>
+        <cfif len(trim(rawBodyStr)) gt 0>
+            <cfset requestBody = deserializeJSON(rawBodyStr)>
+            <cfset addDebug("Parsed JSON body keys=" & structKeyList(requestBody))>
+        </cfif>
+        <cfcatch>
+            <cfset addDebug("JSON parse error: " & cfcatch.message)>
+        </cfcatch>
     </cftry>
 
     <cfparam name="form.job_id" default="">
     <cfparam name="url.job_id" default="">
+    <cfset addDebug("form.job_id=" & form.job_id & " url.job_id=" & url.job_id)>
+
     <cfset jobId = 0>
     <cfif structKeyExists(requestBody, "job_id")>
         <cfset jobId = val(requestBody.job_id)>
+        <cfset addDebug("Got job_id from JSON body: " & jobId)>
     </cfif>
     <cfif jobId eq 0>
         <cfset jobId = val(form.job_id)>
+        <cfif jobId gt 0><cfset addDebug("Got job_id from form: " & jobId)></cfif>
     </cfif>
     <cfif jobId eq 0>
         <cfset jobId = val(url.job_id)>
+        <cfif jobId gt 0><cfset addDebug("Got job_id from URL: " & jobId)></cfif>
     </cfif>
     <cfif jobId lte 0>
+        <cfset addDebug("VALIDATION FAILED - no valid job_id found")>
         <cfset response.code = "VALIDATION_ERROR">
         <cfset response.message = "job_id is required">
         <cfcontent type="application/json" reset="true"><cfoutput>#serializeJSON(response)#</cfoutput><cfabort>
     </cfif>
+    <cfset addDebug("Final jobId=" & jobId)>
 
     <!--- Initialize V3 service --->
+    <cfset addDebug("Initializing V3 service...")>
     <cfset v3Service = new services.ContactImportV3Service()>
+    <cfset addDebug("V3 service initialized")>
 
     <!--- A) Get job with ownership verification --->
+    <cfset addDebug("Getting job for user...")>
     <cfset jobResult = v3Service.getJobForUser(jobId, userid)>
+    <cfset addDebug("getJobForUser result: success=" & jobResult.success)>
     <cfif not jobResult.success>
+        <cfset addDebug("Job fetch failed: code=" & jobResult.code & " msg=" & jobResult.message)>
         <cfset response.code = jobResult.code>
         <cfset response.message = jobResult.message>
         <cfcontent type="application/json" reset="true"><cfoutput>#serializeJSON(response)#</cfoutput><cfabort>
     </cfif>
     <cfset job = jobResult.data.job>
+    <cfset addDebug("Job loaded: status=" & job.status & " file_type=" & job.file_type & " stored_file_path=" & job.stored_file_path)>
 
     <!--- C) Idempotency check: If already parsed, return current counts --->
     <cfif job.status eq "parsed" or job.status eq "mapping" or job.status eq "reviewing" or job.status eq "finalizing" or job.status eq "completed">
@@ -143,6 +176,9 @@
         <cfcontent type="application/json" reset="true"><cfoutput>#serializeJSON(response)#</cfoutput><cfabort>
     </cfif>
 
+    <!--- Set status to parsing --->
+    <cfset v3Service.setJobStatus(jobId, userid, "parsing")>
+
     <!--- Log parse started --->
     <cfset v3Service.logEvent(
         job_id = jobId,
@@ -153,21 +189,26 @@
 
     <!--- Read and parse the file based on type --->
     <cfset filePath = job.stored_file_path>
+    <cfset addDebug("Checking file path: " & filePath)>
     <cfif not fileExists(filePath)>
+        <cfset addDebug("FILE NOT FOUND!")>
         <cfset v3Service.setJobStatus(jobId, userid, "failed", "File not found: " & job.source_filename)>
         <cfset v3Service.logEvent(job_id = jobId, userid = userid, event_type = "parse_failed", detail = { error: "File not found" })>
         <cfset response.code = "PARSE_FAILED">
-        <cfset response.message = "Uploaded file not found on server">
+        <cfset response.message = "Uploaded file not found on server: " & filePath>
         <cfcontent type="application/json" reset="true"><cfoutput>#serializeJSON(response)#</cfoutput><cfabort>
     </cfif>
+    <cfset addDebug("File exists!")>
 
     <cfset headers = []>
     <cfset dataRows = []>
 
     <cftry>
         <cfif job.file_type eq "csv">
+            <cfset addDebug("Parsing CSV file...")>
             <!--- Parse CSV file --->
             <cfset fileContent = fileRead(filePath, "utf-8")>
+            <cfset addDebug("File read, length=" & len(fileContent))>
 
             <!--- Normalize line endings --->
             <cfset fileContent = replace(fileContent, chr(13) & chr(10), chr(10), "all")>
@@ -175,6 +216,7 @@
 
             <!--- Split into lines --->
             <cfset lines = listToArray(fileContent, chr(10))>
+            <cfset addDebug("Lines found: " & arrayLen(lines))>
 
             <cfif arrayLen(lines) eq 0>
                 <cfthrow message="File is empty">
@@ -182,16 +224,20 @@
 
             <!--- Detect delimiter: check first line for comma vs tab --->
             <cfset firstLine = lines[1]>
+            <cfset addDebug("First line: " & left(firstLine, 200))>
             <cfset commaCount = len(firstLine) - len(replace(firstLine, ",", "", "all"))>
             <cfset tabCount = len(firstLine) - len(replace(firstLine, chr(9), "", "all"))>
             <cfset delimiter = ",">
             <cfif tabCount gt commaCount>
                 <cfset delimiter = chr(9)>
             </cfif>
+            <cfset addDebug("Delimiter: " & (delimiter eq "," ? "comma" : "tab") & " (commas=" & commaCount & " tabs=" & tabCount & ")")>
 
             <!--- Parse header row --->
             <cfset headerRow = parseCSVLine(firstLine, delimiter)>
+            <cfset addDebug("Header row parsed, fields=" & arrayLen(headerRow))>
             <cfset headers = processHeaders(headerRow)>
+            <cfset addDebug("Headers: " & arrayToList(headers, ", "))>
 
             <!--- Parse data rows --->
             <cfloop from="2" to="#arrayLen(lines)#" index="i">
@@ -201,6 +247,7 @@
                     <cfset arrayAppend(dataRows, rowData)>
                 </cfif>
             </cfloop>
+            <cfset addDebug("Data rows parsed: " & arrayLen(dataRows))>
 
         <cfelseif job.file_type eq "xls" or job.file_type eq "xlsx">
             <!--- Parse Excel using cfspreadsheet --->
@@ -225,6 +272,7 @@
         </cfif>
 
         <cfcatch type="any">
+            <cfset addDebug("FILE PARSE ERROR: " & cfcatch.message & " | " & cfcatch.detail)>
             <cfset v3Service.setJobStatus(jobId, userid, "failed", "Parse error: " & cfcatch.message)>
             <cfset v3Service.logEvent(job_id = jobId, userid = userid, event_type = "parse_failed", detail = { error: cfcatch.message })>
             <cfset response.code = "PARSE_FAILED">
@@ -233,6 +281,7 @@
         </cfcatch>
     </cftry>
 
+    <cfset addDebug("Starting DB inserts - headers=" & arrayLen(headers) & " dataRows=" & arrayLen(dataRows))>
     <!--- Insert columns with INSERT IGNORE --->
     <cfset columnsCreated = 0>
     <cfloop from="1" to="#arrayLen(headers)#" index="colIdx">
@@ -400,6 +449,8 @@
         { datasource: application.datasource }
     )>
 
+    <cfset addDebug("Final counts - columns=" & qFinalCounts.columns_count & " rows=" & qFinalCounts.rows_count & " facts=" & qFinalCounts.facts_count)>
+
     <!--- Success response --->
     <cfset response.success = true>
     <cfset response.code = "">
@@ -415,13 +466,17 @@
         "rows_created": qFinalCounts.rows_count,
         "facts_created": qFinalCounts.facts_count
     }>
+    <cfset addDebug("SUCCESS - Parse complete!")>
 
     <cfcatch type="any">
         <!--- Log and set failed status --->
+        <cfset addDebug("OUTER CATCH ERROR: " & cfcatch.message & " | " & cfcatch.detail & " | Type: " & cfcatch.type)>
         <cftry>
             <cfset v3Service.setJobStatus(jobId, userid, "failed", cfcatch.message)>
             <cfset v3Service.logEvent(job_id = jobId, userid = userid, event_type = "parse_failed", detail = { error: cfcatch.message })>
-            <cfcatch type="any"><!--- ignore logging errors ---></cfcatch>
+            <cfcatch type="any">
+                <cfset addDebug("Logging error: " & cfcatch.message)>
+            </cfcatch>
         </cftry>
         <cfset response.code = "PARSE_FAILED">
         <cfset response.message = "Parse failed: " & cfcatch.message>

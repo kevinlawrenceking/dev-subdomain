@@ -277,6 +277,13 @@
             data: JSON.stringify({ job_id: state.jobId }),
             success: function(response) {
                 console.log('[V3] Parse response:', response);
+                // Log debug array if present
+                if (response.debug && response.debug.length > 0) {
+                    console.log('[V3] Parse debug log:');
+                    response.debug.forEach(function(line) {
+                        console.log('  ' + line);
+                    });
+                }
                 if (response.success) {
                     // Reload page to show mapping step
                     window.location.reload();
@@ -288,6 +295,16 @@
             },
             error: function(xhr) {
                 console.error('[V3] Parse error:', xhr.responseText);
+                // Try to parse debug from error response
+                try {
+                    var errResp = JSON.parse(xhr.responseText);
+                    if (errResp.debug && errResp.debug.length > 0) {
+                        console.log('[V3] Parse error debug log:');
+                        errResp.debug.forEach(function(line) {
+                            console.log('  ' + line);
+                        });
+                    }
+                } catch(e) {}
                 showAlert('error', 'Parsing failed. Please try again.');
                 $('#btn-parse').prop('disabled', false);
                 $('#parse-progress').hide();
