@@ -20,7 +20,7 @@
 <cfif isNumeric(url.job_id) and url.job_id gt 0>
     <cfset importService = new services.ContactImportV3Service()>
     <cfset activeJob = importService.getJob(url.job_id)>
-    <cfif activeJob.found and activeJob.userid eq session.userid>
+    <cfif structKeyExists(activeJob, "found") and activeJob.found and structKeyExists(activeJob, "userid") and activeJob.userid eq session.userid>
         <cfset hasActiveJob = true>
     </cfif>
 </cfif>
@@ -553,4 +553,4 @@ input[type="date"].form-control-sm {
     </div>
 </div>
 
-<script src="/app/assets/js/contact-import-v3.js"></script>
+<script src="/app/assets/js/contact-import-v3.js?v=<cfoutput>#DateFormat(Now(),'yyyymmdd')##TimeFormat(Now(),'HHmmss')#</cfoutput>"></script>

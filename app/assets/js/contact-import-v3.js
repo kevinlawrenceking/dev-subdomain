@@ -12,6 +12,8 @@
     var $;
 
     console.log('[V3] Contact Import V3 JavaScript loaded');
+    console.log('[V3] jQuery available at load time:', typeof window.jQuery !== 'undefined');
+    console.log('[V3] $ available at load time:', typeof window.$ !== 'undefined');
 
     // Field definitions with types for appropriate widgets
     var fieldDefinitions = {
@@ -122,16 +124,20 @@
 
     // Wait for jQuery to be available before initializing
     function waitForJQuery(callback) {
+        console.log('[V3] waitForJQuery check - jQuery available:', typeof window.jQuery !== 'undefined');
         if (typeof window.jQuery !== 'undefined') {
+            console.log('[V3] jQuery found, calling $(document).ready()');
             window.jQuery(document).ready(callback);
         } else {
             // jQuery not loaded yet, wait and retry
+            console.log('[V3] jQuery not yet available, retrying in 50ms...');
             setTimeout(function() {
                 waitForJQuery(callback);
             }, 50);
         }
     }
 
+    console.log('[V3] Calling waitForJQuery...');
     waitForJQuery(initV3);
 
     // ========================================
