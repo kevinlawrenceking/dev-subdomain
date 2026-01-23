@@ -38,10 +38,25 @@
     </cfif>
     <cfset userid = session.userid>
 
-    <!--- Validate job_id parameter --->
+    <!--- Validate job_id parameter - check JSON body, form, and URL --->
+    <cfset requestBody = {}>
+    <cftry>
+        <cfset rawBody = toString(getHttpRequestData().content)>
+        <cfif len(trim(rawBody)) gt 0>
+            <cfset requestBody = deserializeJSON(rawBody)>
+        </cfif>
+        <cfcatch></cfcatch>
+    </cftry>
+
     <cfparam name="form.job_id" default="">
     <cfparam name="url.job_id" default="">
-    <cfset jobId = val(form.job_id)>
+    <cfset jobId = 0>
+    <cfif structKeyExists(requestBody, "job_id")>
+        <cfset jobId = val(requestBody.job_id)>
+    </cfif>
+    <cfif jobId eq 0>
+        <cfset jobId = val(form.job_id)>
+    </cfif>
     <cfif jobId eq 0>
         <cfset jobId = val(url.job_id)>
     </cfif>
