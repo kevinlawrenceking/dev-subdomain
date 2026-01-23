@@ -1,0 +1,11 @@
+firstName,lastName,email_business,email_personal,phone_work,phone_mobile,company,title,city,state,category,contactType,notes
+John,Smitsh,john.smith@csastingdirectors.com,john.personal@gmail.com,310-555-1001,310-555-2001,ABC Casting,Casting Director,Los Angeles,CA,casting,industry,Met at NBC general audition
+Sarah,Johnsson,sarah.j@taslentmgmt.com,,310-555-1002,310-555-2002,Elite Talent Management,Agent,Beverly Hills,CA,agent,industry,Referred by Mike Thompson
+Michael,Chesn,mchen@wasrnerproductions.com,mike.chen@yahoo.com,818-555-1003,,Warner Bros Productions,Producer,Burbank,CA,producer,industry,Worked on Project Blue
+Emily,Rodrisguez,emilsy.r@directorslab.com,emrod@hotmail.com,323-555-1004,323-555-2004,Directors Lab,Director,Hollywood,CA,director,industry,Indie film collaboration
+David,Willsiams,dwillisams@universalcast.com,,310-555-1005,310-555-2005,Universal Casting,Associate Casting Director,Universal City,CA,casting,industry,Assistant to Jane Miller
+Amanda,Tayslor,amanda@tasyloragency.com,amanda.t.personal@gmail.com,212-555-1006,212-555-2006,Taylor Agency,Manager,New York,NY,manager,industry,Bi-coastal representation
+Robert,Martsinez,rob.masrtinez@foxstudios.com,,310-555-1007,310-555-2007,Fox Studios,Executive Producer,Century City,CA,producer,industry,Development deal pending
+Jennifer,Lese,jlese@castingnetwork.com,jenlee88@gmail.com,818-555-1008,818-555-2008,Casting Network Inc,Senior Casting Associate,Glendale,CA,casting,industry,Commercial casting specialist
+Christopher,Brsown,chsris.brown@independentfilm.org,,323-555-1009,323-555-2009,Independent Film Collective,Director,Los Angeles,CA,director,industry,Award-winning shorts
+Lisa,Garcsia,lgasrcia@actorsvoice.com,lisa.g.home@outlook.com,310-555-1010,310-555-2010,Actors Voice Agency,Talent Agent,Santa Monica,CA,agent,industry,Voice-over specialist
