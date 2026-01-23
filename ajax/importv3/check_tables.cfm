@@ -2,7 +2,8 @@
 <!--- Diagnostic endpoint to check V3 table status --->
 <cfset response = {
     "tables": {},
-    "errors": []
+    "errors": [],
+    "table_columns": {}
 }>
 
 <cfset tableList = "import_v3_jobs,import_v3_columns,import_v3_rows,import_v3_facts,import_v3_events">
@@ -45,18 +46,50 @@
     </cftry>
 </cfif>
 
-<!--- Check table structure --->
-<cftry>
-    <cfset qCols = queryExecute(
-        "SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'import_v3_jobs' ORDER BY ORDINAL_POSITION",
-        {},
-        { datasource: application.datasource }
-    )>
-    <cfset response.import_v3_jobs_columns = valueList(qCols.COLUMN_NAME)>
-    <cfcatch type="any">
-        <cfset response.columns_error = cfcatch.message>
-    </cfcatch>
-</cftry>
+<!--- Check table structure for ALL v3 tables --->
+<cfloop list="#tableList#" index="tableName">
+    <cftry>
+        <cfset qCols = queryExecute(
+            "SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :tbl ORDER BY ORDINAL_POSITION",
+            { tbl: { value: tableName, cfsqltype: "cf_sql_varchar" } },
+            { datasource: application.datasource }
+        )>
+        <cfset response.table_columns[tableName] = valueList(qCols.COLUMN_NAME)>
+        <cfcatch type="any">
+            <cfset response.table_columns[tableName] = "ERROR: " & cfcatch.message>
+        </cfcatch>
+    </cftry>
+</cfloop>
+
+<!--- Test the specific columns query that's failing --->
+<cfif url.job_id gt 0>
+    <cftry>
+        <cfset qTestColumns = queryExecute(
+            "SELECT
+                c.column_id,
+                c.source_column_index,
+                c.source_column_name,
+                c.mapped_field,
+                c.is_custom_field,
+                c.custom_field_id,
+                c.confidence,
+                c.user_confirmed,
+                c.sample_values,
+                c.intent,
+                c.target_key,
+                c.transform_json
+            FROM import_v3_columns c
+            WHERE c.job_id = :job_id
+            ORDER BY c.source_column_index ASC",
+            { job_id: { value: url.job_id, cfsqltype: "cf_sql_integer" } },
+            { datasource: application.datasource }
+        )>
+        <cfset response.columns_query_test = "OK - " & qTestColumns.recordCount & " columns found">
+        <cfcatch type="any">
+            <cfset response.columns_query_test = "FAILED: " & cfcatch.message & " | " & cfcatch.detail>
+        </cfcatch>
+    </cftry>
+</cfif>
 
 </cfsilent>
 <cfcontent type="application/json" reset="true"><cfoutput>#serializeJSON(response)#</cfoutput>
