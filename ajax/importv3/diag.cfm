@@ -6,6 +6,8 @@
     <cfset q0 = queryExecute("SELECT DATABASE() as db_name", {}, { datasource: application.datasource })>
     <cfset result.current_database = q0.db_name>
     <cfset result.datasource_name = application.datasource>
+    <cfset result.server_name = cgi.server_name>
+    <cfset result.host_check = ListFirst(cgi.server_name, ".")>
 <cfcatch><cfset result.test0 = "FAIL: " & cfcatch.message></cfcatch>
 </cftry>
 
