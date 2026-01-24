@@ -1,6 +1,14 @@
 <cftry>
 <cfset result = {}>
 
+<!--- Test 0: Which database are we using? --->
+<cftry>
+    <cfset q0 = queryExecute("SELECT DATABASE() as db_name", {}, { datasource: application.datasource })>
+    <cfset result.current_database = q0.db_name>
+    <cfset result.datasource_name = application.datasource>
+<cfcatch><cfset result.test0 = "FAIL: " & cfcatch.message></cfcatch>
+</cftry>
+
 <!--- Test 1: Basic query --->
 <cftry>
     <cfset q1 = queryExecute("SELECT 1 as test", {}, { datasource: application.datasource })>
@@ -31,6 +39,41 @@
     )>
     <cfset result.test3_query = "OK - " & q3.recordCount & " rows">
 <cfcatch><cfset result.test3_query = "FAIL: " & cfcatch.message & " | " & cfcatch.detail></cfcatch>
+</cftry>
+
+<!--- Test 4: Test getJobForUser query --->
+<cftry>
+    <cfset q4 = queryExecute(
+        "SELECT job_id, userid, source_filename, file_type, file_size, file_hash,
+            stored_file_path, status, error_message, created_at, updated_at,
+            started_at, finished_at, total_rows, parsed_rows, valid_rows,
+            problem_rows, dupe_rows, imported_rows, updated_rows, skipped_rows,
+            options_json, import_mode, allow_blank_overwrite,
+            relationship_system_default, folder_assignment_json
+        FROM import_v3_jobs WHERE job_id = 7",
+        {},
+        { datasource: application.datasource }
+    )>
+    <cfset result.test4_jobs_query = "OK - " & q4.recordCount & " rows, status=" & q4.status>
+<cfcatch><cfset result.test4_jobs_query = "FAIL: " & cfcatch.message & " | " & cfcatch.detail></cfcatch>
+</cftry>
+
+<!--- Test 5: Test service instantiation --->
+<cftry>
+    <cfset svc = new services.ContactImportV3Service()>
+    <cfset result.test5_service = "OK - service created">
+<cfcatch><cfset result.test5_service = "FAIL: " & cfcatch.message & " | " & cfcatch.detail></cfcatch>
+</cftry>
+
+<!--- Test 6: Test getJobForUser via service --->
+<cftry>
+    <cfset svc = new services.ContactImportV3Service()>
+    <cfset jobResult = svc.getJobForUser(7, session.userid)>
+    <cfset result.test6_getJobForUser = "success=" & jobResult.success & " code=" & (structKeyExists(jobResult, "code") ? jobResult.code : "none")>
+    <cfif structKeyExists(jobResult, "message")>
+        <cfset result.test6_message = jobResult.message>
+    </cfif>
+<cfcatch><cfset result.test6_getJobForUser = "EXCEPTION: " & cfcatch.message & " | " & cfcatch.detail></cfcatch>
 </cftry>
 
 <cfcatch type="any">
