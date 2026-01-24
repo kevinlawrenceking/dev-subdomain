@@ -21,6 +21,14 @@
   <cffunction name="onRequestStart" returntype="boolean">
     <cfargument name="targetPage" required="true">
 
+    <!--- Force correct datasource based on current host --->
+    <cfset var host = ListFirst(cgi.server_name, ".")>
+    <cfif host EQ "app">
+      <cfset application.datasource = "abo">
+    <cfelse>
+      <cfset application.datasource = "abod">
+    </cfif>
+
     <!--- Set userid from session if available --->
     <cfif structKeyExists(session, "userid")>
       <cfset userid = session.userid>
