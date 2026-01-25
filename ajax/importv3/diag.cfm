@@ -30,16 +30,17 @@
 </cftry>
 
 <!--- Test 3: Try the exact failing query --->
+<cfparam name="url.job_id" default="3">
 <cftry>
     <cfset q3 = queryExecute(
         "SELECT column_id, source_column_index, source_column_name, mapped_field,
                 is_custom_field, custom_field_id, confidence, user_confirmed,
                 sample_values, intent, target_key, transform_json
-         FROM import_v3_columns WHERE job_id = 7",
-        {},
+         FROM import_v3_columns WHERE job_id = :jid",
+        { jid: { value: url.job_id, cfsqltype: "cf_sql_integer" } },
         { datasource: application.datasource }
     )>
-    <cfset result.test3_query = "OK - " & q3.recordCount & " rows">
+    <cfset result.test3_query = "OK - " & q3.recordCount & " rows for job_id=" & url.job_id>
 <cfcatch><cfset result.test3_query = "FAIL: " & cfcatch.message & " | " & cfcatch.detail></cfcatch>
 </cftry>
 
@@ -52,11 +53,11 @@
             problem_rows, dupe_rows, imported_rows, updated_rows, skipped_rows,
             options_json, import_mode, allow_blank_overwrite,
             relationship_system_default, folder_assignment_json
-        FROM import_v3_jobs WHERE job_id = 7",
-        {},
+        FROM import_v3_jobs WHERE job_id = :jid",
+        { jid: { value: url.job_id, cfsqltype: "cf_sql_integer" } },
         { datasource: application.datasource }
     )>
-    <cfset result.test4_jobs_query = "OK - " & q4.recordCount & " rows, status=" & q4.status>
+    <cfset result.test4_jobs_query = "OK - " & q4.recordCount & " rows, status=" & (q4.recordCount gt 0 ? q4.status : "N/A")>
 <cfcatch><cfset result.test4_jobs_query = "FAIL: " & cfcatch.message & " | " & cfcatch.detail></cfcatch>
 </cftry>
 
@@ -70,7 +71,7 @@
 <!--- Test 6: Test getJobForUser via service --->
 <cftry>
     <cfset svc = new services.ContactImportV3Service()>
-    <cfset jobResult = svc.getJobForUser(7, session.userid)>
+    <cfset jobResult = svc.getJobForUser(url.job_id, session.userid)>
     <cfset result.test6_getJobForUser = "success=" & jobResult.success & " code=" & (structKeyExists(jobResult, "code") ? jobResult.code : "none")>
     <cfif structKeyExists(jobResult, "message")>
         <cfset result.test6_message = jobResult.message>
