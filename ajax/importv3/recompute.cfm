@@ -624,7 +624,8 @@
         </cftry>
 
         <cfset response.code = "RECOMPUTE_FAILED">
-        <cfset response.message = "Recompute failed: " & cfcatch.message>
+        <cfset response.message = "Recompute failed: " & cfcatch.message & " | Detail: " & cfcatch.detail>
+        <cfset response.data = { "error_type": cfcatch.type, "tagcontext": cfcatch.tagcontext[1].template & ":" & cfcatch.tagcontext[1].line }>
     </cfcatch>
 </cftry>
 </cfsilent>
