@@ -201,7 +201,7 @@
     <cfargument name="userid" type="numeric" required="true">
     <cfargument name="email" type="string" required="true">
 
-    <cfquery name="result">
+    <cfquery name="result" datasource="#application.datasource#">
         SELECT DISTINCT
             d.contactid,
             d.contactFullName,
@@ -227,7 +227,7 @@
     <cfargument name="phone" type="string" required="true">
 
     <!--- Phone should already be normalized to digits only --->
-    <cfquery name="result">
+    <cfquery name="result" datasource="#application.datasource#">
         SELECT DISTINCT
             d.contactid,
             d.contactFullName,
@@ -252,7 +252,7 @@
     <cfargument name="userid" type="numeric" required="true">
     <cfargument name="fullName" type="string" required="true">
 
-    <cfquery name="result">
+    <cfquery name="result" datasource="#application.datasource#">
         SELECT DISTINCT
             d.contactid,
             d.contactFullName,
@@ -276,7 +276,7 @@
     <cfargument name="fullName" type="string" required="true">
     <cfargument name="company" type="string" required="true">
 
-    <cfquery name="result">
+    <cfquery name="result" datasource="#application.datasource#">
         SELECT DISTINCT
             d.contactid,
             d.contactFullName,
@@ -306,7 +306,7 @@
     <cfargument name="fullName" type="string" required="true">
     <cfargument name="city" type="string" required="true">
 
-    <cfquery name="result">
+    <cfquery name="result" datasource="#application.datasource#">
         SELECT DISTINCT
             d.contactid,
             d.contactFullName,
@@ -403,7 +403,7 @@
     }>
 
     <!--- Get contact details --->
-    <cfquery name="qContact">
+    <cfquery name="qContact" datasource="#application.datasource#">
         SELECT
             d.contactid,
             d.contactFullName,
@@ -423,7 +423,7 @@
     <cfset result.recordname = qContact.recordname>
 
     <!--- Get emails --->
-    <cfquery name="qEmails">
+    <cfquery name="qEmails" datasource="#application.datasource#">
         SELECT valuetext, valueType
         FROM contactitems
         WHERE contactid = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.contactid#">
@@ -436,7 +436,7 @@
     </cfloop>
 
     <!--- Get phones --->
-    <cfquery name="qPhones">
+    <cfquery name="qPhones" datasource="#application.datasource#">
         SELECT valuetext, valueType
         FROM contactitems
         WHERE contactid = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.contactid#">
@@ -449,7 +449,7 @@
     </cfloop>
 
     <!--- Get company --->
-    <cfquery name="qCompany">
+    <cfquery name="qCompany" datasource="#application.datasource#">
         SELECT valueCompany, valueDepartment, valueTitle
         FROM contactitems
         WHERE contactid = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.contactid#">
@@ -464,7 +464,7 @@
     </cfif>
 
     <!--- Get address --->
-    <cfquery name="qAddress">
+    <cfquery name="qAddress" datasource="#application.datasource#">
         SELECT valueCity, valueRegion
         FROM contactitems
         WHERE contactid = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.contactid#">

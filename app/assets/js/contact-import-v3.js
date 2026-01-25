@@ -394,6 +394,7 @@
     }
 
     function confirmMappings() {
+        console.log('[V3] ========== CONFIRM MAPPINGS ==========');
         console.log('[V3] Confirming mappings for job:', state.jobId);
 
         // Collect mappings
@@ -405,27 +406,44 @@
             });
         });
 
+        console.log('[V3] Mappings to send:', JSON.stringify(mappings));
         $('#btn-confirm-mapping').prop('disabled', true);
+
+        var requestData = { job_id: state.jobId, mappings: mappings };
+        console.log('[V3] Full request data:', JSON.stringify(requestData));
 
         // V3 uses recompute endpoint to apply mappings and validate
         $.ajax({
             url: '/ajax/importv3/recompute.cfm',  // V3 ENDPOINT
             type: 'POST',
             contentType: 'application/json',
-            data: JSON.stringify({ job_id: state.jobId, mappings: mappings }),
+            data: JSON.stringify(requestData),
+            timeout: 60000, // 60 second timeout
             success: function(response) {
+                console.log('[V3] ========== RECOMPUTE RESPONSE ==========');
                 console.log('[V3] Recompute response:', response);
+                console.log('[V3] Response type:', typeof response);
+                console.log('[V3] Response success:', response.success);
                 if (response.success) {
+                    console.log('[V3] Success! Reloading page...');
                     window.location.reload();
                 } else {
+                    console.log('[V3] Failed:', response.message);
                     showAlert('error', response.message || 'Failed to process');
                     $('#btn-confirm-mapping').prop('disabled', false);
                 }
             },
-            error: function(xhr) {
-                console.error('[V3] Recompute error:', xhr.responseText);
-                showAlert('error', 'Failed to process. Please try again.');
+            error: function(xhr, status, error) {
+                console.error('[V3] ========== RECOMPUTE ERROR ==========');
+                console.error('[V3] Status:', status);
+                console.error('[V3] Error:', error);
+                console.error('[V3] Response text:', xhr.responseText);
+                console.error('[V3] Response status:', xhr.status);
+                showAlert('error', 'Failed to process. Please try again. (' + status + ')');
                 $('#btn-confirm-mapping').prop('disabled', false);
+            },
+            complete: function(xhr, status) {
+                console.log('[V3] AJAX complete. Status:', status);
             }
         });
     }
