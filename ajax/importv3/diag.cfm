@@ -78,6 +78,20 @@
 <cfcatch><cfset result.test6_getJobForUser = "EXCEPTION: " & cfcatch.message & " | " & cfcatch.detail></cfcatch>
 </cftry>
 
+<!--- Test 7: Test ValidationService --->
+<cftry>
+    <cfset valSvc = new services.ValidationService()>
+    <cfset result.test7_validation_service = "OK - ValidationService created">
+<cfcatch><cfset result.test7_validation_service = "FAIL: " & cfcatch.message & " | " & cfcatch.detail></cfcatch>
+</cftry>
+
+<!--- Test 8: Test DuplicateMatcherService --->
+<cftry>
+    <cfset dupeSvc = new services.DuplicateMatcherService()>
+    <cfset result.test8_dupe_service = "OK - DuplicateMatcherService created">
+<cfcatch><cfset result.test8_dupe_service = "FAIL: " & cfcatch.message & " | " & cfcatch.detail></cfcatch>
+</cftry>
+
 <cfcatch type="any">
     <cfset result.outer_error = cfcatch.message>
 </cfcatch>
