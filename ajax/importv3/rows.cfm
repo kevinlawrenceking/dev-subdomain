@@ -180,10 +180,15 @@
             <cfcatch type="any"><!--- Ignore logging errors ---></cfcatch>
         </cftry>
 
+        <!--- Also log to importv3 log file --->
+        <cflog file="importv3" text="rows.cfm ERROR job_id=#jobId# user=#userid# err=#cfcatch.message# detail=#cfcatch.detail# type=#cfcatch.type# tagcontext=#cfcatch.tagcontext[1].template#:#cfcatch.tagcontext[1].line#">
+
         <cfset response.code = "INTERNAL_ERROR">
-        <cfset response.message = "Rows fetch failed: " & cfcatch.message>
+        <cfset response.message = "Rows fetch failed: " & cfcatch.message & " [" & cfcatch.tagcontext[1].template & ":" & cfcatch.tagcontext[1].line & "]">
         <cfset response.data.debug = debug>
         <cfset response.data.last_step = arrayLen(debug) gt 1 ? debug[arrayLen(debug) - 1] : "start">
+        <cfset response.data.error_detail = cfcatch.detail>
+        <cfset response.data.error_type = cfcatch.type>
         <cfheader statuscode="500">
     </cfcatch>
 </cftry>
