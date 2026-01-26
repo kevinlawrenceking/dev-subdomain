@@ -562,13 +562,20 @@
 
         $j.get(url, function(response) {
             console.log('[V3] Rows response:', response);
-            // Log debug breadcrumbs if present
-            if (response.data && response.data.debug) {
-                console.log('[V3] Debug trail:', response.data.debug.join(' -> '));
+            // Log debug breadcrumbs if present (handle both cases - CF returns uppercase)
+            var data = response.data || response.DATA || {};
+            var debugTrail = data.debug || data.DEBUG;
+            if (debugTrail) {
+                console.log('[V3] Debug trail:', debugTrail.join(' -> '));
             }
             if (response.success) {
-                renderRows(response.data.rows);
-                renderPagination(response.data.total, response.data.page, response.data.total_pages);
+                // Handle both lowercase and uppercase keys (CF returns uppercase)
+                var rows = data.rows || data.ROWS || [];
+                var total = data.total || data.TOTAL || 0;
+                var page = data.page || data.PAGE || 1;
+                var totalPages = data.total_pages || data.TOTAL_PAGES || 1;
+                renderRows(rows);
+                renderPagination(total, page, totalPages);
                 updateStats();
             } else {
                 console.error('[V3] Load rows failed with code:', response.code);
@@ -580,6 +587,12 @@
         });
     }
 
+    // Helper to get value from object with case-insensitive key lookup
+    function getVal(obj, key) {
+        if (!obj) return '';
+        return obj[key] || obj[key.toUpperCase()] || obj[key.toLowerCase()] || '';
+    }
+
     function renderRows(rows) {
         if (!rows || rows.length === 0) {
             $j('#review-tbody').html('<tr><td colspan="8" class="text-center text-muted p-4">No rows found</td></tr>');
@@ -588,56 +601,69 @@
 
         var html = '';
         rows.forEach(function(row) {
-            var data = row.data || {};
-            var validation = row.validation || {};
+            var data = row.data || row.DATA || {};
+            var validation = row.validation || row.VALIDATION || {};
+            var rowId = row.row_id || row.ROW_ID;
+            var rowNum = row.row_num || row.ROW_NUM;
+            var status = row.status || row.STATUS;
+            var bestMatchScore = row.best_match_score || row.BEST_MATCH_SCORE;
+            var createdContactId = row.created_contactid || row.CREATED_CONTACTID;
+            var errors = row.errors || row.ERRORS || [];
+            var duplicates = row.duplicates || row.DUPLICATES || [];
 
-            var name = data.contactFullName || ((data.firstName || '') + ' ' + (data.lastName || '')).trim() || '-';
-            var email = data.email_business || data.email_personal || '-';
-            var phone = data.phone_work || data.phone_mobile || data.phone_home || '-';
-            var company = data.company || '-';
+            var firstName = getVal(data, 'first_name') || getVal(data, 'firstName');
+            var lastName = getVal(data, 'last_name') || getVal(data, 'lastName');
+            var fullName = getVal(data, 'contactFullName') || getVal(data, 'full_name');
+            var name = fullName || ((firstName || '') + ' ' + (lastName || '')).trim() || '-';
+            var email = getVal(data, 'email_business') || getVal(data, 'email_personal') || '-';
+            var phone = getVal(data, 'phone_work') || getVal(data, 'phone_mobile') || getVal(data, 'phone_home') || '-';
+            var company = getVal(data, 'company') || '-';
 
             // Check for field errors
             var emailClass = hasFieldError(validation, 'email_business') || hasFieldError(validation, 'email_personal') ? 'text-danger' : '';
             var phoneClass = hasFieldError(validation, 'phone_work') || hasFieldError(validation, 'phone_mobile') ? 'text-danger' : '';
 
-            html += '<tr data-row-id="' + row.row_id + '" class="' + (row.status === 'imported' ? 'table-light' : '') + '">';
-            html += '<td><input type="checkbox" class="row-checkbox" data-row-id="' + row.row_id + '" ' + (row.status === 'imported' ? 'disabled' : '') + '></td>';
-            html += '<td>' + row.row_num + '</td>';
+            html += '<tr data-row-id="' + rowId + '" class="' + (status === 'imported' ? 'table-light' : '') + '">';
+            html += '<td><input type="checkbox" class="row-checkbox" data-row-id="' + rowId + '" ' + (status === 'imported' ? 'disabled' : '') + '></td>';
+            html += '<td>' + rowNum + '</td>';
             html += '<td>' + escapeHtml(name) + '</td>';
             html += '<td class="' + emailClass + '">' + escapeHtml(email) + '</td>';
             html += '<td class="' + phoneClass + '">' + escapeHtml(phone) + '</td>';
             html += '<td>' + escapeHtml(company) + '</td>';
-            html += '<td><span class="status-badge status-' + row.status + '">' + row.status + '</span></td>';
+            html += '<td><span class="status-badge status-' + status + '">' + status + '</span></td>';
             html += '<td>';
 
-            if (row.status === 'problem') {
-                html += '<button class="btn btn-xs btn-outline-primary btn-edit" data-row-id="' + row.row_id + '"><i class="fe-edit"></i></button> ';
-            } else if (row.status === 'dupe') {
-                html += '<button class="btn btn-xs btn-outline-warning btn-resolve-dupe" data-row-id="' + row.row_id + '"><i class="fe-users"></i></button> ';
-            } else if (row.status === 'imported' && row.created_contactid) {
-                html += '<a href="/app/contact/?contactid=' + row.created_contactid + '" class="btn btn-xs btn-outline-info"><i class="fe-eye"></i></a>';
+            if (status === 'problem') {
+                html += '<button class="btn btn-xs btn-outline-primary btn-edit" data-row-id="' + rowId + '"><i class="fe-edit"></i></button> ';
+            } else if (status === 'dupe') {
+                html += '<button class="btn btn-xs btn-outline-warning btn-resolve-dupe" data-row-id="' + rowId + '"><i class="fe-users"></i></button> ';
+            } else if (status === 'imported' && createdContactId) {
+                html += '<a href="/app/contact/?contactid=' + createdContactId + '" class="btn btn-xs btn-outline-info"><i class="fe-eye"></i></a>';
             }
 
             html += '</td>';
             html += '</tr>';
 
             // Show validation errors
-            if (row.status === 'problem' && row.errors && row.errors.length > 0) {
+            if (status === 'problem' && errors && errors.length > 0) {
                 html += '<tr class="bg-light"><td></td><td colspan="7">';
                 html += '<small class="text-danger">';
-                row.errors.forEach(function(err) {
-                    html += '<i class="fe-alert-circle"></i> <strong>' + escapeHtml(err.field) + ':</strong> ' + escapeHtml(err.message) + '<br>';
+                errors.forEach(function(err) {
+                    var errField = err.field || err.FIELD || '';
+                    var errMsg = err.message || err.MESSAGE || '';
+                    html += '<i class="fe-alert-circle"></i> <strong>' + escapeHtml(errField) + ':</strong> ' + escapeHtml(errMsg) + '<br>';
                 });
                 html += '</small></td></tr>';
             }
 
             // Show duplicate info
-            if (row.status === 'dupe' && row.duplicates && row.duplicates.length > 0) {
+            if (status === 'dupe' && duplicates && duplicates.length > 0) {
                 html += '<tr class="bg-warning-light"><td></td><td colspan="7">';
                 html += '<small class="text-warning"><i class="fe-alert-triangle"></i> ';
-                html += 'Possible duplicate of: <strong>' + escapeHtml(row.duplicates[0].contactFullName || row.duplicates[0].recordname) + '</strong>';
-                if (row.best_match_score) {
-                    html += ' (Score: ' + row.best_match_score + ')';
+                var dupeName = duplicates[0].contactFullName || duplicates[0].CONTACTFULLNAME || duplicates[0].recordname || duplicates[0].RECORDNAME || 'Unknown';
+                html += 'Possible duplicate of: <strong>' + escapeHtml(dupeName) + '</strong>';
+                if (bestMatchScore) {
+                    html += ' (Score: ' + bestMatchScore + ')';
                 }
                 html += '</small></td></tr>';
             }
