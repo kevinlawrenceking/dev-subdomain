@@ -144,7 +144,7 @@
     <cfelse>
         <!--- H) Call service method to get rows (includes stats) --->
         <cfset rowsResult = v3Service.getRows(
-            jobId = jobId,
+            job_id = jobId,
             userid = userid,
             statusFilter = statusFilter,
             page = page,
