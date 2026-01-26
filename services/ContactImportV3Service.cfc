@@ -37,7 +37,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
         "created": ["uploaded", "failed", "cancelled"],
         "uploaded": ["parsing", "failed", "cancelled"],
         "parsing": ["parsed", "failed", "cancelled"],
-        "parsed": ["mapping", "failed", "cancelled"],
+        "parsed": ["mapping", "reviewing", "failed", "cancelled"],
         "mapping": ["reviewing", "failed", "cancelled"],
         "reviewing": ["finalizing", "failed", "cancelled"],
         "finalizing": ["completed", "failed", "cancelled"],
