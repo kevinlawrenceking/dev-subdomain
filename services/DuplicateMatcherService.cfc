@@ -62,12 +62,14 @@
      ======================================== --->
 
 <cffunction name="isDupeDetectionAvailable" access="public" returntype="struct" output="false"
-    hint="Check if required tables exist for duplicate detection">
+    hint="Check if required tables/views exist for duplicate detection">
 
     <cfset var result = {
         available: false,
         reason: "",
         tables: {},
+        table_types: {},
+        base_tables: {},
         schema: ""
     }>
 
@@ -78,28 +80,66 @@
         </cfquery>
         <cfset result.schema = qSchema.schema_name>
 
-        <!--- Check contactdetails table --->
+        <!--- Check contactdetails - get both existence and table type --->
         <cfquery name="qCheckDetails" datasource="#application.datasource#" timeout="5">
-            SELECT COUNT(*) AS cnt
+            SELECT TABLE_NAME, TABLE_TYPE
             FROM information_schema.TABLES
             WHERE TABLE_SCHEMA = DATABASE()
               AND TABLE_NAME = 'contactdetails'
         </cfquery>
-        <cfset result.tables.contactdetails = qCheckDetails.cnt gt 0>
+        <cfset result.tables.contactdetails = qCheckDetails.recordCount gt 0>
+        <cfif qCheckDetails.recordCount gt 0>
+            <cfset result.table_types.contactdetails = qCheckDetails.TABLE_TYPE>
+        </cfif>
 
-        <!--- Check contactitems table --->
+        <!--- Check contactitems - get both existence and table type --->
         <cfquery name="qCheckItems" datasource="#application.datasource#" timeout="5">
-            SELECT COUNT(*) AS cnt
+            SELECT TABLE_NAME, TABLE_TYPE
             FROM information_schema.TABLES
             WHERE TABLE_SCHEMA = DATABASE()
               AND TABLE_NAME = 'contactitems'
         </cfquery>
-        <cfset result.tables.contactitems = qCheckItems.cnt gt 0>
+        <cfset result.tables.contactitems = qCheckItems.recordCount gt 0>
+        <cfif qCheckItems.recordCount gt 0>
+            <cfset result.table_types.contactitems = qCheckItems.TABLE_TYPE>
+        </cfif>
 
-        <!--- Both must exist --->
+        <!--- Also check for base tables (_tbl suffix) where indexes live --->
+        <cfquery name="qCheckDetailsTbl" datasource="#application.datasource#" timeout="5">
+            SELECT TABLE_NAME, TABLE_TYPE
+            FROM information_schema.TABLES
+            WHERE TABLE_SCHEMA = DATABASE()
+              AND TABLE_NAME = 'contactdetails_tbl'
+        </cfquery>
+        <cfset result.base_tables.contactdetails_tbl = qCheckDetailsTbl.recordCount gt 0>
+
+        <cfquery name="qCheckItemsTbl" datasource="#application.datasource#" timeout="5">
+            SELECT TABLE_NAME, TABLE_TYPE
+            FROM information_schema.TABLES
+            WHERE TABLE_SCHEMA = DATABASE()
+              AND TABLE_NAME = 'contactitems_tbl'
+        </cfquery>
+        <cfset result.base_tables.contactitems_tbl = qCheckItemsTbl.recordCount gt 0>
+
+        <!--- Both contactdetails and contactitems must exist (as views or tables) --->
         <cfif result.tables.contactdetails and result.tables.contactitems>
             <cfset result.available = true>
-            <cfset result.reason = "Tables available in schema: " & result.schema>
+            <cfset var typeInfo = []>
+            <cfif structKeyExists(result.table_types, "contactdetails")>
+                <cfset arrayAppend(typeInfo, "contactdetails=" & result.table_types.contactdetails)>
+            </cfif>
+            <cfif structKeyExists(result.table_types, "contactitems")>
+                <cfset arrayAppend(typeInfo, "contactitems=" & result.table_types.contactitems)>
+            </cfif>
+            <cfset result.reason = "Objects available in schema [" & result.schema & "]: " & arrayToList(typeInfo, ", ")>
+
+            <!--- Log if views are being used (expected in TAO) --->
+            <cfif structKeyExists(result.table_types, "contactdetails") and result.table_types.contactdetails eq "VIEW">
+                <cflog file="importv3" text="DupeService: contactdetails is VIEW, indexes on contactdetails_tbl base_table_exists=#result.base_tables.contactdetails_tbl#">
+            </cfif>
+            <cfif structKeyExists(result.table_types, "contactitems") and result.table_types.contactitems eq "VIEW">
+                <cflog file="importv3" text="DupeService: contactitems is VIEW, indexes on contactitems_tbl base_table_exists=#result.base_tables.contactitems_tbl#">
+            </cfif>
         <cfelse>
             <cfset var missing = []>
             <cfif not result.tables.contactdetails>
@@ -108,7 +148,7 @@
             <cfif not result.tables.contactitems>
                 <cfset arrayAppend(missing, "contactitems")>
             </cfif>
-            <cfset result.reason = "Missing tables in schema [" & result.schema & "]: " & arrayToList(missing, ", ")>
+            <cfset result.reason = "Missing tables/views in schema [" & result.schema & "]: " & arrayToList(missing, ", ")>
         </cfif>
 
         <cfcatch type="any">

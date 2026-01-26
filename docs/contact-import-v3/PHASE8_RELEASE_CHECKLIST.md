@@ -489,5 +489,120 @@ SHOW INDEX FROM contactitems_tbl WHERE Key_name LIKE '%dupe%' OR Key_name LIKE '
 
 ---
 
-*Document Version: Phase 8.0*
+## K) Production Evidence (Phase 9)
+
+This section contains evidence collected during production deployment. See `PHASE9_PROD_PROOF.md` for detailed templates and procedures.
+
+### K.1 Schema Verification Summary
+
+| Check | Result | Date |
+|-------|--------|------|
+| contactdetails is VIEW | [ ] Pass | |
+| contactitems is VIEW | [ ] Pass | |
+| contactdetails_tbl exists (BASE TABLE) | [ ] Pass | |
+| contactitems_tbl exists (BASE TABLE) | [ ] Pass | |
+| Views include IsDeleted filter | [ ] Pass | |
+
+**Schema Evidence:**
+```sql
+-- Paste SHOW FULL TABLES output here
+```
+
+### K.2 Migration Apply Evidence
+
+| Metric | Value |
+|--------|-------|
+| Migration start time | |
+| Migration end time | |
+| Total duration | |
+| Lock warnings observed | [ ] Yes / [ ] No |
+| Rollback needed | [ ] Yes / [ ] No |
+
+**Index Verification:**
+```sql
+-- SHOW INDEX FROM contactdetails_tbl WHERE Key_name LIKE '%dupe%';
+-- SHOW INDEX FROM contactitems_tbl WHERE Key_name LIKE '%dupe%' OR Key_name LIKE '%category%';
+-- Paste output here
+```
+
+### K.3 EXPLAIN Query Verification
+
+| Query | type | key | rows | Pass? |
+|-------|------|-----|------|-------|
+| buildUserDupeIndex | ___ | ___ | ___ | [ ] |
+| getCandidateContactIds | ___ | ___ | ___ | [ ] |
+| rows.cfm pagination | ___ | ___ | ___ | [ ] |
+
+**Fail criteria reminder:**
+- `type = ALL` (full table scan) = FAIL
+- `key = NULL` (no index used) = FAIL
+- `rows > 100,000` for candidate queries = REVIEW
+
+### K.4 E2E Test Evidence
+
+| Phase | Success | elapsed_ms | Notes |
+|-------|---------|------------|-------|
+| Upload | [ ] | | |
+| Parse | [ ] | | |
+| Recompute | [ ] | | dupe_mode: |
+| Review (rows.cfm) | [ ] | | |
+| Finalize | [ ] | | imported_new: |
+
+**Job ID used for testing:** ___________
+
+### K.5 Concurrency Test Evidence
+
+| Test | Expected | Actual | Pass? |
+|------|----------|--------|-------|
+| Double-click finalize (2nd request) | 409 ALREADY_RUNNING or LOCKED | | [ ] |
+| Re-finalize completed job | 409 INVALID_STATE | | [ ] |
+| No duplicate row_results | 0 rows | | [ ] |
+
+### K.6 Post-Release Health Check
+
+Run 24 hours after deployment:
+
+```sql
+-- Stuck jobs
+SELECT COUNT(*) FROM import_v3_jobs
+WHERE status IN ('uploading', 'parsing', 'finalizing')
+  AND updated_at < DATE_SUB(NOW(), INTERVAL 30 MINUTE);
+-- Result: _____ (expected: 0)
+
+-- Job count consistency issues
+-- (see PHASE9_PROD_PROOF.md for full query)
+-- Result: _____ rows with mismatches (expected: 0)
+
+-- Orphan rows
+SELECT COUNT(*) FROM import_v3_rows r
+LEFT JOIN import_v3_jobs j ON r.job_id = j.job_id
+WHERE j.job_id IS NULL;
+-- Result: _____ (expected: 0)
+```
+
+### K.7 Production Sign-Off
+
+| Checkpoint | Verified By | Date |
+|------------|-------------|------|
+| Schema structure confirmed | | |
+| Migration applied successfully | | |
+| EXPLAIN queries pass | | |
+| E2E smoke test pass | | |
+| Concurrency tests pass | | |
+| 24-hour health check pass | | |
+| Ready for general availability | | |
+
+---
+
+## Appendix: Files Changed in Phase 9
+
+| File | Purpose |
+|------|---------|
+| `services/DuplicateMatcherService.cfc` | Enhanced isDupeDetectionAvailable to report table_types and base_tables |
+| `docs/contact-import-v3/PHASE9_PROD_PROOF.md` | NEW - Production proof bundle template |
+| `docs/contact-import-v3/PHASE8_RELEASE_CHECKLIST.md` | UPDATED - Added Production Evidence section (K) |
+
+---
+
+*Document Version: Phase 8.1 (with Phase 9 Production Evidence)*
 *DONE_TOKEN: PHASE8_DONE*
