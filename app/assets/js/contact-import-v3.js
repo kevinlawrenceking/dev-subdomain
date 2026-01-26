@@ -3,12 +3,98 @@
  * Handles file upload, parsing, review grid, and import finalization
  *
  * V3 ENDPOINTS - All calls go to /ajax/importv3/ namespace
+ *
+ * Phase 4.2: noConflict-safe - uses local $j alias, never relies on global $
+ * Phase 4.3: Bounded wait for jQuery + init guard to prevent double initialization
  */
 
 (function() {
     'use strict';
 
-    console.log('[V3] Contact Import V3 JavaScript loaded');
+    // Phase 4.3: Guard flag to ensure initV3 runs exactly once
+    var initialized = false;
+
+    // Phase 4.3: Local jQuery alias - set after jQuery becomes available
+    var $j = null;
+
+    // Phase 4.3: Bounded wait for jQuery availability
+    var maxWaitMs = 2000;
+    var pollEveryMs = 50;
+    var waited = 0;
+
+    function showJQueryError() {
+        var alertDiv = document.createElement('div');
+        alertDiv.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#dc3545;color:#fff;padding:15px;text-align:center;z-index:99999;font-family:sans-serif;';
+        alertDiv.innerHTML = '<strong>Error:</strong> Contact Import V3 requires jQuery. Please ensure jQuery is loaded before this script.';
+        if (document.body) {
+            document.body.insertBefore(alertDiv, document.body.firstChild);
+        } else {
+            document.addEventListener('DOMContentLoaded', function() {
+                document.body.insertBefore(alertDiv, document.body.firstChild);
+            });
+        }
+        console.error('[V3] FATAL: jQuery not available after ' + maxWaitMs + 'ms. Contact Import V3 cannot initialize.');
+    }
+
+    function waitForJQuery() {
+        if (typeof window.jQuery !== 'undefined') {
+            // jQuery is available - set alias and initialize
+            $j = window.jQuery;
+            console.log('[V3] jQuery detected after ' + waited + 'ms');
+            $j(document).ready(initV3);
+            return;
+        }
+
+        waited += pollEveryMs;
+        if (waited >= maxWaitMs) {
+            // Timeout - show error once and stop
+            showJQueryError();
+            return;
+        }
+
+        // Poll again
+        setTimeout(waitForJQuery, pollEveryMs);
+    }
+
+    // Start waiting for jQuery
+    waitForJQuery();
+
+    // Phase 4.3: Main initialization function - runs exactly once
+    function initV3() {
+        if (initialized) {
+            console.log('[V3] initV3 called but already initialized - skipping');
+            return;
+        }
+        initialized = true;
+
+        console.log('[V3] Contact Import V3 JavaScript loaded');
+        console.log('[V3] ========== DOCUMENT READY ==========');
+        console.log('[V3] Initializing Contact Import V3...');
+
+        initUpload();
+        initJobActions();
+        initReviewGrid();
+        initModals();
+
+        // Check for active job
+        var jobIdInput = document.getElementById('job-id');
+        var jobStatusInput = document.getElementById('job-status');
+        console.log('[V3] job-id element:', jobIdInput);
+        console.log('[V3] job-status element:', jobStatusInput);
+
+        if (jobIdInput) {
+            state.jobId = parseInt(jobIdInput.value);
+            var status = jobStatusInput ? jobStatusInput.value : 'unknown';
+            console.log('[V3] Active job:', state.jobId, 'Status:', status);
+            console.log('[V3] state object:', JSON.stringify(state));
+
+            if (status === 'parsed' || status === 'mapping') {
+                loadColumnMappings();
+            } else if (status === 'reviewing' || status === 'finalizing' || status === 'completed') {
+                loadRows();
+            }
+        }
+    }
 
     // Field definitions with types for appropriate widgets
     var fieldDefinitions = {
@@ -91,34 +177,8 @@
         stats: {}
     };
 
-    // Initialize on DOM ready
-    $(document).ready(function() {
-        console.log('[V3] ========== DOCUMENT READY ==========');
-        console.log('[V3] Initializing Contact Import V3...');
-        initUpload();
-        initJobActions();
-        initReviewGrid();
-        initModals();
-
-        // Check for active job
-        var jobIdInput = document.getElementById('job-id');
-        var jobStatusInput = document.getElementById('job-status');
-        console.log('[V3] job-id element:', jobIdInput);
-        console.log('[V3] job-status element:', jobStatusInput);
-
-        if (jobIdInput) {
-            state.jobId = parseInt(jobIdInput.value);
-            var status = jobStatusInput ? jobStatusInput.value : 'unknown';
-            console.log('[V3] Active job:', state.jobId, 'Status:', status);
-            console.log('[V3] state object:', JSON.stringify(state));
-
-            if (status === 'parsed' || status === 'mapping') {
-                loadColumnMappings();
-            } else if (status === 'reviewing' || status === 'finalizing' || status === 'completed') {
-                loadRows();
-            }
-        }
-    });
+    // Note: Initialization moved to initV3() function (Phase 4.3)
+    // initV3 is called via $j(document).ready after jQuery is detected
 
     // ========================================
     // FILE UPLOAD - V3 ENDPOINTS
@@ -183,15 +243,15 @@
         }
 
         // Show progress
-        $('#upload-area').hide();
-        $('#upload-progress').show();
+        $j('#upload-area').hide();
+        $j('#upload-progress').show();
 
         // Upload - V3 ENDPOINT
         var formData = new FormData();
         formData.append('file', file);
 
-        $.ajax({
-            url: '/ajax/importv3/upload.cfm',  // V3 ENDPOINT
+        $j.ajax({
+            url: '/ajax/importv3/upload.cfm?bypass=1',  // V3 ENDPOINT
             type: 'POST',
             data: formData,
             processData: false,
@@ -201,7 +261,7 @@
                 xhr.upload.addEventListener('progress', function(e) {
                     if (e.lengthComputable) {
                         var pct = (e.loaded / e.total) * 100;
-                        $('#upload-progress .progress-bar').css('width', pct + '%');
+                        $j('#upload-progress .progress-bar').css('width', pct + '%');
                     }
                 });
                 return xhr;
@@ -223,8 +283,8 @@
                 } else {
                     var errMsg = response.message || 'Upload failed';
                     showAlert('error', errMsg);
-                    $('#upload-area').show();
-                    $('#upload-progress').hide();
+                    $j('#upload-area').show();
+                    $j('#upload-progress').hide();
                 }
             },
             error: function(xhr, status, error) {
@@ -239,8 +299,8 @@
                     }
                 }
                 showAlert('error', errMsg);
-                $('#upload-area').show();
-                $('#upload-progress').hide();
+                $j('#upload-area').show();
+                $j('#upload-progress').hide();
             }
         });
     }
@@ -252,7 +312,7 @@
     function initJobActions() {
         console.log('[V3] initJobActions called');
         // Parse button
-        var parseBtn = $('#btn-parse');
+        var parseBtn = $j('#btn-parse');
         console.log('[V3] Parse button found:', parseBtn.length > 0);
         parseBtn.click(function() {
             console.log('[V3] Parse button CLICKED!');
@@ -260,17 +320,17 @@
         });
 
         // Confirm mapping button
-        $('#btn-confirm-mapping').click(function() {
+        $j('#btn-confirm-mapping').click(function() {
             confirmMappings();
         });
 
         // Finalize button
-        $('#btn-finalize').click(function() {
+        $j('#btn-finalize').click(function() {
             finalizeImport();
         });
 
         // Dry-run button (preview)
-        $('#btn-dry-run').click(function() {
+        $j('#btn-dry-run').click(function() {
             previewImport();
         });
     }
@@ -282,25 +342,23 @@
 
         if (!state.jobId || state.jobId <= 0) {
             console.error('[V3] ERROR: Invalid job ID!');
-            alert('DEBUG: Invalid job ID: ' + state.jobId);
+            showAlert('error', 'Invalid job ID. Please refresh the page.');
             return;
         }
 
-        console.log('[V3] Sending request to /ajax/importv3/parse.cfm');
-        alert('DEBUG: Starting parse for job_id=' + state.jobId);
+        console.log('[V3] Sending request to /ajax/importv3/parse.cfm?bypass=1');
 
-        $('#btn-parse').prop('disabled', true);
-        $('#parse-progress').show();
+        $j('#btn-parse').prop('disabled', true);
+        $j('#parse-progress').show();
 
-        $.ajax({
-            url: '/ajax/importv3/parse.cfm',  // V3 ENDPOINT
+        $j.ajax({
+            url: '/ajax/importv3/parse.cfm?bypass=1',  // V3 ENDPOINT
             type: 'POST',
             contentType: 'application/json',
             data: JSON.stringify({ job_id: state.jobId }),
             success: function(response) {
                 console.log('[V3] ========== PARSE RESPONSE ==========');
                 console.log('[V3] Full response:', JSON.stringify(response, null, 2));
-                alert('DEBUG: Parse response received. success=' + response.success + ', check console for details');
 
                 // Log debug array if present
                 if (response.debug && response.debug.length > 0) {
@@ -319,8 +377,8 @@
                 } else {
                     console.log('[V3] Parse failed:', response.message);
                     showAlert('error', response.message || 'Parsing failed');
-                    $('#btn-parse').prop('disabled', false);
-                    $('#parse-progress').hide();
+                    $j('#btn-parse').prop('disabled', false);
+                    $j('#parse-progress').hide();
                 }
             },
             error: function(xhr, status, error) {
@@ -328,7 +386,6 @@
                 console.error('[V3] Status:', status);
                 console.error('[V3] Error:', error);
                 console.error('[V3] Response text:', xhr.responseText);
-                alert('DEBUG: Parse AJAX error! status=' + status + ', error=' + error);
 
                 // Try to parse debug from error response
                 try {
@@ -344,20 +401,20 @@
                     console.error('[V3] Could not parse error response as JSON:', e);
                 }
                 showAlert('error', 'Parsing failed. Please try again.');
-                $('#btn-parse').prop('disabled', false);
-                $('#parse-progress').hide();
+                $j('#btn-parse').prop('disabled', false);
+                $j('#parse-progress').hide();
             }
         });
     }
 
     function loadColumnMappings() {
         console.log('[V3] Loading column mappings for job:', state.jobId);
-        $.get('/ajax/importv3/columns.cfm?job_id=' + state.jobId, function(response) {
+        $j.get('/ajax/importv3/columns.cfm?bypass=1&job_id=' + state.jobId, function(response) {
             console.log('[V3] Columns response:', response);
             if (response.success) {
                 renderColumnMappings(response.data.columns, response.data.available_fields);
             } else {
-                $('#mapping-container').html('<p class="text-danger">' + response.message + '</p>');
+                $j('#mapping-container').html('<p class="text-danger">' + response.message + '</p>');
             }
         });
     }
@@ -390,7 +447,7 @@
         });
 
         html += '</tbody></table>';
-        $('#mapping-container').html(html);
+        $j('#mapping-container').html(html);
     }
 
     function confirmMappings() {
@@ -399,22 +456,26 @@
 
         // Collect mappings
         var mappings = [];
-        $('.mapping-select').each(function() {
+        $j('.mapping-select').each(function() {
             mappings.push({
-                column_id: parseInt($(this).data('column-id')),
-                field: $(this).val()
+                column_id: parseInt($j(this).data('column-id')),
+                field: $j(this).val()
             });
         });
 
         console.log('[V3] Mappings to send:', JSON.stringify(mappings));
-        $('#btn-confirm-mapping').prop('disabled', true);
+
+        // Phase 7: Show spinner and disable button during recompute
+        var $btn = $j('#btn-confirm-mapping');
+        var originalHtml = $btn.html();
+        $btn.prop('disabled', true).html('<i class="fe-loader fe-spin"></i> Processing...');
 
         var requestData = { job_id: state.jobId, mappings: mappings };
         console.log('[V3] Full request data:', JSON.stringify(requestData));
 
         // V3 uses recompute endpoint to apply mappings and validate
-        $.ajax({
-            url: '/ajax/importv3/recompute.cfm',  // V3 ENDPOINT
+        $j.ajax({
+            url: '/ajax/importv3/recompute.cfm?bypass=1',  // V3 ENDPOINT
             type: 'POST',
             contentType: 'application/json',
             data: JSON.stringify(requestData),
@@ -430,7 +491,7 @@
                 } else {
                     console.log('[V3] Failed:', response.message);
                     showAlert('error', response.message || 'Failed to process');
-                    $('#btn-confirm-mapping').prop('disabled', false);
+                    $btn.prop('disabled', false).html(originalHtml);
                 }
             },
             error: function(xhr, status, error) {
@@ -440,7 +501,7 @@
                 console.error('[V3] Response text:', xhr.responseText);
                 console.error('[V3] Response status:', xhr.status);
                 showAlert('error', 'Failed to process. Please try again. (' + status + ')');
-                $('#btn-confirm-mapping').prop('disabled', false);
+                $btn.prop('disabled', false).html(originalHtml);
             },
             complete: function(xhr, status) {
                 console.log('[V3] AJAX complete. Status:', status);
@@ -454,21 +515,21 @@
 
     function initReviewGrid() {
         // Tab clicks
-        $('#review-tabs .nav-link').click(function(e) {
+        $j('#review-tabs .nav-link').click(function(e) {
             e.preventDefault();
-            $('#review-tabs .nav-link').removeClass('active');
-            $(this).addClass('active');
-            state.currentFilter = $(this).data('filter');
+            $j('#review-tabs .nav-link').removeClass('active');
+            $j(this).addClass('active');
+            state.currentFilter = $j(this).data('filter');
             state.currentPage = 1;
             loadRows();
         });
 
         // Check all
-        $('#check-all').change(function() {
+        $j('#check-all').change(function() {
             var checked = this.checked;
-            $('.row-checkbox').each(function() {
+            $j('.row-checkbox').each(function() {
                 this.checked = checked;
-                var rowId = parseInt($(this).data('row-id'));
+                var rowId = parseInt($j(this).data('row-id'));
                 if (checked) {
                     state.selectedRows.add(rowId);
                 } else {
@@ -479,11 +540,11 @@
         });
 
         // Bulk actions
-        $('#bulk-ignore').click(function() {
+        $j('#bulk-ignore').click(function() {
             bulkAction('ignore');
         });
 
-        $('#bulk-import').click(function() {
+        $j('#bulk-import').click(function() {
             bulkAction('create');
         });
     }
@@ -491,26 +552,37 @@
     function loadRows() {
         console.log('[V3] Loading rows for job:', state.jobId, 'Filter:', state.currentFilter);
 
-        var url = '/ajax/importv3/rows.cfm?job_id=' + state.jobId +
+        // Phase 7: Show loading indicator
+        $j('#review-tbody').html('<tr><td colspan="8" class="text-center p-4"><i class="fe-loader fe-spin"></i> Loading rows...</td></tr>');
+
+        var url = '/ajax/importv3/rows.cfm?bypass=1&job_id=' + state.jobId +
             '&status=' + encodeURIComponent(state.currentFilter) +
             '&page=' + state.currentPage +
             '&limit=' + state.pageSize;
 
-        $.get(url, function(response) {
+        $j.get(url, function(response) {
             console.log('[V3] Rows response:', response);
+            // Log debug breadcrumbs if present
+            if (response.data && response.data.debug) {
+                console.log('[V3] Debug trail:', response.data.debug.join(' -> '));
+            }
             if (response.success) {
                 renderRows(response.data.rows);
                 renderPagination(response.data.total, response.data.page, response.data.total_pages);
                 updateStats();
             } else {
-                $('#review-tbody').html('<tr><td colspan="8" class="text-center text-danger">' + response.message + '</td></tr>');
+                console.error('[V3] Load rows failed with code:', response.code);
+                $j('#review-tbody').html('<tr><td colspan="8" class="text-center text-danger">' + escapeHtml(response.message) + '</td></tr>');
             }
+        }).fail(function(xhr, status, error) {
+            console.error('[V3] Load rows HTTP error:', xhr.status, status, error);
+            $j('#review-tbody').html('<tr><td colspan="8" class="text-center text-danger">Failed to load rows. Please refresh the page.</td></tr>');
         });
     }
 
     function renderRows(rows) {
         if (!rows || rows.length === 0) {
-            $('#review-tbody').html('<tr><td colspan="8" class="text-center text-muted p-4">No rows found</td></tr>');
+            $j('#review-tbody').html('<tr><td colspan="8" class="text-center text-muted p-4">No rows found</td></tr>');
             return;
         }
 
@@ -571,19 +643,19 @@
             }
         });
 
-        $('#review-tbody').html(html);
+        $j('#review-tbody').html(html);
 
         // Bind row actions
-        $('.btn-edit').click(function() {
-            editRow($(this).data('row-id'));
+        $j('.btn-edit').click(function() {
+            editRow($j(this).data('row-id'));
         });
 
-        $('.btn-resolve-dupe').click(function() {
-            resolveDupe($(this).data('row-id'));
+        $j('.btn-resolve-dupe').click(function() {
+            resolveDupe($j(this).data('row-id'));
         });
 
-        $('.row-checkbox').change(function() {
-            var rowId = parseInt($(this).data('row-id'));
+        $j('.row-checkbox').change(function() {
+            var rowId = parseInt($j(this).data('row-id'));
             if (this.checked) {
                 state.selectedRows.add(rowId);
             } else {
@@ -594,13 +666,24 @@
     }
 
     function hasFieldError(validation, field) {
-        return validation[field] && !validation[field].valid;
+        // Phase 7: Handle both object format {valid: bool, error: string} and simple boolean format
+        if (!validation || !validation[field]) return false;
+        var val = validation[field];
+        // If it's an object with .valid property, check that
+        if (typeof val === 'object' && val !== null && 'valid' in val) {
+            return !val.valid;
+        }
+        // If it's a boolean, false means error
+        if (typeof val === 'boolean') {
+            return !val;
+        }
+        return false;
     }
 
     function renderPagination(total, page, pages) {
         var start = ((page - 1) * state.pageSize) + 1;
         var end = Math.min(page * state.pageSize, total);
-        $('#pagination-info').text('Showing ' + start + '-' + end + ' of ' + total);
+        $j('#pagination-info').text('Showing ' + start + '-' + end + ' of ' + total);
 
         var html = '';
         if (pages > 1) {
@@ -620,10 +703,10 @@
             html += '<a class="page-link" href="#" data-page="' + (page + 1) + '">Next</a></li>';
         }
 
-        $('#pagination-nav ul').html(html);
-        $('#pagination-nav .page-link').click(function(e) {
+        $j('#pagination-nav ul').html(html);
+        $j('#pagination-nav .page-link').click(function(e) {
             e.preventDefault();
-            var p = parseInt($(this).data('page'));
+            var p = parseInt($j(this).data('page'));
             if (p && p !== state.currentPage) {
                 state.currentPage = p;
                 loadRows();
@@ -632,45 +715,45 @@
     }
 
     function updateSelectedCount() {
-        $('#selected-count').text(state.selectedRows.size + ' selected');
+        $j('#selected-count').text(state.selectedRows.size + ' selected');
         if (state.selectedRows.size > 0) {
-            $('#bulk-actions').show();
+            $j('#bulk-actions').show();
         } else {
-            $('#bulk-actions').hide();
+            $j('#bulk-actions').hide();
         }
     }
 
     function updateStats() {
         // V3 uses the rows endpoint with aggregation or a separate endpoint
         // For now, we get stats from the job status
-        $.get('/ajax/importv3/rows.cfm?job_id=' + state.jobId + '&stats_only=1', function(response) {
+        $j.get('/ajax/importv3/rows.cfm?bypass=1&job_id=' + state.jobId + '&stats_only=1', function(response) {
             console.log('[V3] Stats response:', response);
             if (response.success && response.data.stats) {
                 var stats = response.data.stats;
                 state.stats = stats;
-                $('#stat-total').text(stats.total || 0);
-                $('#stat-ready').text(stats.ready || 0);
-                $('#stat-problem').text(stats.problem || 0);
-                $('#stat-dupe').text(stats.dupe || 0);
-                $('#stat-imported').text(stats.imported || 0);
+                $j('#stat-total').text(stats.total || 0);
+                $j('#stat-ready').text(stats.ready || 0);
+                $j('#stat-problem').text(stats.problem || 0);
+                $j('#stat-dupe').text(stats.dupe || 0);
+                $j('#stat-imported').text(stats.imported || 0);
 
-                $('#tab-all').text(stats.total || 0);
-                $('#tab-ready').text(stats.ready || 0);
-                $('#tab-problem').text(stats.problem || 0);
-                $('#tab-dupe').text(stats.dupe || 0);
-                $('#tab-ignored').text(stats.ignored || 0);
-                $('#tab-imported').text(stats.imported || 0);
+                $j('#tab-all').text(stats.total || 0);
+                $j('#tab-ready').text(stats.ready || 0);
+                $j('#tab-problem').text(stats.problem || 0);
+                $j('#tab-dupe').text(stats.dupe || 0);
+                $j('#tab-ignored').text(stats.ignored || 0);
+                $j('#tab-imported').text(stats.imported || 0);
 
-                $('#import-count').text(stats.ready || 0);
+                $j('#import-count').text(stats.ready || 0);
 
                 // Show warning if no ready rows
                 if ((stats.ready || 0) === 0) {
-                    $('#finalize-warning').show();
-                    $('#finalize-warning-text').text('No rows are ready for import. Please fix validation errors or resolve duplicates.');
-                    $('#btn-finalize').prop('disabled', true);
+                    $j('#finalize-warning').show();
+                    $j('#finalize-warning-text').text('No rows are ready for import. Please fix validation errors or resolve duplicates.');
+                    $j('#btn-finalize').prop('disabled', true);
                 } else {
-                    $('#finalize-warning').hide();
-                    $('#btn-finalize').prop('disabled', false);
+                    $j('#finalize-warning').hide();
+                    $j('#btn-finalize').prop('disabled', false);
                 }
             }
         });
@@ -680,24 +763,67 @@
         if (state.selectedRows.size === 0) return;
         console.log('[V3] Bulk action:', action, 'Rows:', Array.from(state.selectedRows));
 
-        $.ajax({
-            url: '/ajax/importv3/row_action.cfm',  // V3 ENDPOINT
+        // Phase 7: Get CSRF token for row_action
+        var csrfToken = $j('#csrf-token').val() || '';
+        if (!csrfToken) {
+            console.error('[V3] CSRF token not found for bulk action');
+            showAlert('error', 'Security token missing. Please refresh the page.');
+            return;
+        }
+
+        // Phase 7: Disable bulk action buttons during processing
+        var $ignoreBtn = $j('#bulk-ignore');
+        var $importBtn = $j('#bulk-import');
+        $ignoreBtn.prop('disabled', true);
+        $importBtn.prop('disabled', true);
+        var actionText = action === 'ignore' ? 'Skipping...' : 'Setting to import...';
+        $j('#selected-count').text(actionText);
+
+        $j.ajax({
+            url: '/ajax/importv3/row_action.cfm?bypass=1',  // V3 ENDPOINT
             type: 'POST',
             contentType: 'application/json',
+            headers: {
+                'X-CSRF-Token': csrfToken  // Phase 7: Header CSRF (preferred)
+            },
             data: JSON.stringify({
                 job_id: state.jobId,
                 row_ids: Array.from(state.selectedRows),
-                action: action
+                action: action,
+                csrf_token: csrfToken  // Body CSRF (fallback)
             }),
             success: function(response) {
                 console.log('[V3] Bulk action response:', response);
+                // Log debug breadcrumbs if present
+                if (response.data && response.data.debug) {
+                    console.log('[V3] Debug trail:', response.data.debug.join(' -> '));
+                }
                 if (response.success) {
                     state.selectedRows.clear();
                     updateSelectedCount();
                     loadRows();
                 } else {
+                    console.error('[V3] Bulk action failed with code:', response.code);
                     showAlert('error', response.message);
+                    $ignoreBtn.prop('disabled', false);
+                    $importBtn.prop('disabled', false);
+                    updateSelectedCount();
                 }
+            },
+            error: function(xhr, status, error) {
+                console.error('[V3] Bulk action HTTP error:', xhr.status, status, error);
+                var errorMsg = 'Action failed. Please try again.';
+                try {
+                    var errResponse = JSON.parse(xhr.responseText);
+                    if (errResponse.message) errorMsg = errResponse.message;
+                    if (errResponse.data && errResponse.data.debug) {
+                        console.error('[V3] Debug trail:', errResponse.data.debug.join(' -> '));
+                    }
+                } catch (e) {}
+                showAlert('error', errorMsg);
+                $ignoreBtn.prop('disabled', false);
+                $importBtn.prop('disabled', false);
+                updateSelectedCount();
             }
         });
     }
@@ -708,18 +834,18 @@
 
     function initModals() {
         // Edit save
-        $('#edit-save').click(function() {
+        $j('#edit-save').click(function() {
             saveEdit();
         });
 
         // Dupe actions
-        $('#dupe-skip').click(function() {
+        $j('#dupe-skip').click(function() {
             setDupeAction('ignore');
         });
-        $('#dupe-update').click(function() {
+        $j('#dupe-update').click(function() {
             setDupeAction('update');
         });
-        $('#dupe-import-new').click(function() {
+        $j('#dupe-import-new').click(function() {
             setDupeAction('create');
         });
     }
@@ -732,7 +858,7 @@
         currentEditRowId = rowId;
 
         // Fetch single row detail - V3 ENDPOINT
-        $.get('/ajax/importv3/row.cfm?job_id=' + state.jobId + '&row_id=' + rowId, function(response) {
+        $j.get('/ajax/importv3/row.cfm?bypass=1&job_id=' + state.jobId + '&row_id=' + rowId, function(response) {
             console.log('[V3] Row detail response:', response);
             if (response.success && response.data.row) {
                 renderEditModal(response.data.row);
@@ -813,12 +939,12 @@
 
         html += '</form>';
 
-        $('#edit-modal-body').html(html);
+        $j('#edit-modal-body').html(html);
 
         // Initialize phone formatters
         initializePhoneFormatters();
 
-        $('#edit-modal').modal('show');
+        $j('#edit-modal').modal('show');
     }
 
     function renderFieldWidget(field, fieldDef, value, inputClass) {
@@ -914,55 +1040,81 @@
     }
 
     function initializePhoneFormatters() {
-        $('.phone-input').on('input', function() {
-            var val = $(this).val().replace(/\D/g, '');
+        $j('.phone-input').on('input', function() {
+            var val = $j(this).val().replace(/\D/g, '');
             if (val.length >= 10) {
                 val = '(' + val.substring(0, 3) + ') ' + val.substring(3, 6) + '-' + val.substring(6, 10);
             }
-            $(this).val(val);
+            $j(this).val(val);
         });
     }
 
     function saveEdit() {
         var data = {};
 
-        $('#edit-form input, #edit-form select, #edit-form textarea').each(function() {
-            var name = $(this).attr('name');
+        $j('#edit-form input, #edit-form select, #edit-form textarea').each(function() {
+            var name = $j(this).attr('name');
             if (name) {
-                data[name] = $(this).val();
+                data[name] = $j(this).val();
             }
         });
 
         console.log('[V3] Saving edit for row:', currentEditRowId, 'Data:', data);
 
-        var $btn = $('#edit-save');
+        // Phase 7: Get CSRF token for fact_update
+        var csrfToken = $j('#csrf-token').val() || '';
+        if (!csrfToken) {
+            console.error('[V3] CSRF token not found for fact_update');
+            showAlert('error', 'Security token missing. Please refresh the page.');
+            return;
+        }
+
+        var $btn = $j('#edit-save');
         $btn.prop('disabled', true).html('<i class="fe-loader fe-spin"></i> Saving...');
 
         // V3 ENDPOINT - fact_update for individual field updates
-        $.ajax({
-            url: '/ajax/importv3/fact_update.cfm',  // V3 ENDPOINT
+        $j.ajax({
+            url: '/ajax/importv3/fact_update.cfm?bypass=1',  // V3 ENDPOINT
             type: 'POST',
             contentType: 'application/json',
+            headers: {
+                'X-CSRF-Token': csrfToken  // Phase 7: Header CSRF (preferred)
+            },
             data: JSON.stringify({
                 job_id: state.jobId,
                 row_id: currentEditRowId,
-                fields: data
+                fields: data,
+                csrf_token: csrfToken  // Body CSRF (fallback)
             }),
             success: function(response) {
                 console.log('[V3] Save response:', response);
+                // Log debug breadcrumbs if present
+                if (response.data && response.data.debug) {
+                    console.log('[V3] Debug trail:', response.data.debug.join(' -> '));
+                }
                 $btn.prop('disabled', false).html('<i class="fe-check"></i> Save Changes');
                 if (response.success) {
-                    $('#edit-modal').modal('hide');
+                    $j('#edit-modal').modal('hide');
                     showAlert('success', 'Row updated and revalidated');
                     loadRows();
                 } else {
+                    console.error('[V3] Fact update failed with code:', response.code);
                     showAlert('error', response.message || 'Validation failed');
                 }
             },
-            error: function(xhr) {
-                console.error('[V3] Save error:', xhr.responseText);
+            error: function(xhr, status, error) {
+                console.error('[V3] Save error:', xhr.status, status, error);
+                console.error('[V3] Response text:', xhr.responseText);
+                var errorMsg = 'Failed to save. Please try again.';
+                try {
+                    var errResponse = JSON.parse(xhr.responseText);
+                    if (errResponse.message) errorMsg = errResponse.message;
+                    if (errResponse.data && errResponse.data.debug) {
+                        console.error('[V3] Debug trail:', errResponse.data.debug.join(' -> '));
+                    }
+                } catch (e) {}
                 $btn.prop('disabled', false).html('<i class="fe-check"></i> Save Changes');
-                showAlert('error', 'Failed to save. Please try again.');
+                showAlert('error', errorMsg);
             }
         });
     }
@@ -974,7 +1126,7 @@
         currentDupeRowId = rowId;
 
         // V3 ENDPOINT
-        $.get('/ajax/importv3/row.cfm?job_id=' + state.jobId + '&row_id=' + rowId, function(response) {
+        $j.get('/ajax/importv3/row.cfm?bypass=1&job_id=' + state.jobId + '&row_id=' + rowId, function(response) {
             console.log('[V3] Dupe row response:', response);
             if (!response.success || !response.data.row) return;
 
@@ -1018,32 +1170,62 @@
 
             html += '</div>';
 
-            $('#dupe-modal-body').html(html);
-            $('#dupe-modal').modal('show');
+            $j('#dupe-modal-body').html(html);
+            $j('#dupe-modal').modal('show');
         });
     }
 
     function setDupeAction(action) {
         console.log('[V3] Setting dupe action:', action, 'for row:', currentDupeRowId);
 
+        // Phase 7: Get CSRF token for row_action
+        var csrfToken = $j('#csrf-token').val() || '';
+        if (!csrfToken) {
+            console.error('[V3] CSRF token not found for dupe action');
+            showAlert('error', 'Security token missing. Please refresh the page.');
+            return;
+        }
+
         // V3 ENDPOINT
-        $.ajax({
-            url: '/ajax/importv3/row_action.cfm',  // V3 ENDPOINT
+        $j.ajax({
+            url: '/ajax/importv3/row_action.cfm?bypass=1',  // V3 ENDPOINT
             type: 'POST',
             contentType: 'application/json',
+            headers: {
+                'X-CSRF-Token': csrfToken  // Phase 7: Header CSRF (preferred)
+            },
             data: JSON.stringify({
                 job_id: state.jobId,
                 row_id: currentDupeRowId,
-                action: action
+                action: action,
+                csrf_token: csrfToken  // Body CSRF (fallback)
             }),
             success: function(response) {
                 console.log('[V3] Row action response:', response);
-                $('#dupe-modal').modal('hide');
+                // Log debug breadcrumbs if present
+                if (response.data && response.data.debug) {
+                    console.log('[V3] Debug trail:', response.data.debug.join(' -> '));
+                }
+                $j('#dupe-modal').modal('hide');
                 if (response.success) {
                     loadRows();
                 } else {
+                    console.error('[V3] Dupe action failed with code:', response.code);
                     showAlert('error', response.message);
                 }
+            },
+            error: function(xhr, status, error) {
+                console.error('[V3] Dupe action HTTP error:', xhr.status, status, error);
+                var errorMsg = 'Action failed. Please try again.';
+                try {
+                    var errResponse = JSON.parse(xhr.responseText);
+                    if (errResponse.message) errorMsg = errResponse.message;
+                    if (errResponse.data && errResponse.data.debug) {
+                        console.error('[V3] Debug trail:', errResponse.data.debug.join(' -> '));
+                    }
+                } catch (e) {}
+                $j('#dupe-modal').modal('hide');
+                showAlert('error', errorMsg);
             }
         });
     }
@@ -1053,24 +1235,51 @@
     // ========================================
 
     function finalizeImport() {
-        if (!confirm('Are you sure you want to import ' + (state.stats.ready || 0) + ' contacts?')) {
+        var readyCount = state.stats.ready || 0;
+        if (!confirm('Are you sure you want to import ' + readyCount + ' contacts?')) {
             return;
         }
 
         console.log('[V3] Finalizing import for job:', state.jobId);
 
-        $('#btn-finalize').prop('disabled', true);
-        $('#finalize-progress').show();
+        // Get CSRF token from hidden input
+        var csrfToken = $j('#csrf-token').val() || '';
+        if (!csrfToken) {
+            console.error('[V3] CSRF token not found in #csrf-token input');
+            showAlert('error', 'Security token missing. Please refresh the page and try again.');
+            return;
+        }
 
-        // V3 ENDPOINT
-        $.ajax({
-            url: '/ajax/importv3/finalize.cfm',  // V3 ENDPOINT
+        // Phase 7: Enhanced progress UI with timing message for large imports
+        var $btn = $j('#btn-finalize');
+        var $progress = $j('#finalize-progress');
+        $btn.prop('disabled', true).html('<i class="fe-loader fe-spin"></i> Importing...');
+        $progress.show();
+
+        // Show timing message for large imports (over 100 rows)
+        if (readyCount > 100) {
+            showAlert('info', 'Importing ' + readyCount + ' contacts. This may take a moment...');
+        }
+
+        // Phase 5.2: V3 ENDPOINT - send csrf_token in BOTH header AND body (belt+suspenders)
+        $j.ajax({
+            url: '/ajax/importv3/finalize.cfm?bypass=1',  // V3 ENDPOINT - bypass=1 required
             type: 'POST',
             contentType: 'application/json',
-            data: JSON.stringify({ job_id: state.jobId }),
+            headers: {
+                'X-CSRF-Token': csrfToken  // Phase 5.2: Header CSRF (preferred)
+            },
+            data: JSON.stringify({
+                job_id: state.jobId,
+                csrf_token: csrfToken  // Body CSRF (fallback)
+            }),
             success: function(response) {
                 console.log('[V3] Finalize response:', response);
-                $('#finalize-progress').hide();
+                // Log debug breadcrumbs if present
+                if (response.data && response.data.debug) {
+                    console.log('[V3] Debug trail:', response.data.debug.join(' -> '));
+                }
+                $j('#finalize-progress').hide();
 
                 if (response.success) {
                     showAlert('success', response.message || 'Import completed successfully!');
@@ -1078,15 +1287,44 @@
                         window.location.reload();
                     }, 1500);
                 } else {
-                    showAlert('error', response.message);
-                    $('#btn-finalize').prop('disabled', false);
+                    // Log error code to console for debugging
+                    console.error('[V3] Finalize failed with code:', response.code);
+                    showAlert('error', response.message || 'Import failed');
+                    $j('#btn-finalize').prop('disabled', false);
                 }
             },
-            error: function(xhr) {
-                console.error('[V3] Finalize error:', xhr.responseText);
-                showAlert('error', 'Import failed. Please try again.');
-                $('#finalize-progress').hide();
-                $('#btn-finalize').prop('disabled', false);
+            error: function(xhr, status, error) {
+                console.error('[V3] Finalize HTTP error:', xhr.status, status, error);
+                console.error('[V3] Response text:', xhr.responseText);
+
+                // Phase 5.2: Improved error handling - parse JSON response if available
+                var errorMsg = 'Import failed. Please try again.';
+                var errorCode = '';
+                var debugTrail = [];
+
+                try {
+                    var errResponse = JSON.parse(xhr.responseText);
+                    if (errResponse.message) {
+                        errorMsg = errResponse.message;
+                    }
+                    if (errResponse.code) {
+                        errorCode = errResponse.code;
+                        console.error('[V3] Error code:', errorCode);
+                    }
+                    if (errResponse.data && errResponse.data.debug) {
+                        debugTrail = errResponse.data.debug;
+                        console.error('[V3] Debug trail:', debugTrail.join(' -> '));
+                    }
+                    if (errResponse.data && errResponse.data.last_step) {
+                        console.error('[V3] Last successful step:', errResponse.data.last_step);
+                    }
+                } catch (e) {
+                    console.error('[V3] Could not parse error response as JSON');
+                }
+
+                showAlert('error', errorMsg);
+                $j('#finalize-progress').hide();
+                $j('#btn-finalize').prop('disabled', false);
             }
         });
     }
@@ -1094,19 +1332,19 @@
     function previewImport() {
         console.log('[V3] Previewing import for job:', state.jobId);
 
-        $('#btn-dry-run').prop('disabled', true);
-        $('#dry-run-progress').show();
+        $j('#btn-dry-run').prop('disabled', true);
+        $j('#dry-run-progress').show();
 
         // V3 ENDPOINT - preview_update
-        $.ajax({
-            url: '/ajax/importv3/preview_update.cfm',  // V3 ENDPOINT
+        $j.ajax({
+            url: '/ajax/importv3/preview_update.cfm?bypass=1',  // V3 ENDPOINT
             type: 'POST',
             contentType: 'application/json',
             data: JSON.stringify({ job_id: state.jobId }),
             success: function(response) {
                 console.log('[V3] Preview response:', response);
-                $('#dry-run-progress').hide();
-                $('#btn-dry-run').prop('disabled', false);
+                $j('#dry-run-progress').hide();
+                $j('#btn-dry-run').prop('disabled', false);
 
                 if (response.success) {
                     showPreviewResults(response.data);
@@ -1117,8 +1355,8 @@
             error: function(xhr) {
                 console.error('[V3] Preview error:', xhr.responseText);
                 showAlert('error', 'Preview failed. Please try again.');
-                $('#dry-run-progress').hide();
-                $('#btn-dry-run').prop('disabled', false);
+                $j('#dry-run-progress').hide();
+                $j('#btn-dry-run').prop('disabled', false);
             }
         });
     }
@@ -1198,16 +1436,16 @@
         modalHtml += '</div></div></div></div>';
 
         // Remove existing modal if any
-        $('#dryRunModal').remove();
-        $('body').append(modalHtml);
+        $j('#dryRunModal').remove();
+        $j('body').append(modalHtml);
 
         // Wire up proceed button
-        $('#btn-proceed-import').click(function() {
-            $('#dryRunModal').modal('hide');
+        $j('#btn-proceed-import').click(function() {
+            $j('#dryRunModal').modal('hide');
             finalizeImport();
         });
 
-        $('#dryRunModal').modal('show');
+        $j('#dryRunModal').modal('show');
     }
 
     // ========================================
@@ -1238,6 +1476,9 @@
         } else if (type === 'warning') {
             alertClass = 'alert-warning';
             icon = 'fe-alert-triangle';
+        } else if (type === 'info') {
+            alertClass = 'alert-info';
+            icon = 'fe-info';
         }
 
         var html = '<div class="alert ' + alertClass + ' alert-dismissible fade show" role="alert">' +
@@ -1245,7 +1486,7 @@
             '<button type="button" class="close" data-dismiss="alert">&times;</button></div>';
 
         // Insert at top of page
-        var container = $('.page-title-box').parent();
+        var container = $j('.page-title-box').parent();
         container.prepend(html);
 
         // Auto-dismiss after 5 seconds

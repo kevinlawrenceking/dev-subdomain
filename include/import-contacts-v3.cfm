@@ -33,6 +33,11 @@
     <cfset importHistory = importService.getJobHistory(session.userid, 20)>
 </cfif>
 
+<!--- Ensure CSRF token exists for V3 API calls --->
+<cfif not structKeyExists(session, "csrf_token") or not len(session.csrf_token)>
+    <cfset session.csrf_token = createUUID()>
+</cfif>
+
 <style>
 /* V3 Indicator Badge */
 .v3-badge {
@@ -312,6 +317,7 @@ input[type="date"].form-control-sm {
     <cfoutput>
     <input type="hidden" id="job-id" value="#activeJob.job_id#">
     <input type="hidden" id="job-status" value="#activeJob.status#">
+    <input type="hidden" id="csrf-token" value="#encodeForHTMLAttribute(session.csrf_token)#">
 
     <!--- Job info bar --->
     <div class="alert d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, ##667eea22 0%, ##764ba222 100%); border: 1px solid ##667eea;">

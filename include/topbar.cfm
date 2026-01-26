@@ -7,10 +7,10 @@
 
 <div class="navbar-custom">
     <div class="container-fluid">
-        <!-- Right Side Menu Items -->
+        <!--- Right Side Menu Items --->
         <ul class="list-unstyled topnav-menu float-end mb-0">
             
-            <!-- Desktop Search -->
+            <!--- Desktop Search --->
             <li class="d-none d-lg-block">
                 <form class="app-search" id="submitform" action="/include/process.cfm" method="POST">
                     <div class="app-search-box dropdown">
@@ -39,7 +39,7 @@
             </li>
 
 
-            <!-- Mobile Search -->
+            <!--- Mobile Search --->
             <li class="dropdown d-inline-block d-lg-none">
                 <a class="nav-link dropdown-toggle arrow-none waves-effect waves-light" 
                    data-bs-toggle="dropdown" 
@@ -66,7 +66,7 @@
                 </div>
             </li>
 
-            <!-- Help & Support Menu -->
+            <!--- Help & Support Menu --->
             <li class="dropdown d-none d-lg-inline-block topbar-dropdown">
                 <a class="nav-link dropdown-toggle arrow-none waves-effect waves-light" 
                    data-bs-toggle="dropdown" 
@@ -133,7 +133,7 @@
                 </div>
             </li>
 
-            <!-- User Profile Menu -->
+            <!--- User Profile Menu --->
             <li class="dropdown notification-list topbar-dropdown">
                 <a class="nav-link dropdown-toggle nav-user me-0 waves-effect waves-light" 
                    data-bs-toggle="dropdown" 
@@ -161,7 +161,7 @@
             </li>
         </ul>
 
-        <!-- Logo Section -->
+        <!--- Logo Section --->
         <cfoutput>
             <div class="logo-box">
                 <a href="/app/" class="logo logo-dark text-center" aria-label="Home">
@@ -184,7 +184,7 @@
             </div>
         </cfoutput>
 
-        <!-- Left Side Menu Controls -->
+        <!--- Left Side Menu Controls --->
         <ul class="list-unstyled topnav-menu topnav-menu-left m-0">
             <li>
                 <button class="button-menu-mobile waves-effect waves-light" 

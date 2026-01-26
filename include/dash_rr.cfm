@@ -410,7 +410,7 @@ $(document).ready(function () {
 });
 </script>
 
-<!-- Confirmation Modal (reuse from reminder_pane.cfm) -->
+<!--- Confirmation Modal (reuse from reminder_pane.cfm) --->
 <div class="modal fade" id="confirmReminderModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">

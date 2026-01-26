@@ -6,7 +6,7 @@
 --->
 
 <div class="user-info-card fade-in" >
-    <!-- User Name Header -->
+    <!--- User Name Header --->
     <div class="user-name-header">
         <cfoutput>#userFirstName# #userlastName#</cfoutput>
         <button type="button" class="edit-account-btn" title="Update Account" data-bs-toggle="modal" data-bs-target="#remoteUserUpdate">
@@ -15,7 +15,7 @@
     </div>
 
     <div class="row">
-        <!-- Avatar Section: Enhanced with modern styling -->
+        <!--- Avatar Section: Enhanced with modern styling --->
         <div class="col-md-3">
             <div class="avatar-section">
                 <cfoutput>
@@ -34,7 +34,7 @@
                     <div class="avatar-name">#avatarname#</div>
                 </cfoutput>
                 
-                <!-- Password Change Section -->
+                <!--- Password Change Section --->
                 <div class="password-section">
                     <form action="/recover/index.cfm" method="post">
                         <cfoutput>
@@ -48,7 +48,7 @@
             </div>
         </div>
 
-        <!-- User Details Section: Enhanced with modern layout -->
+        <!--- User Details Section: Enhanced with modern layout --->
         <div class="col-md-9">
             <div class="user-details">
                 <cfoutput>

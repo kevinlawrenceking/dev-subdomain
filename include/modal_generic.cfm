@@ -15,7 +15,7 @@
                 </button>
             </div>
             <div class="modal-body">
-                <!-- Content will be loaded here via JavaScript -->
+                <!--- Content will be loaded here via JavaScript --->
                 <div class="text-center p-4">
                     <div class="spinner-border" role="status">
                         <span class="visually-hidden">Loading...</span>

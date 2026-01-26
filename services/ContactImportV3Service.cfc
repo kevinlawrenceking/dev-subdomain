@@ -1086,5 +1086,1685 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
         }
     }
 
+    // ============================================================
+    // PHASE 5: FINALIZE JOB - IDEMPOTENT, TRANSACTIONAL, AUDITED
+    // ============================================================
+
+    /**
+     * Finalize import job: Create contacts from approved rows.
+     *
+     * IDEMPOTENCY: Running twice produces same result - already imported rows are skipped.
+     * TRANSACTIONS: Each row is processed in its own transaction for isolation.
+     * AUDIT: Every action is logged to import_v3_events and import_v3_row_results.
+     *
+     * Phase 5 Constraints:
+     * - Create-only mode (no updates to existing contacts)
+     * - No relationship system enrollment (future phase)
+     *
+     * @param job_id The import job ID
+     * @param userid The user ID (must own the job)
+     * @return struct with counts, errors, and timing metrics
+     */
+    public struct function finalizeJob(required numeric job_id, required numeric userid) {
+        var startTime = getTickCount();
+        var lockToken = createUUID();
+
+        // Initialize metrics and counts
+        var metrics = {
+            "total_rows_processed": 0,
+            "elapsed_ms_total": 0,
+            "elapsed_ms_per_row_avg": 0
+        };
+
+        var counts = {
+            "attempted": 0,
+            "imported_new": 0,
+            "updated_existing": 0,
+            "skipped_already_imported": 0,
+            "skipped_ignored": 0,
+            "skipped_not_ready": 0,
+            "failed": 0
+        };
+
+        var failures = []; // Array of {row_id, code, message}
+        var warnings = [];
+
+        try {
+            // A) Acquire job lock (transitions status to 'finalizing')
+            var lockResult = acquireJobLock(
+                job_id = arguments.job_id,
+                userid = arguments.userid,
+                lock_token = lockToken,
+                lock_purpose = "finalize"
+            );
+
+            if (!lockResult.acquired) {
+                // Check if already finalizing or completed
+                var jobCheck = getJobForUser(arguments.job_id, arguments.userid);
+                if (jobCheck.success && jobCheck.data.job.status eq "finalizing") {
+                    return fail(
+                        code = "ALREADY_RUNNING",
+                        message = "Finalize is already in progress for this job.",
+                        data = { job_id: arguments.job_id }
+                    );
+                }
+                if (jobCheck.success && jobCheck.data.job.status eq "completed") {
+                    return fail(
+                        code = "ALREADY_COMPLETED",
+                        message = "This job has already been finalized.",
+                        data = { job_id: arguments.job_id }
+                    );
+                }
+                return fail(
+                    code = "LOCK_FAILED",
+                    message = lockResult.message,
+                    data = { job_id: arguments.job_id }
+                );
+            }
+
+            // Log finalize start
+            logEvent(
+                job_id = arguments.job_id,
+                userid = arguments.userid,
+                event_type = "finalize_started",
+                detail = { lock_token: lockToken }
+            );
+
+            // B) Fetch rows eligible for import
+            // Status = 'ready' OR (status = 'dupe' AND user_action = 'import_new')
+            var qRows = queryExecute(
+                "SELECT r.row_id, r.row_num, r.status, r.user_action, r.created_contactid
+                 FROM import_v3_rows r
+                 WHERE r.job_id = :job_id
+                   AND (
+                       r.status = 'ready'
+                       OR (r.status = 'dupe' AND r.user_action = 'import_new')
+                   )
+                 ORDER BY r.row_num ASC",
+                { job_id: { value: arguments.job_id, cfsqltype: "cf_sql_integer" } },
+                { datasource: application.datasource }
+            );
+
+            counts.attempted = qRows.recordCount;
+
+            if (qRows.recordCount eq 0) {
+                // No rows to import - mark complete anyway
+                setJobStatus(
+                    job_id = arguments.job_id,
+                    userid = arguments.userid,
+                    new_status = "completed"
+                );
+
+                updateJobCounts(arguments.job_id, counts);
+
+                metrics.elapsed_ms_total = getTickCount() - startTime;
+
+                logEvent(
+                    job_id = arguments.job_id,
+                    userid = arguments.userid,
+                    event_type = "finalize_completed",
+                    detail = { counts: counts, metrics: metrics, reason: "no_rows_to_import" }
+                );
+
+                return ok(
+                    data = { counts: counts, metrics: metrics, warnings: ["No rows eligible for import."] },
+                    message = "Finalize completed. No rows were eligible for import."
+                );
+            }
+
+            // C) Process each row
+            for (var row in qRows) {
+                var rowStartTime = getTickCount();
+                var rowResult = processRowForImport(
+                    row_id = row.row_id,
+                    job_id = arguments.job_id,
+                    userid = arguments.userid,
+                    row_status = row.status,
+                    user_action = row.user_action,
+                    existing_contactid = row.created_contactid
+                );
+
+                metrics.total_rows_processed++;
+
+                if (rowResult.success) {
+                    switch (rowResult.action) {
+                        case "created":
+                            counts.imported_new++;
+                            break;
+                        case "updated":
+                            counts.updated_existing++;
+                            break;
+                        case "skipped_already_imported":
+                            counts.skipped_already_imported++;
+                            break;
+                        case "skipped_ignored":
+                            counts.skipped_ignored++;
+                            break;
+                        case "skipped_not_ready":
+                            counts.skipped_not_ready++;
+                            break;
+                    }
+                } else {
+                    counts.failed++;
+                    arrayAppend(failures, {
+                        "row_id": row.row_id,
+                        "row_num": row.row_num,
+                        "code": rowResult.code,
+                        "message": rowResult.message
+                    });
+                }
+            }
+
+            // D) Update job status to completed
+            setJobStatus(
+                job_id = arguments.job_id,
+                userid = arguments.userid,
+                new_status = "completed"
+            );
+
+            // Update job counts
+            updateJobCounts(arguments.job_id, counts);
+
+            // Calculate final metrics
+            metrics.elapsed_ms_total = getTickCount() - startTime;
+            if (metrics.total_rows_processed gt 0) {
+                metrics.elapsed_ms_per_row_avg = round(metrics.elapsed_ms_total / metrics.total_rows_processed);
+            }
+
+            // Log completion
+            logEvent(
+                job_id = arguments.job_id,
+                userid = arguments.userid,
+                event_type = "finalize_completed",
+                detail = { counts: counts, metrics: metrics, failure_count: arrayLen(failures) }
+            );
+
+            var message = "Finalize completed. " & counts.imported_new & " contacts created.";
+            if (counts.skipped_already_imported gt 0) {
+                message &= " " & counts.skipped_already_imported & " already imported.";
+            }
+            if (counts.failed gt 0) {
+                message &= " " & counts.failed & " failed.";
+            }
+
+            return ok(
+                data = {
+                    counts: counts,
+                    metrics: metrics,
+                    failures: failures,
+                    warnings: warnings
+                },
+                message = message
+            );
+
+        } catch (any e) {
+            // Log error
+            logEvent(
+                job_id = arguments.job_id,
+                userid = arguments.userid,
+                event_type = "finalize_error",
+                detail = { error: e.message, detail: e.detail }
+            );
+
+            // Attempt to release lock (revert status to reviewing)
+            try {
+                releaseJobLock(
+                    job_id = arguments.job_id,
+                    userid = arguments.userid,
+                    lock_token = lockToken
+                );
+            } catch (any lockErr) {
+                // Ignore lock release errors
+            }
+
+            return fail(
+                code = "INTERNAL_ERROR",
+                message = "Finalize failed: " & e.message,
+                data = { job_id: arguments.job_id }
+            );
+        }
+    }
+
+    /**
+     * Process a single row for import.
+     * Each row is processed in its own transaction for isolation.
+     *
+     * @param row_id The row ID
+     * @param job_id The job ID
+     * @param userid The user ID
+     * @param row_status Current row status
+     * @param user_action User's chosen action (for dupe rows)
+     * @param existing_contactid If already imported, the contact ID
+     * @return struct with success, action, contactid
+     */
+    private struct function processRowForImport(
+        required numeric row_id,
+        required numeric job_id,
+        required numeric userid,
+        required string row_status,
+        string user_action = "",
+        any existing_contactid = ""
+    ) {
+        try {
+            // A) Idempotency check: If already imported, skip
+            if (isNumeric(arguments.existing_contactid) && arguments.existing_contactid gt 0) {
+                // Check if row_result already exists
+                var qExistingResult = queryExecute(
+                    "SELECT result_id, action_taken, contactid
+                     FROM import_v3_row_results
+                     WHERE row_id = :row_id",
+                    { row_id: { value: arguments.row_id, cfsqltype: "cf_sql_integer" } },
+                    { datasource: application.datasource }
+                );
+
+                if (qExistingResult.recordCount gt 0) {
+                    return {
+                        "success": true,
+                        "action": "skipped_already_imported",
+                        "contactid": qExistingResult.contactid
+                    };
+                }
+            }
+
+            // B) Load facts for this row
+            var qFacts = queryExecute(
+                "SELECT f.fact_id, f.field_name, f.normalized_value, f.is_valid
+                 FROM import_v3_facts f
+                 WHERE f.row_id = :row_id
+                   AND f.is_valid = 1
+                   AND f.normalized_value IS NOT NULL
+                   AND f.normalized_value != ''",
+                { row_id: { value: arguments.row_id, cfsqltype: "cf_sql_integer" } },
+                { datasource: application.datasource }
+            );
+
+            if (qFacts.recordCount eq 0) {
+                // No valid facts - mark as failed
+                recordRowResult(
+                    row_id = arguments.row_id,
+                    job_id = arguments.job_id,
+                    action_taken = "failed",
+                    error_code = "NO_VALID_FACTS",
+                    error_message = "No valid fields to import"
+                );
+                return {
+                    "success": false,
+                    "code": "NO_VALID_FACTS",
+                    "message": "Row has no valid fields to import"
+                };
+            }
+
+            // C) Build contact data from facts
+            var contactData = buildContactDataFromFacts(qFacts);
+
+            // Validate minimum requirements (need at least a name)
+            if (!len(trim(contactData.contactFullName))) {
+                recordRowResult(
+                    row_id = arguments.row_id,
+                    job_id = arguments.job_id,
+                    action_taken = "failed",
+                    error_code = "MISSING_NAME",
+                    error_message = "Contact name is required"
+                );
+                return {
+                    "success": false,
+                    "code": "MISSING_NAME",
+                    "message": "Contact name is required"
+                };
+            }
+
+            // D) Create contact in transaction
+            var newContactId = 0;
+            var itemsCreated = 0;
+
+            transaction {
+                // D1) Insert into contactdetails
+                var qInsertResult = {};
+                queryExecute(
+                    "INSERT INTO contactdetails (
+                        userid,
+                        contactFullName,
+                        recordname,
+                        user_yn,
+                        created_at
+                    ) VALUES (
+                        :userid,
+                        :contactFullName,
+                        :recordname,
+                        'Y',
+                        NOW()
+                    )",
+                    {
+                        userid: { value: arguments.userid, cfsqltype: "cf_sql_integer" },
+                        contactFullName: { value: contactData.contactFullName, cfsqltype: "cf_sql_varchar" },
+                        recordname: { value: contactData.contactFullName, cfsqltype: "cf_sql_varchar" }
+                    },
+                    { datasource: application.datasource, result: "qInsertResult" }
+                );
+
+                newContactId = qInsertResult.generatedKey;
+
+                // D2) Insert contact items (emails, phones, company, address)
+                itemsCreated = insertContactItems(newContactId, contactData);
+
+                // D3) Update import_v3_rows
+                queryExecute(
+                    "UPDATE import_v3_rows
+                     SET status = 'imported',
+                         created_contactid = :contactid,
+                         imported_at = NOW(),
+                         updated_at = NOW()
+                     WHERE row_id = :row_id",
+                    {
+                        row_id: { value: arguments.row_id, cfsqltype: "cf_sql_integer" },
+                        contactid: { value: newContactId, cfsqltype: "cf_sql_integer" }
+                    },
+                    { datasource: application.datasource }
+                );
+
+                // D4) Record result in import_v3_row_results
+                queryExecute(
+                    "INSERT INTO import_v3_row_results (
+                        row_id, job_id, action_taken, contactid,
+                        fields_written, items_created, created_at
+                    ) VALUES (
+                        :row_id, :job_id, 'created', :contactid,
+                        :fields_written, :items_created, NOW()
+                    )
+                    ON DUPLICATE KEY UPDATE
+                        action_taken = 'created',
+                        contactid = :contactid,
+                        fields_written = :fields_written,
+                        items_created = :items_created",
+                    {
+                        row_id: { value: arguments.row_id, cfsqltype: "cf_sql_integer" },
+                        job_id: { value: arguments.job_id, cfsqltype: "cf_sql_integer" },
+                        contactid: { value: newContactId, cfsqltype: "cf_sql_integer" },
+                        fields_written: { value: qFacts.recordCount, cfsqltype: "cf_sql_integer" },
+                        items_created: { value: itemsCreated, cfsqltype: "cf_sql_integer" }
+                    },
+                    { datasource: application.datasource }
+                );
+            }
+
+            // E) Log success event (no PII)
+            logEvent(
+                job_id = arguments.job_id,
+                userid = arguments.userid,
+                event_type = "row_imported",
+                row_id = arguments.row_id,
+                detail = { contactid: newContactId, items_created: itemsCreated }
+            );
+
+            return {
+                "success": true,
+                "action": "created",
+                "contactid": newContactId
+            };
+
+        } catch (any e) {
+            // Log error and record failure
+            logEvent(
+                job_id = arguments.job_id,
+                userid = arguments.userid,
+                event_type = "row_import_error",
+                row_id = arguments.row_id,
+                detail = { error: e.message }
+            );
+
+            // Record failure result
+            recordRowResult(
+                row_id = arguments.row_id,
+                job_id = arguments.job_id,
+                action_taken = "failed",
+                error_code = "IMPORT_EXCEPTION",
+                error_message = left(e.message, 500)
+            );
+
+            // Update row status to failed
+            try {
+                queryExecute(
+                    "UPDATE import_v3_rows
+                     SET status = 'failed',
+                         import_error = :error,
+                         updated_at = NOW()
+                     WHERE row_id = :row_id",
+                    {
+                        row_id: { value: arguments.row_id, cfsqltype: "cf_sql_integer" },
+                        error: { value: left(e.message, 500), cfsqltype: "cf_sql_varchar" }
+                    },
+                    { datasource: application.datasource }
+                );
+            } catch (any updateErr) {
+                // Ignore update errors
+            }
+
+            return {
+                "success": false,
+                "code": "IMPORT_EXCEPTION",
+                "message": e.message
+            };
+        }
+    }
+
+    /**
+     * Build contact data struct from facts query.
+     * Maps EAV facts to contact fields.
+     */
+    private struct function buildContactDataFromFacts(required query qFacts) {
+        var data = {
+            "contactFullName": "",
+            "firstName": "",
+            "lastName": "",
+            "emails": [],
+            "phones": [],
+            "company": "",
+            "title": "",
+            "address": {
+                "street1": "",
+                "street2": "",
+                "city": "",
+                "state": "",
+                "zip": "",
+                "country": ""
+            },
+            "website": "",
+            "linkedin": "",
+            "twitter": "",
+            "instagram": "",
+            "notes": "",
+            "tags": []
+        };
+
+        for (var fact in arguments.qFacts) {
+            var fieldName = fact.field_name;
+            var value = trim(fact.normalized_value);
+
+            if (!len(value)) continue;
+
+            switch (fieldName) {
+                case "firstName":
+                    data.firstName = value;
+                    break;
+                case "lastName":
+                    data.lastName = value;
+                    break;
+                case "contactFullName":
+                    data.contactFullName = value;
+                    break;
+                case "email_business":
+                    arrayAppend(data.emails, { value: value, type: "Business" });
+                    break;
+                case "email_personal":
+                    arrayAppend(data.emails, { value: value, type: "Personal" });
+                    break;
+                case "phone_work":
+                    arrayAppend(data.phones, { value: value, type: "Work" });
+                    break;
+                case "phone_mobile":
+                    arrayAppend(data.phones, { value: value, type: "Mobile" });
+                    break;
+                case "phone_home":
+                    arrayAppend(data.phones, { value: value, type: "Home" });
+                    break;
+                case "company":
+                    data.company = value;
+                    break;
+                case "title":
+                    data.title = value;
+                    break;
+                case "address1":
+                    data.address.street1 = value;
+                    break;
+                case "address2":
+                    data.address.street2 = value;
+                    break;
+                case "city":
+                    data.address.city = value;
+                    break;
+                case "state":
+                    data.address.state = value;
+                    break;
+                case "zip":
+                    data.address.zip = value;
+                    break;
+                case "country":
+                    data.address.country = value;
+                    break;
+                case "website":
+                    data.website = value;
+                    break;
+                case "linkedin":
+                    data.linkedin = value;
+                    break;
+                case "twitter":
+                    data.twitter = value;
+                    break;
+                case "instagram":
+                    data.instagram = value;
+                    break;
+                case "notes":
+                    data.notes = value;
+                    break;
+                case "tags":
+                    // Tags might be comma-separated
+                    var tagList = listToArray(value, ",");
+                    for (var tag in tagList) {
+                        if (len(trim(tag))) {
+                            arrayAppend(data.tags, trim(tag));
+                        }
+                    }
+                    break;
+            }
+        }
+
+        // Build contactFullName if not provided directly
+        if (!len(data.contactFullName)) {
+            if (len(data.firstName) || len(data.lastName)) {
+                data.contactFullName = trim(data.firstName & " " & data.lastName);
+            }
+        }
+
+        return data;
+    }
+
+    /**
+     * Insert contact items (emails, phones, company, address, etc.)
+     * Returns count of items created.
+     *
+     * Includes deduplication: checks for existing items before insert.
+     */
+    private numeric function insertContactItems(required numeric contactid, required struct contactData) {
+        var itemsCreated = 0;
+
+        // Insert emails
+        for (var email in arguments.contactData.emails) {
+            if (len(trim(email.value)) && !contactItemExists(arguments.contactid, "Email", email.value)) {
+                queryExecute(
+                    "INSERT INTO contactitems (contactid, valueCategory, valueType, valuetext, itemStatus)
+                     VALUES (:contactid, 'Email', :valueType, :valuetext, 'Active')",
+                    {
+                        contactid: { value: arguments.contactid, cfsqltype: "cf_sql_integer" },
+                        valueType: { value: email.type, cfsqltype: "cf_sql_varchar" },
+                        valuetext: { value: trim(email.value), cfsqltype: "cf_sql_varchar" }
+                    },
+                    { datasource: application.datasource }
+                );
+                itemsCreated++;
+            }
+        }
+
+        // Insert phones
+        for (var phone in arguments.contactData.phones) {
+            if (len(trim(phone.value)) && !contactItemExists(arguments.contactid, "Phone", phone.value)) {
+                queryExecute(
+                    "INSERT INTO contactitems (contactid, valueCategory, valueType, valuetext, itemStatus)
+                     VALUES (:contactid, 'Phone', :valueType, :valuetext, 'Active')",
+                    {
+                        contactid: { value: arguments.contactid, cfsqltype: "cf_sql_integer" },
+                        valueType: { value: phone.type, cfsqltype: "cf_sql_varchar" },
+                        valuetext: { value: trim(phone.value), cfsqltype: "cf_sql_varchar" }
+                    },
+                    { datasource: application.datasource }
+                );
+                itemsCreated++;
+            }
+        }
+
+        // Insert company
+        if (len(trim(arguments.contactData.company))) {
+            queryExecute(
+                "INSERT INTO contactitems (contactid, valueCategory, valueType, valueCompany, valueTitle, itemStatus)
+                 VALUES (:contactid, 'Company', 'Company', :company, :title, 'Active')",
+                {
+                    contactid: { value: arguments.contactid, cfsqltype: "cf_sql_integer" },
+                    company: { value: trim(arguments.contactData.company), cfsqltype: "cf_sql_varchar" },
+                    title: { value: trim(arguments.contactData.title), cfsqltype: "cf_sql_varchar", null: !len(trim(arguments.contactData.title)) }
+                },
+                { datasource: application.datasource }
+            );
+            itemsCreated++;
+        }
+
+        // Insert address (if any address field is populated)
+        var addr = arguments.contactData.address;
+        if (len(trim(addr.street1)) || len(trim(addr.city)) || len(trim(addr.state)) || len(trim(addr.zip))) {
+            queryExecute(
+                "INSERT INTO contactitems (
+                    contactid, valueCategory, valueType,
+                    valueStreetAddress, valueExtendedAddress,
+                    valueCity, valueRegion, valuePostalCode, valueCountry,
+                    itemStatus
+                ) VALUES (
+                    :contactid, 'Address', 'Work',
+                    :street1, :street2,
+                    :city, :state, :zip, :country,
+                    'Active'
+                )",
+                {
+                    contactid: { value: arguments.contactid, cfsqltype: "cf_sql_integer" },
+                    street1: { value: trim(addr.street1), cfsqltype: "cf_sql_varchar", null: !len(trim(addr.street1)) },
+                    street2: { value: trim(addr.street2), cfsqltype: "cf_sql_varchar", null: !len(trim(addr.street2)) },
+                    city: { value: trim(addr.city), cfsqltype: "cf_sql_varchar", null: !len(trim(addr.city)) },
+                    state: { value: trim(addr.state), cfsqltype: "cf_sql_varchar", null: !len(trim(addr.state)) },
+                    zip: { value: trim(addr.zip), cfsqltype: "cf_sql_varchar", null: !len(trim(addr.zip)) },
+                    country: { value: trim(addr.country), cfsqltype: "cf_sql_varchar", null: !len(trim(addr.country)) }
+                },
+                { datasource: application.datasource }
+            );
+            itemsCreated++;
+        }
+
+        // Insert website
+        if (len(trim(arguments.contactData.website))) {
+            queryExecute(
+                "INSERT INTO contactitems (contactid, valueCategory, valueType, valuetext, itemStatus)
+                 VALUES (:contactid, 'Website', 'Website', :value, 'Active')",
+                {
+                    contactid: { value: arguments.contactid, cfsqltype: "cf_sql_integer" },
+                    value: { value: trim(arguments.contactData.website), cfsqltype: "cf_sql_varchar" }
+                },
+                { datasource: application.datasource }
+            );
+            itemsCreated++;
+        }
+
+        // Insert social media
+        if (len(trim(arguments.contactData.linkedin))) {
+            queryExecute(
+                "INSERT INTO contactitems (contactid, valueCategory, valueType, valuetext, itemStatus)
+                 VALUES (:contactid, 'Social', 'LinkedIn', :value, 'Active')",
+                {
+                    contactid: { value: arguments.contactid, cfsqltype: "cf_sql_integer" },
+                    value: { value: trim(arguments.contactData.linkedin), cfsqltype: "cf_sql_varchar" }
+                },
+                { datasource: application.datasource }
+            );
+            itemsCreated++;
+        }
+
+        if (len(trim(arguments.contactData.twitter))) {
+            queryExecute(
+                "INSERT INTO contactitems (contactid, valueCategory, valueType, valuetext, itemStatus)
+                 VALUES (:contactid, 'Social', 'Twitter', :value, 'Active')",
+                {
+                    contactid: { value: arguments.contactid, cfsqltype: "cf_sql_integer" },
+                    value: { value: trim(arguments.contactData.twitter), cfsqltype: "cf_sql_varchar" }
+                },
+                { datasource: application.datasource }
+            );
+            itemsCreated++;
+        }
+
+        if (len(trim(arguments.contactData.instagram))) {
+            queryExecute(
+                "INSERT INTO contactitems (contactid, valueCategory, valueType, valuetext, itemStatus)
+                 VALUES (:contactid, 'Social', 'Instagram', :value, 'Active')",
+                {
+                    contactid: { value: arguments.contactid, cfsqltype: "cf_sql_integer" },
+                    value: { value: trim(arguments.contactData.instagram), cfsqltype: "cf_sql_varchar" }
+                },
+                { datasource: application.datasource }
+            );
+            itemsCreated++;
+        }
+
+        // Insert tags
+        for (var tag in arguments.contactData.tags) {
+            if (len(trim(tag)) && !contactItemExists(arguments.contactid, "Tag", tag)) {
+                queryExecute(
+                    "INSERT INTO contactitems (contactid, valueCategory, valueType, valuetext, itemStatus)
+                     VALUES (:contactid, 'Tag', 'Tags', :value, 'Active')",
+                    {
+                        contactid: { value: arguments.contactid, cfsqltype: "cf_sql_integer" },
+                        value: { value: trim(tag), cfsqltype: "cf_sql_varchar" }
+                    },
+                    { datasource: application.datasource }
+                );
+                itemsCreated++;
+            }
+        }
+
+        // Insert notes
+        if (len(trim(arguments.contactData.notes))) {
+            queryExecute(
+                "INSERT INTO contactitems (contactid, valueCategory, valueType, valuetext, itemStatus)
+                 VALUES (:contactid, 'Note', 'Note', :value, 'Active')",
+                {
+                    contactid: { value: arguments.contactid, cfsqltype: "cf_sql_integer" },
+                    value: { value: trim(arguments.contactData.notes), cfsqltype: "cf_sql_longvarchar" }
+                },
+                { datasource: application.datasource }
+            );
+            itemsCreated++;
+        }
+
+        return itemsCreated;
+    }
+
+    /**
+     * Check if a contact item already exists (for deduplication).
+     */
+    private boolean function contactItemExists(
+        required numeric contactid,
+        required string valueCategory,
+        required string valuetext
+    ) {
+        var qCheck = queryExecute(
+            "SELECT 1 FROM contactitems
+             WHERE contactid = :contactid
+               AND valueCategory = :valueCategory
+               AND valuetext = :valuetext
+               AND itemStatus = 'Active'
+             LIMIT 1",
+            {
+                contactid: { value: arguments.contactid, cfsqltype: "cf_sql_integer" },
+                valueCategory: { value: arguments.valueCategory, cfsqltype: "cf_sql_varchar" },
+                valuetext: { value: arguments.valuetext, cfsqltype: "cf_sql_varchar" }
+            },
+            { datasource: application.datasource }
+        );
+        return qCheck.recordCount gt 0;
+    }
+
+    /**
+     * Record result in import_v3_row_results table.
+     */
+    private void function recordRowResult(
+        required numeric row_id,
+        required numeric job_id,
+        required string action_taken,
+        string error_code = "",
+        string error_message = "",
+        numeric contactid = 0,
+        numeric fields_written = 0,
+        numeric items_created = 0
+    ) {
+        try {
+            queryExecute(
+                "INSERT INTO import_v3_row_results (
+                    row_id, job_id, action_taken, contactid,
+                    fields_written, items_created, error_code, error_message, created_at
+                ) VALUES (
+                    :row_id, :job_id, :action_taken, :contactid,
+                    :fields_written, :items_created, :error_code, :error_message, NOW()
+                )
+                ON DUPLICATE KEY UPDATE
+                    action_taken = :action_taken,
+                    contactid = :contactid,
+                    error_code = :error_code,
+                    error_message = :error_message",
+                {
+                    row_id: { value: arguments.row_id, cfsqltype: "cf_sql_integer" },
+                    job_id: { value: arguments.job_id, cfsqltype: "cf_sql_integer" },
+                    action_taken: { value: arguments.action_taken, cfsqltype: "cf_sql_varchar" },
+                    contactid: { value: arguments.contactid, cfsqltype: "cf_sql_integer", null: arguments.contactid eq 0 },
+                    fields_written: { value: arguments.fields_written, cfsqltype: "cf_sql_integer" },
+                    items_created: { value: arguments.items_created, cfsqltype: "cf_sql_integer" },
+                    error_code: { value: arguments.error_code, cfsqltype: "cf_sql_varchar", null: !len(arguments.error_code) },
+                    error_message: { value: arguments.error_message, cfsqltype: "cf_sql_varchar", null: !len(arguments.error_message) }
+                },
+                { datasource: application.datasource }
+            );
+        } catch (any e) {
+            // Ignore errors recording results - don't fail the import
+        }
+    }
+
+    /**
+     * Update job counts after finalize.
+     */
+    private void function updateJobCounts(required numeric job_id, required struct counts) {
+        try {
+            queryExecute(
+                "UPDATE import_v3_jobs SET
+                    imported_rows = :imported_new,
+                    updated_rows = :updated_existing,
+                    skipped_rows = :skipped,
+                    updated_at = NOW()
+                 WHERE job_id = :job_id",
+                {
+                    job_id: { value: arguments.job_id, cfsqltype: "cf_sql_integer" },
+                    imported_new: { value: arguments.counts.imported_new, cfsqltype: "cf_sql_integer" },
+                    updated_existing: { value: arguments.counts.updated_existing, cfsqltype: "cf_sql_integer" },
+                    skipped: { value: arguments.counts.skipped_already_imported + arguments.counts.skipped_ignored + arguments.counts.skipped_not_ready, cfsqltype: "cf_sql_integer" }
+                },
+                { datasource: application.datasource }
+            );
+        } catch (any e) {
+            // Ignore errors updating counts
+        }
+    }
+
+    // ============================================================
+    // PHASE 6: ROW LISTING, DETAIL, EDITING, AND ACTIONS
+    // ============================================================
+
+    /**
+     * Get job statistics by status.
+     * Used for stats bar and stats_only mode.
+     */
+    public struct function getJobStats(required numeric job_id) {
+        var stats = {
+            "total": 0,
+            "ready": 0,
+            "problem": 0,
+            "dupe": 0,
+            "ignored": 0,
+            "imported": 0
+        };
+
+        try {
+            var qStats = queryExecute(
+                "SELECT status, COUNT(*) as cnt
+                 FROM import_v3_rows
+                 WHERE job_id = :job_id
+                 GROUP BY status",
+                { job_id: { value: arguments.job_id, cfsqltype: "cf_sql_integer" } },
+                { datasource: application.datasource }
+            );
+
+            var total = 0;
+            for (var row in qStats) {
+                var st = lcase(row.status);
+                total += row.cnt;
+                if (structKeyExists(stats, st)) {
+                    stats[st] = row.cnt;
+                } else if (st eq "updated" or st eq "failed") {
+                    // Count updated/failed as imported for display
+                    stats.imported += row.cnt;
+                }
+            }
+            stats.total = total;
+
+        } catch (any e) {
+            // Return zeros on error
+        }
+
+        return stats;
+    }
+
+    /**
+     * Get paginated rows for a job with optional status filter.
+     * Phase 6: Batch-loads facts to avoid N+1 queries.
+     *
+     * @param job_id The job ID
+     * @param userid The user ID (for ownership check, already validated by caller)
+     * @param statusFilter Filter: ready|problem|dupe|ignored|imported|all
+     * @param page Page number (1-based)
+     * @param pageSize Rows per page (max 200)
+     * @return struct with rows array, pagination info, and stats
+     */
+    public struct function getRows(
+        required numeric job_id,
+        required numeric userid,
+        string statusFilter = "all",
+        numeric page = 1,
+        numeric pageSize = 50
+    ) {
+        try {
+            // Sanitize pagination
+            var safePage = max(1, arguments.page);
+            var safePageSize = min(200, max(1, arguments.pageSize));
+            var offset = (safePage - 1) * safePageSize;
+
+            // Build status filter clause
+            var statusClause = "";
+            var statusList = "";
+            if (arguments.statusFilter neq "all" and len(arguments.statusFilter)) {
+                if (arguments.statusFilter eq "imported") {
+                    // Include imported, updated, failed statuses
+                    statusList = "'imported','updated','failed'";
+                    statusClause = "AND r.status IN (#statusList#)";
+                } else {
+                    statusClause = "AND r.status = :status";
+                }
+            }
+
+            // Get total count for pagination
+            var countSql = "SELECT COUNT(*) as cnt FROM import_v3_rows r WHERE r.job_id = :job_id #statusClause#";
+            var countParams = { job_id: { value: arguments.job_id, cfsqltype: "cf_sql_integer" } };
+            if (len(statusClause) and arguments.statusFilter neq "imported") {
+                countParams.status = { value: arguments.statusFilter, cfsqltype: "cf_sql_varchar" };
+            }
+
+            var qCount = queryExecute(countSql, countParams, { datasource: application.datasource });
+            var totalRows = qCount.cnt;
+            var totalPages = ceiling(totalRows / safePageSize);
+
+            // Fetch rows
+            var rowsSql = "
+                SELECT r.row_id, r.row_num, r.status, r.error_count, r.warning_count,
+                       r.matched_contactid, r.best_match_score, r.user_action,
+                       r.created_contactid, r.updated_contactid, r.import_error,
+                       r.validation_summary, r.dupe_candidates_json
+                FROM import_v3_rows r
+                WHERE r.job_id = :job_id
+                #statusClause#
+                ORDER BY r.row_num ASC
+                LIMIT :limit OFFSET :offset
+            ";
+
+            var rowParams = {
+                job_id: { value: arguments.job_id, cfsqltype: "cf_sql_integer" },
+                limit: { value: safePageSize, cfsqltype: "cf_sql_integer" },
+                offset: { value: offset, cfsqltype: "cf_sql_integer" }
+            };
+            if (len(statusClause) and arguments.statusFilter neq "imported") {
+                rowParams.status = { value: arguments.statusFilter, cfsqltype: "cf_sql_varchar" };
+            }
+
+            var qRows = queryExecute(rowsSql, rowParams, { datasource: application.datasource });
+
+            // Collect row IDs for batch fact loading
+            var rowIds = [];
+            for (var row in qRows) {
+                arrayAppend(rowIds, row.row_id);
+            }
+
+            // Batch load facts for all rows
+            var factsMap = {};
+            if (arrayLen(rowIds) gt 0) {
+                var factsSql = "
+                    SELECT f.row_id, f.field_name, f.normalized_value, f.is_valid,
+                           f.validation_code, f.validation_message
+                    FROM import_v3_facts f
+                    WHERE f.row_id IN (#arrayToList(rowIds)#)
+                    ORDER BY f.row_id, f.field_name
+                ";
+                var qFacts = queryExecute(factsSql, {}, { datasource: application.datasource });
+
+                for (var fact in qFacts) {
+                    if (!structKeyExists(factsMap, fact.row_id)) {
+                        factsMap[fact.row_id] = { data: {}, validation: {}, errors: [] };
+                    }
+                    factsMap[fact.row_id].data[fact.field_name] = isNull(fact.normalized_value) ? "" : fact.normalized_value;
+                    factsMap[fact.row_id].validation[fact.field_name] = fact.is_valid ? true : false;
+                    if (!fact.is_valid and len(fact.validation_message)) {
+                        arrayAppend(factsMap[fact.row_id].errors, {
+                            "field": fact.field_name,
+                            "code": isNull(fact.validation_code) ? "" : fact.validation_code,
+                            "message": fact.validation_message
+                        });
+                    }
+                }
+            }
+
+            // Build rows array
+            var rows = [];
+            for (var row in qRows) {
+                var rowData = {
+                    "row_id": row.row_id,
+                    "row_num": row.row_num,
+                    "status": row.status,
+                    "error_count": row.error_count,
+                    "warning_count": row.warning_count,
+                    "user_action": isNull(row.user_action) ? "" : row.user_action,
+                    "created_contactid": isNull(row.created_contactid) ? 0 : row.created_contactid,
+                    "best_match_score": isNull(row.best_match_score) ? 0 : row.best_match_score,
+                    "data": structKeyExists(factsMap, row.row_id) ? factsMap[row.row_id].data : {},
+                    "validation": structKeyExists(factsMap, row.row_id) ? factsMap[row.row_id].validation : {},
+                    "errors": structKeyExists(factsMap, row.row_id) ? factsMap[row.row_id].errors : []
+                };
+
+                // Parse duplicates from JSON (minimal info for list view)
+                if (!isNull(row.dupe_candidates_json) and len(row.dupe_candidates_json)) {
+                    try {
+                        var dupes = deserializeJSON(row.dupe_candidates_json);
+                        // Only include count and best score for list view
+                        rowData["dupe_count"] = arrayLen(dupes);
+                    } catch (any e) {
+                        rowData["dupe_count"] = 0;
+                    }
+                } else {
+                    rowData["dupe_count"] = 0;
+                }
+
+                arrayAppend(rows, rowData);
+            }
+
+            // Get stats
+            var stats = getJobStats(arguments.job_id);
+
+            return ok(
+                data = {
+                    rows: rows,
+                    total: totalRows,
+                    page: safePage,
+                    page_size: safePageSize,
+                    total_pages: totalPages,
+                    stats: stats
+                }
+            );
+
+        } catch (any e) {
+            return fail(
+                code = "QUERY_ERROR",
+                message = "Failed to load rows: " & e.message
+            );
+        }
+    }
+
+    /**
+     * Get detailed information for a single row.
+     * Includes full facts, validation, and duplicate candidates with contact names.
+     */
+    public struct function getRowDetail(
+        required numeric job_id,
+        required numeric row_id,
+        required numeric userid
+    ) {
+        try {
+            // Fetch row
+            var qRow = queryExecute(
+                "SELECT r.*
+                 FROM import_v3_rows r
+                 WHERE r.row_id = :row_id AND r.job_id = :job_id",
+                {
+                    row_id: { value: arguments.row_id, cfsqltype: "cf_sql_integer" },
+                    job_id: { value: arguments.job_id, cfsqltype: "cf_sql_integer" }
+                },
+                { datasource: application.datasource }
+            );
+
+            if (qRow.recordCount eq 0) {
+                return fail(code = "NOT_FOUND", message = "Row not found");
+            }
+
+            var row = qRow;
+
+            // Fetch facts
+            var qFacts = queryExecute(
+                "SELECT f.fact_id, f.column_id, f.field_name, f.raw_value, f.normalized_value,
+                        f.is_valid, f.validation_code, f.validation_message,
+                        f.existing_value, f.has_conflict, f.user_choice
+                 FROM import_v3_facts f
+                 WHERE f.row_id = :row_id
+                 ORDER BY f.field_name",
+                { row_id: { value: arguments.row_id, cfsqltype: "cf_sql_integer" } },
+                { datasource: application.datasource }
+            );
+
+            // Build data and validation structs
+            var data = {};
+            var validation = {};
+            var errors = [];
+            var facts = [];
+
+            for (var fact in qFacts) {
+                data[fact.field_name] = isNull(fact.normalized_value) ? "" : fact.normalized_value;
+                validation[fact.field_name] = fact.is_valid ? true : false;
+
+                if (!fact.is_valid and len(fact.validation_message)) {
+                    arrayAppend(errors, {
+                        "field": fact.field_name,
+                        "code": isNull(fact.validation_code) ? "" : fact.validation_code,
+                        "message": fact.validation_message
+                    });
+                }
+
+                arrayAppend(facts, {
+                    "fact_id": fact.fact_id,
+                    "column_id": fact.column_id,
+                    "field_name": fact.field_name,
+                    "raw_value": isNull(fact.raw_value) ? "" : fact.raw_value,
+                    "normalized_value": isNull(fact.normalized_value) ? "" : fact.normalized_value,
+                    "is_valid": fact.is_valid,
+                    "validation_code": isNull(fact.validation_code) ? "" : fact.validation_code,
+                    "validation_message": isNull(fact.validation_message) ? "" : fact.validation_message,
+                    "existing_value": isNull(fact.existing_value) ? "" : fact.existing_value,
+                    "has_conflict": fact.has_conflict
+                });
+            }
+
+            // Parse duplicates with contact info (minimal - no PII beyond name which is already in DB)
+            var duplicates = [];
+            var warnings = [];
+
+            if (!isNull(row.dupe_candidates_json) and len(row.dupe_candidates_json)) {
+                try {
+                    var rawDupes = deserializeJSON(row.dupe_candidates_json);
+                    // Fetch contact names for dupe candidates
+                    for (var dupe in rawDupes) {
+                        var dupeInfo = {
+                            "contactid": dupe.contactid,
+                            "score": structKeyExists(dupe, "score") ? dupe.score : 0,
+                            "reasons": structKeyExists(dupe, "reasons") ? dupe.reasons : [],
+                            "contactFullName": ""
+                        };
+
+                        // Lookup contact name (allowed since it's already in DB)
+                        try {
+                            var qContact = queryExecute(
+                                "SELECT contactFullName FROM contactdetails WHERE contactid = :cid AND userid = :uid",
+                                {
+                                    cid: { value: dupe.contactid, cfsqltype: "cf_sql_integer" },
+                                    uid: { value: arguments.userid, cfsqltype: "cf_sql_integer" }
+                                },
+                                { datasource: application.datasource }
+                            );
+                            if (qContact.recordCount gt 0) {
+                                dupeInfo.contactFullName = qContact.contactFullName;
+                            }
+                        } catch (any e) {
+                            // Ignore lookup errors
+                        }
+
+                        arrayAppend(duplicates, dupeInfo);
+                    }
+                } catch (any e) {
+                    arrayAppend(warnings, "Failed to parse duplicate candidates");
+                }
+            }
+
+            // Build response
+            var rowDetail = {
+                "row_id": row.row_id,
+                "row_num": row.row_num,
+                "job_id": row.job_id,
+                "status": row.status,
+                "error_count": row.error_count,
+                "warning_count": row.warning_count,
+                "user_action": isNull(row.user_action) ? "" : row.user_action,
+                "matched_contactid": isNull(row.matched_contactid) ? 0 : row.matched_contactid,
+                "best_match_score": isNull(row.best_match_score) ? 0 : row.best_match_score,
+                "created_contactid": isNull(row.created_contactid) ? 0 : row.created_contactid,
+                "updated_contactid": isNull(row.updated_contactid) ? 0 : row.updated_contactid,
+                "import_error": isNull(row.import_error) ? "" : row.import_error,
+                "data": data,
+                "validation": validation,
+                "errors": errors,
+                "facts": facts,
+                "duplicates": duplicates,
+                "warnings": warnings
+            };
+
+            return ok(data = { row: rowDetail });
+
+        } catch (any e) {
+            return fail(
+                code = "QUERY_ERROR",
+                message = "Failed to load row detail: " & e.message
+            );
+        }
+    }
+
+    /**
+     * Update facts for a row and recompute status.
+     * Phase 6: Supports batch field updates with revalidation.
+     *
+     * @param job_id The job ID
+     * @param row_id The row ID
+     * @param fields Struct of field_name -> new_value
+     * @param userid The user ID
+     * @return struct with updated row detail
+     */
+    public struct function updateRowFacts(
+        required numeric job_id,
+        required numeric row_id,
+        required struct fields,
+        required numeric userid
+    ) {
+        try {
+            // Verify row exists and belongs to job
+            var qRow = queryExecute(
+                "SELECT r.row_id, r.status, r.dupe_candidates_json
+                 FROM import_v3_rows r
+                 INNER JOIN import_v3_jobs j ON r.job_id = j.job_id
+                 WHERE r.row_id = :row_id AND r.job_id = :job_id AND j.userid = :userid",
+                {
+                    row_id: { value: arguments.row_id, cfsqltype: "cf_sql_integer" },
+                    job_id: { value: arguments.job_id, cfsqltype: "cf_sql_integer" },
+                    userid: { value: arguments.userid, cfsqltype: "cf_sql_integer" }
+                },
+                { datasource: application.datasource }
+            );
+
+            if (qRow.recordCount eq 0) {
+                return fail(code = "NOT_FOUND", message = "Row not found or access denied");
+            }
+
+            // Don't allow editing imported/failed rows
+            if (listFindNoCase("imported,updated,failed", qRow.status)) {
+                return fail(code = "INVALID_STATE", message = "Cannot edit rows that have been imported");
+            }
+
+            // Initialize validation service
+            var validationService = new services.ValidationService();
+
+            // Track which fields were updated
+            var updatedFields = [];
+            var validationErrors = [];
+
+            // Update each field
+            for (var fieldName in arguments.fields) {
+                var newValue = arguments.fields[fieldName];
+
+                // Validate the new value
+                var validationResult = validationService.validateField(fieldName, newValue);
+
+                // Upsert the fact
+                queryExecute(
+                    "INSERT INTO import_v3_facts (row_id, column_id, field_name, raw_value, normalized_value, is_valid, validation_code, validation_message, updated_at)
+                     SELECT :row_id, COALESCE(c.column_id, 0), :field_name, :raw_value, :normalized_value, :is_valid, :validation_code, :validation_message, NOW()
+                     FROM (SELECT 1) AS dummy
+                     LEFT JOIN import_v3_columns c ON c.job_id = :job_id AND c.mapped_field = :field_name
+                     ON DUPLICATE KEY UPDATE
+                         normalized_value = :normalized_value,
+                         is_valid = :is_valid,
+                         validation_code = :validation_code,
+                         validation_message = :validation_message,
+                         updated_at = NOW()",
+                    {
+                        row_id: { value: arguments.row_id, cfsqltype: "cf_sql_integer" },
+                        job_id: { value: arguments.job_id, cfsqltype: "cf_sql_integer" },
+                        field_name: { value: fieldName, cfsqltype: "cf_sql_varchar" },
+                        raw_value: { value: newValue, cfsqltype: "cf_sql_varchar", null: !len(newValue) },
+                        normalized_value: { value: validationResult.normalized_value, cfsqltype: "cf_sql_varchar", null: !len(validationResult.normalized_value) },
+                        is_valid: { value: validationResult.is_valid ? 1 : 0, cfsqltype: "cf_sql_integer" },
+                        validation_code: { value: validationResult.is_valid ? "" : validationResult.code, cfsqltype: "cf_sql_varchar", null: validationResult.is_valid },
+                        validation_message: { value: validationResult.is_valid ? "" : validationResult.message, cfsqltype: "cf_sql_varchar", null: validationResult.is_valid }
+                    },
+                    { datasource: application.datasource }
+                );
+
+                arrayAppend(updatedFields, fieldName);
+
+                if (!validationResult.is_valid) {
+                    arrayAppend(validationErrors, {
+                        "field": fieldName,
+                        "code": validationResult.code,
+                        "message": validationResult.message
+                    });
+                }
+            }
+
+            // Handle contactFullName dependency on firstName/lastName
+            if (structKeyExists(arguments.fields, "firstName") or structKeyExists(arguments.fields, "lastName")) {
+                recomputeFullName(arguments.row_id);
+            }
+
+            // Recompute row status
+            var newStatus = recomputeRowStatus(arguments.row_id, qRow.dupe_candidates_json);
+
+            // Update row
+            queryExecute(
+                "UPDATE import_v3_rows
+                 SET status = :status,
+                     error_count = (SELECT COUNT(*) FROM import_v3_facts WHERE row_id = :row_id AND is_valid = 0),
+                     updated_at = NOW()
+                 WHERE row_id = :row_id",
+                {
+                    row_id: { value: arguments.row_id, cfsqltype: "cf_sql_integer" },
+                    status: { value: newStatus, cfsqltype: "cf_sql_varchar" }
+                },
+                { datasource: application.datasource }
+            );
+
+            // Update job counts
+            updateJobRowCounts(arguments.job_id);
+
+            // Return updated row detail
+            return getRowDetail(arguments.job_id, arguments.row_id, arguments.userid);
+
+        } catch (any e) {
+            return fail(
+                code = "UPDATE_ERROR",
+                message = "Failed to update row: " & e.message
+            );
+        }
+    }
+
+    /**
+     * Recompute contactFullName from firstName and lastName.
+     */
+    private void function recomputeFullName(required numeric row_id) {
+        try {
+            var qNames = queryExecute(
+                "SELECT field_name, normalized_value
+                 FROM import_v3_facts
+                 WHERE row_id = :row_id AND field_name IN ('firstName', 'lastName')",
+                { row_id: { value: arguments.row_id, cfsqltype: "cf_sql_integer" } },
+                { datasource: application.datasource }
+            );
+
+            var firstName = "";
+            var lastName = "";
+            for (var row in qNames) {
+                if (row.field_name eq "firstName") firstName = isNull(row.normalized_value) ? "" : row.normalized_value;
+                if (row.field_name eq "lastName") lastName = isNull(row.normalized_value) ? "" : row.normalized_value;
+            }
+
+            var fullName = trim(firstName & " " & lastName);
+
+            if (len(fullName)) {
+                queryExecute(
+                    "UPDATE import_v3_facts
+                     SET normalized_value = :fullName, updated_at = NOW()
+                     WHERE row_id = :row_id AND field_name = 'contactFullName'",
+                    {
+                        row_id: { value: arguments.row_id, cfsqltype: "cf_sql_integer" },
+                        fullName: { value: fullName, cfsqltype: "cf_sql_varchar" }
+                    },
+                    { datasource: application.datasource }
+                );
+            }
+        } catch (any e) {
+            // Ignore errors
+        }
+    }
+
+    /**
+     * Recompute row status based on validation and duplicates.
+     * Returns: ready|problem|dupe
+     */
+    private string function recomputeRowStatus(required numeric row_id, any dupe_candidates_json = "") {
+        // Check for validation errors
+        var qErrors = queryExecute(
+            "SELECT COUNT(*) as cnt FROM import_v3_facts WHERE row_id = :row_id AND is_valid = 0",
+            { row_id: { value: arguments.row_id, cfsqltype: "cf_sql_integer" } },
+            { datasource: application.datasource }
+        );
+
+        if (qErrors.cnt gt 0) {
+            return "problem";
+        }
+
+        // Check for duplicates
+        if (!isNull(arguments.dupe_candidates_json) and len(arguments.dupe_candidates_json)) {
+            try {
+                var dupes = deserializeJSON(arguments.dupe_candidates_json);
+                if (isArray(dupes) and arrayLen(dupes) gt 0) {
+                    return "dupe";
+                }
+            } catch (any e) {
+                // Ignore parse errors
+            }
+        }
+
+        return "ready";
+    }
+
+    /**
+     * Update job row counts from actual row data.
+     */
+    private void function updateJobRowCounts(required numeric job_id) {
+        try {
+            queryExecute(
+                "UPDATE import_v3_jobs j
+                 SET j.valid_rows = (SELECT COUNT(*) FROM import_v3_rows WHERE job_id = j.job_id AND status = 'ready'),
+                     j.problem_rows = (SELECT COUNT(*) FROM import_v3_rows WHERE job_id = j.job_id AND status = 'problem'),
+                     j.dupe_rows = (SELECT COUNT(*) FROM import_v3_rows WHERE job_id = j.job_id AND status = 'dupe'),
+                     j.skipped_rows = (SELECT COUNT(*) FROM import_v3_rows WHERE job_id = j.job_id AND status = 'ignored'),
+                     j.imported_rows = (SELECT COUNT(*) FROM import_v3_rows WHERE job_id = j.job_id AND status IN ('imported', 'updated')),
+                     j.updated_at = NOW()
+                 WHERE j.job_id = :job_id",
+                { job_id: { value: arguments.job_id, cfsqltype: "cf_sql_integer" } },
+                { datasource: application.datasource }
+            );
+        } catch (any e) {
+            // Ignore errors
+        }
+    }
+
+    /**
+     * Set user action on a single row (ignore/create).
+     * Phase 6: Create-only mode, no update support.
+     *
+     * @param job_id The job ID
+     * @param row_id The row ID
+     * @param action The action: ignore|create (update not supported)
+     * @param userid The user ID
+     * @return struct with updated row and stats
+     */
+    public struct function setRowAction(
+        required numeric job_id,
+        required numeric row_id,
+        required string action,
+        required numeric userid,
+        numeric matchedContactId = 0
+    ) {
+        try {
+            // Normalize action
+            var normalizedAction = lcase(trim(arguments.action));
+
+            // Map UI actions to DB values
+            // UI sends: ignore, create, update
+            // DB stores: skip, import_new, update_existing
+            var dbAction = "";
+            var newStatus = "";
+
+            switch (normalizedAction) {
+                case "ignore":
+                case "skip":
+                    dbAction = "skip";
+                    newStatus = "ignored";
+                    break;
+                case "create":
+                case "import_new":
+                    dbAction = "import_new";
+                    // Keep current status (ready or dupe) - finalize will pick it up
+                    newStatus = "";
+                    break;
+                case "update":
+                case "update_existing":
+                    // Create-only mode enforcement
+                    return fail(
+                        code = "UPDATE_NOT_SUPPORTED",
+                        message = "Update mode is not supported in the current release. Only new contact creation is available."
+                    );
+                default:
+                    return fail(
+                        code = "INVALID_ACTION",
+                        message = "Invalid action: " & normalizedAction & ". Valid actions: ignore, create"
+                    );
+            }
+
+            // Verify row exists and belongs to job/user
+            var qRow = queryExecute(
+                "SELECT r.row_id, r.status
+                 FROM import_v3_rows r
+                 INNER JOIN import_v3_jobs j ON r.job_id = j.job_id
+                 WHERE r.row_id = :row_id AND r.job_id = :job_id AND j.userid = :userid",
+                {
+                    row_id: { value: arguments.row_id, cfsqltype: "cf_sql_integer" },
+                    job_id: { value: arguments.job_id, cfsqltype: "cf_sql_integer" },
+                    userid: { value: arguments.userid, cfsqltype: "cf_sql_integer" }
+                },
+                { datasource: application.datasource }
+            );
+
+            if (qRow.recordCount eq 0) {
+                return fail(code = "NOT_FOUND", message = "Row not found or access denied");
+            }
+
+            // Don't allow changing imported/failed rows
+            if (listFindNoCase("imported,updated,failed", qRow.status)) {
+                return fail(code = "INVALID_STATE", message = "Cannot change action on imported rows");
+            }
+
+            // Update row
+            if (len(newStatus)) {
+                queryExecute(
+                    "UPDATE import_v3_rows
+                     SET user_action = :action,
+                         status = :status,
+                         user_action_at = NOW(),
+                         updated_at = NOW()
+                     WHERE row_id = :row_id",
+                    {
+                        row_id: { value: arguments.row_id, cfsqltype: "cf_sql_integer" },
+                        action: { value: dbAction, cfsqltype: "cf_sql_varchar" },
+                        status: { value: newStatus, cfsqltype: "cf_sql_varchar" }
+                    },
+                    { datasource: application.datasource }
+                );
+            } else {
+                queryExecute(
+                    "UPDATE import_v3_rows
+                     SET user_action = :action,
+                         user_action_at = NOW(),
+                         updated_at = NOW()
+                     WHERE row_id = :row_id",
+                    {
+                        row_id: { value: arguments.row_id, cfsqltype: "cf_sql_integer" },
+                        action: { value: dbAction, cfsqltype: "cf_sql_varchar" }
+                    },
+                    { datasource: application.datasource }
+                );
+            }
+
+            // Update job counts
+            updateJobRowCounts(arguments.job_id);
+
+            // Get updated stats
+            var stats = getJobStats(arguments.job_id);
+
+            return ok(
+                data = {
+                    row_id: arguments.row_id,
+                    action: dbAction,
+                    status: len(newStatus) ? newStatus : qRow.status,
+                    stats: stats
+                },
+                message = "Row action updated"
+            );
+
+        } catch (any e) {
+            return fail(
+                code = "UPDATE_ERROR",
+                message = "Failed to update row action: " & e.message
+            );
+        }
+    }
+
+    /**
+     * Set user action on multiple rows (bulk ignore/create).
+     *
+     * @param job_id The job ID
+     * @param row_ids Array of row IDs
+     * @param action The action: ignore|create
+     * @param userid The user ID
+     * @return struct with count of updated rows and stats
+     */
+    public struct function bulkRowAction(
+        required numeric job_id,
+        required array row_ids,
+        required string action,
+        required numeric userid
+    ) {
+        try {
+            if (arrayLen(arguments.row_ids) eq 0) {
+                return fail(code = "MISSING_PARAMS", message = "No row IDs provided");
+            }
+
+            // Normalize action
+            var normalizedAction = lcase(trim(arguments.action));
+            var dbAction = "";
+            var newStatus = "";
+
+            switch (normalizedAction) {
+                case "ignore":
+                case "skip":
+                    dbAction = "skip";
+                    newStatus = "ignored";
+                    break;
+                case "create":
+                case "import_new":
+                    dbAction = "import_new";
+                    newStatus = "";
+                    break;
+                case "update":
+                case "update_existing":
+                    return fail(
+                        code = "UPDATE_NOT_SUPPORTED",
+                        message = "Update mode is not supported in the current release."
+                    );
+                default:
+                    return fail(
+                        code = "INVALID_ACTION",
+                        message = "Invalid action: " & normalizedAction
+                    );
+            }
+
+            // Build safe ID list
+            var safeIds = [];
+            for (var id in arguments.row_ids) {
+                if (isNumeric(id) and val(id) gt 0) {
+                    arrayAppend(safeIds, val(id));
+                }
+            }
+
+            if (arrayLen(safeIds) eq 0) {
+                return fail(code = "MISSING_PARAMS", message = "No valid row IDs provided");
+            }
+
+            // Update rows (only those not already imported)
+            var updateSql = "";
+            if (len(newStatus)) {
+                updateSql = "
+                    UPDATE import_v3_rows r
+                    INNER JOIN import_v3_jobs j ON r.job_id = j.job_id
+                    SET r.user_action = :action,
+                        r.status = :status,
+                        r.user_action_at = NOW(),
+                        r.updated_at = NOW()
+                    WHERE r.row_id IN (#arrayToList(safeIds)#)
+                      AND r.job_id = :job_id
+                      AND j.userid = :userid
+                      AND r.status NOT IN ('imported', 'updated', 'failed')
+                ";
+            } else {
+                updateSql = "
+                    UPDATE import_v3_rows r
+                    INNER JOIN import_v3_jobs j ON r.job_id = j.job_id
+                    SET r.user_action = :action,
+                        r.user_action_at = NOW(),
+                        r.updated_at = NOW()
+                    WHERE r.row_id IN (#arrayToList(safeIds)#)
+                      AND r.job_id = :job_id
+                      AND j.userid = :userid
+                      AND r.status NOT IN ('imported', 'updated', 'failed')
+                ";
+            }
+
+            var updateParams = {
+                job_id: { value: arguments.job_id, cfsqltype: "cf_sql_integer" },
+                userid: { value: arguments.userid, cfsqltype: "cf_sql_integer" },
+                action: { value: dbAction, cfsqltype: "cf_sql_varchar" }
+            };
+            if (len(newStatus)) {
+                updateParams.status = { value: newStatus, cfsqltype: "cf_sql_varchar" };
+            }
+
+            var result = {};
+            queryExecute(updateSql, updateParams, { datasource: application.datasource, result: "result" });
+
+            var updatedCount = structKeyExists(result, "recordCount") ? result.recordCount : arrayLen(safeIds);
+
+            // Update job counts
+            updateJobRowCounts(arguments.job_id);
+
+            // Get updated stats
+            var stats = getJobStats(arguments.job_id);
+
+            return ok(
+                data = {
+                    updated_count: updatedCount,
+                    requested_count: arrayLen(safeIds),
+                    action: dbAction,
+                    stats: stats
+                },
+                message = updatedCount & " row(s) updated"
+            );
+
+        } catch (any e) {
+            return fail(
+                code = "UPDATE_ERROR",
+                message = "Failed to update rows: " & e.message
+            );
+        }
+    }
+
 }
 

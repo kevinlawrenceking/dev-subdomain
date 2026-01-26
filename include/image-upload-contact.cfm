@@ -38,11 +38,11 @@
     <cfset inputsize = 300/>
 </cfif>
 
-<!-- Modern CSS and JS Dependencies -->
+<!--- Modern CSS and JS Dependencies --->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.css">
 <link rel="stylesheet" href="/app/assets/css/croppie.css">
 
-<!-- Load Croppie JS with fallback -->
+<!--- Load Croppie JS with fallback --->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.js"></script>
 <script>
 // Fallback loader if Croppie fails
@@ -54,7 +54,7 @@ if (typeof Croppie === 'undefined') {
 }
 </script>
 
-<!-- Main Upload Script -->
+<!--- Main Upload Script --->
 <script>
 // Simplified initialization flow
 $(document).ready(function() {
@@ -73,7 +73,7 @@ function checkCroppieAvailability() {
 }
 </script>
 
-<!-- Custom Styles for Modern Look -->
+<!--- Custom Styles for Modern Look --->
 <style>
     .upload-card {
         border: 1px solid #dee2e6;
@@ -322,8 +322,8 @@ function checkCroppieAvailability() {
     }
 </style>
 
-<!-- Modern Contact Avatar Upload Interface -->
-<!-- Header Section -->
+<!--- Modern Contact Avatar Upload Interface --->
+<!--- Header Section --->
 <div class="text-center mb-4 fade-in">
     <p class="text-muted fs-5 mb-0">
         <cfoutput>Upload a new avatar for <strong>#subtitle#</strong></cfoutput>
@@ -336,7 +336,7 @@ function checkCroppieAvailability() {
     </div>
 </div>
 
-<!-- Step Indicator -->
+<!--- Step Indicator --->
 <div class="step-indicator">
     <div class="step active" id="step1">
         <div class="step-number">1</div>
@@ -354,10 +354,10 @@ function checkCroppieAvailability() {
     </div>
 </div>
 
-<!-- Main Upload Card -->
+<!--- Main Upload Card --->
 <div class="card upload-card" id="upload-section">
     <div class="card-body p-4">
-        <!-- Current Avatar Display -->
+        <!--- Current Avatar Display --->
         <div class="text-center mb-4">
             <h5 class="card-title mb-3">Current Avatar</h5>
             <cfoutput>
@@ -367,7 +367,7 @@ function checkCroppieAvailability() {
             </cfoutput>
         </div>
 
-        <!-- Upload Zone -->
+        <!--- Upload Zone --->
         <div class="upload-zone text-center p-5" id="upload-zone">
             <div class="upload-content">
                 <i class="fe-upload upload-icon"></i>
@@ -388,7 +388,7 @@ function checkCroppieAvailability() {
             <input type="file" id="upload" accept="image/*" style="display: none;" />
         </div>
 
-        <!-- File Info Display -->
+        <!--- File Info Display --->
         <div class="file-info" id="file-info" style="display: none;">
             <div class="d-flex align-items-center">
                 <i class="fe-image text-success me-3"></i>
@@ -404,7 +404,7 @@ function checkCroppieAvailability() {
     </div>
 </div>
 
-<!-- Cropping Section -->
+<!--- Cropping Section --->
 <div class="card upload-card mt-4" id="crop-section" style="display: none;">
     <div class="card-body p-4">
         <h5 class="card-title text-center mb-4">
@@ -426,7 +426,7 @@ function checkCroppieAvailability() {
     </div>
 </div>
 
-<!-- Success Section -->
+<!--- Success Section --->
 <div class="card upload-card mt-4 success-animation" id="success-section" style="display: none;">
     <div class="card-body p-4 text-center">
         <div class="mb-4">
@@ -457,7 +457,7 @@ function checkCroppieAvailability() {
 </div>
 
 <input type="hidden" name="picturebase" id="picturebase" value="" />
-<!-- Enhanced JavaScript with Modern Features for Contact Avatars -->
+<!--- Enhanced JavaScript with Modern Features for Contact Avatars --->
 <script>
 // Main initialization function for contact avatar upload
 function initializeContactUploadApp() {
