@@ -8,15 +8,6 @@
 <!--- Get contact tag status --->
 <cfset contactItemService = createObject("component", "services.ContactItemService")>
 <cfset new_systemscope = contactItemService.getContactTagStatus(contactid=contactid, userid=userid)>
-<Cfoutput>
-old_systemscope: #old_systemscope#<BR>
-old_systemtype: #old_systemtype#<BR>
-
-
-
-<cfdump var="#new_systemscope#">
-
-</cfoutput>
 
 <!--- Part c--->
 <cfif old_systemtype neq new_systemtype>

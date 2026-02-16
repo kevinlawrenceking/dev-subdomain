@@ -45,8 +45,6 @@
     <cfoutput>image_dir: [#image_dir#]</cfoutput><br>
 </cfif>
 
-<cfoutput>domain: <cfoutput>#domain#</cfoutput></cfoutput>
-
 <!--- Check if the temp directory exists, create it if not --->
 <cfif NOT directoryExists("#image_dir#/temp")>
     <cfdirectory action="create" directory="#image_dir#/temp">
@@ -99,7 +97,6 @@
 
     <!--- Update the sitelinks_user table with the new siteicon --->
     <cfset fileName = "custom_#id#.png">
-    <p>filename: <cfoutput>#fileName#</cfoutput></p>
 
     <cfinclude template="/include/qry/update_92_1.cfm" />
 

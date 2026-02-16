@@ -17,8 +17,10 @@
         <!--- Prepare JSON output based on the row count --->
         <cfif checkSiteName.total_row EQ 0>
             <cfset output = { "success" = true }>
-            <cfoutput>#serializeJSON(output)#</cfoutput>
+        <cfelse>
+            <cfset output = { "success" = false }>
         </cfif>
+        <cfoutput>#serializeJSON(output)#</cfoutput>
 
     </cfif>
 </cfif>

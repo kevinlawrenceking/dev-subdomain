@@ -35,8 +35,8 @@
                         </div>   --->          
                         
                         <div class="form-group col-md-12">
-                            <label for="snow-editor">Details</label>
-                            <div id="snow-editor" style="height: 200px;"></div>
+                            <label for="notetext">Details</label>
+                            <textarea class="form-control" name="notetext" id="notetext" rows="8" placeholder="Add details..."></textarea>
                         </div>
                         
                         <div class="form-group col-md-12">&nbsp;</div>
@@ -60,7 +60,6 @@
                     </div>
 
                     <div class="row mt-2">
-                        <textarea name="notetext" style="display:none" id="hiddenArea"></textarea>
                         <div class="col-md-12">
                             <a href="javascript:history.go(-1)">
                                 <button type="button" class="btn btn-light mr-1 btn-sm" data-bs-dismiss="modal">Back</button>
@@ -102,11 +101,6 @@
     });
 </script>
 
-<script>
-    $("#form-event").on("submit", function() {
-        $("#hiddenArea").val($("#snow-editor").html());
-    });
-</script>
 
 <cfset script_name_include="/include/#ListLast(GetCurrentTemplatePath(), " \")#" />
 
