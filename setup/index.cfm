@@ -2,6 +2,8 @@
 <cfparam name="p" default="" />
 <cfparam name="recover" default="" />
 <cfparam name="uuid" default="" />
+<cfparam name="IMAGESURL" default="/media-abo/images" />
+
 
 <cfquery result="result" name="U" >
 SELECT th.id
@@ -18,6 +20,7 @@ LEFT JOIN paymentplans pp ON pp.BasePaymentPlanId = th.BasePaymentPlanId
 LEFT JOIN products pr ON pr.BaseProductId = th.BaseProductId
 WHERE th.STATUS = 'Emailed' and th.uuid = '#uuid#'
 </cfquery>
+
 
 <cfif #u.recordcount# is not "1">
 <cflocation url="/app/dashboard_new/" />
@@ -73,13 +76,13 @@ WHERE th.STATUS = 'Emailed' and th.uuid = '#uuid#'
                                     <div class="auth-logo">
                                         <a href="index.html" class="logo no-hover-effect logo-dark text-center">
                                             <span class="logo no-hover-effect-lg">
-                                                <img src="<cfoutput>#application.imagesUrl#/taowhite.png</cfoutput>" alt="" height="60">
+                                                <img src="<cfoutput>#imagesurl#/taowhite.png</cfoutput>" alt="" height="60">
                                             </span>
                                         </a>
                     
                                         <a href="index.html" class="logo no-hover-effect logo-light text-center">
                                             <span class="logo no-hover-effect-lg">
-                                                <img src="<cfoutput>#application.imagesUrl#</cfoutput>/logo-dark.png" alt="" height="20">
+                                                <img src="<cfoutput>#imagesurl#</cfoutput>/logo-dark.png" alt="" height="20">
                                             </span>
                                         </a>
                                     </div>

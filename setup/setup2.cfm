@@ -30,7 +30,7 @@ VALUES (
 
 <cfset select_userid=result.generatedkey />
 
-    <cfinclude template="/sched/user_setup_core.cfm" />
+    <cfinclude template="user_setup_core.cfm" />
 
 <cfquery result="result" name="update" >
     UPDATE thrivecart
@@ -38,5 +38,5 @@ VALUES (
     <cfqueryparam cfsqltype="cf_sql_varchar" value="Completed" />
     where id = #id#
 </cfquery>
-
+<Cfbort> 
 <cflocation url="setup-complete.cfm?userid=#select_userid#" />

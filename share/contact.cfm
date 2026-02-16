@@ -4,7 +4,13 @@
     DATE: 2025-10-19
     NOTES: Full-page view with header and back button
 --->
-<cfset dsn = "abod">
+<cfset host = ListFirst(cgi.server_name, ".")/>
+
+<cfif host is "app">
+    <cfset dsn = "abo"/>
+<cfelse>
+    <cfset dsn = "abod"/>
+</cfif>
 <cfset shareID = trim(url.shareID)>
 <cfset contactID = val(url.contactID)>
 <cfset baseMediaUrl  = "/media-" & dsn>
