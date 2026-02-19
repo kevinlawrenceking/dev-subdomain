@@ -1033,7 +1033,7 @@
         // Initialize phone formatters
         initializePhoneFormatters();
 
-        $j('#edit-modal').modal('show');
+        bsModal('#edit-modal', 'show');
     }
 
     function renderFieldWidget(field, fieldDef, value, inputClass) {
@@ -1185,7 +1185,7 @@
                 }
                 $btn.prop('disabled', false).html('<i class="fe-check"></i> Save Changes');
                 if (response.success) {
-                    $j('#edit-modal').modal('hide');
+                    bsModal('#edit-modal', 'hide');
                     showAlert('success', 'Row updated and revalidated');
                     loadRows();
                 } else {
@@ -1262,7 +1262,7 @@
             html += '</div>';
 
             $j('#dupe-modal-body').html(html);
-            $j('#dupe-modal').modal('show');
+            bsModal('#dupe-modal', 'show');
         });
     }
 
@@ -1297,7 +1297,7 @@
                 if (response.data && response.data.debug) {
                     console.log('[V3] Debug trail:', response.data.debug.join(' -> '));
                 }
-                $j('#dupe-modal').modal('hide');
+                bsModal('#dupe-modal', 'hide');
                 if (response.success) {
                     loadRows();
                 } else {
@@ -1315,7 +1315,7 @@
                         console.error('[V3] Debug trail:', errResponse.data.debug.join(' -> '));
                     }
                 } catch (e) {}
-                $j('#dupe-modal').modal('hide');
+                bsModal('#dupe-modal', 'hide');
                 showAlert('error', errorMsg);
             }
         });
@@ -1513,15 +1513,15 @@
         // Show in modal
         var modalHtml = '<div class="modal fade" id="dryRunModal" tabindex="-1">' +
             '<div class="modal-dialog modal-lg"><div class="modal-content">' +
-            '<div class="modal-header" style="background: linear-gradient(135deg, #667eea22 0%, #764ba222 100%);">' +
+            '<div class="modal-header" style="background: rgba(64,110,142,0.1);">' +
             '<h5 class="modal-title">Import Preview <span class="v3-badge" style="font-size:10px;">V3</span></h5>' +
-            '<button type="button" class="close" data-dismiss="modal">&times;</button></div>' +
+            '<button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>' +
             '<div class="modal-body">' + html + '</div>' +
             '<div class="modal-footer">' +
-            '<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>';
+            '<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>';
 
         if ((summary.will_create || 0) + (summary.will_update || 0) > 0 && (summary.problems || 0) === 0 && (summary.dupes_unresolved || 0) === 0) {
-            modalHtml += '<button type="button" class="btn btn-primary" id="btn-proceed-import" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border:none;">Proceed with Import</button>';
+            modalHtml += '<button type="button" class="btn btn-primary" id="btn-proceed-import" style="background: linear-gradient(135deg, var(--ct-link-color), var(--ct-link-hover-color)); border:none;">Proceed with Import</button>';
         }
 
         modalHtml += '</div></div></div></div>';
@@ -1532,16 +1532,25 @@
 
         // Wire up proceed button
         $j('#btn-proceed-import').click(function() {
-            $j('#dryRunModal').modal('hide');
+            bsModal('#dryRunModal', 'hide');
             finalizeImport();
         });
 
-        $j('#dryRunModal').modal('show');
+        bsModal('#dryRunModal', 'show');
     }
 
     // ========================================
     // UTILITIES
     // ========================================
+
+    // Bootstrap 5 modal helper (BS5 dropped jQuery .modal() plugin)
+    function bsModal(selector, action) {
+        var el = document.querySelector(selector);
+        if (!el) return;
+        var instance = bootstrap.Modal.getInstance(el) || new bootstrap.Modal(el);
+        if (action === 'show') instance.show();
+        else if (action === 'hide') instance.hide();
+    }
 
     function escapeHtml(text) {
         if (!text) return '';
@@ -1574,7 +1583,7 @@
 
         var html = '<div class="alert ' + alertClass + ' alert-dismissible fade show" role="alert">' +
             '<i class="' + icon + '"></i> ' + escapeHtml(message) +
-            '<button type="button" class="close" data-dismiss="alert">&times;</button></div>';
+            '<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>';
 
         // Insert at top of page
         var container = $j('.page-title-box').parent();

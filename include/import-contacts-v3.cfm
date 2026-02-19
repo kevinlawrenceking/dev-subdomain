@@ -42,7 +42,7 @@
 /* V3 Indicator Badge */
 .v3-badge {
     display: inline-block;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #406e8e;
     color: #fff;
     font-weight: bold;
     font-size: 14px;
@@ -53,10 +53,10 @@
     vertical-align: middle;
     text-transform: uppercase;
     letter-spacing: 1px;
-    box-shadow: 0 2px 4px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 2px 4px rgba(64, 110, 142, 0.4);
 }
 .v3-banner {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, var(--ct-link-color), var(--ct-link-hover-color));
     color: #fff;
     padding: 8px 16px;
     border-radius: 4px;
@@ -83,7 +83,7 @@
     display: inline-block;
     width: 28px;
     height: 28px;
-    background: #667eea;
+    background: #406e8e;
     color: #fff;
     border-radius: 50%;
     text-align: center;
@@ -97,7 +97,7 @@
 
 /* File upload area */
 .upload-area {
-    border: 2px dashed #667eea;
+    border: 2px dashed #406e8e;
     border-radius: 8px;
     padding: 40px;
     text-align: center;
@@ -105,12 +105,12 @@
     transition: all 0.2s;
 }
 .upload-area:hover, .upload-area.dragover {
-    border-color: #764ba2;
-    background: #f8f5ff;
+    border-color: var(--ct-link-hover-color);
+    background: #f0f5f8;
 }
 .upload-area .upload-icon {
     font-size: 48px;
-    color: #667eea;
+    color: #406e8e;
     margin-bottom: 10px;
 }
 
@@ -194,7 +194,7 @@
 }
 .inline-edit.editing {
     background: #fff;
-    border: 1px solid #667eea;
+    border: 1px solid #406e8e;
 }
 
 /* Warning state for validation warnings */
@@ -321,7 +321,7 @@ input[type="date"].form-control-sm {
     <input type="hidden" id="csrf-token" value="#encodeForHTMLAttribute(session.csrf_token)#">
 
     <!--- Job info bar --->
-    <div class="alert d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, ##667eea22 0%, ##764ba222 100%); border: 1px solid ##667eea;">
+    <div class="alert d-flex justify-content-between align-items-center" style="background: rgba(64,110,142,0.1); border: 1px solid ##406e8e;">
         <div>
             <strong>File:</strong> #activeJob.source_filename#
             <span class="mx-2">|</span>
@@ -339,12 +339,12 @@ input[type="date"].form-control-sm {
         <div class="import-step" id="step-parse">
             <h5><span class="step-number">2</span> Parsing File</h5>
             <p>Click to parse and analyze your file.</p>
-            <button class="btn btn-primary" id="btn-parse" style="background: linear-gradient(135deg, ##667eea 0%, ##764ba2 100%); border:none;">
+            <button class="btn btn-primary" id="btn-parse" style="background: linear-gradient(135deg, var(--ct-link-color), var(--ct-link-hover-color)); border:none;">
                 <i class="fe-play"></i> Parse File
             </button>
             <div class="import-progress mt-3" id="parse-progress" style="display:none">
                 <div class="progress">
-                    <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%; background: linear-gradient(135deg, ##667eea 0%, ##764ba2 100%);"></div>
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%; background: linear-gradient(135deg, var(--ct-link-color), var(--ct-link-hover-color));"></div>
                 </div>
                 <p class="mt-2 text-center">Parsing file...</p>
             </div>
@@ -359,7 +359,7 @@ input[type="date"].form-control-sm {
                 <p class="text-center"><i class="fe-loader fe-spin"></i> Loading column mappings...</p>
             </div>
             <div class="mt-3">
-                <button class="btn btn-primary" id="btn-confirm-mapping" style="background: linear-gradient(135deg, ##667eea 0%, ##764ba2 100%); border:none;">
+                <button class="btn btn-primary" id="btn-confirm-mapping" style="background: linear-gradient(135deg, var(--ct-link-color), var(--ct-link-hover-color)); border:none;">
                     <i class="fe-check"></i> Confirm Mapping & Continue
                 </button>
             </div>
@@ -397,7 +397,7 @@ input[type="date"].form-control-sm {
                     </div>
                 </div>
                 <div class="col">
-                    <div class="card card-body p-2 text-center" style="background: linear-gradient(135deg, ##667eea 0%, ##764ba2 100%); color:##fff;">
+                    <div class="card card-body p-2 text-center" style="background: linear-gradient(135deg, var(--ct-link-color), var(--ct-link-hover-color)); color:##fff;">
                         <div class="h4 mb-0" id="stat-imported"><i class="fe-loader fe-spin" style="font-size:16px"></i></div>
                         <small>Imported</small>
                     </div>
@@ -433,7 +433,7 @@ input[type="date"].form-control-sm {
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="##" data-filter="imported">
-                        Imported <span class="badge" style="background:##667eea;color:##fff;" id="tab-imported">...</span>
+                        Imported <span class="badge" style="background:##406e8e;color:##fff;" id="tab-imported">...</span>
                     </a>
                 </li>
             </ul>
@@ -492,7 +492,7 @@ input[type="date"].form-control-sm {
                 <button class="btn btn-outline-primary btn-lg mr-2" id="btn-dry-run">
                     <i class="fe-eye"></i> Preview Import (Dry Run)
                 </button>
-                <button class="btn btn-lg" id="btn-finalize" style="background: linear-gradient(135deg, ##667eea 0%, ##764ba2 100%); color:##fff; border:none;" <cfif activeJob.status eq "finalizing">disabled</cfif>>
+                <button class="btn btn-lg" id="btn-finalize" style="background: linear-gradient(135deg, var(--ct-link-color), var(--ct-link-hover-color)); color:##fff; border:none;" <cfif activeJob.status eq "finalizing">disabled</cfif>>
                     <i class="fe-check-circle"></i> Import <span id="import-count">...</span> Contacts
                 </button>
             </div>
@@ -504,7 +504,7 @@ input[type="date"].form-control-sm {
             </div>
             <div class="import-progress mt-3" id="finalize-progress" style="display:none">
                 <div class="progress">
-                    <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%; background: linear-gradient(135deg, ##667eea 0%, ##764ba2 100%);"></div>
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%; background: linear-gradient(135deg, var(--ct-link-color), var(--ct-link-hover-color));"></div>
                 </div>
                 <p class="mt-2 text-center">Importing contacts...</p>
             </div>
@@ -513,7 +513,7 @@ input[type="date"].form-control-sm {
         <div class="import-step completed">
             <h5><span class="step-number"><i class="fe-check"></i></span> Import Complete <span class="v3-badge" style="font-size:10px;">V3</span></h5>
             <p class="text-success"><strong>#activeJob.imported_rows#</strong> contacts were successfully imported.</p>
-            <a href="/app/contacts/?byimport=#activeJob.job_id#" class="btn btn-primary" style="background: linear-gradient(135deg, ##667eea 0%, ##764ba2 100%); border:none;">
+            <a href="/app/contacts/?byimport=#activeJob.job_id#" class="btn btn-primary" style="background: linear-gradient(135deg, var(--ct-link-color), var(--ct-link-hover-color)); border:none;">
                 <i class="fe-users"></i> View Imported Contacts
             </a>
         </div>
@@ -527,17 +527,17 @@ input[type="date"].form-control-sm {
 <div class="modal fade" id="dupe-modal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header" style="background: linear-gradient(135deg, #667eea22 0%, #764ba222 100%);">
+            <div class="modal-header" style="background: rgba(64,110,142,0.1);">
                 <h5 class="modal-title">Resolve Duplicate <span class="v3-badge" style="font-size:10px;">V3</span></h5>
-                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" id="dupe-modal-body">
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 <button type="button" class="btn btn-outline-danger" id="dupe-skip">Skip This Row</button>
                 <button type="button" class="btn btn-warning" id="dupe-update">Update Existing</button>
-                <button type="button" class="btn btn-primary" id="dupe-import-new" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border:none;">Import as New</button>
+                <button type="button" class="btn btn-primary" id="dupe-import-new" style="background: linear-gradient(135deg, var(--ct-link-color), var(--ct-link-hover-color)); border:none;">Import as New</button>
             </div>
         </div>
     </div>
@@ -547,15 +547,15 @@ input[type="date"].form-control-sm {
 <div class="modal fade" id="edit-modal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header" style="background: linear-gradient(135deg, #667eea22 0%, #764ba222 100%);">
+            <div class="modal-header" style="background: rgba(64,110,142,0.1);">
                 <h5 class="modal-title"><i class="fe-edit"></i> Edit Row <span class="v3-badge" style="font-size:10px;">V3</span></h5>
-                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" id="edit-modal-body" style="max-height: 60vh; overflow-y: auto;">
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="edit-save" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border:none;"><i class="fe-check"></i> Save Changes</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="edit-save" style="background: linear-gradient(135deg, var(--ct-link-color), var(--ct-link-hover-color)); border:none;"><i class="fe-check"></i> Save Changes</button>
             </div>
         </div>
     </div>
