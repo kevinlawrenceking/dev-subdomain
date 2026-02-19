@@ -230,8 +230,8 @@
     <!--- K) Call service method to update facts --->
     <cfset arrayAppend(debug, "update_called")>
     <cfset updateResult = v3Service.updateRowFacts(
-        jobId = jobId,
-        rowId = rowId,
+        job_id = jobId,
+        row_id = rowId,
         fields = fields,
         userid = userid
     )>

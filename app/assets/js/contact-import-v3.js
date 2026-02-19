@@ -425,6 +425,13 @@
             return (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
         }
 
+        // Smart defaults: map common shorthand source names to preferred fields
+        var smartDefaults = {
+            'email':    'email_business',
+            'phone':    'phone_mobile',
+            'address':  'address1'
+        };
+
         var html = '<table class="table table-sm"><thead><tr><th>Source Column</th><th>Maps To</th><th>Confidence</th></tr></thead><tbody>';
 
         columns.forEach(function(col) {
@@ -432,10 +439,16 @@
             var effectiveMapping = col.mapped_field || '';
             if (!effectiveMapping && col.source_name) {
                 var srcNorm = normalize(col.source_name);
-                for (var i = 0; i < availableFields.length; i++) {
-                    if (srcNorm === normalize(availableFields[i].field) || srcNorm === normalize(availableFields[i].display_name)) {
-                        effectiveMapping = availableFields[i].field;
-                        break;
+                // 1) Check smart defaults first (e.g. "email" -> business email)
+                if (smartDefaults[srcNorm]) {
+                    effectiveMapping = smartDefaults[srcNorm];
+                } else {
+                    // 2) Fall back to normalized match against field key or display name
+                    for (var i = 0; i < availableFields.length; i++) {
+                        if (srcNorm === normalize(availableFields[i].field) || srcNorm === normalize(availableFields[i].display_name)) {
+                            effectiveMapping = availableFields[i].field;
+                            break;
+                        }
                     }
                 }
             }
@@ -904,8 +917,10 @@
         // Fetch single row detail - V3 ENDPOINT
         $j.get('/ajax/importv3/row.cfm?bypass=1&job_id=' + state.jobId + '&row_id=' + rowId, function(response) {
             console.log('[V3] Row detail response:', response);
-            if (response.success && response.data.row) {
-                renderEditModal(response.data.row);
+            // ColdFusion serializes struct keys uppercase — handle both
+            var rowData = response.data.row || response.data.ROW;
+            if (response.success && rowData) {
+                renderEditModal(rowData);
             } else {
                 showAlert('error', 'Could not find row data');
             }
@@ -913,8 +928,20 @@
     }
 
     function renderEditModal(row) {
-        currentEditData = row.data || {};
-        var validation = row.validation || {};
+        // Normalize server keys (first_name -> firstName, contact_type -> contactType)
+        // to match fieldDefinitions/fieldGroups camelCase keys
+        var keyMap = { first_name: 'firstName', last_name: 'lastName', contact_type: 'contactType', contact_full_name: 'contactFullName' };
+        function normalizeKeys(obj) {
+            var out = {};
+            for (var k in obj) {
+                if (obj.hasOwnProperty(k)) {
+                    out[keyMap[k] || k] = obj[k];
+                }
+            }
+            return out;
+        }
+        currentEditData = normalizeKeys(row.data || {});
+        var validation = normalizeKeys(row.validation || {});
 
         // Group fields by category for better organization
         var fieldGroups = {
@@ -929,6 +956,13 @@
             'Other': ['notes', 'tags']
         };
 
+        // Build error lookup from row.errors array (field -> message)
+        var errorLookup = {};
+        (row.errors || []).forEach(function(e) {
+            var f = keyMap[e.field] || e.field;
+            errorLookup[f] = e.message;
+        });
+
         var html = '<form id="edit-form">';
 
         // Only show fields that have data or errors
@@ -936,7 +970,10 @@
             return currentEditData[k] !== '' && currentEditData[k] !== null;
         });
         var fieldsWithErrors = Object.keys(validation).filter(function(k) {
-            return validation[k] && !validation[k].valid;
+            // validation[k] is boolean (true=valid, false=invalid) or object with .valid
+            var v = validation[k];
+            if (typeof v === 'boolean') return !v;
+            return v && !v.valid;
         });
         var relevantFields = new Set(fieldsWithData.concat(fieldsWithErrors));
 
@@ -959,8 +996,16 @@
             groupFields.forEach(function(field) {
                 var fieldDef = fieldDefinitions[field] || { type: 'text', label: formatFieldName(field) };
                 var val = currentEditData[field] || '';
-                var error = validation[field] && !validation[field].valid ? validation[field].error : '';
-                var warning = validation[field] && validation[field].warning ? validation[field].warning : '';
+                // validation[field] can be boolean (true=valid) or object with .valid/.error
+                var v = validation[field];
+                var error = '';
+                var warning = '';
+                if (typeof v === 'boolean') {
+                    if (!v) error = errorLookup[field] || 'Invalid value';
+                } else if (v && !v.valid) {
+                    error = v.error || '';
+                    warning = v.warning || '';
+                }
                 var inputClass = error ? 'is-invalid' : (warning ? 'is-warning' : '');
 
                 var colClass = fieldDef.type === 'textarea' || fieldDef.type === 'notes' ? 'col-12' : 'col-md-6';
@@ -1094,12 +1139,14 @@
     }
 
     function saveEdit() {
+        // Reverse map camelCase form names back to underscore for the server
+        var reverseKeyMap = { firstName: 'first_name', lastName: 'last_name', contactType: 'contact_type', contactFullName: 'contact_full_name' };
         var data = {};
 
         $j('#edit-form input, #edit-form select, #edit-form textarea').each(function() {
             var name = $j(this).attr('name');
             if (name) {
-                data[name] = $j(this).val();
+                data[reverseKeyMap[name] || name] = $j(this).val();
             }
         });
 
