@@ -112,8 +112,8 @@
 
     <!--- F) Call service method to get row detail --->
     <cfset rowResult = v3Service.getRowDetail(
-        jobId = jobId,
-        rowId = rowId,
+        job_id = jobId,
+        row_id = rowId,
         userid = userid
     )>
 
