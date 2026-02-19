@@ -178,7 +178,7 @@
             { "field": "state", "display_name": "State" },
             { "field": "zip", "display_name": "Zip Code" },
             { "field": "country", "display_name": "Country" },
-            { "field": "birthday", "display_name": "Birthday" },
+            { "field": "birthday", "display_name": "Next Birthday" },
             { "field": "relationship_start", "display_name": "Relationship Start" },
             { "field": "website", "display_name": "Website" },
             { "field": "linkedin", "display_name": "LinkedIn" },

@@ -154,6 +154,38 @@
         <cfreturn result>
     </cfif>
 
+    <!--- Strip ColdFusion timestamp wrapper if present: {ts 'yyyy-mm-dd ...'} --->
+    <cfif left(trimmed, 4) eq "{ts ">
+        <cfset trimmed = reReplace(trimmed, "^\{ts\s+'([^']+)'\}", "\1")>
+        <cfset trimmed = trim(listFirst(trimmed, " "))>
+    </cfif>
+
+    <!--- Direct regex match for ISO date yyyy-mm-dd (most common from HTML date inputs) --->
+    <cfif reFindNoCase("^\d{4}-\d{2}-\d{2}$", trimmed)>
+        <cfset var parts = listToArray(trimmed, "-")>
+        <cfset var yr = val(parts[1])>
+        <cfset var mo = val(parts[2])>
+        <cfset var dy = val(parts[3])>
+        <cfif yr gte 1900 and yr lte 2100 and mo gte 1 and mo lte 12 and dy gte 1 and dy lte 31>
+            <cfset result.normalized = trimmed>
+            <cfset result.originalFormat = "yyyy-mm-dd">
+            <cfreturn result>
+        </cfif>
+    </cfif>
+
+    <!--- Direct regex match for mm/dd/yyyy --->
+    <cfif reFindNoCase("^\d{1,2}/\d{1,2}/\d{4}$", trimmed)>
+        <cfset var parts = listToArray(trimmed, "/")>
+        <cfset var mo = val(parts[1])>
+        <cfset var dy = val(parts[2])>
+        <cfset var yr = val(parts[3])>
+        <cfif yr gte 1900 and yr lte 2100 and mo gte 1 and mo lte 12 and dy gte 1 and dy lte 31>
+            <cfset result.normalized = yr & "-" & right("0" & mo, 2) & "-" & right("0" & dy, 2)>
+            <cfset result.originalFormat = "mm/dd/yyyy">
+            <cfreturn result>
+        </cfif>
+    </cfif>
+
     <!--- Try multiple date formats --->
     <cfset var dateFormats = [
         "yyyy-mm-dd",

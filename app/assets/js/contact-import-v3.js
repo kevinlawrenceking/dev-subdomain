@@ -114,7 +114,7 @@
         state: { type: 'state', label: 'State', group: 'address' },
         zip: { type: 'text', label: 'Zip Code', group: 'address' },
         country: { type: 'country', label: 'Country', group: 'address' },
-        birthday: { type: 'date', label: 'Birthday', group: 'dates' },
+        birthday: { type: 'date', label: 'Next Birthday', group: 'dates' },
         relationship_start: { type: 'date', label: 'Relationship Start', group: 'dates' },
         website: { type: 'url', label: 'Website', group: 'web' },
         linkedin: { type: 'url', label: 'LinkedIn', group: 'web' },
