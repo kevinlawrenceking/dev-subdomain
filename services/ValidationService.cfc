@@ -147,157 +147,61 @@
         originalFormat: ""
     }>
 
-    <!--- Handle empty --->
     <cfset var trimmed = trim(arguments.value)>
     <cfif not len(trimmed)>
-        <cfset result.normalized = "">
         <cfreturn result>
     </cfif>
 
-    <!--- Strip ColdFusion timestamp wrapper if present: {ts 'yyyy-mm-dd ...'} --->
+    <!--- Strip ColdFusion timestamp wrapper: {ts 'yyyy-mm-dd ...'} --->
     <cfif left(trimmed, 4) eq "{ts ">
         <cfset trimmed = reReplace(trimmed, "^\{ts\s+'([^']+)'\}", "\1")>
         <cfset trimmed = trim(listFirst(trimmed, " "))>
     </cfif>
 
-    <!--- Direct regex match for ISO date yyyy-mm-dd (most common from HTML date inputs) --->
-    <cfif reFindNoCase("^\d{4}-\d{2}-\d{2}$", trimmed)>
-        <cfset var parts = listToArray(trimmed, "-")>
-        <cfset var yr = val(parts[1])>
-        <cfset var mo = val(parts[2])>
-        <cfset var dy = val(parts[3])>
-        <cfif yr gte 1900 and yr lte 2100 and mo gte 1 and mo lte 12 and dy gte 1 and dy lte 31>
-            <cfset result.normalized = trimmed>
-            <cfset result.originalFormat = "yyyy-mm-dd">
-            <cfreturn result>
-        </cfif>
-    </cfif>
-
-    <!--- Direct regex match for mm/dd/yyyy --->
-    <cfif reFindNoCase("^\d{1,2}/\d{1,2}/\d{4}$", trimmed)>
-        <cfset var parts = listToArray(trimmed, "/")>
-        <cfset var mo = val(parts[1])>
-        <cfset var dy = val(parts[2])>
-        <cfset var yr = val(parts[3])>
-        <cfif yr gte 1900 and yr lte 2100 and mo gte 1 and mo lte 12 and dy gte 1 and dy lte 31>
+    <!--- 1) yyyy-mm-dd (HTML date input format) --->
+    <cfif reFindNoCase("^\d{4}-\d{1,2}-\d{1,2}$", trimmed)>
+        <cfset var p = listToArray(trimmed, "-")>
+        <cfset var yr = val(p[1])><cfset var mo = val(p[2])><cfset var dy = val(p[3])>
+        <cfif mo gte 1 and mo lte 12 and dy gte 1 and dy lte 31>
             <cfset result.normalized = yr & "-" & right("0" & mo, 2) & "-" & right("0" & dy, 2)>
-            <cfset result.originalFormat = "mm/dd/yyyy">
             <cfreturn result>
         </cfif>
     </cfif>
 
-    <!--- Try multiple date formats --->
-    <cfset var dateFormats = [
-        "yyyy-mm-dd",
-        "mm/dd/yyyy",
-        "m/d/yyyy",
-        "mm-dd-yyyy",
-        "dd/mm/yyyy",
-        "d/m/yyyy",
-        "dd-mm-yyyy",
-        "yyyy/mm/dd",
-        "mmm d, yyyy",
-        "mmmm d, yyyy",
-        "d mmm yyyy"
-    ]>
-
-    <!--- Add custom formats if provided --->
-    <cfif arrayLen(arguments.formats)>
-        <cfset dateFormats = arguments.formats>
-    </cfif>
-
-    <!--- Check if value looks like an Excel date serial --->
-    <cfif isNumeric(trimmed)>
-        <cfset var numVal = val(trimmed)>
-
-        <!--- Excel serial 0, 1, negative, or very small decimals are invalid/empty dates --->
-        <!--- Serial 0 = 1899-12-30, Serial 1 = 1899-12-31 (both pre-1900, invalid) --->
-        <cfif numVal lte 1 or (numVal gt 0 and numVal lt 2)>
-            <cfset result.normalized = "">
-            <cfset result.originalFormat = "Excel serial (invalid)">
+    <!--- 2) mm/dd/yyyy or m/d/yyyy --->
+    <cfif reFindNoCase("^\d{1,2}/\d{1,2}/\d{4}$", trimmed)>
+        <cfset var p = listToArray(trimmed, "/")>
+        <cfset var mo = val(p[1])><cfset var dy = val(p[2])><cfset var yr = val(p[3])>
+        <cfif mo gte 1 and mo lte 12 and dy gte 1 and dy lte 31>
+            <cfset result.normalized = yr & "-" & right("0" & mo, 2) & "-" & right("0" & dy, 2)>
             <cfreturn result>
         </cfif>
+    </cfif>
 
-        <!--- Valid Excel serial range: 2 to ~60000 covers 1900-2063 --->
-        <cfif numVal gte 2 and numVal lt 100000>
-            <cftry>
-                <!--- Convert Excel serial to date --->
-                <!--- Excel base date is 1899-12-30 (accounts for Excel's 1900 leap year bug) --->
-                <!--- Serial 2 = 1900-01-01, Serial 60000 ~ 2063 --->
-                <cfset var excelBase = createDate(1899, 12, 30)>
-                <cfset var parsedDate = dateAdd("d", int(numVal), excelBase)>
-
-                <!--- Validate reasonable range (1900-2100) --->
-                <cfif year(parsedDate) gte 1900 and year(parsedDate) lte 2100>
-                    <cfset result.normalized = dateFormat(parsedDate, "yyyy-mm-dd")>
-                    <cfset result.originalFormat = "Excel serial">
-                    <cfreturn result>
-                </cfif>
-
-                <cfcatch>
-                    <!--- Not a valid Excel date, fall through to standard parsing --->
-                </cfcatch>
-            </cftry>
+    <!--- 3) mm-dd-yyyy --->
+    <cfif reFindNoCase("^\d{1,2}-\d{1,2}-\d{4}$", trimmed)>
+        <cfset var p = listToArray(trimmed, "-")>
+        <cfset var mo = val(p[1])><cfset var dy = val(p[2])><cfset var yr = val(p[3])>
+        <cfif mo gte 1 and mo lte 12 and dy gte 1 and dy lte 31>
+            <cfset result.normalized = yr & "-" & right("0" & mo, 2) & "-" & right("0" & dy, 2)>
+            <cfreturn result>
         </cfif>
     </cfif>
 
-    <!--- Try parsing with ColdFusion's isDate --->
+    <!--- 4) Fallback: let ColdFusion try --->
     <cfif isDate(trimmed)>
         <cftry>
-            <cfset var parsedDate = parseDateTime(trimmed)>
-
-            <!--- Validate reasonable range --->
-            <cfif year(parsedDate) lt 1900 or year(parsedDate) gt 2100>
-                <cfset result.valid = false>
-                <cfset result.error = "Date out of reasonable range (1900-2100)">
-                <cfset result.normalized = trimmed>
-                <cfreturn result>
-            </cfif>
-
-            <cfset result.normalized = dateFormat(parsedDate, "yyyy-mm-dd")>
-            <cfset result.originalFormat = "auto-detected">
+            <cfset var pd = parseDateTime(trimmed)>
+            <cfset result.normalized = dateFormat(pd, "yyyy-mm-dd")>
             <cfreturn result>
-
-            <cfcatch>
-                <!--- Fall through to format-specific parsing --->
-            </cfcatch>
+            <cfcatch></cfcatch>
         </cftry>
     </cfif>
 
-    <!--- Try format-specific parsing --->
-    <cfloop array="#dateFormats#" index="fmt">
-        <cftry>
-            <cfset var parsedDate = parseDateTime(trimmed, fmt)>
-
-            <cfif year(parsedDate) gte 1900 and year(parsedDate) lte 2100>
-                <cfset result.normalized = dateFormat(parsedDate, "yyyy-mm-dd")>
-                <cfset result.originalFormat = fmt>
-                <cfreturn result>
-            </cfif>
-
-            <cfcatch>
-                <!--- Try next format --->
-            </cfcatch>
-        </cftry>
-    </cfloop>
-
-    <!--- Check for ambiguous date (could be MM/DD or DD/MM) --->
-    <cfif reFindNoCase("^\d{1,2}[/\-]\d{1,2}[/\-]\d{2,4}$", trimmed)>
-        <cfset var parts = reMatch("\d+", trimmed)>
-        <cfif arrayLen(parts) eq 3>
-            <cfset var first = val(parts[1])>
-            <cfset var second = val(parts[2])>
-            <cfif first lte 12 and second lte 12 and first neq second>
-                <cfset result.warning = "Ambiguous date format. Interpreted as #result.originalFormat#.">
-            </cfif>
-        </cfif>
-    </cfif>
-
-    <!--- Could not parse --->
+    <!--- Not a date --->
     <cfset result.valid = false>
-    <cfset result.error = "Could not parse date. Expected formats: YYYY-MM-DD, MM/DD/YYYY, etc.">
+    <cfset result.error = "Invalid date">
     <cfset result.normalized = trimmed>
-
     <cfreturn result>
 </cffunction>
 

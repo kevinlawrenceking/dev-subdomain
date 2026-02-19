@@ -1006,6 +1006,10 @@
                     error = v.error || '';
                     warning = v.warning || '';
                 }
+                // For date fields, suppress stale error if current value is a valid date
+                if (error && fieldDef.type === 'date' && val && !isNaN(new Date(val).getTime())) {
+                    error = '';
+                }
                 var inputClass = error ? 'is-invalid' : (warning ? 'is-warning' : '');
 
                 var colClass = fieldDef.type === 'textarea' || fieldDef.type === 'notes' ? 'col-12' : 'col-md-6';
