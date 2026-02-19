@@ -420,9 +420,26 @@
     }
 
     function renderColumnMappings(columns, availableFields) {
+        // Helper: normalize a string for comparison (lowercase, strip non-alpha)
+        function normalize(s) {
+            return (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+        }
+
         var html = '<table class="table table-sm"><thead><tr><th>Source Column</th><th>Maps To</th><th>Confidence</th></tr></thead><tbody>';
 
         columns.forEach(function(col) {
+            // If backend didn't map, try exact match on source column name
+            var effectiveMapping = col.mapped_field || '';
+            if (!effectiveMapping && col.source_name) {
+                var srcNorm = normalize(col.source_name);
+                for (var i = 0; i < availableFields.length; i++) {
+                    if (srcNorm === normalize(availableFields[i].field) || srcNorm === normalize(availableFields[i].display_name)) {
+                        effectiveMapping = availableFields[i].field;
+                        break;
+                    }
+                }
+            }
+
             html += '<tr>';
             html += '<td><strong>' + escapeHtml(col.source_name || 'Column ' + (col.source_index + 1)) + '</strong></td>';
             html += '<td>';
@@ -430,7 +447,7 @@
             html += '<option value="">(Do not import)</option>';
 
             availableFields.forEach(function(field) {
-                var selected = field.field === col.mapped_field ? 'selected' : '';
+                var selected = field.field === effectiveMapping ? 'selected' : '';
                 html += '<option value="' + field.field + '" ' + selected + '>' + escapeHtml(field.display_name) + '</option>';
             });
 
