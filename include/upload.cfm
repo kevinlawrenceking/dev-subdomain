@@ -154,5 +154,5 @@
  
 </cfif>
 
-<cflocation url="/app/contacts-import/?uploadid=#new_uploadid#">
+<cflocation url="/app/contacts-import-v3/?uploadid=#new_uploadid#">
 

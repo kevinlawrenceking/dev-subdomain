@@ -8,7 +8,7 @@
 
                 <div class="d-flex justify-content-between">
                     <div class="float-left">
-                        <a title="View All" href="/app/contacts-import/">
+                        <a title="View All" href="/app/contacts-import-v3/">
                             <i class="mdi mdi-eye-outline"></i> View All
                         </a>
                     </div>

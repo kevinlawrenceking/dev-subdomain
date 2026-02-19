@@ -205,7 +205,7 @@
                     }
                     // Redirect to job page
                     window.location.href = '/app/contacts-import-v2/?job_id=' + response.job_id;
-                } else {
+                } else {    
                     var errMsg = response.message || 'Upload failed';
                     if (response.debug_step) {
                         errMsg += ' [Step: ' + response.debug_step + ']';

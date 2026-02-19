@@ -959,7 +959,7 @@ WHERE contactid = :contactid
 **Feature:** Import contacts from CSV file with validation, duplicate detection, and review
 
 **User flow:**
-1. Navigate to app/contacts-import/
+1. Navigate to app/contacts-import-v3/
 2. Download CSV template (optional)
 3. Upload completed CSV file
 4. System stages to contactsimport table
@@ -974,7 +974,7 @@ WHERE contactid = :contactid
 10. Import results summary
 
 **Files:**
-- **Main page:** app/contacts-import/index.cfm
+- **Main page:** app/contacts-import-v3/index.cfm
 - **Template:** include/import-contacts.cfm
 - **Template download:** include/download_contact_template.cfm
 - **Services:**

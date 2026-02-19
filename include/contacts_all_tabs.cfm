@@ -166,7 +166,7 @@
                         <span class="btn-label"><i class="mdi mdi-tag-plus-outline"></i></span>Search Tag
                     </button>
 
-                    <a href="/app/contacts-import/" target="import" class="text-reset font-18 py-1 px-2 d-inline-block" data-toggle="tooltip" data-placement="top" title="Import Relationships" data-original-title="Import Relationships">
+                    <a href="/app/contacts-import-v3/" target="import" class="text-reset font-18 py-1 px-2 d-inline-block" data-toggle="tooltip" data-placement="top" title="Import Relationships" data-original-title="Import Relationships">
                         <button type="button" class="btn btn-warning waves-effect waves-light">
                             <span class="btn-label"><i class="fe-upload"></i></span>Import Relationships
                         </button>

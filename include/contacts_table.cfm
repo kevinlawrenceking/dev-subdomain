@@ -107,7 +107,7 @@ $(document).ready(function() {
         text: 'Import',
         className: 'import',
         action: function() {
-            window.location = '/app/contacts-import/';
+            window.location = '/app/contacts-import-v3/';
         }
     },
     <cfif #imports.recordcount# is not "0">
