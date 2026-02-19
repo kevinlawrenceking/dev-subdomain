@@ -1461,7 +1461,7 @@
 
         // Summary stats
         html += '<div class="dry-run-summary">';
-        html += '<h5>Import Summary <span class="v3-badge" style="font-size:10px;">V3</span></h5>';
+        html += '<h5>Import Summary</h5>';
         html += '<ul class="list-unstyled">';
         html += '<li><strong>Will Import:</strong> ' + (summary.will_create || 0) + ' new contacts</li>';
         if (summary.will_update > 0) {
@@ -1514,7 +1514,7 @@
         var modalHtml = '<div class="modal fade" id="dryRunModal" tabindex="-1">' +
             '<div class="modal-dialog modal-lg"><div class="modal-content">' +
             '<div class="modal-header" style="background: rgba(64,110,142,0.1);">' +
-            '<h5 class="modal-title">Import Preview <span class="v3-badge" style="font-size:10px;">V3</span></h5>' +
+            '<h5 class="modal-title">Import Preview</h5>' +
             '<button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>' +
             '<div class="modal-body">' + html + '</div>' +
             '<div class="modal-footer">' +
@@ -1567,31 +1567,36 @@
     }
 
     function showAlert(type, message) {
-        var alertClass = 'alert-danger';
-        var icon = 'fe-alert-circle';
+        var colors = { success: {bg:'#d1e7dd',border:'#badbcc',text:'#0f5132'},
+                       warning: {bg:'#fff3cd',border:'#ffecb5',text:'#664d03'},
+                       info:    {bg:'#cff4fc',border:'#b6effb',text:'#055160'},
+                       error:   {bg:'#f8d7da',border:'#f5c2c7',text:'#842029'} };
+        var c = colors[type] || colors.error;
+        var icons = { success:'fe-check-circle', warning:'fe-alert-triangle', info:'fe-info', error:'fe-alert-circle' };
+        var icon = icons[type] || icons.error;
 
-        if (type === 'success') {
-            alertClass = 'alert-success';
-            icon = 'fe-check-circle';
-        } else if (type === 'warning') {
-            alertClass = 'alert-warning';
-            icon = 'fe-alert-triangle';
-        } else if (type === 'info') {
-            alertClass = 'alert-info';
-            icon = 'fe-info';
+        // Ensure toast container exists
+        if (!document.getElementById('v3-toast-container')) {
+            $j('body').append('<div id="v3-toast-container" style="position:fixed;top:20px;right:20px;z-index:99999;max-width:420px;"></div>');
         }
 
-        var html = '<div class="alert ' + alertClass + ' alert-dismissible fade show" role="alert">' +
-            '<i class="' + icon + '"></i> ' + escapeHtml(message) +
-            '<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>';
+        var id = 'v3-alert-' + Date.now();
+        var html = '<div id="' + id + '" style="background:' + c.bg + ';border:1px solid ' + c.border + ';color:' + c.text + ';' +
+            'padding:12px 40px 12px 16px;border-radius:6px;margin-bottom:10px;position:relative;' +
+            'box-shadow:0 4px 12px rgba(0,0,0,0.15);font-size:14px;opacity:0;transition:opacity 0.3s ease;">' +
+            '<i class="' + icon + '" style="margin-right:8px;"></i>' + escapeHtml(message) +
+            '<span style="position:absolute;top:8px;right:12px;cursor:pointer;font-size:18px;line-height:1;opacity:0.6;" ' +
+            'onclick="this.parentElement.remove()">&times;</span></div>';
 
-        // Insert at top of page
-        var container = $j('.page-title-box').parent();
-        container.prepend(html);
+        $j('#v3-toast-container').append(html);
+
+        // Fade in
+        setTimeout(function() { document.getElementById(id).style.opacity = '1'; }, 10);
 
         // Auto-dismiss after 5 seconds
         setTimeout(function() {
-            container.find('.alert').first().remove();
+            var el = document.getElementById(id);
+            if (el) { el.style.opacity = '0'; setTimeout(function() { if (el.parentNode) el.remove(); }, 300); }
         }, 5000);
     }
 

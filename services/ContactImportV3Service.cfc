@@ -2332,6 +2332,16 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
             // Initialize validation service
             var validationService = new services.ValidationService();
 
+            // Field-type mapping for routing to correct validator
+            var fieldTypes = {
+                "email_business": "email", "email_personal": "email",
+                "phone_work": "phone", "phone_mobile": "phone", "phone_home": "phone",
+                "birthday": "date", "relationship_start": "date",
+                "website": "url", "linkedin": "url",
+                "tags": "tag",
+                "notes": "text"
+            };
+
             // Track which fields were updated
             var updatedFields = [];
             var validationErrors = [];
@@ -2340,8 +2350,24 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
             for (var fieldName in arguments.fields) {
                 var newValue = arguments.fields[fieldName];
 
-                // Validate the new value
-                var validationResult = validationService.validateField(fieldName, newValue);
+                // Route to correct validator based on field type
+                var fType = structKeyExists(fieldTypes, fieldName) ? fieldTypes[fieldName] : "string";
+                var vr = {};
+                switch (fType) {
+                    case "email": vr = validationService.validateEmail(newValue); break;
+                    case "phone": vr = validationService.validatePhone(newValue); break;
+                    case "date":  vr = validationService.validateDate(newValue);  break;
+                    case "url":   vr = validationService.validateURL(newValue);   break;
+                    case "tag":   vr = validationService.validateTag(newValue);   break;
+                    case "text":  vr = validationService.validateString(newValue, 65535); break;
+                    default:      vr = validationService.validateString(newValue, 255);   break;
+                }
+
+                // Normalize result keys (validators return: valid, normalized, error)
+                var isValid = structKeyExists(vr, "valid") ? vr.valid : true;
+                var normalizedVal = structKeyExists(vr, "normalized") ? vr.normalized : newValue;
+                var errCode = !isValid ? (structKeyExists(vr, "code") ? vr.code : "INVALID") : "";
+                var errMsg = !isValid ? (structKeyExists(vr, "error") ? vr.error : "") : "";
 
                 // Upsert the fact
                 queryExecute(
@@ -2350,6 +2376,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                      FROM (SELECT 1) AS dummy
                      LEFT JOIN import_v3_columns c ON c.job_id = :job_id AND c.mapped_field = :field_name
                      ON DUPLICATE KEY UPDATE
+                         raw_value = :raw_value,
                          normalized_value = :normalized_value,
                          is_valid = :is_valid,
                          validation_code = :validation_code,
@@ -2360,21 +2387,21 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                         job_id: { value: arguments.job_id, cfsqltype: "cf_sql_integer" },
                         field_name: { value: fieldName, cfsqltype: "cf_sql_varchar" },
                         raw_value: { value: newValue, cfsqltype: "cf_sql_varchar", null: !len(newValue) },
-                        normalized_value: { value: validationResult.normalized_value, cfsqltype: "cf_sql_varchar", null: !len(validationResult.normalized_value) },
-                        is_valid: { value: validationResult.is_valid ? 1 : 0, cfsqltype: "cf_sql_integer" },
-                        validation_code: { value: validationResult.is_valid ? "" : validationResult.code, cfsqltype: "cf_sql_varchar", null: validationResult.is_valid },
-                        validation_message: { value: validationResult.is_valid ? "" : validationResult.message, cfsqltype: "cf_sql_varchar", null: validationResult.is_valid }
+                        normalized_value: { value: normalizedVal, cfsqltype: "cf_sql_varchar", null: !len(normalizedVal) },
+                        is_valid: { value: isValid ? 1 : 0, cfsqltype: "cf_sql_integer" },
+                        validation_code: { value: errCode, cfsqltype: "cf_sql_varchar", null: isValid },
+                        validation_message: { value: errMsg, cfsqltype: "cf_sql_varchar", null: isValid }
                     },
                     { datasource: application.datasource }
                 );
 
                 arrayAppend(updatedFields, fieldName);
 
-                if (!validationResult.is_valid) {
+                if (!isValid) {
                     arrayAppend(validationErrors, {
                         "field": fieldName,
-                        "code": validationResult.code,
-                        "message": validationResult.message
+                        "code": errCode,
+                        "message": errMsg
                     });
                 }
             }

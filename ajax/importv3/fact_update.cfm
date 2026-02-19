@@ -215,8 +215,8 @@
     <cfset job = jobResult.data.job>
     <cfset arrayAppend(debug, "job_loaded")>
 
-    <!--- J) Status gate: Only allow fact editing from reviewing state --->
-    <cfset ALLOWED_STATUSES = ["reviewing"]>
+    <!--- J) Status gate: Allow fact editing during review and finalization --->
+    <cfset ALLOWED_STATUSES = ["reviewing", "finalizing"]>
     <cfif not arrayFindNoCase(ALLOWED_STATUSES, job.status)>
         <cfset returnError(
             "INVALID_STATE",

@@ -439,6 +439,58 @@
 
 
 <!--- ========================================
+      SINGLE-FIELD VALIDATION
+     ======================================== --->
+
+<cffunction name="validateField" access="public" returntype="struct" output="false"
+    hint="Validate a single field by name, routing to the correct type-specific validator">
+    <cfargument name="fieldName" type="string" required="true">
+    <cfargument name="value" type="string" required="true">
+
+    <cfset var fieldTypes = {
+        "first_name": "string", "last_name": "string", "contact_full_name": "string",
+        "firstName": "string", "lastName": "string", "contactFullName": "string",
+        "email_business": "email", "email_personal": "email",
+        "phone_work": "phone", "phone_mobile": "phone", "phone_home": "phone",
+        "company": "string", "title": "string",
+        "address1": "string", "address2": "string", "city": "string",
+        "state": "string", "zip": "string", "country": "string",
+        "birthday": "date", "relationship_start": "date",
+        "website": "url", "linkedin": "url",
+        "twitter": "string", "instagram": "string",
+        "notes": "text", "tags": "tag",
+        "category": "string", "contact_type": "string", "contactType": "string",
+        "relationship_system": "string"
+    }>
+
+    <cfset var fieldType = structKeyExists(fieldTypes, arguments.fieldName) ? fieldTypes[arguments.fieldName] : "string">
+
+    <cfswitch expression="#fieldType#">
+        <cfcase value="email">
+            <cfreturn validateEmail(arguments.value)>
+        </cfcase>
+        <cfcase value="phone">
+            <cfreturn validatePhone(arguments.value)>
+        </cfcase>
+        <cfcase value="date">
+            <cfreturn validateDate(arguments.value)>
+        </cfcase>
+        <cfcase value="url">
+            <cfreturn validateURL(arguments.value)>
+        </cfcase>
+        <cfcase value="tag">
+            <cfreturn validateTag(arguments.value)>
+        </cfcase>
+        <cfcase value="text">
+            <cfreturn validateString(arguments.value, 65535)>
+        </cfcase>
+        <cfdefaultcase>
+            <cfreturn validateString(arguments.value, 255)>
+        </cfdefaultcase>
+    </cfswitch>
+</cffunction>
+
+<!--- ========================================
       ROW-LEVEL VALIDATION
      ======================================== --->
 

@@ -39,30 +39,6 @@
 </cfif>
 
 <style>
-/* V3 Indicator Badge */
-.v3-badge {
-    display: inline-block;
-    background: #406e8e;
-    color: #fff;
-    font-weight: bold;
-    font-size: 14px;
-    padding: 6px 10px;
-    border-radius: 50%;
-    line-height: 1;
-    margin-left: 10px;
-    vertical-align: middle;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    box-shadow: 0 2px 4px rgba(64, 110, 142, 0.4);
-}
-.v3-banner {
-    background: linear-gradient(135deg, var(--ct-link-color), var(--ct-link-hover-color));
-    color: #fff;
-    padding: 8px 16px;
-    border-radius: 4px;
-    margin-bottom: 20px;
-    font-weight: 500;
-}
 
 .import-step {
     padding: 20px;
@@ -234,16 +210,14 @@ input[type="date"].form-control-sm {
         <div class="page-title-box">
             <h4 class="page-title">
                 Import Contacts
-                <span class="v3-badge">V3</span>
             </h4>
         </div>
     </div>
 </div>
 
-<!--- V3 Testing Banner --->
-<div class="v3-banner">
-    <i class="fe-zap"></i> <strong>Contact Import V3</strong> - You are using the new import system. Please report any issues.
-</div>
+<!--- V3 Alert Container --->
+<div id="v3-alert-container"></div>
+
 
 <cfif not hasActiveJob>
     <!--- UPLOAD STEP --->
@@ -278,7 +252,7 @@ input[type="date"].form-control-sm {
     <cfif importHistory.recordCount gt 0>
     <div class="card">
         <div class="card-body">
-            <h5>Import History <span class="v3-badge" style="font-size:10px;">V3</span></h5>
+            <h5>Import History</h5>
             <table class="table table-sm">
                 <thead>
                     <tr>
@@ -326,7 +300,6 @@ input[type="date"].form-control-sm {
             <strong>File:</strong> #activeJob.source_filename#
             <span class="mx-2">|</span>
             <strong>Status:</strong> <span id="current-status" class="status-badge status-#lcase(activeJob.status)#">#activeJob.status#</span>
-            <span class="v3-badge" style="font-size:10px; margin-left:10px;">V3</span>
         </div>
         <div>
             <a href="/app/contacts-import-v3/" class="btn btn-sm btn-outline-secondary">Start New Import</a>
@@ -511,7 +484,7 @@ input[type="date"].form-control-sm {
         </div>
         <cfelse>
         <div class="import-step completed">
-            <h5><span class="step-number"><i class="fe-check"></i></span> Import Complete <span class="v3-badge" style="font-size:10px;">V3</span></h5>
+            <h5><span class="step-number"><i class="fe-check"></i></span> Import Complete</h5>
             <p class="text-success"><strong>#activeJob.imported_rows#</strong> contacts were successfully imported.</p>
             <a href="/app/contacts/?byimport=#activeJob.job_id#" class="btn btn-primary" style="background: linear-gradient(135deg, var(--ct-link-color), var(--ct-link-hover-color)); border:none;">
                 <i class="fe-users"></i> View Imported Contacts
@@ -528,7 +501,7 @@ input[type="date"].form-control-sm {
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header" style="background: rgba(64,110,142,0.1);">
-                <h5 class="modal-title">Resolve Duplicate <span class="v3-badge" style="font-size:10px;">V3</span></h5>
+                <h5 class="modal-title">Resolve Duplicate</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" id="dupe-modal-body">
@@ -548,7 +521,7 @@ input[type="date"].form-control-sm {
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header" style="background: rgba(64,110,142,0.1);">
-                <h5 class="modal-title"><i class="fe-edit"></i> Edit Row <span class="v3-badge" style="font-size:10px;">V3</span></h5>
+                <h5 class="modal-title"><i class="fe-edit"></i> Edit Row</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" id="edit-modal-body" style="max-height: 60vh; overflow-y: auto;">
