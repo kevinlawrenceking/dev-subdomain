@@ -46,8 +46,9 @@
     color: #fff;
     font-weight: bold;
     font-size: 14px;
-    padding: 4px 12px;
-    border-radius: 20px;
+    padding: 6px 10px;
+    border-radius: 50%;
+    line-height: 1;
     margin-left: 10px;
     vertical-align: middle;
     text-transform: uppercase;
