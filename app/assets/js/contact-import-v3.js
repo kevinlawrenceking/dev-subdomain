@@ -750,12 +750,13 @@
     }
 
     function updateStats() {
-        // V3 uses the rows endpoint with aggregation or a separate endpoint
-        // For now, we get stats from the job status
+        // V3 uses the rows endpoint with stats_only mode
         $j.get('/ajax/importv3/rows.cfm?bypass=1&job_id=' + state.jobId + '&stats_only=1', function(response) {
             console.log('[V3] Stats response:', response);
-            if (response.success && response.data.stats) {
-                var stats = response.data.stats;
+            // CF serializes keys uppercase: handle both cases
+            var data = response.data || response.DATA || {};
+            var stats = data.stats || data.STATS;
+            if (response.success && stats) {
                 state.stats = stats;
                 $j('#stat-total').text(stats.total || 0);
                 $j('#stat-ready').text(stats.ready || 0);

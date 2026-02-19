@@ -373,31 +373,31 @@ input[type="date"].form-control-sm {
             <div class="row mb-3" id="stats-bar">
                 <div class="col">
                     <div class="card card-body p-2 text-center">
-                        <div class="h4 mb-0" id="stat-total">#activeJob.total_rows#</div>
+                        <div class="h4 mb-0" id="stat-total"><i class="fe-loader fe-spin" style="font-size:16px"></i></div>
                         <small class="text-muted">Total</small>
                     </div>
                 </div>
                 <div class="col">
                     <div class="card card-body p-2 text-center bg-success text-white">
-                        <div class="h4 mb-0" id="stat-ready">#activeJob.valid_rows#</div>
+                        <div class="h4 mb-0" id="stat-ready"><i class="fe-loader fe-spin" style="font-size:16px"></i></div>
                         <small>Ready</small>
                     </div>
                 </div>
                 <div class="col">
                     <div class="card card-body p-2 text-center bg-danger text-white">
-                        <div class="h4 mb-0" id="stat-problem">#activeJob.problem_rows#</div>
+                        <div class="h4 mb-0" id="stat-problem"><i class="fe-loader fe-spin" style="font-size:16px"></i></div>
                         <small>Problems</small>
                     </div>
                 </div>
                 <div class="col">
                     <div class="card card-body p-2 text-center bg-warning">
-                        <div class="h4 mb-0" id="stat-dupe">#activeJob.dupe_rows#</div>
+                        <div class="h4 mb-0" id="stat-dupe"><i class="fe-loader fe-spin" style="font-size:16px"></i></div>
                         <small>Duplicates</small>
                     </div>
                 </div>
                 <div class="col">
                     <div class="card card-body p-2 text-center" style="background: linear-gradient(135deg, ##667eea 0%, ##764ba2 100%); color:##fff;">
-                        <div class="h4 mb-0" id="stat-imported">#activeJob.imported_rows#</div>
+                        <div class="h4 mb-0" id="stat-imported"><i class="fe-loader fe-spin" style="font-size:16px"></i></div>
                         <small>Imported</small>
                     </div>
                 </div>
@@ -407,40 +407,39 @@ input[type="date"].form-control-sm {
             <ul class="nav nav-tabs review-tabs" id="review-tabs">
                 <li class="nav-item">
                     <a class="nav-link active" href="##" data-filter="">
-                        All <span class="badge badge-secondary" id="tab-all">#activeJob.total_rows#</span>
+                        All <span class="badge badge-secondary" id="tab-all">...</span>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="##" data-filter="ready">
-                        Ready <span class="badge badge-success" id="tab-ready">#activeJob.valid_rows#</span>
+                        Ready <span class="badge badge-success" id="tab-ready">...</span>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="##" data-filter="problem">
-                        Problems <span class="badge badge-danger" id="tab-problem">#activeJob.problem_rows#</span>
+                        Problems <span class="badge badge-danger" id="tab-problem">...</span>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="##" data-filter="dupe">
-                        Duplicates <span class="badge badge-warning" id="tab-dupe">#activeJob.dupe_rows#</span>
+                        Duplicates <span class="badge badge-warning" id="tab-dupe">...</span>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="##" data-filter="ignored">
-                        Ignored <span class="badge badge-secondary" id="tab-ignored">0</span>
+                        Ignored <span class="badge badge-secondary" id="tab-ignored">...</span>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="##" data-filter="imported">
-                        Imported <span class="badge" style="background:##667eea;color:##fff;" id="tab-imported">#activeJob.imported_rows#</span>
+                        Imported <span class="badge" style="background:##667eea;color:##fff;" id="tab-imported">...</span>
                     </a>
                 </li>
             </ul>
 
             <!--- Bulk actions --->
-            <div class="d-flex justify-content-between align-items-center my-3" id="bulk-actions" style="display:none !important;">
+            <div class="d-flex justify-content-between align-items-center my-3" id="bulk-actions" style="display:none;">
                 <div>
-                    <input type="checkbox" id="select-all"> <label for="select-all" class="mb-0 ml-1">Select All</label>
                     <span class="ml-3" id="selected-count">0 selected</span>
                 </div>
                 <div>
@@ -493,7 +492,7 @@ input[type="date"].form-control-sm {
                     <i class="fe-eye"></i> Preview Import (Dry Run)
                 </button>
                 <button class="btn btn-lg" id="btn-finalize" style="background: linear-gradient(135deg, ##667eea 0%, ##764ba2 100%); color:##fff; border:none;" <cfif activeJob.status eq "finalizing">disabled</cfif>>
-                    <i class="fe-check-circle"></i> Import <span id="import-count">#activeJob.valid_rows#</span> Contacts
+                    <i class="fe-check-circle"></i> Import <span id="import-count">...</span> Contacts
                 </button>
             </div>
             <div class="import-progress mt-3" id="dry-run-progress" style="display:none">
