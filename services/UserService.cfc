@@ -791,6 +791,9 @@
     <cfset result.total = qCount.total>
 
     <!--- Fetch page --->
+    <cfset var pageParams = duplicate(params)>
+    <cfset pageParams.pageSize = { value: arguments.pageSize, cfsqltype: "cf_sql_integer" }>
+    <cfset pageParams.offset = { value: offset, cfsqltype: "cf_sql_integer" }>
     <cfset var qUsers = queryExecute(
         "SELECT u.userid, u.userFirstName, u.userLastName, u.userEmail,
                 u.userRole, u.userstatus, u.recordname, u.IsDeleted,
@@ -799,10 +802,7 @@
          FROM taousers u" & whereSQL &
         " ORDER BY #safeSortCol# #safeSortDir#
          LIMIT :pageSize OFFSET :offset",
-        structAppend(duplicate(params), {
-            pageSize: { value: arguments.pageSize, cfsqltype: "cf_sql_integer" },
-            offset: { value: offset, cfsqltype: "cf_sql_integer" }
-        }, true),
+        pageParams,
         { datasource: application.datasource }
     )>
     <cfset result.users = qUsers>
