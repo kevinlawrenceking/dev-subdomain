@@ -22,7 +22,7 @@
     - ALREADY_PARSED: Job already has parsed data (idempotent return)
 --->
 
-<cfset response = {
+<cfset variables.response = {
     "success": false,
     "code": "",
     "message": "",
@@ -33,7 +33,7 @@
 <!--- Debug helper --->
 <cffunction name="addDebug" access="public" returntype="void" output="false">
     <cfargument name="msg" type="string" required="true">
-    <cfset arrayAppend(response.debug, "[" & timeFormat(now(), "HH:mm:ss") & "] " & arguments.msg)>
+    <cfset arrayAppend(variables.response.debug, "[" & timeFormat(now(), "HH:mm:ss") & "] " & arguments.msg)>
 </cffunction>
 
 <cftry>
@@ -41,27 +41,28 @@
     <!--- A) Auth: Require logged-in session userid --->
     <cfif not structKeyExists(session, "userid") or not isNumeric(session.userid) or session.userid lte 0>
         <cfset addDebug("AUTH FAILED - no session.userid")>
-        <cfset response.code = "AUTH_REQUIRED">
-        <cfset response.message = "Authentication required">
-        <cfcontent type="application/json" reset="true"><cfoutput>#serializeJSON(response)#</cfoutput><cfabort>
+        <cfset variables.response.code = "AUTH_REQUIRED">
+        <cfset variables.response.message = "Authentication required">
+        <cfcontent type="application/json" reset="true"><cfoutput>#serializeJSON(variables.response)#</cfoutput><cfabort>
     </cfif>
-    <cfset userid = session.userid>
-    <cfset addDebug("Auth OK - userid=" & userid)>
+    <cfset variables.userid = session.userid>
+    <cfset addDebug("Auth OK - userid=" & variables.userid)>
+    <cflog file="importv3" text="[parse] START userid=#variables.userid#">
 
     <!--- Validate job_id parameter - check JSON body, form, and URL --->
-    <cfset requestBody = {}>
-    <cfset rawBodyStr = "">
+    <cfset variables.requestBody = {}>
+    <cfset variables.rawBodyStr = "">
     <cftry>
-        <cfset rawBody = getHttpRequestData().content>
-        <cfif isBinary(rawBody)>
-            <cfset rawBodyStr = toString(rawBody)>
-        <cfelseif isSimpleValue(rawBody)>
-            <cfset rawBodyStr = rawBody>
+        <cfset variables.rawBody = getHttpRequestData().content>
+        <cfif isBinary(variables.rawBody)>
+            <cfset variables.rawBodyStr = toString(variables.rawBody)>
+        <cfelseif isSimpleValue(variables.rawBody)>
+            <cfset variables.rawBodyStr = variables.rawBody>
         </cfif>
-        <cfset addDebug("Raw body length=" & len(rawBodyStr) & " content=" & left(rawBodyStr, 200))>
-        <cfif len(trim(rawBodyStr)) gt 0>
-            <cfset requestBody = deserializeJSON(rawBodyStr)>
-            <cfset addDebug("Parsed JSON body keys=" & structKeyList(requestBody))>
+        <cfset addDebug("Raw body length=" & len(variables.rawBodyStr) & " content=" & left(variables.rawBodyStr, 200))>
+        <cfif len(trim(variables.rawBodyStr)) gt 0>
+            <cfset variables.requestBody = deserializeJSON(variables.rawBodyStr)>
+            <cfset addDebug("Parsed JSON body keys=" & structKeyList(variables.requestBody))>
         </cfif>
         <cfcatch>
             <cfset addDebug("JSON parse error: " & cfcatch.message)>
@@ -72,352 +73,353 @@
     <cfparam name="url.job_id" default="">
     <cfset addDebug("form.job_id=" & form.job_id & " url.job_id=" & url.job_id)>
 
-    <cfset jobId = 0>
-    <cfif structKeyExists(requestBody, "job_id")>
-        <cfset jobId = val(requestBody.job_id)>
-        <cfset addDebug("Got job_id from JSON body: " & jobId)>
+    <cfset variables.jobId = 0>
+    <cfif structKeyExists(variables.requestBody, "job_id")>
+        <cfset variables.jobId = val(variables.requestBody.job_id)>
+        <cfset addDebug("Got job_id from JSON body: " & variables.jobId)>
     </cfif>
-    <cfif jobId eq 0>
-        <cfset jobId = val(form.job_id)>
-        <cfif jobId gt 0><cfset addDebug("Got job_id from form: " & jobId)></cfif>
+    <cfif variables.jobId eq 0>
+        <cfset variables.jobId = val(form.job_id)>
+        <cfif variables.jobId gt 0><cfset addDebug("Got job_id from form: " & variables.jobId)></cfif>
     </cfif>
-    <cfif jobId eq 0>
-        <cfset jobId = val(url.job_id)>
-        <cfif jobId gt 0><cfset addDebug("Got job_id from URL: " & jobId)></cfif>
+    <cfif variables.jobId eq 0>
+        <cfset variables.jobId = val(url.job_id)>
+        <cfif variables.jobId gt 0><cfset addDebug("Got job_id from URL: " & variables.jobId)></cfif>
     </cfif>
-    <cfif jobId lte 0>
+    <cfif variables.jobId lte 0>
         <cfset addDebug("VALIDATION FAILED - no valid job_id found")>
-        <cfset response.code = "VALIDATION_ERROR">
-        <cfset response.message = "job_id is required">
-        <cfcontent type="application/json" reset="true"><cfoutput>#serializeJSON(response)#</cfoutput><cfabort>
+        <cfset variables.response.code = "VALIDATION_ERROR">
+        <cfset variables.response.message = "job_id is required">
+        <cfcontent type="application/json" reset="true"><cfoutput>#serializeJSON(variables.response)#</cfoutput><cfabort>
     </cfif>
-    <cfset addDebug("Final jobId=" & jobId)>
+    <cfset addDebug("Final jobId=" & variables.jobId)>
+    <cflog file="importv3" text="[parse] PARAMS userid=#variables.userid# job_id=#variables.jobId#">
 
     <!--- Initialize V3 service --->
     <cfset addDebug("Initializing V3 service...")>
-    <cfset v3Service = new services.ContactImportV3Service()>
+    <cfset variables.v3Service = new services.ContactImportV3Service()>
     <cfset addDebug("V3 service initialized")>
 
     <!--- A) Get job with ownership verification --->
     <cfset addDebug("Getting job for user...")>
     <cftry>
-        <cfset jobResult = v3Service.getJobForUser(jobId, userid)>
-        <cfset addDebug("getJobForUser result: success=" & jobResult.success)>
+        <cfset variables.jobResult = variables.v3Service.getJobForUser(variables.jobId, variables.userid)>
+        <cfset addDebug("getJobForUser result: success=" & variables.jobResult.success)>
         <cfcatch type="any">
             <cfset addDebug("getJobForUser EXCEPTION: " & cfcatch.message & " | " & cfcatch.detail)>
-            <cfset response.code = "SERVICE_ERROR">
-            <cfset response.message = "Service error: " & cfcatch.message & " | Detail: " & cfcatch.detail>
-            <cfcontent type="application/json" reset="true"><cfoutput>#serializeJSON(response)#</cfoutput><cfabort>
+            <cfset variables.response.code = "SERVICE_ERROR">
+            <cfset variables.response.message = "Service error: " & cfcatch.message & " | Detail: " & cfcatch.detail>
+            <cfcontent type="application/json" reset="true"><cfoutput>#serializeJSON(variables.response)#</cfoutput><cfabort>
         </cfcatch>
     </cftry>
-    <cfif not jobResult.success>
-        <cfset addDebug("Job fetch failed: code=" & jobResult.code & " msg=" & jobResult.message)>
-        <cfif structKeyExists(jobResult, "data") and structKeyExists(jobResult.data, "error_detail")>
-            <cfset addDebug("Error detail: " & jobResult.data.error_detail)>
+    <cfif not variables.jobResult.success>
+        <cfset addDebug("Job fetch failed: code=" & variables.jobResult.code & " msg=" & variables.jobResult.message)>
+        <cfif structKeyExists(variables.jobResult, "data") and structKeyExists(variables.jobResult.data, "error_detail")>
+            <cfset addDebug("Error detail: " & variables.jobResult.data.error_detail)>
         </cfif>
-        <cfset response.code = jobResult.code>
-        <cfset response.message = jobResult.message>
-        <cfset response.data = jobResult.data>
-        <cfcontent type="application/json" reset="true"><cfoutput>#serializeJSON(response)#</cfoutput><cfabort>
+        <cfset variables.response.code = variables.jobResult.code>
+        <cfset variables.response.message = variables.jobResult.message>
+        <cfset variables.response.data = variables.jobResult.data>
+        <cfcontent type="application/json" reset="true"><cfoutput>#serializeJSON(variables.response)#</cfoutput><cfabort>
     </cfif>
-    <cfset job = jobResult.data.job>
-    <cfset addDebug("Job loaded: status=" & job.status & " file_type=" & job.file_type & " stored_file_path=" & job.stored_file_path)>
+    <cfset variables.job = variables.jobResult.data.job>
+    <cfset addDebug("Job loaded: status=" & variables.job.status & " file_type=" & variables.job.file_type & " stored_file_path=" & variables.job.stored_file_path)>
 
-    <!--- C) Idempotency check: If already parsed, return current counts --->
-    <cfif job.status eq "parsed" or job.status eq "mapping" or job.status eq "reviewing" or job.status eq "finalizing" or job.status eq "completed">
+    <!--- C) Idempotency check: if job already has parsed data, return existing counts instead of re-parsing --->
+    <cfif variables.job.status eq "parsed" or variables.job.status eq "mapping" or variables.job.status eq "reviewing" or variables.job.status eq "finalizing" or variables.job.status eq "completed">
         <!--- Check if data already exists --->
-        <cfset qRowCount = queryExecute(
+        <cfset variables.qRowCount = queryExecute(
             "SELECT COUNT(*) as cnt FROM import_v3_rows WHERE job_id = :job_id",
-            { job_id: { value: jobId, cfsqltype: "cf_sql_integer" } },
+            { job_id: { value: variables.jobId, cfsqltype: "cf_sql_integer" } },
             { datasource: application.datasource }
         )>
-        <cfif qRowCount.cnt gt 0>
+        <cfif variables.qRowCount.cnt gt 0>
             <!--- Already parsed - return idempotent response --->
-            <cfset qCounts = queryExecute(
+            <cfset variables.qCounts = queryExecute(
                 "SELECT
                     (SELECT COUNT(*) FROM import_v3_columns WHERE job_id = :job_id) as columns_count,
                     (SELECT COUNT(*) FROM import_v3_rows WHERE job_id = :job_id) as rows_count,
                     (SELECT COUNT(*) FROM import_v3_facts f
                      INNER JOIN import_v3_rows r ON f.row_id = r.row_id
                      WHERE r.job_id = :job_id) as facts_count",
-                { job_id: { value: jobId, cfsqltype: "cf_sql_integer" } },
+                { job_id: { value: variables.jobId, cfsqltype: "cf_sql_integer" } },
                 { datasource: application.datasource }
             )>
 
-            <cfset v3Service.logEvent(
-                job_id = jobId,
-                userid = userid,
+            <cfset variables.v3Service.logEvent(
+                job_id = variables.jobId,
+                userid = variables.userid,
                 event_type = "parse_already_done",
-                detail = { status: job.status, rows: qCounts.rows_count, columns: qCounts.columns_count }
+                detail = { status: variables.job.status, rows: variables.qCounts.rows_count, columns: variables.qCounts.columns_count }
             )>
 
-            <cfset response.success = true>
-            <cfset response.code = "ALREADY_PARSED">
-            <cfset response.message = "Job has already been parsed">
-            <cfset response.data = {
+            <cfset variables.response.success = true>
+            <cfset variables.response.code = "ALREADY_PARSED">
+            <cfset variables.response.message = "Job has already been parsed">
+            <cfset variables.response.data = {
                 "job": {
-                    "job_id": jobId,
-                    "status": job.status,
-                    "source_filename": job.source_filename
+                    "job_id": variables.jobId,
+                    "status": variables.job.status,
+                    "source_filename": variables.job.source_filename
                 },
-                "columns_created": qCounts.columns_count,
-                "rows_created": qCounts.rows_count,
-                "facts_created": qCounts.facts_count
+                "columns_created": variables.qCounts.columns_count,
+                "rows_created": variables.qCounts.rows_count,
+                "facts_created": variables.qCounts.facts_count
             }>
-            <cfcontent type="application/json" reset="true"><cfoutput>#serializeJSON(response)#</cfoutput><cfabort>
+            <cflog file="importv3" text="[parse] ALREADY_PARSED userid=#variables.userid# job_id=#variables.jobId# status=#variables.job.status#">
+            <cfcontent type="application/json" reset="true"><cfoutput>#serializeJSON(variables.response)#</cfoutput><cfabort>
         </cfif>
     </cfif>
 
-    <!--- Check VCF not supported yet --->
-    <cfif job.file_type eq "vcf">
-        <cfset response.code = "UNSUPPORTED_FILE_TYPE">
-        <cfset response.message = "VCF (vCard) parsing is not yet supported">
-        <cfcontent type="application/json" reset="true"><cfoutput>#serializeJSON(response)#</cfoutput><cfabort>
+    <!--- D) VCF (vCard) parsing is not yet implemented - return early with informative message --->
+    <cfif variables.job.file_type eq "vcf">
+        <cfset variables.response.code = "UNSUPPORTED_FILE_TYPE">
+        <cfset variables.response.message = "VCF (vCard) parsing is not yet supported">
+        <cfcontent type="application/json" reset="true"><cfoutput>#serializeJSON(variables.response)#</cfoutput><cfabort>
     </cfif>
 
-    <!--- B) Acquire lock for parse operation --->
-    <cfset lockResult = v3Service.acquireJobLock(
-        job_id = jobId,
-        userid = userid,
+    <!--- E) Acquire job lock to prevent concurrent parse operations --->
+    <cfset variables.lockResult = variables.v3Service.acquireJobLock(
+        job_id = variables.jobId,
+        userid = variables.userid,
         lock_token = createUUID(),
         lock_purpose = "parse"
     )>
-    <cfif not lockResult.acquired>
-        <cfset response.code = "LOCKED">
-        <cfset response.message = lockResult.message>
-        <cfcontent type="application/json" reset="true"><cfoutput>#serializeJSON(response)#</cfoutput><cfabort>
+    <cfif not variables.lockResult.acquired>
+        <cfset variables.response.code = "LOCKED">
+        <cfset variables.response.message = variables.lockResult.message>
+        <cfcontent type="application/json" reset="true"><cfoutput>#serializeJSON(variables.response)#</cfoutput><cfabort>
     </cfif>
 
-    <!--- Set status to parsing --->
-    <cfset v3Service.setJobStatus(jobId, userid, "parsing")>
-
-    <!--- Log parse started --->
-    <cfset v3Service.logEvent(
-        job_id = jobId,
-        userid = userid,
+    <!--- F) Transition job status to "parsing" and log the event --->
+    <cfset variables.v3Service.setJobStatus(variables.jobId, variables.userid, "parsing")>
+    <cfset variables.v3Service.logEvent(
+        job_id = variables.jobId,
+        userid = variables.userid,
         event_type = "parse_started",
-        detail = { file_type: job.file_type, source_filename: job.source_filename }
+        detail = { file_type: variables.job.file_type, source_filename: variables.job.source_filename }
     )>
 
-    <!--- Read and parse the file based on type --->
-    <cfset filePath = job.stored_file_path>
-    <cfset addDebug("Checking file path: " & filePath)>
-    <cfif not fileExists(filePath)>
+    <!--- G) Read and parse the uploaded file based on type (CSV or XLS/XLSX) --->
+    <cfset variables.filePath = variables.job.stored_file_path>
+    <cfset addDebug("Checking file path: " & variables.filePath)>
+    <cfif not fileExists(variables.filePath)>
         <cfset addDebug("FILE NOT FOUND!")>
-        <cfset v3Service.setJobStatus(jobId, userid, "failed", "File not found: " & job.source_filename)>
-        <cfset v3Service.logEvent(job_id = jobId, userid = userid, event_type = "parse_failed", detail = { error: "File not found" })>
-        <cfset response.code = "PARSE_FAILED">
-        <cfset response.message = "Uploaded file not found on server: " & filePath>
-        <cfcontent type="application/json" reset="true"><cfoutput>#serializeJSON(response)#</cfoutput><cfabort>
+        <cfset variables.v3Service.setJobStatus(variables.jobId, variables.userid, "failed", "File not found: " & variables.job.source_filename)>
+        <cfset variables.v3Service.logEvent(job_id = variables.jobId, userid = variables.userid, event_type = "parse_failed", detail = { error: "File not found" })>
+        <cfset variables.response.code = "PARSE_FAILED">
+        <cfset variables.response.message = "Uploaded file not found on server: " & variables.filePath>
+        <cfcontent type="application/json" reset="true"><cfoutput>#serializeJSON(variables.response)#</cfoutput><cfabort>
     </cfif>
     <cfset addDebug("File exists!")>
+    <cflog file="importv3" text="[parse] FILE_FOUND userid=#variables.userid# job_id=#variables.jobId# file_type=#variables.job.file_type#">
 
-    <cfset headers = []>
-    <cfset dataRows = []>
+    <cfset variables.headers = []>
+    <cfset variables.dataRows = []>
 
     <cftry>
-        <cfif job.file_type eq "csv">
+        <cfif variables.job.file_type eq "csv">
             <cfset addDebug("Parsing CSV file...")>
             <!--- Parse CSV file --->
-            <cfset fileContent = fileRead(filePath, "utf-8")>
-            <cfset addDebug("File read, length=" & len(fileContent))>
+            <cfset variables.fileContent = fileRead(variables.filePath, "utf-8")>
+            <cfset addDebug("File read, length=" & len(variables.fileContent))>
 
             <!--- Normalize line endings --->
-            <cfset fileContent = replace(fileContent, chr(13) & chr(10), chr(10), "all")>
-            <cfset fileContent = replace(fileContent, chr(13), chr(10), "all")>
+            <cfset variables.fileContent = replace(variables.fileContent, chr(13) & chr(10), chr(10), "all")>
+            <cfset variables.fileContent = replace(variables.fileContent, chr(13), chr(10), "all")>
 
             <!--- Split into lines --->
-            <cfset lines = listToArray(fileContent, chr(10))>
-            <cfset addDebug("Lines found: " & arrayLen(lines))>
+            <cfset variables.lines = listToArray(variables.fileContent, chr(10))>
+            <cfset addDebug("Lines found: " & arrayLen(variables.lines))>
 
-            <cfif arrayLen(lines) eq 0>
+            <cfif arrayLen(variables.lines) eq 0>
                 <cfthrow message="File is empty">
             </cfif>
 
             <!--- Detect delimiter: check first line for comma vs tab --->
-            <cfset firstLine = lines[1]>
-            <cfset addDebug("First line: " & left(firstLine, 200))>
-            <cfset commaCount = len(firstLine) - len(replace(firstLine, ",", "", "all"))>
-            <cfset tabCount = len(firstLine) - len(replace(firstLine, chr(9), "", "all"))>
-            <cfset delimiter = ",">
-            <cfif tabCount gt commaCount>
-                <cfset delimiter = chr(9)>
+            <cfset variables.firstLine = variables.lines[1]>
+            <cfset addDebug("First line: " & left(variables.firstLine, 200))>
+            <cfset variables.commaCount = len(variables.firstLine) - len(replace(variables.firstLine, ",", "", "all"))>
+            <cfset variables.tabCount = len(variables.firstLine) - len(replace(variables.firstLine, chr(9), "", "all"))>
+            <cfset variables.delimiter = ",">
+            <cfif variables.tabCount gt variables.commaCount>
+                <cfset variables.delimiter = chr(9)>
             </cfif>
-            <cfset addDebug("Delimiter: " & (delimiter eq "," ? "comma" : "tab") & " (commas=" & commaCount & " tabs=" & tabCount & ")")>
+            <cfset addDebug("Delimiter: " & (variables.delimiter eq "," ? "comma" : "tab") & " (commas=" & variables.commaCount & " tabs=" & variables.tabCount & ")")>
 
             <!--- Parse header row --->
-            <cfset headerRow = parseCSVLine(firstLine, delimiter)>
-            <cfset addDebug("Header row parsed, fields=" & arrayLen(headerRow))>
-            <cfset headers = processHeaders(headerRow)>
-            <cfset addDebug("Headers: " & arrayToList(headers, ", "))>
+            <cfset variables.headerRow = parseCSVLine(variables.firstLine, variables.delimiter)>
+            <cfset addDebug("Header row parsed, fields=" & arrayLen(variables.headerRow))>
+            <cfset variables.headers = processHeaders(variables.headerRow)>
+            <cfset addDebug("Headers: " & arrayToList(variables.headers, ", "))>
 
             <!--- Parse data rows --->
-            <cfloop from="2" to="#arrayLen(lines)#" index="i">
-                <cfset lineText = trim(lines[i])>
-                <cfif len(lineText) gt 0>
-                    <cfset rowData = parseCSVLine(lineText, delimiter)>
-                    <cfset arrayAppend(dataRows, rowData)>
+            <cfloop from="2" to="#arrayLen(variables.lines)#" index="i">
+                <cfset variables.lineText = trim(variables.lines[i])>
+                <cfif len(variables.lineText) gt 0>
+                    <cfset variables.rowData = parseCSVLine(variables.lineText, variables.delimiter)>
+                    <cfset arrayAppend(variables.dataRows, variables.rowData)>
                 </cfif>
             </cfloop>
-            <cfset addDebug("Data rows parsed: " & arrayLen(dataRows))>
+            <cfset addDebug("Data rows parsed: " & arrayLen(variables.dataRows))>
 
-        <cfelseif job.file_type eq "xls" or job.file_type eq "xlsx">
+        <cfelseif variables.job.file_type eq "xls" or variables.job.file_type eq "xlsx">
             <!--- Parse Excel using cfspreadsheet --->
-            <cfspreadsheet action="read" src="#filePath#" query="spreadsheetData" headerrow="1">
+            <cfspreadsheet action="read" src="#variables.filePath#" query="spreadsheetData" headerrow="1">
 
             <!--- Get headers from column names --->
-            <cfset rawHeaders = listToArray(spreadsheetData.columnList)>
-            <cfset headers = processHeaders(rawHeaders)>
+            <cfset variables.rawHeaders = listToArray(variables.spreadsheetData.columnList)>
+            <cfset variables.headers = processHeaders(variables.rawHeaders)>
 
             <!--- Get data rows --->
-            <cfloop query="spreadsheetData">
-                <cfset rowData = []>
-                <cfloop list="#spreadsheetData.columnList#" index="colName">
-                    <cfset cellValue = spreadsheetData[colName][spreadsheetData.currentRow]>
-                    <cfif isNull(cellValue)>
-                        <cfset cellValue = "">
+            <cfloop query="variables.spreadsheetData">
+                <cfset variables.rowData = []>
+                <cfloop list="#variables.spreadsheetData.columnList#" index="colName">
+                    <cfset variables.cellValue = variables.spreadsheetData[variables.colName][variables.spreadsheetData.currentRow]>
+                    <cfif isNull(variables.cellValue)>
+                        <cfset variables.cellValue = "">
                     </cfif>
-                    <cfset arrayAppend(rowData, toString(cellValue))>
+                    <cfset arrayAppend(variables.rowData, toString(variables.cellValue))>
                 </cfloop>
-                <cfset arrayAppend(dataRows, rowData)>
+                <cfset arrayAppend(variables.dataRows, variables.rowData)>
             </cfloop>
         </cfif>
 
         <cfcatch type="any">
             <cfset addDebug("FILE PARSE ERROR: " & cfcatch.message & " | " & cfcatch.detail)>
-            <cfset v3Service.setJobStatus(jobId, userid, "failed", "Parse error: " & cfcatch.message)>
-            <cfset v3Service.logEvent(job_id = jobId, userid = userid, event_type = "parse_failed", detail = { error: cfcatch.message })>
-            <cfset response.code = "PARSE_FAILED">
-            <cfset response.message = "Failed to parse file: " & cfcatch.message>
-            <cfcontent type="application/json" reset="true"><cfoutput>#serializeJSON(response)#</cfoutput><cfabort>
+            <cfset variables.v3Service.setJobStatus(variables.jobId, variables.userid, "failed", "Parse error: " & cfcatch.message)>
+            <cfset variables.v3Service.logEvent(job_id = variables.jobId, userid = variables.userid, event_type = "parse_failed", detail = { error: cfcatch.message })>
+            <cfset variables.response.code = "PARSE_FAILED">
+            <cfset variables.response.message = "Failed to parse file: " & cfcatch.message>
+            <cfcontent type="application/json" reset="true"><cfoutput>#serializeJSON(variables.response)#</cfoutput><cfabort>
         </cfcatch>
     </cftry>
 
-    <cfset addDebug("Starting DB inserts - headers=" & arrayLen(headers) & " dataRows=" & arrayLen(dataRows))>
-    <!--- Insert columns with INSERT IGNORE --->
-    <cfset columnsCreated = 0>
-    <cfloop from="1" to="#arrayLen(headers)#" index="colIdx">
-        <cfset headerName = headers[colIdx]>
-        <cfset sampleVals = []>
+    <cfset addDebug("Starting DB inserts - headers=" & arrayLen(variables.headers) & " dataRows=" & arrayLen(variables.dataRows))>
+    <!--- H) Insert column definitions into import_v3_columns (INSERT IGNORE for idempotency) --->
+    <cfset variables.columnsCreated = 0>
+    <cfloop from="1" to="#arrayLen(variables.headers)#" index="colIdx">
+        <cfset variables.headerName = variables.headers[colIdx]>
+        <cfset variables.sampleVals = []>
         <!--- Collect up to 3 sample values --->
-        <cfloop from="1" to="#min(3, arrayLen(dataRows))#" index="sampleIdx">
-            <cfif arrayLen(dataRows[sampleIdx]) gte colIdx>
-                <cfset arrayAppend(sampleVals, dataRows[sampleIdx][colIdx])>
+        <cfloop from="1" to="#min(3, arrayLen(variables.dataRows))#" index="sampleIdx">
+            <cfif arrayLen(variables.dataRows[sampleIdx]) gte colIdx>
+                <cfset arrayAppend(variables.sampleVals, variables.dataRows[sampleIdx][colIdx])>
             </cfif>
         </cfloop>
 
-        <cfset qColResult = {}>
+        <cfset variables.qColResult = {}>
         <cfset queryExecute(
             "INSERT IGNORE INTO import_v3_columns
              (job_id, source_column_index, source_column_name, sample_values, created_at, updated_at)
              VALUES (:job_id, :col_index, :col_name, :sample_values, NOW(), NOW())",
             {
-                job_id: { value: jobId, cfsqltype: "cf_sql_integer" },
+                job_id: { value: variables.jobId, cfsqltype: "cf_sql_integer" },
                 col_index: { value: colIdx - 1, cfsqltype: "cf_sql_integer" },
-                col_name: { value: headerName, cfsqltype: "cf_sql_varchar", maxlength: 255 },
-                sample_values: { value: serializeJSON(sampleVals), cfsqltype: "cf_sql_longvarchar" }
+                col_name: { value: variables.headerName, cfsqltype: "cf_sql_varchar", maxlength: 255 },
+                sample_values: { value: serializeJSON(variables.sampleVals), cfsqltype: "cf_sql_longvarchar" }
             },
-            { datasource: application.datasource, result: "qColResult" }
+            { datasource: application.datasource, result: "variables.qColResult" }
         )>
-        <cfif structKeyExists(qColResult, "recordCount") and qColResult.recordCount gt 0>
-            <cfset columnsCreated++>
+        <cfif structKeyExists(variables.qColResult, "recordCount") and variables.qColResult.recordCount gt 0>
+            <cfset variables.columnsCreated++>
         </cfif>
     </cfloop>
 
-    <!--- Get column IDs for fact insertion --->
-    <cfset qColumns = queryExecute(
+    <!--- I) Build column index-to-ID lookup map for fact insertion --->
+    <cfset variables.qColumns = queryExecute(
         "SELECT column_id, source_column_index FROM import_v3_columns WHERE job_id = :job_id ORDER BY source_column_index",
-        { job_id: { value: jobId, cfsqltype: "cf_sql_integer" } },
+        { job_id: { value: variables.jobId, cfsqltype: "cf_sql_integer" } },
         { datasource: application.datasource }
     )>
 
     <!--- Build column index to ID map --->
-    <cfset colIdMap = {}>
-    <cfloop query="qColumns">
-        <cfset colIdMap[qColumns.source_column_index] = qColumns.column_id>
+    <cfset variables.colIdMap = {}>
+    <cfloop query="variables.qColumns">
+        <cfset variables.colIdMap[variables.qColumns.source_column_index] = variables.qColumns.column_id>
     </cfloop>
 
-    <!--- Insert rows with INSERT IGNORE --->
-    <cfset rowsCreated = 0>
-    <cfloop from="1" to="#arrayLen(dataRows)#" index="rowIdx">
-        <cfset rowData = dataRows[rowIdx]>
+    <!--- J) Insert data rows into import_v3_rows (INSERT IGNORE for idempotency) --->
+    <cfset variables.rowsCreated = 0>
+    <cfloop from="1" to="#arrayLen(variables.dataRows)#" index="rowIdx">
+        <cfset variables.rowData = variables.dataRows[rowIdx]>
         <!--- Build raw_json as object with column indices as keys --->
-        <cfset rawJson = {}>
-        <cfloop from="1" to="#arrayLen(rowData)#" index="cellIdx">
-            <cfset rawJson[cellIdx - 1] = rowData[cellIdx]>
+        <cfset variables.rawJson = {}>
+        <cfloop from="1" to="#arrayLen(variables.rowData)#" index="cellIdx">
+            <cfset variables.rawJson[cellIdx - 1] = variables.rowData[cellIdx]>
         </cfloop>
 
-        <cfset qRowResult = {}>
+        <cfset variables.qRowResult = {}>
         <cfset queryExecute(
             "INSERT IGNORE INTO import_v3_rows
              (job_id, row_num, raw_json, status, created_at, updated_at)
              VALUES (:job_id, :row_num, :raw_json, 'pending', NOW(), NOW())",
             {
-                job_id: { value: jobId, cfsqltype: "cf_sql_integer" },
+                job_id: { value: variables.jobId, cfsqltype: "cf_sql_integer" },
                 row_num: { value: rowIdx, cfsqltype: "cf_sql_integer" },
-                raw_json: { value: serializeJSON(rawJson), cfsqltype: "cf_sql_longvarchar" }
+                raw_json: { value: serializeJSON(variables.rawJson), cfsqltype: "cf_sql_longvarchar" }
             },
-            { datasource: application.datasource, result: "qRowResult" }
+            { datasource: application.datasource, result: "variables.qRowResult" }
         )>
-        <cfif structKeyExists(qRowResult, "recordCount") and qRowResult.recordCount gt 0>
-            <cfset rowsCreated++>
+        <cfif structKeyExists(variables.qRowResult, "recordCount") and variables.qRowResult.recordCount gt 0>
+            <cfset variables.rowsCreated++>
         </cfif>
     </cfloop>
 
-    <!--- Get row IDs for fact insertion --->
-    <cfset qRows = queryExecute(
+    <!--- K) Build row_num-to-ID lookup map for fact insertion --->
+    <cfset variables.qRows = queryExecute(
         "SELECT row_id, row_num FROM import_v3_rows WHERE job_id = :job_id ORDER BY row_num",
-        { job_id: { value: jobId, cfsqltype: "cf_sql_integer" } },
+        { job_id: { value: variables.jobId, cfsqltype: "cf_sql_integer" } },
         { datasource: application.datasource }
     )>
 
     <!--- Build row_num to ID map --->
-    <cfset rowIdMap = {}>
-    <cfloop query="qRows">
-        <cfset rowIdMap[qRows.row_num] = qRows.row_id>
+    <cfset variables.rowIdMap = {}>
+    <cfloop query="variables.qRows">
+        <cfset variables.rowIdMap[variables.qRows.row_num] = variables.qRows.row_id>
     </cfloop>
 
-    <!--- Insert facts for each cell --->
-    <cfset factsCreated = 0>
-    <cfloop from="1" to="#arrayLen(dataRows)#" index="rowIdx">
-        <cfset rowData = dataRows[rowIdx]>
-        <cfif structKeyExists(rowIdMap, rowIdx)>
-            <cfset currentRowId = rowIdMap[rowIdx]>
+    <!--- L) Insert individual cell facts into import_v3_facts (one per cell per row) --->
+    <cfset variables.factsCreated = 0>
+    <cfloop from="1" to="#arrayLen(variables.dataRows)#" index="rowIdx">
+        <cfset variables.rowData = variables.dataRows[rowIdx]>
+        <cfif structKeyExists(variables.rowIdMap, rowIdx)>
+            <cfset variables.currentRowId = variables.rowIdMap[rowIdx]>
 
-            <cfloop from="1" to="#arrayLen(headers)#" index="colIdx">
-                <cfset colIndex = colIdx - 1>
-                <cfif structKeyExists(colIdMap, colIndex)>
-                    <cfset currentColId = colIdMap[colIndex]>
-                    <cfset cellValue = "">
-                    <cfif arrayLen(rowData) gte colIdx>
-                        <cfset cellValue = rowData[colIdx]>
+            <cfloop from="1" to="#arrayLen(variables.headers)#" index="colIdx">
+                <cfset variables.colIndex = colIdx - 1>
+                <cfif structKeyExists(variables.colIdMap, variables.colIndex)>
+                    <cfset variables.currentColId = variables.colIdMap[variables.colIndex]>
+                    <cfset variables.cellValue = "">
+                    <cfif arrayLen(variables.rowData) gte colIdx>
+                        <cfset variables.cellValue = variables.rowData[colIdx]>
                     </cfif>
 
                     <!--- field_name is placeholder until mapping phase --->
-                    <cfset fieldName = "unmapped_" & colIndex>
+                    <cfset variables.fieldName = "unmapped_" & variables.colIndex>
 
-                    <cfset qFactResult = {}>
+                    <cfset variables.qFactResult = {}>
                     <cfset queryExecute(
                         "INSERT IGNORE INTO import_v3_facts
                          (row_id, column_id, field_name, raw_value, created_at, updated_at)
                          VALUES (:row_id, :column_id, :field_name, :raw_value, NOW(), NOW())",
                         {
-                            row_id: { value: currentRowId, cfsqltype: "cf_sql_integer" },
-                            column_id: { value: currentColId, cfsqltype: "cf_sql_integer" },
-                            field_name: { value: fieldName, cfsqltype: "cf_sql_varchar", maxlength: 50 },
-                            raw_value: { value: cellValue, cfsqltype: "cf_sql_longvarchar", null: (len(trim(cellValue)) eq 0) }
+                            row_id: { value: variables.currentRowId, cfsqltype: "cf_sql_integer" },
+                            column_id: { value: variables.currentColId, cfsqltype: "cf_sql_integer" },
+                            field_name: { value: variables.fieldName, cfsqltype: "cf_sql_varchar", maxlength: 50 },
+                            raw_value: { value: variables.cellValue, cfsqltype: "cf_sql_longvarchar", null: (len(trim(variables.cellValue)) eq 0) }
                         },
-                        { datasource: application.datasource, result: "qFactResult" }
+                        { datasource: application.datasource, result: "variables.qFactResult" }
                     )>
-                    <cfif structKeyExists(qFactResult, "recordCount") and qFactResult.recordCount gt 0>
-                        <cfset factsCreated++>
+                    <cfif structKeyExists(variables.qFactResult, "recordCount") and variables.qFactResult.recordCount gt 0>
+                        <cfset variables.factsCreated++>
                     </cfif>
                 </cfif>
             </cfloop>
         </cfif>
     </cfloop>
 
-    <!--- Update job counts --->
+    <!--- M) Update job row counts in import_v3_jobs --->
     <cfset queryExecute(
         "UPDATE import_v3_jobs
          SET total_rows = :total_rows,
@@ -425,79 +427,84 @@
              updated_at = NOW()
          WHERE job_id = :job_id AND userid = :userid",
         {
-            job_id: { value: jobId, cfsqltype: "cf_sql_integer" },
-            userid: { value: userid, cfsqltype: "cf_sql_integer" },
-            total_rows: { value: arrayLen(dataRows), cfsqltype: "cf_sql_integer" },
-            parsed_rows: { value: arrayLen(dataRows), cfsqltype: "cf_sql_integer" }
+            job_id: { value: variables.jobId, cfsqltype: "cf_sql_integer" },
+            userid: { value: variables.userid, cfsqltype: "cf_sql_integer" },
+            total_rows: { value: arrayLen(variables.dataRows), cfsqltype: "cf_sql_integer" },
+            parsed_rows: { value: arrayLen(variables.dataRows), cfsqltype: "cf_sql_integer" }
         },
         { datasource: application.datasource }
     )>
 
+    <cflog file="importv3" text="[parse] DB_INSERTS_DONE userid=#variables.userid# job_id=#variables.jobId# columns=#variables.columnsCreated# rows=#variables.rowsCreated# facts=#variables.factsCreated#">
     <!--- Set status to parsed --->
-    <cfset v3Service.setJobStatus(jobId, userid, "parsed")>
+    <cfset variables.v3Service.setJobStatus(variables.jobId, variables.userid, "parsed")>
 
     <!--- Log parse completed --->
-    <cfset v3Service.logEvent(
-        job_id = jobId,
-        userid = userid,
+    <cfset variables.v3Service.logEvent(
+        job_id = variables.jobId,
+        userid = variables.userid,
         event_type = "parse_completed",
         detail = {
-            columns_created: columnsCreated,
-            rows_created: rowsCreated,
-            facts_created: factsCreated,
-            total_rows: arrayLen(dataRows)
+            columns_created: variables.columnsCreated,
+            rows_created: variables.rowsCreated,
+            facts_created: variables.factsCreated,
+            total_rows: arrayLen(variables.dataRows)
         }
     )>
 
-    <!--- Get final counts from DB --->
-    <cfset qFinalCounts = queryExecute(
+    <!--- N) Get verified counts from DB for the response (not in-memory counters) --->
+    <cfset variables.qFinalCounts = queryExecute(
         "SELECT
             (SELECT COUNT(*) FROM import_v3_columns WHERE job_id = :job_id) as columns_count,
             (SELECT COUNT(*) FROM import_v3_rows WHERE job_id = :job_id) as rows_count,
             (SELECT COUNT(*) FROM import_v3_facts f
              INNER JOIN import_v3_rows r ON f.row_id = r.row_id
              WHERE r.job_id = :job_id) as facts_count",
-        { job_id: { value: jobId, cfsqltype: "cf_sql_integer" } },
+        { job_id: { value: variables.jobId, cfsqltype: "cf_sql_integer" } },
         { datasource: application.datasource }
     )>
 
-    <cfset addDebug("Final counts - columns=" & qFinalCounts.columns_count & " rows=" & qFinalCounts.rows_count & " facts=" & qFinalCounts.facts_count)>
+    <cfset addDebug("Final counts - columns=" & variables.qFinalCounts.columns_count & " rows=" & variables.qFinalCounts.rows_count & " facts=" & variables.qFinalCounts.facts_count)>
 
     <!--- Success response --->
-    <cfset response.success = true>
-    <cfset response.code = "">
-    <cfset response.message = "File parsed successfully">
-    <cfset response.data = {
+    <cfset variables.response.success = true>
+    <cfset variables.response.code = "">
+    <cfset variables.response.message = "File parsed successfully">
+    <cfset variables.response.data = {
         "job": {
-            "job_id": jobId,
+            "job_id": variables.jobId,
             "status": "parsed",
-            "source_filename": job.source_filename,
-            "total_rows": arrayLen(dataRows)
+            "source_filename": variables.job.source_filename,
+            "total_rows": arrayLen(variables.dataRows)
         },
-        "columns_created": qFinalCounts.columns_count,
-        "rows_created": qFinalCounts.rows_count,
-        "facts_created": qFinalCounts.facts_count
+        "columns_created": variables.qFinalCounts.columns_count,
+        "rows_created": variables.qFinalCounts.rows_count,
+        "facts_created": variables.qFinalCounts.facts_count
     }>
     <cfset addDebug("SUCCESS - Parse complete!")>
+    <cflog file="importv3" text="[parse] SUCCESS userid=#variables.userid# job_id=#variables.jobId# columns=#variables.qFinalCounts.columns_count# rows=#variables.qFinalCounts.rows_count# facts=#variables.qFinalCounts.facts_count#">
 
     <cfcatch type="any">
         <!--- Log and set failed status --->
         <cfset addDebug("OUTER CATCH ERROR: " & cfcatch.message & " | " & cfcatch.detail & " | Type: " & cfcatch.type)>
+        <cflog file="importv3" text="[parse] ERROR userid=#variables.userid# job_id=#variables.jobId# message=#cfcatch.message# detail=#cfcatch.detail#">
         <cftry>
-            <cfset v3Service.setJobStatus(jobId, userid, "failed", cfcatch.message)>
-            <cfset v3Service.logEvent(job_id = jobId, userid = userid, event_type = "parse_failed", detail = { error: cfcatch.message })>
+            <cfset variables.v3Service.setJobStatus(variables.jobId, variables.userid, "failed", cfcatch.message)>
+            <cfset variables.v3Service.logEvent(job_id = variables.jobId, userid = variables.userid, event_type = "parse_failed", detail = { error: cfcatch.message })>
             <cfcatch type="any">
                 <cfset addDebug("Logging error: " & cfcatch.message)>
             </cfcatch>
         </cftry>
-        <cfset response.code = "PARSE_FAILED">
-        <cfset response.message = "Parse failed: " & cfcatch.message>
+        <cfset variables.response.code = "PARSE_FAILED">
+        <cfset variables.response.message = "Parse failed: " & cfcatch.message>
     </cfcatch>
 </cftry>
 </cfsilent>
-<cfcontent type="application/json" reset="true"><cfoutput>#serializeJSON(response)#</cfoutput>
+<cfcontent type="application/json" reset="true"><cfoutput>#serializeJSON(variables.response)#</cfoutput>
 
-<!--- Helper function to parse a CSV line handling quoted values --->
+<!--- ==================== HELPER FUNCTIONS ==================== --->
+
+<!--- parseCSVLine: Parse a single CSV line handling quoted values and escaped quotes --->
 <cffunction name="parseCSVLine" access="private" returntype="array" output="false">
     <cfargument name="line" type="string" required="true">
     <cfargument name="delimiter" type="string" required="true">
@@ -534,7 +541,7 @@
     <cfreturn result>
 </cffunction>
 
-<!--- Helper function to process headers (handle blanks and duplicates) --->
+<!--- processHeaders: Normalize header names, assign names for blank headers, deduplicate --->
 <cffunction name="processHeaders" access="private" returntype="array" output="false">
     <cfargument name="rawHeaders" type="array" required="true">
 

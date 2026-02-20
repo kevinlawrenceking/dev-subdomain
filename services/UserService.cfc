@@ -740,4 +740,319 @@
 </cffunction>
 
 
+<!--- ============================================================
+     ADMIN USER MANAGEMENT METHODS
+     ============================================================ --->
+
+<cffunction name="listUsers" access="public" returntype="struct" output="false"
+            hint="Paginated, searchable, filterable user list for admin">
+    <cfargument name="search" type="string" required="false" default="">
+    <cfargument name="status" type="string" required="false" default="">
+    <cfargument name="role" type="string" required="false" default="">
+    <cfargument name="page" type="numeric" required="false" default="1">
+    <cfargument name="pageSize" type="numeric" required="false" default="25">
+    <cfargument name="sortCol" type="string" required="false" default="userid">
+    <cfargument name="sortDir" type="string" required="false" default="DESC">
+
+    <cfset var result = { users: queryNew(""), total: 0, page: arguments.page, pageSize: arguments.pageSize }>
+    <cfset var offset = (arguments.page - 1) * arguments.pageSize>
+    <cfset var allowedSortCols = "userid,userFirstName,userLastName,userEmail,userRole,userstatus,recordname,customerid">
+    <cfset var safeSortCol = listFindNoCase(allowedSortCols, arguments.sortCol) ? arguments.sortCol : "userid">
+    <cfset var safeSortDir = (ucase(arguments.sortDir) eq "ASC") ? "ASC" : "DESC">
+
+    <!--- Build WHERE clauses --->
+    <cfset var whereParts = []>
+    <cfset var params = {}>
+
+    <cfif len(trim(arguments.search))>
+        <cfset arrayAppend(whereParts, "(u.userFirstName LIKE :search OR u.userLastName LIKE :search OR u.userEmail LIKE :search OR u.recordname LIKE :search OR CAST(u.userid AS CHAR) = :exactSearch)")>
+        <cfset params.search = { value: "%" & trim(arguments.search) & "%", cfsqltype: "cf_sql_varchar" }>
+        <cfset params.exactSearch = { value: trim(arguments.search), cfsqltype: "cf_sql_varchar" }>
+    </cfif>
+
+    <cfif len(trim(arguments.status))>
+        <cfset arrayAppend(whereParts, "u.userstatus = :status")>
+        <cfset params.status = { value: trim(arguments.status), cfsqltype: "cf_sql_varchar" }>
+    </cfif>
+
+    <cfif len(trim(arguments.role))>
+        <cfset arrayAppend(whereParts, "u.userRole = :role")>
+        <cfset params.role = { value: trim(arguments.role), cfsqltype: "cf_sql_varchar" }>
+    </cfif>
+
+    <cfset var whereSQL = arrayLen(whereParts) ? " WHERE " & arrayToList(whereParts, " AND ") : "">
+
+    <!--- Count total --->
+    <cfset var qCount = queryExecute(
+        "SELECT COUNT(*) AS total FROM taousers u" & whereSQL,
+        params,
+        { datasource: application.datasource }
+    )>
+    <cfset result.total = qCount.total>
+
+    <!--- Fetch page --->
+    <cfset var qUsers = queryExecute(
+        "SELECT u.userid, u.userFirstName, u.userLastName, u.userEmail,
+                u.userRole, u.userstatus, u.recordname, u.IsDeleted,
+                u.IsBetaTester, u.isSetup, u.customerid, u.avatarname,
+                u.isAudition, u.isAuditionModule
+         FROM taousers u" & whereSQL &
+        " ORDER BY #safeSortCol# #safeSortDir#
+         LIMIT :pageSize OFFSET :offset",
+        structAppend(duplicate(params), {
+            pageSize: { value: arguments.pageSize, cfsqltype: "cf_sql_integer" },
+            offset: { value: offset, cfsqltype: "cf_sql_integer" }
+        }, true),
+        { datasource: application.datasource }
+    )>
+    <cfset result.users = qUsers>
+
+    <cfreturn result>
+</cffunction>
+
+<cffunction name="getUserStatuses" access="public" returntype="query" output="false"
+            hint="Returns distinct user statuses from the taousers table">
+    <cfset var qStatuses = queryExecute(
+        "SELECT DISTINCT userstatus FROM taousers WHERE userstatus IS NOT NULL AND userstatus != '' ORDER BY userstatus",
+        {},
+        { datasource: application.datasource }
+    )>
+    <cfreturn qStatuses>
+</cffunction>
+
+<cffunction name="getUserRoles" access="public" returntype="query" output="false"
+            hint="Returns distinct user roles from the taousers table">
+    <cfset var qRoles = queryExecute(
+        "SELECT DISTINCT userRole FROM taousers WHERE userRole IS NOT NULL AND userRole != '' ORDER BY userRole",
+        {},
+        { datasource: application.datasource }
+    )>
+    <cfreturn qRoles>
+</cffunction>
+
+<cffunction name="createUser" access="public" returntype="struct" output="false"
+            hint="Creates a new user with proper password hashing">
+    <cfargument name="userFirstName" type="string" required="true">
+    <cfargument name="userLastName" type="string" required="true">
+    <cfargument name="userEmail" type="string" required="true">
+    <cfargument name="userRole" type="string" required="false" default="User">
+    <cfargument name="password" type="string" required="true">
+    <cfargument name="userstatus" type="string" required="false" default="Active">
+
+    <cfset var result = { success: false, message: "", userid: 0 }>
+
+    <!--- Validate required fields --->
+    <cfif not len(trim(arguments.userFirstName))>
+        <cfset result.message = "First name is required">
+        <cfreturn result>
+    </cfif>
+    <cfif not len(trim(arguments.userLastName))>
+        <cfset result.message = "Last name is required">
+        <cfreturn result>
+    </cfif>
+    <cfif not len(trim(arguments.userEmail)) or not isValid("email", arguments.userEmail)>
+        <cfset result.message = "A valid email address is required">
+        <cfreturn result>
+    </cfif>
+    <cfif len(arguments.password) lt 6>
+        <cfset result.message = "Password must be at least 6 characters">
+        <cfreturn result>
+    </cfif>
+
+    <!--- Check email uniqueness --->
+    <cfset var qExisting = queryExecute(
+        "SELECT userid FROM taousers WHERE userEmail = :email AND IsDeleted = 0",
+        { email: { value: trim(arguments.userEmail), cfsqltype: "cf_sql_varchar" } },
+        { datasource: application.datasource }
+    )>
+    <cfif qExisting.recordCount gt 0>
+        <cfset result.message = "A user with this email address already exists">
+        <cfreturn result>
+    </cfif>
+
+    <!--- Generate password hash --->
+    <cfset var passwordSalt = hash(generateSecretKey("AES"), "SHA-512")>
+    <cfset var passwordHash = hash(arguments.password & passwordSalt, "SHA-512")>
+    <cfset var recordname = trim(arguments.userFirstName) & " " & trim(arguments.userLastName)>
+
+    <cftry>
+        <cfset var qInsert = "">
+        <cfset queryExecute(
+            "INSERT INTO taousers (userFirstName, userLastName, userEmail, userRole, userstatus,
+                                   passwordHash, passwordSalt, recordname, avatarname, IsDeleted, isSetup)
+             VALUES (:firstName, :lastName, :email, :role, :status,
+                     :pwHash, :pwSalt, :recordname, :avatarname, 0, 0)",
+            {
+                firstName: { value: trim(arguments.userFirstName), cfsqltype: "cf_sql_varchar" },
+                lastName: { value: trim(arguments.userLastName), cfsqltype: "cf_sql_varchar" },
+                email: { value: trim(arguments.userEmail), cfsqltype: "cf_sql_varchar" },
+                role: { value: trim(arguments.userRole), cfsqltype: "cf_sql_varchar" },
+                status: { value: trim(arguments.userstatus), cfsqltype: "cf_sql_varchar" },
+                pwHash: { value: passwordHash, cfsqltype: "cf_sql_char" },
+                pwSalt: { value: passwordSalt, cfsqltype: "cf_sql_char" },
+                recordname: { value: recordname, cfsqltype: "cf_sql_varchar" },
+                avatarname: { value: trim(arguments.userFirstName), cfsqltype: "cf_sql_varchar" }
+            },
+            { datasource: application.datasource, result: "qInsert" }
+        )>
+
+        <cfset result.success = true>
+        <cfset result.userid = qInsert.generatedKey>
+        <cfset result.message = "User created successfully">
+
+        <cfcatch type="any">
+            <cfset result.message = "Failed to create user: " & cfcatch.message>
+            <cflog file="admin_users" text="[create_user] ERROR: #cfcatch.message# detail=#cfcatch.detail#">
+        </cfcatch>
+    </cftry>
+
+    <cfreturn result>
+</cffunction>
+
+<cffunction name="updateUser" access="public" returntype="struct" output="false"
+            hint="Updates an existing user's editable fields">
+    <cfargument name="userid" type="numeric" required="true">
+    <cfargument name="userFirstName" type="string" required="true">
+    <cfargument name="userLastName" type="string" required="true">
+    <cfargument name="userEmail" type="string" required="true">
+    <cfargument name="userRole" type="string" required="false" default="">
+    <cfargument name="userstatus" type="string" required="false" default="">
+    <cfargument name="IsBetaTester" type="boolean" required="false" default="false">
+    <cfargument name="isAudition" type="boolean" required="false" default="false">
+    <cfargument name="isAuditionModule" type="boolean" required="false" default="false">
+    <cfargument name="newPassword" type="string" required="false" default="">
+
+    <cfset var result = { success: false, message: "" }>
+
+    <!--- Validate --->
+    <cfif not len(trim(arguments.userFirstName))>
+        <cfset result.message = "First name is required">
+        <cfreturn result>
+    </cfif>
+    <cfif not len(trim(arguments.userLastName))>
+        <cfset result.message = "Last name is required">
+        <cfreturn result>
+    </cfif>
+    <cfif not len(trim(arguments.userEmail)) or not isValid("email", arguments.userEmail)>
+        <cfset result.message = "A valid email address is required">
+        <cfreturn result>
+    </cfif>
+
+    <!--- Check email uniqueness (excluding this user) --->
+    <cfset var qExisting = queryExecute(
+        "SELECT userid FROM taousers WHERE userEmail = :email AND userid != :uid AND IsDeleted = 0",
+        {
+            email: { value: trim(arguments.userEmail), cfsqltype: "cf_sql_varchar" },
+            uid: { value: arguments.userid, cfsqltype: "cf_sql_integer" }
+        },
+        { datasource: application.datasource }
+    )>
+    <cfif qExisting.recordCount gt 0>
+        <cfset result.message = "Another user already has this email address">
+        <cfreturn result>
+    </cfif>
+
+    <cftry>
+        <cfset var recordname = trim(arguments.userFirstName) & " " & trim(arguments.userLastName)>
+
+        <cfset var setParts = [
+            "userFirstName = :firstName",
+            "userLastName = :lastName",
+            "userEmail = :email",
+            "recordname = :recordname"
+        ]>
+        <cfset var params = {
+            firstName: { value: trim(arguments.userFirstName), cfsqltype: "cf_sql_varchar" },
+            lastName: { value: trim(arguments.userLastName), cfsqltype: "cf_sql_varchar" },
+            email: { value: trim(arguments.userEmail), cfsqltype: "cf_sql_varchar" },
+            recordname: { value: recordname, cfsqltype: "cf_sql_varchar" },
+            uid: { value: arguments.userid, cfsqltype: "cf_sql_integer" }
+        }>
+
+        <cfif len(trim(arguments.userRole))>
+            <cfset arrayAppend(setParts, "userRole = :role")>
+            <cfset params.role = { value: trim(arguments.userRole), cfsqltype: "cf_sql_varchar" }>
+        </cfif>
+
+        <cfif len(trim(arguments.userstatus))>
+            <cfset arrayAppend(setParts, "userstatus = :status")>
+            <cfset params.status = { value: trim(arguments.userstatus), cfsqltype: "cf_sql_varchar" }>
+        </cfif>
+
+        <cfset arrayAppend(setParts, "IsBetaTester = :isBeta")>
+        <cfset params.isBeta = { value: arguments.IsBetaTester ? 1 : 0, cfsqltype: "cf_sql_bit" }>
+
+        <cfset arrayAppend(setParts, "isAudition = :isAud")>
+        <cfset params.isAud = { value: arguments.isAudition ? 1 : 0, cfsqltype: "cf_sql_bit" }>
+
+        <cfset arrayAppend(setParts, "isAuditionModule = :isAudMod")>
+        <cfset params.isAudMod = { value: arguments.isAuditionModule ? 1 : 0, cfsqltype: "cf_sql_bit" }>
+
+        <!--- Password change if provided --->
+        <cfif len(trim(arguments.newPassword))>
+            <cfif len(arguments.newPassword) lt 6>
+                <cfset result.message = "Password must be at least 6 characters">
+                <cfreturn result>
+            </cfif>
+            <cfset var newSalt = hash(generateSecretKey("AES"), "SHA-512")>
+            <cfset var newHash = hash(arguments.newPassword & newSalt, "SHA-512")>
+            <cfset arrayAppend(setParts, "passwordHash = :pwHash")>
+            <cfset arrayAppend(setParts, "passwordSalt = :pwSalt")>
+            <cfset params.pwHash = { value: newHash, cfsqltype: "cf_sql_char" }>
+            <cfset params.pwSalt = { value: newSalt, cfsqltype: "cf_sql_char" }>
+        </cfif>
+
+        <cfset queryExecute(
+            "UPDATE taousers SET " & arrayToList(setParts, ", ") & " WHERE userid = :uid",
+            params,
+            { datasource: application.datasource }
+        )>
+
+        <cfset result.success = true>
+        <cfset result.message = "User updated successfully">
+
+        <cfcatch type="any">
+            <cfset result.message = "Failed to update user: " & cfcatch.message>
+            <cflog file="admin_users" text="[update_user] ERROR userid=#arguments.userid#: #cfcatch.message#">
+        </cfcatch>
+    </cftry>
+
+    <cfreturn result>
+</cffunction>
+
+<cffunction name="toggleUserStatus" access="public" returntype="struct" output="false"
+            hint="Activate or deactivate a user">
+    <cfargument name="userid" type="numeric" required="true">
+    <cfargument name="newStatus" type="string" required="true">
+
+    <cfset var result = { success: false, message: "" }>
+    <cfset var allowedStatuses = "Active,Cancelled,Pending">
+
+    <cfif not listFindNoCase(allowedStatuses, arguments.newStatus)>
+        <cfset result.message = "Invalid status value">
+        <cfreturn result>
+    </cfif>
+
+    <cftry>
+        <cfset queryExecute(
+            "UPDATE taousers SET userstatus = :status WHERE userid = :uid",
+            {
+                status: { value: arguments.newStatus, cfsqltype: "cf_sql_varchar" },
+                uid: { value: arguments.userid, cfsqltype: "cf_sql_integer" }
+            },
+            { datasource: application.datasource }
+        )>
+
+        <cfset result.success = true>
+        <cfset result.message = "User status changed to " & arguments.newStatus>
+
+        <cfcatch type="any">
+            <cfset result.message = "Failed to change status: " & cfcatch.message>
+            <cflog file="admin_users" text="[toggle_status] ERROR userid=#arguments.userid#: #cfcatch.message#">
+        </cfcatch>
+    </cftry>
+
+    <cfreturn result>
+</cffunction>
+
 </cfcomponent>

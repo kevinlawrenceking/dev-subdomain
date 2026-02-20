@@ -128,6 +128,15 @@
 .status-dupe { background: #fff3cd; color: #856404; }
 .status-ignored { background: #e2e3e5; color: #383d41; }
 .status-imported { background: #cce5ff; color: #004085; }
+.status-completed { background: #d4edda; color: #155724; }
+.status-failed { background: #f8d7da; color: #721c24; }
+.status-cancelled { background: #e2e3e5; color: #383d41; }
+.status-reviewing { background: #cce5ff; color: #004085; }
+.status-finalizing { background: #fff3cd; color: #856404; }
+.status-parsing { background: #fff3cd; color: #856404; }
+.status-uploaded { background: #e2e3e5; color: #383d41; }
+.status-parsed { background: #cce5ff; color: #004085; }
+.status-mapping { background: #cce5ff; color: #004085; }
 
 /* Duplicate panel */
 .dupe-panel {
@@ -205,6 +214,9 @@ input[type="date"].form-control-sm {
 }
 </style>
 
+<!--- ============================================================
+     PAGE HEADER
+     ============================================================ --->
 <div class="row">
     <div class="col-12">
         <div class="page-title-box">
@@ -215,11 +227,15 @@ input[type="date"].form-control-sm {
     </div>
 </div>
 
-<!--- V3 Alert Container --->
+<!--- Toast alert container for V3 AJAX notifications --->
 <div id="v3-alert-container"></div>
 
-
+<!--- ============================================================
+     MAIN CONTENT: Shows either upload/history OR active job view
+     ============================================================ --->
 <cfif not hasActiveJob>
+    <!--- CSRF token for history table actions --->
+    <cfoutput><input type="hidden" id="csrf-token" value="#encodeForHTMLAttribute(session.csrf_token)#"></cfoutput>
     <!--- UPLOAD STEP --->
     <div class="import-step" id="step-upload">
         <h5><span class="step-number">1</span> Upload File</h5>
@@ -278,6 +294,15 @@ input[type="date"].form-control-sm {
                             <cfif importHistory.status neq "completed" and importHistory.status neq "cancelled" and importHistory.status neq "failed">
                                 <a href="?job_id=#importHistory.job_id#" class="btn btn-xs btn-primary">Continue</a>
                             </cfif>
+                            <cfif importHistory.status eq "completed">
+                                <a href="?job_id=#importHistory.job_id#" class="btn btn-xs btn-outline-info" title="View import details"><i class="fe-eye"></i></a>
+                            </cfif>
+                            <cfif importHistory.status eq "failed" or importHistory.status eq "finalizing">
+                                <button class="btn btn-xs btn-outline-warning btn-history-reset" data-job-id="#importHistory.job_id#" title="Reset to review"><i class="fe-refresh-cw"></i></button>
+                            </cfif>
+                            <cfif importHistory.status neq "cancelled" and importHistory.status neq "completed">
+                                <button class="btn btn-xs btn-outline-danger btn-history-cancel" data-job-id="#importHistory.job_id#" title="Cancel import"><i class="fe-x"></i></button>
+                            </cfif>
                         </td>
                     </tr>
                     </cfoutput>
@@ -288,7 +313,11 @@ input[type="date"].form-control-sm {
     </cfif>
 
 <cfelse>
-    <!--- ACTIVE JOB --->
+    <!--- ============================================================
+         ACTIVE JOB VIEW
+         Shows the multi-step import workflow for the selected job.
+         Hidden inputs provide state to the JS controller.
+         ============================================================ --->
     <cfoutput>
     <input type="hidden" id="job-id" value="#activeJob.job_id#">
     <input type="hidden" id="job-status" value="#activeJob.status#">
@@ -300,15 +329,61 @@ input[type="date"].form-control-sm {
             <strong>File:</strong> #activeJob.source_filename#
             <span class="mx-2">|</span>
             <strong>Status:</strong> <span id="current-status" class="status-badge status-#lcase(activeJob.status)#">#activeJob.status#</span>
+            <cfif listFindNoCase("completed,failed,cancelled", activeJob.status)>
+                <button class="btn btn-sm btn-outline-warning ms-2" id="btn-reset-to-review" data-job-id="#activeJob.job_id#" title="Move job back to reviewing so you can re-examine or re-import rows">
+                    <i class="fe-rotate-ccw"></i> Reset to Review
+                </button>
+            </cfif>
+            <cfif activeJob.status neq "cancelled" and activeJob.status neq "completed">
+                <button class="btn btn-sm btn-outline-danger ms-2" id="btn-cancel-job" data-job-id="#activeJob.job_id#" title="Cancel this import job">
+                    <i class="fe-x-circle"></i> Cancel
+                </button>
+            </cfif>
         </div>
-        <div>
+        <div class="d-flex align-items-center gap-2">
+            <cfif listFindNoCase("reviewing,finalizing,completed,failed", activeJob.status)>
+            <div class="dropdown d-inline-block">
+                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" id="status-change-btn">
+                    Change Status
+                </button>
+                <ul class="dropdown-menu">
+                    <cfif activeJob.status eq "finalizing" or activeJob.status eq "completed" or activeJob.status eq "failed">
+                    <li><a class="dropdown-item btn-change-status" href="##" data-new-status="reviewing"><i class="fe-refresh-cw"></i> Return to Review</a></li>
+                    </cfif>
+                    <cfif activeJob.status neq "cancelled">
+                    <li><a class="dropdown-item btn-change-status text-danger" href="##" data-new-status="cancelled"><i class="fe-x-circle"></i> Cancel Import</a></li>
+                    </cfif>
+                </ul>
+            </div>
+            </cfif>
             <a href="/app/contacts-import-v3/" class="btn btn-sm btn-outline-secondary">Start New Import</a>
         </div>
     </div>
 
-    <!--- Show appropriate step based on status --->
+    <!--- Stale lock detection: warn if job is stuck in finalizing/parsing for over 10 minutes --->
+    <cfif listFindNoCase("finalizing,parsing", activeJob.status) and structKeyExists(activeJob, "updated_at") and isDate(activeJob.updated_at)>
+        <cfset variables.staleLockMinutes = dateDiff("n", activeJob.updated_at, now())>
+        <cfif variables.staleLockMinutes gt 10>
+            <div class="alert alert-warning d-flex align-items-center" id="stale-lock-warning">
+                <i class="fe-alert-triangle me-2" style="font-size:20px;"></i>
+                <div class="flex-grow-1">
+                    <strong>This job appears stuck.</strong>
+                    It has been in <strong>#activeJob.status#</strong> status for #variables.staleLockMinutes# minutes without completing.
+                    This usually means the previous operation was interrupted. You can safely reset it.
+                </div>
+                <button class="btn btn-warning btn-sm ms-3" id="btn-force-unlock" data-job-id="#activeJob.job_id#">
+                    <i class="fe-unlock"></i> Unlock &amp; Reset to Review
+                </button>
+            </div>
+        </cfif>
+    </cfif>
+
+    <!--- ============================================================
+         WORKFLOW STEPS - Show appropriate step based on job status
+         Step 2: Parse | Step 2: Map Columns | Step 3: Review | Step 4: Finalize
+         ============================================================ --->
     <cfif activeJob.status eq "created" or activeJob.status eq "pending" or activeJob.status eq "uploaded">
-        <!--- Need to parse --->
+        <!--- STEP 2a: Parse File - job is uploaded but not yet parsed --->
         <div class="import-step" id="step-parse">
             <h5><span class="step-number">2</span> Parsing File</h5>
             <p>Click to parse and analyze your file.</p>
@@ -324,7 +399,7 @@ input[type="date"].form-control-sm {
         </div>
 
     <cfelseif activeJob.status eq "parsed" or activeJob.status eq "mapping">
-        <!--- Column mapping step --->
+        <!--- STEP 2b: Column Mapping - file is parsed, user maps source columns to contact fields --->
         <div class="import-step" id="step-mapping">
             <h5><span class="step-number">2</span> Map Columns</h5>
             <p class="text-muted">Review how columns from your file map to contact fields.</p>
@@ -339,9 +414,21 @@ input[type="date"].form-control-sm {
         </div>
 
     <cfelseif listFindNoCase("reviewing,importing,finalizing,completed", activeJob.status)>
-        <!--- Review grid --->
+        <!--- STEP 3: Review Grid - shows all rows with status, validation, and dupe info --->
         <div class="import-step" id="step-review">
-            <h5><span class="step-number">3</span> Review &amp; Fix</h5>
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><span class="step-number">3</span> Review &amp; Fix</h5>
+                <div>
+                    <button class="btn btn-sm btn-outline-danger" id="btn-export-problems" style="display:none;" title="Download CSV of rows with errors">
+                        <i class="fe-download"></i> Export Problems
+                    </button>
+                    <cfif activeJob.status neq "completed">
+                    <button class="btn btn-sm btn-outline-secondary ms-1" id="btn-refresh-validation" title="Re-run validation and duplicate detection on all rows">
+                        <i class="fe-refresh-cw"></i> Refresh Validation
+                    </button>
+                    </cfif>
+                </div>
+            </div>
 
             <!--- Stats bar --->
             <div class="row mb-3" id="stats-bar">
@@ -374,6 +461,17 @@ input[type="date"].form-control-sm {
                         <div class="h4 mb-0" id="stat-imported"><i class="fe-loader fe-spin" style="font-size:16px"></i></div>
                         <small>Imported</small>
                     </div>
+                </div>
+            </div>
+
+            <!--- Search bar --->
+            <div class="mb-2">
+                <div class="input-group input-group-sm" style="max-width:350px;">
+                    <span class="input-group-text"><i class="fe-search"></i></span>
+                    <input type="text" class="form-control" id="row-search" placeholder="Search by name, email, company, phone...">
+                    <button class="btn btn-outline-secondary" type="button" id="row-search-clear" style="display:none;">
+                        <i class="fe-x"></i>
+                    </button>
                 </div>
             </div>
 
@@ -410,6 +508,13 @@ input[type="date"].form-control-sm {
                     </a>
                 </li>
             </ul>
+
+            <!--- Select all across pages banner --->
+            <div class="alert alert-info py-2 mb-0" id="select-all-banner" style="display:none;">
+                <span id="select-all-page-text"></span>
+                <a href="##" id="select-all-matching" class="fw-bold ms-1"></a>
+                <a href="##" id="clear-all-selection" class="ms-2 text-muted" style="display:none;">Clear selection</a>
+            </div>
 
             <!--- Bulk actions --->
             <div class="d-flex justify-content-between align-items-center my-3" id="bulk-actions" style="display:none;">
@@ -453,13 +558,22 @@ input[type="date"].form-control-sm {
             </div>
         </div>
 
-        <!--- Finalize step --->
+        <!--- STEP 4: Preview & Finalize Import
+              Dry-run shows what will happen; Finalize creates contacts --->
         <cfif activeJob.status neq "completed">
         <div class="import-step" id="step-finalize">
             <h5><span class="step-number">4</span> Preview & Finalize Import</h5>
             <p class="text-muted">Review what will be imported, then finalize to import contacts into your account.</p>
             <div class="alert alert-warning" id="finalize-warning" style="display:none">
                 <i class="fe-alert-triangle"></i> <span id="finalize-warning-text"></span>
+            </div>
+            <div id="finalize-precheck" class="mb-3" style="display:none">
+                <div class="card" style="border-left:4px solid ##406e8e;">
+                    <div class="card-body py-2 px-3">
+                        <strong class="small text-uppercase text-muted">Import Summary</strong>
+                        <div class="row mt-1" id="precheck-details"></div>
+                    </div>
+                </div>
             </div>
             <div class="btn-toolbar mb-3">
                 <button class="btn btn-outline-primary btn-lg mr-2" id="btn-dry-run">
@@ -485,7 +599,50 @@ input[type="date"].form-control-sm {
         <cfelse>
         <div class="import-step completed">
             <h5><span class="step-number"><i class="fe-check"></i></span> Import Complete</h5>
-            <p class="text-success"><strong>#activeJob.imported_rows#</strong> contacts were successfully imported.</p>
+            <div class="row mb-3">
+                <div class="col-auto">
+                    <div class="card card-body p-2 text-center bg-success text-white" style="min-width:100px;">
+                        <div class="h4 mb-0">#val(activeJob.imported_rows)#</div>
+                        <small>Created</small>
+                    </div>
+                </div>
+                <cfif val(activeJob.updated_rows) gt 0>
+                <div class="col-auto">
+                    <div class="card card-body p-2 text-center" style="min-width:100px;background:##cce5ff;color:##004085;">
+                        <div class="h4 mb-0">#val(activeJob.updated_rows)#</div>
+                        <small>Updated</small>
+                    </div>
+                </div>
+                </cfif>
+                <cfif val(activeJob.skipped_rows) gt 0>
+                <div class="col-auto">
+                    <div class="card card-body p-2 text-center" style="min-width:100px;background:##e2e3e5;color:##383d41;">
+                        <div class="h4 mb-0">#val(activeJob.skipped_rows)#</div>
+                        <small>Skipped</small>
+                    </div>
+                </div>
+                </cfif>
+                <cfif val(activeJob.problem_rows) gt 0>
+                <div class="col-auto">
+                    <div class="card card-body p-2 text-center bg-danger text-white" style="min-width:100px;">
+                        <div class="h4 mb-0">#val(activeJob.problem_rows)#</div>
+                        <small>Problems</small>
+                    </div>
+                </div>
+                </cfif>
+                <div class="col-auto">
+                    <div class="card card-body p-2 text-center" style="min-width:100px;background:##f8f9fa;color:##6c757d;">
+                        <div class="h4 mb-0">#val(activeJob.total_rows)#</div>
+                        <small>Total Rows</small>
+                    </div>
+                </div>
+            </div>
+            <cfif isDate(activeJob.finished_at) and isDate(activeJob.started_at)>
+                <p class="text-muted small mb-3">
+                    Completed #dateFormat(activeJob.finished_at, "mm/dd/yyyy")# at #timeFormat(activeJob.finished_at, "h:mm tt")#
+                    (Duration: #dateDiff("s", activeJob.started_at, activeJob.finished_at)#s)
+                </p>
+            </cfif>
             <a href="/app/contacts/?byimport=#activeJob.job_id#" class="btn btn-primary" style="background: linear-gradient(135deg, var(--ct-link-color), var(--ct-link-hover-color)); border:none;">
                 <i class="fe-users"></i> View Imported Contacts
             </a>
@@ -496,7 +653,12 @@ input[type="date"].form-control-sm {
     </cfoutput>
 </cfif>
 
-<!--- Duplicate resolution modal --->
+<!--- ============================================================
+     MODALS
+     Duplicate resolution and row edit modals, used by the JS controller
+     ============================================================ --->
+
+<!--- Duplicate resolution modal - shows candidate matches and action buttons --->
 <div class="modal fade" id="dupe-modal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -516,7 +678,7 @@ input[type="date"].form-control-sm {
     </div>
 </div>
 
-<!--- Edit row modal --->
+<!--- Edit row modal - dynamically populated by JS with type-specific field widgets --->
 <div class="modal fade" id="edit-modal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -534,4 +696,8 @@ input[type="date"].form-control-sm {
     </div>
 </div>
 
+<!--- ============================================================
+     JAVASCRIPT CONTROLLER
+     Cache-busted via timestamp query param
+     ============================================================ --->
 <script src="/app/assets/js/contact-import-v3.js?v=<cfoutput>#DateFormat(Now(),'yyyymmdd')##TimeFormat(Now(),'HHmmss')#</cfoutput>"></script>

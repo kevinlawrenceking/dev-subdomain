@@ -1,31 +1,27 @@
 <cfsilent>
 <!---
-    Contact Import V3 - Fact Update Endpoint
-    POST /ajax/importv3/fact_update.cfm
+    Contact Import V3 - Status Change Endpoint
+    POST /ajax/importv3/status.cfm
 
-    Updates fact values for a single row, revalidates, and recomputes row status.
-    NEVER modifies raw_value - that is immutable.
-
-    Phase 6: Enhanced with Phase 5.2 patterns (debug breadcrumbs, JSON body, belt+suspenders CSRF).
+    Allows manual job status changes (reset stuck jobs, cancel, re-open).
 
     Request Parameters (from JSON body, form, or URL):
     - job_id (required): The import job ID
-    - row_id (required): The row ID
-    - fields (required): Object with field_name:new_value pairs to update
-    - csrf_token (required): CSRF protection token (also accepts X-CSRF-Token header)
+    - new_status (required): The target status
+    - csrf_token (required): CSRF protection token
 
     Response codes:
     - AUTH_REQUIRED: No session userid (401)
     - CSRF_INVALID: Invalid or missing CSRF token (403)
     - ACCESS_DENIED: Job does not belong to user (403)
-    - NOT_FOUND: Job or row does not exist (404)
+    - NOT_FOUND: Job does not exist (404)
     - MISSING_PARAMS: Required parameters missing (400)
-    - INVALID_STATE: Job not in allowed status for editing (409)
-    - UPDATE_FAILED: Database update failed (500)
+    - INVALID_TRANSITION: Status transition not allowed (409)
+    - UPDATE_FAILED: Status update failed (500)
 
     Debug breadcrumbs (response.data.debug):
     - Lightweight step markers for debugging without PII
-    - Example: ["start","auth_ok","csrf_ok","params_ok","service_init","job_loaded","status_ok","facts_updated","done"]
+    - Example: ["start","auth_ok","csrf_ok","params_ok","service_init","job_loaded","transition_ok","status_updated","done"]
 --->
 
 <!--- Initialize response structure --->
@@ -36,17 +32,29 @@
     "data": {}
 }>
 
-<!--- Phase 5.2: Debug breadcrumbs array (no PII) --->
+<!--- Debug breadcrumbs array (no PII) --->
 <cfset variables.debug = ["start"]>
 
-<!--- Phase 6.1: Timing for observability --->
+<!--- Timing for observability --->
 <cfset variables.startTick = getTickCount()>
 
 <!--- Initialize variables for error handling --->
 <cfset variables.jobId = 0>
-<cfset variables.rowId = 0>
 <cfset variables.userid = 0>
 <cfset variables.v3Service = "">
+<cfset variables.newStatus = "">
+
+<!--- Allowed manual transitions: from_status -> [to_statuses] --->
+<cfset variables.MANUAL_TRANSITIONS = {
+    "finalizing": ["reviewing", "cancelled"],
+    "completed": ["reviewing"],
+    "reviewing": ["cancelled"],
+    "failed": ["reviewing"],
+    "parsing": ["cancelled"],
+    "uploaded": ["cancelled"],
+    "parsed": ["cancelled"],
+    "mapping": ["cancelled"]
+}>
 
 <!--- Helper: Return JSON error response with debug trail --->
 <cffunction name="returnError" access="private" returntype="void" output="true">
@@ -98,6 +106,7 @@
     <cfreturn body>
 </cffunction>
 
+
 <cftry>
     <!--- A) Auth: Require logged-in session userid --->
     <cfif not structKeyExists(session, "userid") or not isNumeric(session.userid) or session.userid lte 0>
@@ -105,7 +114,6 @@
     </cfif>
     <cfset variables.userid = session.userid>
     <cfset arrayAppend(variables.debug, "auth_ok")>
-    <cflog file="importv3" text="[fact_update] START userid=#variables.userid#">
 
     <!--- B) Generate CSRF token if not exists --->
     <cfif not structKeyExists(session, "csrf_token") or not len(session.csrf_token)>
@@ -159,40 +167,33 @@
         <cfset variables.jobId = val(form.job_id)>
     </cfif>
 
-    <!--- F) Read row_id: url -> body -> form --->
-    <cfparam name="url.row_id" default="">
-    <cfparam name="form.row_id" default="">
-
-    <cfif isNumeric(url.row_id) and val(url.row_id) gt 0>
-        <cfset variables.rowId = val(url.row_id)>
-    <cfelseif structKeyExists(variables.body, "row_id") and isNumeric(variables.body.row_id) and val(variables.body.row_id) gt 0>
-        <cfset variables.rowId = val(variables.body.row_id)>
-    <cfelseif isNumeric(form.row_id) and val(form.row_id) gt 0>
-        <cfset variables.rowId = val(form.row_id)>
+    <cfif variables.jobId lte 0>
+        <cfset returnError("MISSING_PARAMS", "job_id is required", 400)>
     </cfif>
 
-    <cfif variables.jobId lte 0 or variables.rowId lte 0>
-        <cfset returnError("MISSING_PARAMS", "job_id and row_id are required", 400)>
+
+    <!--- F) Read new_status: body -> form --->
+    <cfparam name="form.new_status" default="">
+
+    <cfif structKeyExists(variables.body, "new_status") and len(trim(variables.body.new_status))>
+        <cfset variables.newStatus = lcase(trim(variables.body.new_status))>
+    <cfelseif len(trim(form.new_status))>
+        <cfset variables.newStatus = lcase(trim(form.new_status))>
     </cfif>
 
-    <!--- G) Read fields: body only (must be a struct) --->
-    <cfset variables.fields = {}>
-    <cfif structKeyExists(variables.body, "fields") and isStruct(variables.body.fields)>
-        <cfset variables.fields = variables.body.fields>
-    </cfif>
-
-    <cfif structIsEmpty(variables.fields)>
-        <cfset returnError("MISSING_PARAMS", "fields object is required with at least one field to update", 400)>
+    <cfif not len(variables.newStatus)>
+        <cfset returnError("MISSING_PARAMS", "new_status is required", 400)>
     </cfif>
     <cfset arrayAppend(variables.debug, "params_ok")>
 
-    <!--- H) Initialize service --->
+    <!--- G) Initialize service --->
     <cfset variables.v3Service = new services.ContactImportV3Service()>
     <cfset arrayAppend(variables.debug, "service_init")>
 
-    <!--- I) Verify job ownership and get current status --->
+    <!--- H) Verify job ownership and get current status --->
     <cfset variables.jobResult = variables.v3Service.getJobForUser(variables.jobId, variables.userid)>
     <cfif not variables.jobResult.success>
+        <!--- Determine HTTP status based on error code --->
         <cfset variables.httpStatusCode = 400>
         <cfif variables.jobResult.code eq "NOT_FOUND">
             <cfset variables.httpStatusCode = 404>
@@ -202,68 +203,126 @@
         <cfset returnError(variables.jobResult.code, variables.jobResult.message, variables.httpStatusCode)>
     </cfif>
     <cfset variables.job = variables.jobResult.data.job>
+    <cfset variables.currentStatus = lcase(variables.job.status)>
     <cfset arrayAppend(variables.debug, "job_loaded")>
 
-    <!--- J) Status gate: Allow fact editing during review and finalization --->
-    <cfset variables.ALLOWED_STATUSES = ["reviewing", "finalizing"]>
-    <cfif not arrayFindNoCase(variables.ALLOWED_STATUSES, variables.job.status)>
+    <!--- I) Validate the transition is allowed --->
+    <!--- Check current status has manual transitions defined --->
+    <cfif not structKeyExists(variables.MANUAL_TRANSITIONS, variables.currentStatus)>
         <cfset returnError(
-            "INVALID_STATE",
-            "Cannot edit facts from status: " & variables.job.status & ". Allowed: " & arrayToList(variables.ALLOWED_STATUSES, ", "),
+            "INVALID_TRANSITION",
+            "No manual transitions allowed from status: " & variables.currentStatus,
             409,
-            { current_status: variables.job.status, allowed: variables.ALLOWED_STATUSES }
+            { current_status: variables.currentStatus, requested_status: variables.newStatus }
         )>
     </cfif>
-    <cfset arrayAppend(variables.debug, "status_ok")>
 
-    <!--- K) Call service method to update facts --->
-    <cfset arrayAppend(variables.debug, "update_called")>
-    <cfset variables.updateResult = variables.v3Service.updateRowFacts(
-        job_id = variables.jobId,
-        row_id = variables.rowId,
-        fields = variables.fields,
-        userid = variables.userid
-    )>
-
-    <cfif not variables.updateResult.success>
-        <cfset variables.httpStatusCode = 500>
-        <cfif variables.updateResult.code eq "NOT_FOUND">
-            <cfset variables.httpStatusCode = 404>
-        <cfelseif variables.updateResult.code eq "VALIDATION_ERROR">
-            <cfset variables.httpStatusCode = 400>
-        </cfif>
-        <cfset arrayAppend(variables.debug, "update_failed")>
-        <cfset returnError(variables.updateResult.code, variables.updateResult.message, variables.httpStatusCode, variables.updateResult.data ?: {})>
+    <!--- Check the requested target status is in the allowed list --->
+    <cfset variables.allowedTargets = variables.MANUAL_TRANSITIONS[variables.currentStatus]>
+    <cfif not arrayFindNoCase(variables.allowedTargets, variables.newStatus)>
+        <cfset returnError(
+            "INVALID_TRANSITION",
+            "Cannot transition from '" & variables.currentStatus & "' to '" & variables.newStatus & "'. Allowed targets: " & arrayToList(variables.allowedTargets, ", "),
+            409,
+            { current_status: variables.currentStatus, requested_status: variables.newStatus, allowed_targets: variables.allowedTargets }
+        )>
     </cfif>
-    <cfset arrayAppend(variables.debug, "facts_updated")>
-    <cflog file="importv3" text="[fact_update] SUCCESS userid=#variables.userid# job_id=#variables.jobId# row_id=#variables.rowId# field_count=#structCount(variables.fields)# elapsed_ms=#getTickCount() - variables.startTick#">
+    <cfset arrayAppend(variables.debug, "transition_ok")>
+
+    <!--- J) Direct UPDATE bypassing service transition rules --->
+    <!--- Build additional fields based on target status --->
+    <cfset variables.additionalFields = "">
+
+    <!--- When going back to reviewing, clear finished_at since the job is being re-opened --->
+    <cfif variables.newStatus eq "reviewing">
+        <cfset variables.additionalFields = ", finished_at = NULL, error_message = NULL">
+    </cfif>
+
+    <!--- When cancelling, set finished_at --->
+    <cfif variables.newStatus eq "cancelled">
+        <cfset variables.additionalFields = ", finished_at = NOW()">
+    </cfif>
+
+    <cftry>
+        <cfset queryExecute(
+            "UPDATE import_v3_jobs
+                SET status = :new_status,
+                    updated_at = NOW()
+                    #variables.additionalFields#
+                WHERE job_id = :job_id
+                  AND userid = :userid",
+            {
+                new_status: { value: variables.newStatus, cfsqltype: "cf_sql_varchar", maxlength: 20 },
+                job_id: { value: variables.jobId, cfsqltype: "cf_sql_integer" },
+                userid: { value: variables.userid, cfsqltype: "cf_sql_integer" }
+            },
+            { datasource: application.datasource }
+        )>
+        <cfset arrayAppend(variables.debug, "status_updated")>
+
+        <cfcatch type="any">
+            <cfset arrayAppend(variables.debug, "update_failed")>
+            <!--- Log the DB error via service --->
+            <cftry>
+                <cfif isObject(variables.v3Service)>
+                    <cfset variables.v3Service.logEvent(
+                        job_id = variables.jobId,
+                        userid = variables.userid,
+                        event_type = "manual_status_change_db_error",
+                        detail = { error: cfcatch.message, from_status: variables.currentStatus, to_status: variables.newStatus, debug: variables.debug }
+                    )>
+                </cfif>
+                <cfcatch type="any"><!--- Ignore logging errors ---></cfcatch>
+            </cftry>
+            <cfset returnError("UPDATE_FAILED", "Failed to update job status: " & cfcatch.message, 500)>
+        </cfcatch>
+    </cftry>
+
+    <!--- K) Log the manual status change via service --->
+    <cftry>
+        <cfset variables.v3Service.logEvent(
+            job_id = variables.jobId,
+            userid = variables.userid,
+            event_type = "manual_status_change",
+            detail = { from_status: variables.currentStatus, to_status: variables.newStatus, endpoint: "status.cfm" }
+        )>
+        <cfset arrayAppend(variables.debug, "logged")>
+        <cfcatch type="any">
+            <!--- Non-fatal: log failure should not block the response --->
+            <cfset arrayAppend(variables.debug, "log_failed")>
+        </cfcatch>
+    </cftry>
+
     <cfset arrayAppend(variables.debug, "done")>
 
     <!--- Build success response --->
     <cfset variables.response.success = true>
-    <cfset variables.response.message = variables.updateResult.message>
-    <cfset variables.response.data = variables.updateResult.data>
-    <cfset variables.response.data.debug = variables.debug>
-    <cfset variables.response.data.elapsed_ms = getTickCount() - variables.startTick>
+    <cfset variables.response.message = "Job status changed from '" & variables.currentStatus & "' to '" & variables.newStatus & "'">
+    <cfset variables.response.data = {
+        "job_id": variables.jobId,
+        "previous_status": variables.currentStatus,
+        "new_status": variables.newStatus,
+        "debug": variables.debug,
+        "elapsed_ms": getTickCount() - variables.startTick
+    }>
 
     <cfcatch type="any">
-        <!--- Log fact update error (if service available) --->
-        <cflog file="importv3" text="[fact_update] ERROR userid=#variables.userid# job_id=#variables.jobId# row_id=#variables.rowId# message=#cfcatch.message# detail=#cfcatch.detail#">
+        <!--- Log status change error (if service available) --->
         <cfset arrayAppend(variables.debug, "exception")>
         <cftry>
             <cfif isObject(variables.v3Service) and variables.jobId gt 0>
                 <cfset variables.v3Service.logEvent(
                     job_id = variables.jobId,
                     userid = variables.userid,
-                    event_type = "fact_update_endpoint_error",
-                    detail = { error: cfcatch.message, detail: cfcatch.detail, row_id: variables.rowId, debug: variables.debug }
+                    event_type = "status_endpoint_error",
+                    detail = { error: cfcatch.message, detail: cfcatch.detail, new_status: variables.newStatus, debug: variables.debug }
                 )>
             </cfif>
             <cfcatch type="any"><!--- Ignore logging errors ---></cfcatch>
         </cftry>
 
         <cfset variables.response.code = "INTERNAL_ERROR">
-        <cfset variables.response.message = "Fact update failed: " & cfcatch.message>
+        <cfset variables.response.message = "Status change failed: " & cfcatch.message>
         <cfset variables.response.data.debug = variables.debug>
         <cfset variables.response.data.last_step = arrayLen(variables.debug) gt 1 ? variables.debug[arrayLen(variables.debug) - 1] : "start">
         <cfheader statuscode="500">

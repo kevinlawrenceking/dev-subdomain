@@ -27,7 +27,7 @@
 --->
 
 <!--- Initialize response structure --->
-<cfset response = {
+<cfset variables.response = {
     "success": false,
     "code": "",
     "message": "",
@@ -35,10 +35,10 @@
 }>
 
 <!--- Phase 5.2: Debug breadcrumbs array (no PII) --->
-<cfset debug = ["start"]>
+<cfset variables.debug = ["start"]>
 
 <!--- Phase 6.1: Timing for observability --->
-<cfset startTick = getTickCount()>
+<cfset variables.startTick = getTickCount()>
 
 <!--- Initialize variables for error handling --->
 <cfset variables.jobId = 0>
@@ -52,13 +52,13 @@
     <cfargument name="statusCode" type="numeric" required="true">
     <cfargument name="extraData" type="struct" required="false" default="#{}#">
 
-    <cfset response.code = arguments.code>
-    <cfset response.message = arguments.message>
-    <cfset response.data = arguments.extraData>
-    <cfset response.data.debug = debug>
-    <cfset response.data.last_step = arrayLen(debug) gt 0 ? debug[arrayLen(debug)] : "none">
+    <cfset variables.response.code = arguments.code>
+    <cfset variables.response.message = arguments.message>
+    <cfset variables.response.data = arguments.extraData>
+    <cfset variables.response.data.debug = variables.debug>
+    <cfset variables.response.data.last_step = arrayLen(variables.debug) gt 0 ? variables.debug[arrayLen(variables.debug)] : "none">
     <cfheader statuscode="#arguments.statusCode#">
-    <cfcontent type="application/json; charset=utf-8" reset="true"><cfoutput>#serializeJSON(response)#</cfoutput><cfabort>
+    <cfcontent type="application/json; charset=utf-8" reset="true"><cfoutput>#serializeJSON(variables.response)#</cfoutput><cfabort>
 </cffunction>
 
 <cftry>
@@ -67,7 +67,8 @@
         <cfset returnError("AUTH_REQUIRED", "Authentication required", 401)>
     </cfif>
     <cfset variables.userid = session.userid>
-    <cfset arrayAppend(debug, "auth_ok")>
+    <cfset arrayAppend(variables.debug, "auth_ok")>
+    <cflog file="importv3" text="[rows] START userid=#variables.userid#">
 
     <!--- B) Validate job_id parameter --->
     <cfparam name="url.job_id" default="">
@@ -75,34 +76,35 @@
     <cfif variables.jobId lte 0>
         <cfset returnError("MISSING_PARAMS", "job_id is required", 400)>
     </cfif>
-    <cfset arrayAppend(debug, "job_id_ok")>
+    <cfset arrayAppend(variables.debug, "job_id_ok")>
 
     <!--- C) Parse optional parameters --->
     <cfparam name="url.status" default="all">
     <cfparam name="url.page" default="1">
     <cfparam name="url.page_size" default="50">
     <cfparam name="url.stats_only" default="0">
+    <cfparam name="url.search" default="">
 
     <cfset variables.statusFilter = lcase(trim(url.status))>
     <cfset variables.page = max(1, val(url.page))>
     <cfset variables.pageSize = min(200, max(1, val(url.page_size)))>
     <cfset variables.statsOnly = val(url.stats_only) eq 1>
+    <cfset variables.searchTerm = trim(url.search)>
 
     <!--- Validate status filter --->
     <cfset variables.validStatuses = ["ready", "problem", "dupe", "ignored", "imported", "all"]>
     <cfif not arrayFindNoCase(variables.validStatuses, variables.statusFilter)>
         <cfset variables.statusFilter = "all">
     </cfif>
-    <cfset arrayAppend(debug, "params_parsed")>
+    <cfset arrayAppend(variables.debug, "params_parsed")>
 
     <!--- D) Initialize service --->
     <cfset variables.v3Service = new services.ContactImportV3Service()>
-    <cfset arrayAppend(debug, "service_init")>
+    <cfset arrayAppend(variables.debug, "service_init")>
 
     <!--- E) Verify job ownership and get current status --->
     <cfset variables.jobResult = variables.v3Service.getJobForUser(variables.jobId, variables.userid)>
     <cfif not variables.jobResult.success>
-        <!--- Determine HTTP status based on error code --->
         <cfset variables.httpStatusCode = 400>
         <cfif variables.jobResult.code eq "NOT_FOUND">
             <cfset variables.httpStatusCode = 404>
@@ -112,7 +114,7 @@
         <cfset returnError(variables.jobResult.code, variables.jobResult.message, variables.httpStatusCode)>
     </cfif>
     <cfset variables.job = variables.jobResult.data.job>
-    <cfset arrayAppend(debug, "job_loaded")>
+    <cfset arrayAppend(variables.debug, "job_loaded")>
 
     <!--- F) Status gate: Only allow rows view from these states --->
     <cfset variables.ALLOWED_STATUSES = ["reviewing", "finalizing", "completed"]>
@@ -124,22 +126,22 @@
             { current_status: variables.job.status, allowed: variables.ALLOWED_STATUSES }
         )>
     </cfif>
-    <cfset arrayAppend(debug, "status_ok")>
+    <cfset arrayAppend(variables.debug, "status_ok")>
 
     <!--- G) If stats_only, return just the stats --->
     <cfif variables.statsOnly>
-        <!--- Phase 7: getJobStats returns stats struct directly, not wrapped in result envelope --->
         <cfset variables.stats = variables.v3Service.getJobStats(variables.jobId)>
-        <cfset arrayAppend(debug, "stats_fetched")>
-        <cfset arrayAppend(debug, "done")>
+        <cfset arrayAppend(variables.debug, "stats_fetched")>
+        <cfset arrayAppend(variables.debug, "done")>
+        <cflog file="importv3" text="[rows] STATS_ONLY userid=#variables.userid# job_id=#variables.jobId# elapsed_ms=#getTickCount() - variables.startTick#">
 
-        <cfset response.success = true>
-        <cfset response.message = "">
-        <cfset response.data = {
+        <cfset variables.response.success = true>
+        <cfset variables.response.message = "">
+        <cfset variables.response.data = {
             stats: variables.stats,
             stats_only: true,
-            debug: debug,
-            elapsed_ms: getTickCount() - startTick
+            debug: variables.debug,
+            elapsed_ms: getTickCount() - variables.startTick
         }>
     <cfelse>
         <!--- H) Call service method to get rows (includes stats) --->
@@ -148,33 +150,35 @@
             userid = variables.userid,
             statusFilter = variables.statusFilter,
             page = variables.page,
-            pageSize = variables.pageSize
+            pageSize = variables.pageSize,
+            search = variables.searchTerm
         )>
 
         <cfif not variables.rowsResult.success>
             <cfset returnError(variables.rowsResult.code, variables.rowsResult.message, 500)>
         </cfif>
-        <cfset arrayAppend(debug, "rows_fetched")>
-        <cfset arrayAppend(debug, "done")>
+        <cfset arrayAppend(variables.debug, "rows_fetched")>
+        <cfset arrayAppend(variables.debug, "done")>
+        <cflog file="importv3" text="[rows] SUCCESS userid=#variables.userid# job_id=#variables.jobId# filter=#variables.statusFilter# page=#variables.page# elapsed_ms=#getTickCount() - variables.startTick#">
 
         <!--- Build success response --->
-        <cfset response.success = true>
-        <cfset response.message = "">
-        <cfset response.data = variables.rowsResult.data>
-        <cfset response.data.debug = debug>
-        <cfset response.data.elapsed_ms = getTickCount() - startTick>
+        <cfset variables.response.success = true>
+        <cfset variables.response.message = "">
+        <cfset variables.response.data = variables.rowsResult.data>
+        <cfset variables.response.data.debug = variables.debug>
+        <cfset variables.response.data.elapsed_ms = getTickCount() - variables.startTick>
     </cfif>
 
     <cfcatch type="any">
         <!--- Log rows error (if service available) --->
-        <cfset arrayAppend(debug, "exception")>
+        <cfset arrayAppend(variables.debug, "exception")>
         <cftry>
             <cfif isObject(variables.v3Service) and variables.jobId gt 0>
                 <cfset variables.v3Service.logEvent(
                     job_id = variables.jobId,
                     userid = variables.userid,
                     event_type = "rows_endpoint_error",
-                    detail = { error: cfcatch.message, detail: cfcatch.detail, debug: debug }
+                    detail = { error: cfcatch.message, detail: cfcatch.detail, debug: variables.debug }
                 )>
             </cfif>
             <cfcatch type="any"><!--- Ignore logging errors ---></cfcatch>
@@ -183,14 +187,14 @@
         <!--- Also log to importv3 log file --->
         <cflog file="importv3" text="rows.cfm ERROR job_id=#variables.jobId# user=#variables.userid# err=#cfcatch.message# detail=#cfcatch.detail# type=#cfcatch.type# tagcontext=#cfcatch.tagcontext[1].template#:#cfcatch.tagcontext[1].line#">
 
-        <cfset response.code = "INTERNAL_ERROR">
-        <cfset response.message = "Rows fetch failed: " & cfcatch.message & " [" & cfcatch.tagcontext[1].template & ":" & cfcatch.tagcontext[1].line & "]">
-        <cfset response.data.debug = debug>
-        <cfset response.data.last_step = arrayLen(debug) gt 1 ? debug[arrayLen(debug) - 1] : "start">
-        <cfset response.data.error_detail = cfcatch.detail>
-        <cfset response.data.error_type = cfcatch.type>
+        <cfset variables.response.code = "INTERNAL_ERROR">
+        <cfset variables.response.message = "Rows fetch failed: " & cfcatch.message & " [" & cfcatch.tagcontext[1].template & ":" & cfcatch.tagcontext[1].line & "]">
+        <cfset variables.response.data.debug = variables.debug>
+        <cfset variables.response.data.last_step = arrayLen(variables.debug) gt 1 ? variables.debug[arrayLen(variables.debug) - 1] : "start">
+        <cfset variables.response.data.error_detail = cfcatch.detail>
+        <cfset variables.response.data.error_type = cfcatch.type>
         <cfheader statuscode="500">
     </cfcatch>
 </cftry>
 </cfsilent>
-<cfcontent type="application/json; charset=utf-8" reset="true"><cfoutput>#serializeJSON(response)#</cfoutput>
+<cfcontent type="application/json; charset=utf-8" reset="true"><cfoutput>#serializeJSON(variables.response)#</cfoutput>

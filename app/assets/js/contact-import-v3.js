@@ -75,6 +75,7 @@
         initJobActions();
         initReviewGrid();
         initModals();
+        initStatusControls();
 
         // Check for active job
         var jobIdInput = document.getElementById('job-id');
@@ -174,7 +175,9 @@
         currentPage: 1,
         pageSize: 50,
         selectedRows: new Set(),
-        stats: {}
+        selectAllMatchingFilter: '',
+        stats: {},
+        searchQuery: ''
     };
 
     // Note: Initialization moved to initV3() function (Phase 4.3)
@@ -269,16 +272,34 @@
             success: function(response) {
                 console.log('[V3] Upload response:', response);
                 if (response.success) {
-                    // Check if this is a duplicate file
-                    if (response.is_duplicate_file && response.existing_job) {
-                        var msg = 'Warning: This file was previously imported on ' +
-                            response.existing_job.created_at +
-                            ' (' + response.existing_job.imported_rows + ' contacts imported). ' +
-                            'You can still proceed with this import.';
-                        showAlert('warning', msg);
+                    // Extract job_id from response.data.job
+                    var job = response.data && response.data.job ? response.data.job : {};
+                    var jobId = job.job_id || job.JOB_ID || 0;
+
+                    // Check if this is a duplicate file (V3 uses code field)
+                    if (response.code === 'DUPLICATE_FILE') {
+                        var dupeName = job.source_filename || job.SOURCE_FILENAME || 'this file';
+                        var dupeStatus = job.status || job.STATUS || 'unknown';
+                        console.log('[V3] Duplicate file detected:', dupeName, 'existing job status:', dupeStatus);
+                        $j('#upload-progress').hide();
+                        $j('#upload-area').show();
+                        showAlert('warning',
+                            'This file (<strong>' + escapeHtml(dupeName) + '</strong>) was already uploaded.' +
+                            ' The existing job is in <strong>' + escapeHtml(dupeStatus) + '</strong> status.' +
+                            ' <a href="/app/contacts-import-v3/?job_id=' + jobId + '" class="alert-link">Open existing job</a>'
+                        );
+                        return;
                     }
+
+                    if (!jobId) {
+                        console.error('[V3] Could not extract job_id from upload response:', response);
+                        showAlert('error', 'Upload succeeded but no job ID was returned.');
+                        $j('#upload-area').show();
+                        $j('#upload-progress').hide();
+                        return;
+                    }
+
                     // Redirect to V3 job page
-                    var jobId = response.data.job_id || (response.data.job && response.data.job.job_id);
                     window.location.href = '/app/contacts-import-v3/?job_id=' + jobId;
                 } else {
                     var errMsg = response.message || 'Upload failed';
@@ -332,6 +353,88 @@
         // Dry-run button (preview)
         $j('#btn-dry-run').click(function() {
             previewImport();
+        });
+
+        // Export problems as CSV
+        $j('#btn-export-problems').click(function() {
+            var $btn = $j(this);
+            $btn.prop('disabled', true).html('<i class="fe-loader fe-spin"></i> Exporting...');
+            // Fetch all problem rows (up to 10000)
+            $j.get('/ajax/importv3/rows.cfm?bypass=1&job_id=' + state.jobId + '&status=problem&page=1&limit=10000', function(response) {
+                $btn.prop('disabled', false).html('<i class="fe-download"></i> Export Problems');
+                if (!response.success) {
+                    showAlert('error', 'Could not fetch problem rows');
+                    return;
+                }
+                var data = response.data || response.DATA || {};
+                var rows = data.rows || data.ROWS || [];
+                if (rows.length === 0) {
+                    showAlert('info', 'No problem rows to export');
+                    return;
+                }
+                // Build CSV
+                var csvRows = [['Row #', 'Name', 'Email', 'Phone', 'Company', 'Error Field', 'Error Message'].join(',')];
+                rows.forEach(function(row) {
+                    var d = row.data || row.DATA || {};
+                    var name = getVal(d, 'contactFullName') || ((getVal(d, 'first_name') || getVal(d, 'firstName') || '') + ' ' + (getVal(d, 'last_name') || getVal(d, 'lastName') || '')).trim();
+                    var email = getVal(d, 'email_business') || getVal(d, 'email_personal') || '';
+                    var phone = getVal(d, 'phone_work') || getVal(d, 'phone_mobile') || '';
+                    var company = getVal(d, 'company') || '';
+                    var errors = row.errors || row.ERRORS || [];
+                    if (errors.length === 0) {
+                        csvRows.push([row.row_num || row.ROW_NUM, csvEscape(name), csvEscape(email), csvEscape(phone), csvEscape(company), '', ''].join(','));
+                    } else {
+                        errors.forEach(function(err) {
+                            csvRows.push([row.row_num || row.ROW_NUM, csvEscape(name), csvEscape(email), csvEscape(phone), csvEscape(company), csvEscape(err.field || err.FIELD || ''), csvEscape(err.message || err.MESSAGE || '')].join(','));
+                        });
+                    }
+                });
+                var csvContent = csvRows.join('\n');
+                var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                var link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'import_problems_job_' + state.jobId + '.csv';
+                link.click();
+                showAlert('success', 'Exported ' + rows.length + ' problem rows');
+            }).fail(function() {
+                $btn.prop('disabled', false).html('<i class="fe-download"></i> Export Problems');
+                showAlert('error', 'Export failed');
+            });
+        });
+
+        // Refresh validation: re-run recompute
+        $j('#btn-refresh-validation').click(function() {
+            var $btn = $j(this);
+            var originalHtml = $btn.html();
+            $btn.prop('disabled', true).html('<i class="fe-loader fe-spin"></i> Refreshing...');
+            $j.ajax({
+                url: '/ajax/importv3/recompute.cfm?bypass=1',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ job_id: state.jobId }),
+                timeout: 120000,
+                success: function(response) {
+                    $btn.prop('disabled', false).html(originalHtml);
+                    if (response.success) {
+                        showAlert('success', 'Validation refreshed. Reloading...');
+                        setTimeout(function() { window.location.reload(); }, 800);
+                    } else {
+                        showAlert('error', response.message || 'Refresh failed');
+                    }
+                },
+                error: function(xhr) {
+                    $btn.prop('disabled', false).html(originalHtml);
+                    showAlert('error', 'Refresh failed. Please try again.');
+                }
+            });
+        });
+
+        // Stale lock: Force unlock stuck job
+        $j('#btn-force-unlock').click(function() {
+            var jobId = $j(this).data('job-id');
+            if (confirm('This will reset the job back to reviewing status so you can continue working with it. Proceed?')) {
+                changeJobStatus(jobId, 'reviewing');
+            }
         });
     }
 
@@ -408,6 +511,7 @@
     }
 
     function loadColumnMappings() {
+        console.log('[V3] ========== LOAD COLUMN MAPPINGS ==========');
         console.log('[V3] Loading column mappings for job:', state.jobId);
         $j.get('/ajax/importv3/columns.cfm?bypass=1&job_id=' + state.jobId, function(response) {
             console.log('[V3] Columns response:', response);
@@ -432,7 +536,7 @@
             'address':  'address1'
         };
 
-        var html = '<table class="table table-sm"><thead><tr><th>Source Column</th><th>Maps To</th></tr></thead><tbody>';
+        var html = '<table class="table table-sm"><thead><tr><th>Source Column</th><th>Sample Values</th><th>Maps To</th></tr></thead><tbody>';
 
         columns.forEach(function(col) {
             // If backend didn't map, try exact match on source column name
@@ -453,8 +557,22 @@
                 }
             }
 
+            // Build sample values display
+            var samples = col.sample_values || col.SAMPLE_VALUES || [];
+            var sampleHtml = '';
+            if (samples.length > 0) {
+                var shown = samples.slice(0, 3);
+                sampleHtml = shown.map(function(s) { return '<span class="badge bg-light text-dark me-1" style="font-weight:normal;font-size:11px;">' + escapeHtml(s) + '</span>'; }).join('');
+                if (samples.length > 3) {
+                    sampleHtml += '<span class="text-muted small">+' + (samples.length - 3) + ' more</span>';
+                }
+            } else {
+                sampleHtml = '<span class="text-muted small">(no data)</span>';
+            }
+
             html += '<tr>';
             html += '<td><strong>' + escapeHtml(col.source_name || 'Column ' + (col.source_index + 1)) + '</strong></td>';
+            html += '<td>' + sampleHtml + '</td>';
             html += '<td>';
             html += '<select class="form-control form-control-sm mapping-select" data-column-id="' + col.column_id + '">';
             html += '<option value="">(Do not import)</option>';
@@ -537,6 +655,27 @@
     // ========================================
 
     function initReviewGrid() {
+        // Search input with debounce
+        var searchTimer = null;
+        $j('#row-search').on('input', function() {
+            var val = $j(this).val().trim();
+            clearTimeout(searchTimer);
+            $j('#row-search-clear').toggle(val.length > 0);
+            searchTimer = setTimeout(function() {
+                state.searchQuery = val;
+                state.currentPage = 1;
+                loadRows();
+            }, 350);
+        });
+
+        $j('#row-search-clear').click(function() {
+            $j('#row-search').val('');
+            $j(this).hide();
+            state.searchQuery = '';
+            state.currentPage = 1;
+            loadRows();
+        });
+
         // Tab clicks
         $j('#review-tabs .nav-link').click(function(e) {
             e.preventDefault();
@@ -547,7 +686,7 @@
             loadRows();
         });
 
-        // Check all
+        // Check all (page-level)
         $j('#check-all').change(function() {
             var checked = this.checked;
             $j('.row-checkbox').each(function() {
@@ -559,7 +698,31 @@
                     state.selectedRows.delete(rowId);
                 }
             });
+            state.selectAllMatchingFilter = '';
             updateSelectedCount();
+            updateSelectAllBanner(checked);
+        });
+
+        // Select all matching rows across all pages
+        $j('#select-all-matching').click(function(e) {
+            e.preventDefault();
+            state.selectAllMatchingFilter = state.currentFilter || 'all';
+            var totalForFilter = getTotalForCurrentFilter();
+            $j('#select-all-banner').html(
+                '<strong>All ' + totalForFilter + ' matching rows selected.</strong> ' +
+                '<a href="#" id="clear-all-selection" class="ms-2">Clear selection</a>'
+            ).show();
+            $j('#clear-all-selection').click(function(ev) {
+                ev.preventDefault();
+                clearAllSelection();
+            });
+            updateSelectedCount();
+        });
+
+        // Clear all selection
+        $j('#clear-all-selection').click(function(e) {
+            e.preventDefault();
+            clearAllSelection();
         });
 
         // Bulk actions
@@ -581,10 +744,13 @@
         var url = '/ajax/importv3/rows.cfm?bypass=1&job_id=' + state.jobId +
             '&status=' + encodeURIComponent(state.currentFilter) +
             '&page=' + state.currentPage +
-            '&limit=' + state.pageSize;
+            '&limit=' + state.pageSize +
+            (state.searchQuery ? '&search=' + encodeURIComponent(state.searchQuery) : '');
 
         $j.get(url, function(response) {
+            console.log('[V3] ========== ROWS RESPONSE ==========');
             console.log('[V3] Rows response:', response);
+            console.log('[V3] Rows success:', response.success, 'Code:', response.code);
             // Log debug breadcrumbs if present (handle both cases - CF returns uppercase)
             var data = response.data || response.DATA || {};
             var debugTrail = data.debug || data.DEBUG;
@@ -778,9 +944,39 @@
         });
     }
 
+    function updateSelectAllBanner(allPageChecked) {
+        var totalForFilter = getTotalForCurrentFilter();
+        var visibleCount = $j('.row-checkbox').length;
+        if (allPageChecked && totalForFilter > visibleCount) {
+            $j('#select-all-page-text').text('All ' + visibleCount + ' rows on this page are selected.');
+            $j('#select-all-matching').text('Select all ' + totalForFilter + ' matching rows').show();
+            $j('#clear-all-selection').hide();
+            $j('#select-all-banner').show();
+        } else {
+            $j('#select-all-banner').hide();
+        }
+    }
+
+    function clearAllSelection() {
+        state.selectAllMatchingFilter = '';
+        state.selectedRows.clear();
+        $j('.row-checkbox').prop('checked', false);
+        $j('#check-all').prop('checked', false);
+        $j('#select-all-banner').hide();
+        updateSelectedCount();
+    }
+
+    function getTotalForCurrentFilter() {
+        if (!state.stats) return 0;
+        var f = state.currentFilter;
+        if (!f || f === 'all' || f === '') return state.stats.total || 0;
+        return state.stats[f] || 0;
+    }
+
     function updateSelectedCount() {
-        $j('#selected-count').text(state.selectedRows.size + ' selected');
-        if (state.selectedRows.size > 0) {
+        var count = state.selectAllMatchingFilter ? getTotalForCurrentFilter() : state.selectedRows.size;
+        $j('#selected-count').text(count + ' selected');
+        if (count > 0) {
             $j('#bulk-actions').show();
         } else {
             $j('#bulk-actions').hide();
@@ -790,6 +986,7 @@
     function updateStats() {
         // V3 uses the rows endpoint with stats_only mode
         $j.get('/ajax/importv3/rows.cfm?bypass=1&job_id=' + state.jobId + '&stats_only=1', function(response) {
+            console.log('[V3] ========== STATS RESPONSE ==========');
             console.log('[V3] Stats response:', response);
             // CF serializes keys uppercase: handle both cases
             var data = response.data || response.DATA || {};
@@ -820,13 +1017,34 @@
                     $j('#finalize-warning').hide();
                     $j('#btn-finalize').prop('disabled', false);
                 }
+
+                // Show/hide export problems button
+                $j('#btn-export-problems').toggle((stats.problem || 0) > 0);
+
+                // Build finalize pre-check summary
+                var precheckHtml = '';
+                precheckHtml += '<div class="col-auto"><span class="text-success"><strong>' + (stats.ready || 0) + '</strong> ready to import</span></div>';
+                if ((stats.problem || 0) > 0) {
+                    precheckHtml += '<div class="col-auto"><span class="text-danger">' + stats.problem + ' with errors (will be skipped)</span></div>';
+                }
+                if ((stats.dupe || 0) > 0) {
+                    precheckHtml += '<div class="col-auto"><span class="text-warning">' + stats.dupe + ' unresolved duplicates (will be skipped)</span></div>';
+                }
+                if ((stats.ignored || 0) > 0) {
+                    precheckHtml += '<div class="col-auto"><span class="text-muted">' + stats.ignored + ' excluded by you</span></div>';
+                }
+                if ((stats.imported || 0) > 0) {
+                    precheckHtml += '<div class="col-auto"><span style="color:#406e8e;">' + stats.imported + ' already imported</span></div>';
+                }
+                $j('#precheck-details').html(precheckHtml);
+                $j('#finalize-precheck').show();
             }
         });
     }
 
     function bulkAction(action) {
-        if (state.selectedRows.size === 0) return;
-        console.log('[V3] Bulk action:', action, 'Rows:', Array.from(state.selectedRows));
+        if (state.selectedRows.size === 0 && !state.selectAllMatchingFilter) return;
+        console.log('[V3] Bulk action:', action, 'selectAllFilter:', state.selectAllMatchingFilter, 'Rows:', Array.from(state.selectedRows));
 
         // Phase 7: Get CSRF token for row_action
         var csrfToken = $j('#csrf-token').val() || '';
@@ -851,11 +1069,16 @@
             headers: {
                 'X-CSRF-Token': csrfToken  // Phase 7: Header CSRF (preferred)
             },
-            data: JSON.stringify({
+            data: JSON.stringify(state.selectAllMatchingFilter ? {
+                job_id: state.jobId,
+                select_all_filter: state.selectAllMatchingFilter === 'all' ? (state.currentFilter || '') : state.selectAllMatchingFilter,
+                action: action,
+                csrf_token: csrfToken
+            } : {
                 job_id: state.jobId,
                 row_ids: Array.from(state.selectedRows),
                 action: action,
-                csrf_token: csrfToken  // Body CSRF (fallback)
+                csrf_token: csrfToken
             }),
             success: function(response) {
                 console.log('[V3] Bulk action response:', response);
@@ -864,8 +1087,7 @@
                     console.log('[V3] Debug trail:', response.data.debug.join(' -> '));
                 }
                 if (response.success) {
-                    state.selectedRows.clear();
-                    updateSelectedCount();
+                    clearAllSelection();
                     loadRows();
                 } else {
                     console.error('[V3] Bulk action failed with code:', response.code);
@@ -1373,12 +1595,105 @@
     }
 
     // ========================================
+    // STATUS CHANGE
+    // ========================================
+
+    function initStatusControls() {
+        // Active job status change dropdown
+        $j(document).on('click', '.btn-change-status', function(e) {
+            e.preventDefault();
+            var newStatus = $j(this).data('new-status');
+            var statusLabel = newStatus === 'cancelled' ? 'cancel this import' : 'return this job to review';
+            if (!confirm('Are you sure you want to ' + statusLabel + '?')) return;
+            changeJobStatus(state.jobId, newStatus);
+        });
+
+        // History table reset buttons
+        $j(document).on('click', '.btn-history-reset', function(e) {
+            e.preventDefault();
+            var histJobId = $j(this).data('job-id');
+            if (!confirm('Reset this job back to review status?')) return;
+            changeJobStatus(histJobId, 'reviewing', true);
+        });
+
+        // History table cancel buttons
+        $j(document).on('click', '.btn-history-cancel', function(e) {
+            e.preventDefault();
+            var histJobId = $j(this).data('job-id');
+            if (!confirm('Cancel this import job?')) return;
+            changeJobStatus(histJobId, 'cancelled', true);
+        });
+    }
+
+    function changeJobStatus(jobId, newStatus, reloadPage) {
+        console.log('[V3] Changing job status:', jobId, '->', newStatus);
+
+        var csrfToken = $j('#csrf-token').val() || '';
+        // For history page actions where csrf-token hidden input may not exist,
+        // generate one or skip CSRF (server will handle)
+        
+        $j.ajax({
+            url: '/ajax/importv3/status.cfm?bypass=1',
+            type: 'POST',
+            contentType: 'application/json',
+            headers: csrfToken ? { 'X-CSRF-Token': csrfToken } : {},
+            data: JSON.stringify({
+                job_id: jobId,
+                new_status: newStatus,
+                csrf_token: csrfToken
+            }),
+            success: function(response) {
+                console.log('[V3] Status change response:', response);
+                if (response.data && response.data.debug) {
+                    console.log('[V3] Debug trail:', response.data.debug.join(' -> '));
+                }
+                if (response.success) {
+                    showAlert('success', response.message || 'Status updated');
+                    setTimeout(function() {
+                        if (reloadPage || newStatus === 'cancelled') {
+                            window.location.href = '/app/contacts-import-v3/';
+                        } else {
+                            window.location.reload();
+                        }
+                    }, 1000);
+                } else {
+                    console.error('[V3] Status change failed:', response.code, response.message);
+                    showAlert('error', response.message || 'Status change failed');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('[V3] Status change HTTP error:', xhr.status, status, error);
+                var errorMsg = 'Status change failed. Please try again.';
+                try {
+                    var errResponse = JSON.parse(xhr.responseText);
+                    if (errResponse.message) errorMsg = errResponse.message;
+                    if (errResponse.data && errResponse.data.debug) {
+                        console.error('[V3] Debug trail:', errResponse.data.debug.join(' -> '));
+                    }
+                } catch (e) {}
+                showAlert('error', errorMsg);
+            }
+        });
+    }
+
+    // ========================================
     // FINALIZE - V3 ENDPOINTS
     // ========================================
 
     function finalizeImport() {
         var readyCount = state.stats.ready || 0;
-        if (!confirm('Are you sure you want to import ' + readyCount + ' contacts?')) {
+        var problemCount = state.stats.problem || 0;
+        var dupeCount = state.stats.dupe || 0;
+        var ignoredCount = state.stats.ignored || 0;
+
+        var msg = 'Import ' + readyCount + ' contact' + (readyCount !== 1 ? 's' : '') + '?\n\n';
+        msg += readyCount + ' will be imported\n';
+        if (problemCount > 0) msg += problemCount + ' with errors will be skipped\n';
+        if (dupeCount > 0) msg += dupeCount + ' unresolved duplicates will be skipped\n';
+        if (ignoredCount > 0) msg += ignoredCount + ' excluded by you\n';
+        msg += '\nThis action cannot be undone.';
+
+        if (!confirm(msg)) {
             return;
         }
 
@@ -1424,15 +1739,33 @@
                 $j('#finalize-progress').hide();
 
                 if (response.success) {
+                    // Log import counts for debugging
+                    if (response.data && response.data.counts) {
+                        var c = response.data.counts;
+                        console.log('[V3] Finalize counts: imported_new=' + (c.imported_new || c.IMPORTED_NEW || 0) +
+                            ' updated=' + (c.updated_existing || c.UPDATED_EXISTING || 0) +
+                            ' skipped_already=' + (c.skipped_already_imported || c.SKIPPED_ALREADY_IMPORTED || 0) +
+                            ' failed=' + (c.failed || c.FAILED || 0));
+                    }
+                    if (response.data && response.data.warnings) {
+                        var w = response.data.warnings || response.data.WARNINGS || [];
+                        if (w.length > 0) {
+                            console.warn('[V3] Finalize warnings:', w);
+                        }
+                    }
                     showAlert('success', response.message || 'Import completed successfully!');
                     setTimeout(function() {
                         window.location.reload();
                     }, 1500);
                 } else {
-                    // Log error code to console for debugging
                     console.error('[V3] Finalize failed with code:', response.code);
-                    showAlert('error', response.message || 'Import failed');
-                    $j('#btn-finalize').prop('disabled', false);
+                    // Handle specific error codes with better UX
+                    if (response.code === 'NO_ROWS_ELIGIBLE') {
+                        showAlert('warning', response.message || 'No rows are ready for import. Please review and approve rows first.');
+                    } else {
+                        showAlert('error', response.message || 'Import failed');
+                    }
+                    $j('#btn-finalize').prop('disabled', false).html('<i class="fe-check-circle"></i> Import <span id="import-count">' + (state.stats.ready || '...') + '</span> Contacts');
                 }
             },
             error: function(xhr, status, error) {
@@ -1608,6 +1941,15 @@
         var div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+
+    function csvEscape(val) {
+        if (!val) return '';
+        val = String(val);
+        if (val.indexOf(',') >= 0 || val.indexOf('"') >= 0 || val.indexOf('\n') >= 0) {
+            return '"' + val.replace(/"/g, '""') + '"';
+        }
+        return val;
     }
 
     function formatFieldName(field) {

@@ -40,10 +40,10 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
         "parsed": ["mapping", "reviewing", "failed", "cancelled"],
         "mapping": ["reviewing", "failed", "cancelled"],
         "reviewing": ["finalizing", "failed", "cancelled"],
-        "finalizing": ["completed", "failed", "cancelled"],
-        "completed": [],
-        "failed": [],
-        "cancelled": []
+        "finalizing": ["completed", "failed", "cancelled", "reviewing"],
+        "completed": ["reviewing"],
+        "failed": ["reviewing"],
+        "cancelled": ["reviewing"]
     };
 
     // =============================================================
@@ -385,16 +385,19 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
             
             if (qResult.recordCount eq 1) {
                 logEvent(job_id = arguments.job_id, userid = arguments.userid, event_type = "lock_acquired", detail = { purpose: arguments.lock_purpose });
+                writeLog(file="importv3", text="[acquireJobLock] ACQUIRED job_id=" & arguments.job_id & " userid=" & arguments.userid & " purpose=" & arguments.lock_purpose);
                 return { "acquired": true, "message": "" };
             } else {
                 var jobResult = getJobForUser(arguments.job_id, arguments.userid);
                 if (!jobResult.success) {
                     return { "acquired": false, "message": jobResult.message };
                 }
+                writeLog(file="importv3", text="[acquireJobLock] DENIED job_id=" & arguments.job_id & " userid=" & arguments.userid & " purpose=" & arguments.lock_purpose & " current_status=" & jobResult.data.job.status);
                 return { "acquired": false, "message": "Job cannot be locked from current status: " & jobResult.data.job.status };
             }
         } catch (any e) {
             logEvent(job_id = arguments.job_id, userid = arguments.userid, event_type = "lock_error", detail = { error: e.message });
+            writeLog(file="importv3", text="[acquireJobLock] ERROR job_id=" & arguments.job_id & " userid=" & arguments.userid & " message=" & e.message);
             return { "acquired": false, "message": "Lock acquisition failed: " & e.message };
         }
     }
@@ -430,9 +433,11 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
             );
             
             logEvent(job_id = arguments.job_id, userid = arguments.userid, event_type = "lock_released", detail = { previous_status: job.status, new_status: targetStatus });
+            writeLog(file="importv3", text="[releaseJobLock] RELEASED job_id=" & arguments.job_id & " userid=" & arguments.userid & " from=" & job.status & " to=" & targetStatus);
             return { "released": true };
         } catch (any e) {
             logEvent(job_id = arguments.job_id, userid = arguments.userid, event_type = "lock_release_error", detail = { error: e.message });
+            writeLog(file="importv3", text="[releaseJobLock] ERROR job_id=" & arguments.job_id & " userid=" & arguments.userid & " message=" & e.message);
             return { "released": false, "message": "Lock release failed: " & e.message };
         }
     }
@@ -449,6 +454,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
         string error_message = ""
     ) {
         try {
+            cflog(file="importv3", text="[service] setJobStatus START job_id=#arguments.job_id# userid=#arguments.userid# new_status=#arguments.new_status#");
             if (!arrayFindNoCase(variables.VALID_STATUSES, arguments.new_status)) {
                 return fail(code = "INVALID_STATUS", message = "Invalid status: " & arguments.new_status, data = { valid_statuses: variables.VALID_STATUSES });
             }
@@ -490,10 +496,12 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
             queryExecute("UPDATE import_v3_jobs SET status = :new_status, updated_at = NOW() " & additionalFields & " WHERE job_id = :job_id AND userid = :userid", params, { datasource: application.datasource });
             
             logEvent(job_id = arguments.job_id, userid = arguments.userid, event_type = "status_changed", detail = { from_status: currentStatus, to_status: arguments.new_status });
+            writeLog(file="importv3", text="[setJobStatus] TRANSITION job_id=" & arguments.job_id & " userid=" & arguments.userid & " from=" & currentStatus & " to=" & arguments.new_status);
             
             return ok(data = { previous_status: currentStatus, new_status: arguments.new_status }, message = "Status updated.");
         } catch (any e) {
             logEvent(job_id = arguments.job_id, userid = arguments.userid, event_type = "status_change_error", detail = { error: e.message });
+            writeLog(file="importv3", text="[service.setJobStatus] ERROR job_id=" & arguments.job_id & " new_status=" & arguments.new_status & " message=" & e.message);
             return fail(code = "INTERNAL_ERROR", message = "Status update failed.", data = { job_id: arguments.job_id });
         }
     }
@@ -604,6 +612,13 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                         { datasource: application.datasource }
                     );
                     result.facts_deleted = qFactCount.cnt;
+
+                    var qResultCount = queryExecute(
+                        "SELECT COUNT(*) as cnt FROM import_v3_row_results WHERE row_id IN (:rowIdList)",
+                        { rowIdList: { value: rowIdList, cfsqltype: "cf_sql_integer", list: true } },
+                        { datasource: application.datasource }
+                    );
+                    result.row_results_deleted = qResultCount.cnt;
                 }
 
                 var qRowCount = queryExecute(
@@ -660,7 +675,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                     { datasource: application.datasource }
                 );
 
-                // 3. Delete facts (references row_id)
+                // 3. Delete facts and row_results (reference row_id)
                 if (qRowIds.recordCount gt 0) {
                     var rowIdList = valueList(qRowIds.row_id);
                     var qFactDel = {};
@@ -670,6 +685,15 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                         { datasource: application.datasource, result: "qFactDel" }
                     );
                     result.facts_deleted = structKeyExists(qFactDel, "recordCount") ? qFactDel.recordCount : 0;
+
+                    // 3b. Delete row_results (references row_id)
+                    var qResultDel = {};
+                    queryExecute(
+                        "DELETE FROM import_v3_row_results WHERE row_id IN (:rowIdList)",
+                        { rowIdList: { value: rowIdList, cfsqltype: "cf_sql_integer", list: true } },
+                        { datasource: application.datasource, result: "qResultDel" }
+                    );
+                    result.row_results_deleted = structKeyExists(qResultDel, "recordCount") ? qResultDel.recordCount : 0;
                 }
 
                 // 4. Delete rows (references job_id)
@@ -1108,6 +1132,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
     public struct function finalizeJob(required numeric job_id, required numeric userid) {
         var startTime = getTickCount();
         var lockToken = createUUID();
+        writeLog(file="importv3", text="[finalizeJob] START job_id=" & arguments.job_id & " userid=" & arguments.userid);
 
         // Initialize metrics and counts
         var metrics = {
@@ -1188,27 +1213,24 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
             counts.attempted = qRows.recordCount;
 
             if (qRows.recordCount eq 0) {
-                // No rows to import - mark complete anyway
-                setJobStatus(
+                // No rows to import - revert to reviewing so user can fix/approve rows
+                releaseJobLock(
                     job_id = arguments.job_id,
                     userid = arguments.userid,
-                    new_status = "completed"
+                    lock_token = lockToken
                 );
-
-                updateJobCounts(arguments.job_id, counts);
-
-                metrics.elapsed_ms_total = getTickCount() - startTime;
 
                 logEvent(
                     job_id = arguments.job_id,
                     userid = arguments.userid,
-                    event_type = "finalize_completed",
-                    detail = { counts: counts, metrics: metrics, reason: "no_rows_to_import" }
+                    event_type = "finalize_no_rows",
+                    detail = { counts: counts, reason: "no_rows_to_import" }
                 );
 
-                return ok(
-                    data = { counts: counts, metrics: metrics, warnings: ["No rows eligible for import."] },
-                    message = "Finalize completed. No rows were eligible for import."
+                return fail(
+                    code = "NO_ROWS_ELIGIBLE",
+                    message = "No rows are eligible for import. Please review and approve rows before finalizing.",
+                    data = { counts: counts }
                 );
             }
 
@@ -1226,6 +1248,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
 
                 metrics.total_rows_processed++;
 
+                writeLog(file="importv3", text="[finalizeJob] ROW_PROCESSED job_id=" & arguments.job_id & " row_id=" & row.row_id & " success=" & rowResult.success & " action=" & (structKeyExists(rowResult, "action") ? rowResult.action : "n/a"));
                 if (rowResult.success) {
                     switch (rowResult.action) {
                         case "created":
@@ -1255,12 +1278,41 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                 }
             }
 
-            // D) Update job status to completed
-            setJobStatus(
-                job_id = arguments.job_id,
-                userid = arguments.userid,
-                new_status = "completed"
-            );
+            // D) Update job status based on actual import results
+            // Only count genuinely new imports (not skipped/idempotent rows)
+            var newlyImported = counts.imported_new + counts.updated_existing;
+            cflog(file="importv3", text="[finalize] COMPLETION_CHECK job_id=#arguments.job_id# imported_new=#counts.imported_new# updated_existing=#counts.updated_existing# skipped_already=#counts.skipped_already_imported# failed=#counts.failed# newlyImported=#newlyImported#");
+
+            if (newlyImported gt 0) {
+                // Contacts were actually created/updated this run - mark completed
+                setJobStatus(
+                    job_id = arguments.job_id,
+                    userid = arguments.userid,
+                    new_status = "completed"
+                );
+            } else if (counts.skipped_already_imported gt 0 && counts.failed eq 0) {
+                // All rows were already imported (idempotent re-run) - mark completed
+                setJobStatus(
+                    job_id = arguments.job_id,
+                    userid = arguments.userid,
+                    new_status = "completed"
+                );
+                arrayAppend(warnings, "All eligible rows were already imported from a previous run.");
+            } else {
+                // Nothing was actually imported (all failed or skipped) - revert to reviewing
+                logEvent(
+                    job_id = arguments.job_id,
+                    userid = arguments.userid,
+                    event_type = "finalize_all_failed",
+                    detail = { counts: counts, failures_count: arrayLen(failures) }
+                );
+                releaseJobLock(
+                    job_id = arguments.job_id,
+                    userid = arguments.userid,
+                    lock_token = lockToken
+                );
+                arrayAppend(warnings, "No contacts were successfully imported. Job returned to review status.");
+            }
 
             // Update job counts
             updateJobCounts(arguments.job_id, counts);
@@ -1279,6 +1331,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                 detail = { counts: counts, metrics: metrics, failure_count: arrayLen(failures) }
             );
 
+            writeLog(file="importv3", text="[finalizeJob] COMPLETED job_id=" & arguments.job_id & " userid=" & arguments.userid & " imported=" & counts.imported_new & " failed=" & counts.failed & " skipped=" & counts.skipped_already_imported & " elapsed_ms=" & metrics.elapsed_ms_total);
             var message = "Finalize completed. " & counts.imported_new & " contacts created.";
             if (counts.skipped_already_imported gt 0) {
                 message &= " " & counts.skipped_already_imported & " already imported.";
@@ -1305,6 +1358,8 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                 event_type = "finalize_error",
                 detail = { error: e.message, detail: e.detail }
             );
+
+            writeLog(file="importv3", text="[service.finalizeJob] ERROR job_id=" & arguments.job_id & " userid=" & arguments.userid & " message=" & e.message);
 
             // Attempt to release lock (revert status to reviewing)
             try {
@@ -1345,6 +1400,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
         string user_action = "",
         any existing_contactid = ""
     ) {
+        var _rowStart = getTickCount();
         try {
             // A) Idempotency check: If already imported, skip
             if (isNumeric(arguments.existing_contactid) && arguments.existing_contactid gt 0) {
@@ -1504,6 +1560,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
 
         } catch (any e) {
             // Log error and record failure
+            writeLog(file="importv3", text="[processRowForImport] ERROR job_id=" & arguments.job_id & " row_id=" & arguments.row_id & " message=" & e.message);
             logEvent(
                 job_id = arguments.job_id,
                 userid = arguments.userid,
@@ -1584,12 +1641,16 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
 
             switch (fieldName) {
                 case "firstName":
+                case "first_name":
                     data.firstName = value;
                     break;
                 case "lastName":
+                case "last_name":
                     data.lastName = value;
                     break;
                 case "contactFullName":
+                case "contact_full_name":
+                case "full_name":
                     data.contactFullName = value;
                     break;
                 case "email_business":
@@ -2000,13 +2061,18 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
         required numeric userid,
         string statusFilter = "all",
         numeric page = 1,
-        numeric pageSize = 50
+        numeric pageSize = 50,
+        string search = ""
     ) {
         try {
             // Sanitize pagination
             var safePage = max(1, arguments.page);
             var safePageSize = min(200, max(1, arguments.pageSize));
             var offset = (safePage - 1) * safePageSize;
+
+            // Sanitize search term
+            var searchTerm = trim(arguments.search);
+            var hasSearch = len(searchTerm) gt 0;
 
             // Build status filter clause
             var statusClause = "";
@@ -2021,11 +2087,26 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                 }
             }
 
+            // Build search clause: join facts table for text search on key fields
+            var searchClause = "";
+            if (hasSearch) {
+                searchClause = "AND r.row_id IN (
+                    SELECT DISTINCT f.row_id FROM import_v3_facts f
+                    WHERE f.row_id IN (SELECT r2.row_id FROM import_v3_rows r2 WHERE r2.job_id = :job_id_search)
+                      AND f.field_name IN ('first_name','last_name','contactFullName','email_business','email_personal','company','phone_work','phone_mobile')
+                      AND f.normalized_value LIKE :search_term
+                )";
+            }
+
             // Get total count for pagination
-            var countSql = "SELECT COUNT(*) as cnt FROM import_v3_rows r WHERE r.job_id = :job_id #statusClause#";
+            var countSql = "SELECT COUNT(*) as cnt FROM import_v3_rows r WHERE r.job_id = :job_id #statusClause# #searchClause#";
             var countParams = { job_id: { value: arguments.job_id, cfsqltype: "cf_sql_integer" } };
             if (len(statusClause) and arguments.statusFilter neq "imported") {
                 countParams.status = { value: arguments.statusFilter, cfsqltype: "cf_sql_varchar" };
+            }
+            if (hasSearch) {
+                countParams.job_id_search = { value: arguments.job_id, cfsqltype: "cf_sql_integer" };
+                countParams.search_term = { value: "%" & searchTerm & "%", cfsqltype: "cf_sql_varchar" };
             }
 
             var qCount = queryExecute(countSql, countParams, { datasource: application.datasource });
@@ -2041,6 +2122,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                 FROM import_v3_rows r
                 WHERE r.job_id = :job_id
                 #statusClause#
+                #searchClause#
                 ORDER BY r.row_num ASC
                 LIMIT :limit OFFSET :offset
             ";
@@ -2053,6 +2135,10 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
             if (len(statusClause) and arguments.statusFilter neq "imported") {
                 rowParams.status = { value: arguments.statusFilter, cfsqltype: "cf_sql_varchar" };
             }
+            if (hasSearch) {
+                rowParams.job_id_search = { value: arguments.job_id, cfsqltype: "cf_sql_integer" };
+                rowParams.search_term = { value: "%" & searchTerm & "%", cfsqltype: "cf_sql_varchar" };
+            }
 
             var qRows = queryExecute(rowsSql, rowParams, { datasource: application.datasource });
 
@@ -2062,17 +2148,19 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                 arrayAppend(rowIds, row.row_id);
             }
 
-            // Batch load facts for all rows
+            // Batch load facts for all rows (parameterized list to prevent SQL injection)
             var factsMap = {};
             if (arrayLen(rowIds) gt 0) {
                 var factsSql = "
                     SELECT f.row_id, f.field_name, f.normalized_value, f.is_valid,
                            f.validation_code, f.validation_message
                     FROM import_v3_facts f
-                    WHERE f.row_id IN (#arrayToList(rowIds)#)
+                    WHERE f.row_id IN (:row_id_list)
                     ORDER BY f.row_id, f.field_name
                 ";
-                var qFacts = queryExecute(factsSql, {}, { datasource: application.datasource });
+                var qFacts = queryExecute(factsSql, {
+                    row_id_list: { value: arrayToList(rowIds), cfsqltype: "cf_sql_integer", list: true }
+                }, { datasource: application.datasource });
 
                 for (var fact in qFacts) {
                     if (!structKeyExists(factsMap, fact.row_id)) {
@@ -2138,6 +2226,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
             );
 
         } catch (any e) {
+            writeLog(file="importv3", text="[getRows] ERROR job_id=" & arguments.job_id & " userid=" & arguments.userid & " filter=" & arguments.statusFilter & " message=" & e.message);
             return fail(
                 code = "QUERY_ERROR",
                 message = "Failed to load rows: " & e.message
@@ -2282,6 +2371,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
             return ok(data = { row: rowDetail });
 
         } catch (any e) {
+            writeLog(file="importv3", text="[getRowDetail] ERROR job_id=" & arguments.job_id & " row_id=" & arguments.row_id & " message=" & e.message);
             return fail(
                 code = "QUERY_ERROR",
                 message = "Failed to load row detail: " & e.message
@@ -2306,6 +2396,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
         required numeric userid
     ) {
         try {
+            writeLog(file="importv3", text="[service.updateRowFacts] START job_id=" & arguments.job_id & " row_id=" & arguments.row_id & " field_count=" & structCount(arguments.fields));
             // Verify row exists and belongs to job
             var qRow = queryExecute(
                 "SELECT r.row_id, r.status, r.dupe_candidates_json
@@ -2432,9 +2523,11 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
             updateJobRowCounts(arguments.job_id);
 
             // Return updated row detail
+            writeLog(file="importv3", text="[service.updateRowFacts] OK job_id=" & arguments.job_id & " row_id=" & arguments.row_id & " fields_updated=" & arrayLen(updatedFields));
             return getRowDetail(arguments.job_id, arguments.row_id, arguments.userid);
 
         } catch (any e) {
+            writeLog(file="importv3", text="[updateRowFacts] ERROR job_id=" & arguments.job_id & " row_id=" & arguments.row_id & " fields=" & structKeyList(arguments.fields) & " message=" & e.message);
             return fail(
                 code = "UPDATE_ERROR",
                 message = "Failed to update row: " & e.message
@@ -2552,6 +2645,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
         numeric matchedContactId = 0
     ) {
         try {
+            writeLog(file="importv3", text="[service.setRowAction] START job_id=" & arguments.job_id & " row_id=" & arguments.row_id & " action=" & arguments.action);
             // Normalize action
             var normalizedAction = lcase(trim(arguments.action));
 
@@ -2653,6 +2747,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
             // Get updated stats
             var stats = getJobStats(arguments.job_id);
 
+            writeLog(file="importv3", text="[service.setRowAction] OK job_id=" & arguments.job_id & " row_id=" & arguments.row_id & " action=" & dbAction);
             return ok(
                 data = {
                     row_id: arguments.row_id,
@@ -2664,6 +2759,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
             );
 
         } catch (any e) {
+            writeLog(file="importv3", text="[setRowAction] ERROR job_id=" & arguments.job_id & " row_id=" & arguments.row_id & " action=" & arguments.action & " message=" & e.message);
             return fail(
                 code = "UPDATE_ERROR",
                 message = "Failed to update row action: " & e.message
@@ -2687,6 +2783,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
         required numeric userid
     ) {
         try {
+            writeLog(file="importv3", text="[service.bulkRowAction] START job_id=" & arguments.job_id & " row_count=" & arrayLen(arguments.row_ids) & " action=" & arguments.action);
             if (arrayLen(arguments.row_ids) eq 0) {
                 return fail(code = "MISSING_PARAMS", message = "No row IDs provided");
             }
@@ -2742,7 +2839,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                         r.status = :status,
                         r.user_action_at = NOW(),
                         r.updated_at = NOW()
-                    WHERE r.row_id IN (#arrayToList(safeIds)#)
+                    WHERE r.row_id IN (:safe_id_list)
                       AND r.job_id = :job_id
                       AND j.userid = :userid
                       AND r.status NOT IN ('imported', 'updated', 'failed')
@@ -2756,7 +2853,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                         r.status = CASE WHEN r.status = 'ignored' THEN 'ready' ELSE r.status END,
                         r.user_action_at = NOW(),
                         r.updated_at = NOW()
-                    WHERE r.row_id IN (#arrayToList(safeIds)#)
+                    WHERE r.row_id IN (:safe_id_list)
                       AND r.job_id = :job_id
                       AND j.userid = :userid
                       AND r.status NOT IN ('imported', 'updated', 'failed')
@@ -2766,7 +2863,8 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
             var updateParams = {
                 job_id: { value: arguments.job_id, cfsqltype: "cf_sql_integer" },
                 userid: { value: arguments.userid, cfsqltype: "cf_sql_integer" },
-                action: { value: dbAction, cfsqltype: "cf_sql_varchar" }
+                action: { value: dbAction, cfsqltype: "cf_sql_varchar" },
+                safe_id_list: { value: arrayToList(safeIds), cfsqltype: "cf_sql_integer", list: true }
             };
             if (len(newStatus)) {
                 updateParams.status = { value: newStatus, cfsqltype: "cf_sql_varchar" };
@@ -2783,6 +2881,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
             // Get updated stats
             var stats = getJobStats(arguments.job_id);
 
+            writeLog(file="importv3", text="[service.bulkRowAction] OK job_id=" & arguments.job_id & " action=" & dbAction & " updated_count=" & updatedCount);
             return ok(
                 data = {
                     updated_count: updatedCount,
@@ -2794,6 +2893,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
             );
 
         } catch (any e) {
+            writeLog(file="importv3", text="[bulkRowAction] ERROR job_id=" & arguments.job_id & " row_count=" & arrayLen(arguments.row_ids) & " action=" & arguments.action & " message=" & e.message);
             return fail(
                 code = "UPDATE_ERROR",
                 message = "Failed to update rows: " & e.message

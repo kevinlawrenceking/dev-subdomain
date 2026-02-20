@@ -32,7 +32,7 @@
 --->
 
 <!--- Initialize response structure --->
-<cfset response = {
+<cfset variables.response = {
     "success": false,
     "code": "",
     "message": "",
@@ -40,15 +40,15 @@
 }>
 
 <!--- Phase 5.2: Debug breadcrumbs array (no PII) --->
-<cfset debug = ["start"]>
+<cfset variables.debug = ["start"]>
 
 <!--- Phase 6.1: Timing for observability --->
-<cfset startTick = getTickCount()>
+<cfset variables.startTick = getTickCount()>
 
 <!--- Initialize variables for error handling --->
-<cfset jobId = 0>
-<cfset userid = 0>
-<cfset v3Service = "">
+<cfset variables.jobId = 0>
+<cfset variables.userid = 0>
+<cfset variables.v3Service = "">
 
 <!--- Helper: Return JSON error response with debug trail --->
 <cffunction name="returnError" access="private" returntype="void" output="true">
@@ -57,13 +57,13 @@
     <cfargument name="statusCode" type="numeric" required="true">
     <cfargument name="extraData" type="struct" required="false" default="#{}#">
 
-    <cfset response.code = arguments.code>
-    <cfset response.message = arguments.message>
-    <cfset response.data = arguments.extraData>
-    <cfset response.data.debug = debug>
-    <cfset response.data.last_step = arrayLen(debug) gt 0 ? debug[arrayLen(debug)] : "none">
+    <cfset variables.response.code = arguments.code>
+    <cfset variables.response.message = arguments.message>
+    <cfset variables.response.data = arguments.extraData>
+    <cfset variables.response.data.debug = variables.debug>
+    <cfset variables.response.data.last_step = arrayLen(variables.debug) gt 0 ? variables.debug[arrayLen(variables.debug)] : "none">
     <cfheader statuscode="#arguments.statusCode#">
-    <cfcontent type="application/json; charset=utf-8" reset="true"><cfoutput>#serializeJSON(response)#</cfoutput><cfabort>
+    <cfcontent type="application/json; charset=utf-8" reset="true"><cfoutput>#serializeJSON(variables.response)#</cfoutput><cfabort>
 </cffunction>
 
 <!--- Helper: Strip BOM and whitespace from raw body --->
@@ -108,8 +108,8 @@
     <cfif not structKeyExists(session, "userid") or not isNumeric(session.userid) or session.userid lte 0>
         <cfset returnError("AUTH_REQUIRED", "Authentication required", 401)>
     </cfif>
-    <cfset userid = session.userid>
-    <cfset arrayAppend(debug, "auth_ok")>
+    <cfset variables.userid = session.userid>
+    <cfset arrayAppend(variables.debug, "auth_ok")>
 
     <!--- B) Generate CSRF token if not exists --->
     <cfif not structKeyExists(session, "csrf_token") or not len(session.csrf_token)>
@@ -117,219 +117,219 @@
     </cfif>
 
     <!--- C) Parse JSON request body (tolerant parsing) --->
-    <cfset body = {}>
+    <cfset variables.body = {}>
     <cftry>
-        <cfset httpData = getHttpRequestData()>
-        <cfset rawBody = toString(httpData.content)>
-        <cfset body = parseJsonBody(rawBody)>
+        <cfset variables.httpData = getHttpRequestData()>
+        <cfset variables.rawBody = toString(variables.httpData.content)>
+        <cfset variables.body = parseJsonBody(variables.rawBody)>
         <cfcatch type="any">
             <!--- If getHttpRequestData fails, continue with empty body --->
-            <cfset body = {}>
+            <cfset variables.body = {}>
         </cfcatch>
     </cftry>
-    <cfset arrayAppend(debug, "body_parsed")>
+    <cfset arrayAppend(variables.debug, "body_parsed")>
 
     <!--- D) Read CSRF token: header -> body -> form (belt+suspenders) --->
-    <cfset csrfToken = "">
-    <cfset csrfSource = "none">
+    <cfset variables.csrfToken = "">
+    <cfset variables.csrfSource = "none">
 
     <!--- 1) Check X-CSRF-Token header (preferred for JS clients) --->
     <cfif structKeyExists(cgi, "http_x_csrf_token") and len(trim(cgi.http_x_csrf_token))>
-        <cfset csrfToken = trim(cgi.http_x_csrf_token)>
-        <cfset csrfSource = "header">
+        <cfset variables.csrfToken = trim(cgi.http_x_csrf_token)>
+        <cfset variables.csrfSource = "header">
     <!--- 2) Check JSON body --->
-    <cfelseif structKeyExists(body, "csrf_token") and len(trim(body.csrf_token))>
-        <cfset csrfToken = trim(body.csrf_token)>
-        <cfset csrfSource = "body">
+    <cfelseif structKeyExists(variables.body, "csrf_token") and len(trim(variables.body.csrf_token))>
+        <cfset variables.csrfToken = trim(variables.body.csrf_token)>
+        <cfset variables.csrfSource = "body">
     <!--- 3) Check form field (fallback for traditional POST) --->
     <cfelseif structKeyExists(form, "csrf_token") and len(trim(form.csrf_token))>
-        <cfset csrfToken = trim(form.csrf_token)>
-        <cfset csrfSource = "form">
+        <cfset variables.csrfToken = trim(form.csrf_token)>
+        <cfset variables.csrfSource = "form">
     </cfif>
 
     <!--- Validate CSRF token --->
-    <cfif not len(csrfToken)>
+    <cfif not len(variables.csrfToken)>
         <cfset returnError("CSRF_INVALID", "CSRF token is required", 403, { csrf_source: "missing" })>
     </cfif>
-    <cfif csrfToken neq session.csrf_token>
-        <cfset returnError("CSRF_INVALID", "Invalid CSRF token", 403, { csrf_source: csrfSource })>
+    <cfif variables.csrfToken neq session.csrf_token>
+        <cfset returnError("CSRF_INVALID", "Invalid CSRF token", 403, { csrf_source: variables.csrfSource })>
     </cfif>
-    <cfset arrayAppend(debug, "csrf_ok")>
+    <cfset arrayAppend(variables.debug, "csrf_ok")>
 
     <!--- E) Read job_id: url -> body -> form --->
     <cfparam name="url.job_id" default="">
     <cfparam name="form.job_id" default="">
 
     <cfif isNumeric(url.job_id) and val(url.job_id) gt 0>
-        <cfset jobId = val(url.job_id)>
-    <cfelseif structKeyExists(body, "job_id") and isNumeric(body.job_id) and val(body.job_id) gt 0>
-        <cfset jobId = val(body.job_id)>
+        <cfset variables.jobId = val(url.job_id)>
+    <cfelseif structKeyExists(variables.body, "job_id") and isNumeric(variables.body.job_id) and val(variables.body.job_id) gt 0>
+        <cfset variables.jobId = val(variables.body.job_id)>
     <cfelseif isNumeric(form.job_id) and val(form.job_id) gt 0>
-        <cfset jobId = val(form.job_id)>
+        <cfset variables.jobId = val(form.job_id)>
     </cfif>
 
-    <cfif jobId lte 0>
+    <cfif variables.jobId lte 0>
         <cfset returnError("MISSING_PARAMS", "job_id is required", 400)>
     </cfif>
 
     <!--- F) Read action: body -> form --->
     <cfparam name="form.action" default="">
     <cfparam name="form.user_action" default="">
-    <cfset action = "">
+    <cfset variables.rowAction = "">
 
     <!--- Check body.action first --->
-    <cfif structKeyExists(body, "action") and len(trim(body.action))>
-        <cfset action = lcase(trim(body.action))>
+    <cfif structKeyExists(variables.body, "action") and len(trim(variables.body.action))>
+        <cfset variables.rowAction = lcase(trim(variables.body.action))>
     <!--- Legacy: body.user_action --->
-    <cfelseif structKeyExists(body, "user_action") and len(trim(body.user_action))>
-        <cfset action = lcase(trim(body.user_action))>
+    <cfelseif structKeyExists(variables.body, "user_action") and len(trim(variables.body.user_action))>
+        <cfset variables.rowAction = lcase(trim(variables.body.user_action))>
     <!--- Form fallback --->
     <cfelseif len(trim(form.action))>
-        <cfset action = lcase(trim(form.action))>
+        <cfset variables.rowAction = lcase(trim(form.action))>
     <cfelseif len(trim(form.user_action))>
-        <cfset action = lcase(trim(form.user_action))>
+        <cfset variables.rowAction = lcase(trim(form.user_action))>
     </cfif>
 
     <!--- Validate action --->
-    <cfset validActions = ["ignore", "create", "skip", "import_new"]>
-    <cfif not len(action)>
+    <cfset variables.validActions = ["ignore", "create", "skip", "import_new"]>
+    <cfif not len(variables.rowAction)>
         <cfset returnError("MISSING_PARAMS", "action is required (ignore or create)", 400)>
     </cfif>
-    <cfif not arrayFindNoCase(validActions, action)>
-        <cfset returnError("INVALID_ACTION", "action must be one of: ignore, create", 400, { provided: action })>
+    <cfif not arrayFindNoCase(variables.validActions, variables.rowAction)>
+        <cfset returnError("INVALID_ACTION", "action must be one of: ignore, create", 400, { provided: variables.rowAction })>
     </cfif>
 
     <!--- Normalize action names (UI names to DB names) --->
-    <cfif action eq "ignore">
-        <cfset action = "skip">
-    <cfelseif action eq "create">
-        <cfset action = "import_new">
+    <cfif variables.rowAction eq "ignore">
+        <cfset variables.rowAction = "skip">
+    <cfelseif variables.rowAction eq "create">
+        <cfset variables.rowAction = "import_new">
     </cfif>
 
     <!--- G) Read row IDs: support both single row_id and bulk row_ids --->
     <cfparam name="url.row_id" default="">
     <cfparam name="form.row_id" default="">
-    <cfset rowIds = []>
-    <cfset isBulk = false>
+    <cfset variables.rowIds = []>
+    <cfset variables.isBulk = false>
 
     <!--- Check for bulk row_ids array in body --->
-    <cfif structKeyExists(body, "row_ids") and isArray(body.row_ids) and arrayLen(body.row_ids) gt 0>
-        <cfloop array="#body.row_ids#" index="rid">
+    <cfif structKeyExists(variables.body, "row_ids") and isArray(variables.body.row_ids) and arrayLen(variables.body.row_ids) gt 0>
+        <cfloop array="#variables.body.row_ids#" index="rid">
             <cfif isNumeric(rid) and val(rid) gt 0>
-                <cfset arrayAppend(rowIds, val(rid))>
+                <cfset arrayAppend(variables.rowIds, val(rid))>
             </cfif>
         </cfloop>
-        <cfset isBulk = true>
+        <cfset variables.isBulk = true>
     <!--- Single row_id from various sources --->
-    <cfelseif structKeyExists(body, "row_id") and isNumeric(body.row_id) and val(body.row_id) gt 0>
-        <cfset arrayAppend(rowIds, val(body.row_id))>
+    <cfelseif structKeyExists(variables.body, "row_id") and isNumeric(variables.body.row_id) and val(variables.body.row_id) gt 0>
+        <cfset arrayAppend(variables.rowIds, val(variables.body.row_id))>
     <cfelseif isNumeric(url.row_id) and val(url.row_id) gt 0>
-        <cfset arrayAppend(rowIds, val(url.row_id))>
+        <cfset arrayAppend(variables.rowIds, val(url.row_id))>
     <cfelseif isNumeric(form.row_id) and val(form.row_id) gt 0>
-        <cfset arrayAppend(rowIds, val(form.row_id))>
+        <cfset arrayAppend(variables.rowIds, val(form.row_id))>
     </cfif>
 
-    <cfif arrayLen(rowIds) eq 0>
+    <cfif arrayLen(variables.rowIds) eq 0>
         <cfset returnError("MISSING_PARAMS", "row_id or row_ids is required", 400)>
     </cfif>
-    <cfset arrayAppend(debug, "params_ok")>
+    <cfset arrayAppend(variables.debug, "params_ok")>
 
     <!--- H) Initialize service --->
-    <cfset v3Service = new services.ContactImportV3Service()>
-    <cfset arrayAppend(debug, "service_init")>
+    <cfset variables.v3Service = new services.ContactImportV3Service()>
+    <cfset arrayAppend(variables.debug, "service_init")>
 
     <!--- I) Verify job ownership and get current status --->
-    <cfset jobResult = v3Service.getJobForUser(jobId, userid)>
-    <cfif not jobResult.success>
+    <cfset variables.jobResult = variables.v3Service.getJobForUser(variables.jobId, variables.userid)>
+    <cfif not variables.jobResult.success>
         <!--- Determine HTTP status based on error code --->
-        <cfset statusCode = 400>
-        <cfif jobResult.code eq "NOT_FOUND">
-            <cfset statusCode = 404>
-        <cfelseif jobResult.code eq "ACCESS_DENIED">
-            <cfset statusCode = 403>
+        <cfset variables.statusCode = 400>
+        <cfif variables.jobResult.code eq "NOT_FOUND">
+            <cfset variables.statusCode = 404>
+        <cfelseif variables.jobResult.code eq "ACCESS_DENIED">
+            <cfset variables.statusCode = 403>
         </cfif>
-        <cfset returnError(jobResult.code, jobResult.message, statusCode)>
+        <cfset returnError(variables.jobResult.code, variables.jobResult.message, variables.statusCode)>
     </cfif>
-    <cfset job = jobResult.data.job>
-    <cfset arrayAppend(debug, "job_loaded")>
+    <cfset variables.job = variables.jobResult.data.job>
+    <cfset arrayAppend(variables.debug, "job_loaded")>
 
     <!--- J) Status gate: Allow row actions from reviewing, finalizing, and completed states --->
-    <cfset ALLOWED_STATUSES = ["reviewing", "finalizing", "completed"]>
-    <cfif not arrayFindNoCase(ALLOWED_STATUSES, job.status)>
+    <cfset variables.ALLOWED_STATUSES = ["reviewing", "finalizing", "completed"]>
+    <cfif not arrayFindNoCase(variables.ALLOWED_STATUSES, variables.job.status)>
         <cfset returnError(
             "INVALID_STATE",
-            "Cannot set row actions from status: " & job.status & ". Allowed: " & arrayToList(ALLOWED_STATUSES, ", "),
+            "Cannot set row actions from status: " & variables.job.status & ". Allowed: " & arrayToList(variables.ALLOWED_STATUSES, ", "),
             409,
-            { current_status: job.status, allowed: ALLOWED_STATUSES }
+            { current_status: variables.job.status, allowed: variables.ALLOWED_STATUSES }
         )>
     </cfif>
-    <cfset arrayAppend(debug, "status_ok")>
+    <cfset arrayAppend(variables.debug, "status_ok")>
 
     <!--- K) Call service method(s) to set row action --->
-    <cfset arrayAppend(debug, "action_called")>
+    <cfset arrayAppend(variables.debug, "action_called")>
 
-    <cfif isBulk or arrayLen(rowIds) gt 1>
+    <cfif variables.isBulk or arrayLen(variables.rowIds) gt 1>
         <!--- Bulk operation --->
-        <cfset actionResult = v3Service.bulkRowAction(
-            job_id = jobId,
-            row_ids = rowIds,
-            action = action,
-            userid = userid
+        <cfset variables.actionResult = variables.v3Service.bulkRowAction(
+            job_id = variables.jobId,
+            row_ids = variables.rowIds,
+            action = variables.rowAction,
+            userid = variables.userid
         )>
     <cfelse>
         <!--- Single row operation --->
-        <cfset actionResult = v3Service.setRowAction(
-            job_id = jobId,
-            row_id = rowIds[1],
-            action = action,
-            userid = userid
+        <cfset variables.actionResult = variables.v3Service.setRowAction(
+            job_id = variables.jobId,
+            row_id = variables.rowIds[1],
+            action = variables.rowAction,
+            userid = variables.userid
         )>
     </cfif>
 
-    <cfif not actionResult.success>
+    <cfif not variables.actionResult.success>
         <!--- Determine HTTP status based on error code --->
-        <cfset statusCode = 500>
-        <cfif actionResult.code eq "NOT_FOUND">
-            <cfset statusCode = 404>
-        <cfelseif actionResult.code eq "UPDATE_NOT_SUPPORTED">
-            <cfset statusCode = 400>
-        <cfelseif actionResult.code eq "INVALID_ACTION">
-            <cfset statusCode = 400>
+        <cfset variables.statusCode = 500>
+        <cfif variables.actionResult.code eq "NOT_FOUND">
+            <cfset variables.statusCode = 404>
+        <cfelseif variables.actionResult.code eq "UPDATE_NOT_SUPPORTED">
+            <cfset variables.statusCode = 400>
+        <cfelseif variables.actionResult.code eq "INVALID_ACTION">
+            <cfset variables.statusCode = 400>
         </cfif>
-        <cfset arrayAppend(debug, "action_failed")>
-        <cfset returnError(actionResult.code, actionResult.message, statusCode, actionResult.data ?: {})>
+        <cfset arrayAppend(variables.debug, "action_failed")>
+        <cfset returnError(variables.actionResult.code, variables.actionResult.message, variables.statusCode, variables.actionResult.data ?: {})>
     </cfif>
-    <cfset arrayAppend(debug, "action_applied")>
-    <cfset arrayAppend(debug, "done")>
+    <cfset arrayAppend(variables.debug, "action_applied")>
+    <cfset arrayAppend(variables.debug, "done")>
 
     <!--- Build success response --->
-    <cfset response.success = true>
-    <cfset response.message = actionResult.message>
-    <cfset response.data = actionResult.data>
-    <cfset response.data.debug = debug>
-    <cfset response.data.elapsed_ms = getTickCount() - startTick>
+    <cfset variables.response.success = true>
+    <cfset variables.response.message = variables.actionResult.message>
+    <cfset variables.response.data = variables.actionResult.data>
+    <cfset variables.response.data.debug = variables.debug>
+    <cfset variables.response.data.elapsed_ms = getTickCount() - variables.startTick>
 
     <cfcatch type="any">
         <!--- Log row action error (if service available) --->
-        <cfset arrayAppend(debug, "exception")>
+        <cfset arrayAppend(variables.debug, "exception")>
         <cftry>
-            <cfif isObject(v3Service) and jobId gt 0>
-                <cfset v3Service.logEvent(
-                    job_id = jobId,
-                    userid = userid,
+            <cfif isObject(variables.v3Service) and variables.jobId gt 0>
+                <cfset variables.v3Service.logEvent(
+                    job_id = variables.jobId,
+                    userid = variables.userid,
                     event_type = "row_action_endpoint_error",
-                    detail = { error: cfcatch.message, detail: cfcatch.detail, action: action, debug: debug }
+                    detail = { error: cfcatch.message, detail: cfcatch.detail, action: variables.rowAction, debug: variables.debug }
                 )>
             </cfif>
             <cfcatch type="any"><!--- Ignore logging errors ---></cfcatch>
         </cftry>
 
-        <cfset response.code = "INTERNAL_ERROR">
-        <cfset response.message = "Row action failed: " & cfcatch.message>
-        <cfset response.data.debug = debug>
-        <cfset response.data.last_step = arrayLen(debug) gt 1 ? debug[arrayLen(debug) - 1] : "start">
+        <cfset variables.response.code = "INTERNAL_ERROR">
+        <cfset variables.response.message = "Row action failed: " & cfcatch.message>
+        <cfset variables.response.data.debug = variables.debug>
+        <cfset variables.response.data.last_step = arrayLen(variables.debug) gt 1 ? variables.debug[arrayLen(variables.debug) - 1] : "start">
         <cfheader statuscode="500">
     </cfcatch>
 </cftry>
 </cfsilent>
-<cfcontent type="application/json; charset=utf-8" reset="true"><cfoutput>#serializeJSON(response)#</cfoutput>
+<cfcontent type="application/json; charset=utf-8" reset="true"><cfoutput>#serializeJSON(variables.response)#</cfoutput>

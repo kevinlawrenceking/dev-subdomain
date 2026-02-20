@@ -30,7 +30,7 @@
 --->
 
 <!--- Initialize response structure --->
-<cfset response = {
+<cfset variables.response = {
     "success": false,
     "code": "",
     "message": "",
@@ -38,12 +38,12 @@
 }>
 
 <!--- Phase 5.2: Debug breadcrumbs array (no PII) --->
-<cfset debug = ["start"]>
+<cfset variables.debug = ["start"]>
 
 <!--- Initialize variables for error handling --->
-<cfset jobId = 0>
-<cfset userid = 0>
-<cfset v3Service = "">
+<cfset variables.jobId = 0>
+<cfset variables.userid = 0>
+<cfset variables.v3Service = "">
 
 <!--- Helper: Return JSON error response with debug trail --->
 <cffunction name="returnError" access="private" returntype="void" output="true">
@@ -52,13 +52,13 @@
     <cfargument name="statusCode" type="numeric" required="true">
     <cfargument name="extraData" type="struct" required="false" default="#{}#">
 
-    <cfset response.code = arguments.code>
-    <cfset response.message = arguments.message>
-    <cfset response.data = arguments.extraData>
-    <cfset response.data.debug = debug>
-    <cfset response.data.last_step = arrayLen(debug) gt 0 ? debug[arrayLen(debug)] : "none">
+    <cfset variables.response.code = arguments.code>
+    <cfset variables.response.message = arguments.message>
+    <cfset variables.response.data = arguments.extraData>
+    <cfset variables.response.data.debug = variables.debug>
+    <cfset variables.response.data.last_step = arrayLen(variables.debug) gt 0 ? variables.debug[arrayLen(variables.debug)] : "none">
     <cfheader statuscode="#arguments.statusCode#">
-    <cfcontent type="application/json; charset=utf-8" reset="true"><cfoutput>#serializeJSON(response)#</cfoutput><cfabort>
+    <cfcontent type="application/json; charset=utf-8" reset="true"><cfoutput>#serializeJSON(variables.response)#</cfoutput><cfabort>
 </cffunction>
 
 <!--- Helper: Strip BOM and whitespace from raw body --->
@@ -80,16 +80,13 @@
     <cfset var body = {}>
     <cfset var cleaned = cleanRawBody(arguments.rawBody)>
 
-    <!--- Phase 5.2: Do NOT require "{" prefix - try to parse any non-empty content --->
     <cfif len(cleaned)>
         <cftry>
             <cfset body = deserializeJSON(cleaned)>
-            <!--- Ensure it's a struct --->
             <cfif not isStruct(body)>
                 <cfset body = {}>
             </cfif>
             <cfcatch type="any">
-                <!--- Invalid JSON - continue with empty body --->
                 <cfset body = {}>
             </cfcatch>
         </cftry>
@@ -103,8 +100,10 @@
     <cfif not structKeyExists(session, "userid") or not isNumeric(session.userid) or session.userid lte 0>
         <cfset returnError("AUTH_REQUIRED", "Authentication required", 401)>
     </cfif>
-    <cfset userid = session.userid>
-    <cfset arrayAppend(debug, "auth_ok")>
+    <cfset variables.userid = session.userid>
+    <cfset arrayAppend(variables.debug, "auth_ok")>
+    <cfset variables.startTick = getTickCount()>
+    <cflog file="importv3" text="[finalize] START userid=#variables.userid#">
 
     <!--- B) Generate CSRF token if not exists --->
     <cfif not structKeyExists(session, "csrf_token") or not len(session.csrf_token)>
@@ -112,153 +111,145 @@
     </cfif>
 
     <!--- C) Parse JSON request body (Phase 5.2: tolerant parsing) --->
-    <cfset body = {}>
+    <cfset variables.body = {}>
     <cftry>
-        <cfset httpData = getHttpRequestData()>
-        <cfset rawBody = toString(httpData.content)>
-        <cfset body = parseJsonBody(rawBody)>
+        <cfset variables.httpData = getHttpRequestData()>
+        <cfset variables.rawBody = toString(variables.httpData.content)>
+        <cfset variables.body = parseJsonBody(variables.rawBody)>
         <cfcatch type="any">
-            <!--- If getHttpRequestData fails, continue with empty body --->
-            <cfset body = {}>
+            <cfset variables.body = {}>
         </cfcatch>
     </cftry>
-    <cfset arrayAppend(debug, "body_parsed")>
+    <cfset arrayAppend(variables.debug, "body_parsed")>
 
     <!--- D) Read CSRF token: header -> body -> form (Phase 5.2: belt+suspenders) --->
-    <cfset csrfToken = "">
-    <cfset csrfSource = "none">
+    <cfset variables.csrfToken = "">
+    <cfset variables.csrfSource = "none">
 
-    <!--- 1) Check X-CSRF-Token header (preferred for JS clients) --->
     <cfif structKeyExists(cgi, "http_x_csrf_token") and len(trim(cgi.http_x_csrf_token))>
-        <cfset csrfToken = trim(cgi.http_x_csrf_token)>
-        <cfset csrfSource = "header">
-    <!--- 2) Check JSON body --->
-    <cfelseif structKeyExists(body, "csrf_token") and len(trim(body.csrf_token))>
-        <cfset csrfToken = trim(body.csrf_token)>
-        <cfset csrfSource = "body">
-    <!--- 3) Check form field (fallback for traditional POST) --->
+        <cfset variables.csrfToken = trim(cgi.http_x_csrf_token)>
+        <cfset variables.csrfSource = "header">
+    <cfelseif structKeyExists(variables.body, "csrf_token") and len(trim(variables.body.csrf_token))>
+        <cfset variables.csrfToken = trim(variables.body.csrf_token)>
+        <cfset variables.csrfSource = "body">
     <cfelseif structKeyExists(form, "csrf_token") and len(trim(form.csrf_token))>
-        <cfset csrfToken = trim(form.csrf_token)>
-        <cfset csrfSource = "form">
+        <cfset variables.csrfToken = trim(form.csrf_token)>
+        <cfset variables.csrfSource = "form">
     </cfif>
 
-    <!--- Validate CSRF token --->
-    <cfif not len(csrfToken)>
+    <cfif not len(variables.csrfToken)>
         <cfset returnError("CSRF_INVALID", "CSRF token is required", 403, { csrf_source: "missing" })>
     </cfif>
-    <cfif csrfToken neq session.csrf_token>
-        <cfset returnError("CSRF_INVALID", "Invalid CSRF token", 403, { csrf_source: csrfSource })>
+    <cfif variables.csrfToken neq session.csrf_token>
+        <cfset returnError("CSRF_INVALID", "Invalid CSRF token", 403, { csrf_source: variables.csrfSource })>
     </cfif>
-    <cfset arrayAppend(debug, "csrf_ok")>
+    <cfset arrayAppend(variables.debug, "csrf_ok")>
 
     <!--- E) Read job_id: url -> body -> form --->
     <cfparam name="url.job_id" default="">
     <cfparam name="form.job_id" default="">
-    <cfset jobIdSource = "none">
+    <cfset variables.jobIdSource = "none">
 
-    <!--- 1) Check URL parameter --->
     <cfif isNumeric(url.job_id) and val(url.job_id) gt 0>
-        <cfset jobId = val(url.job_id)>
-        <cfset jobIdSource = "url">
-    <!--- 2) Check JSON body --->
-    <cfelseif structKeyExists(body, "job_id") and isNumeric(body.job_id) and val(body.job_id) gt 0>
-        <cfset jobId = val(body.job_id)>
-        <cfset jobIdSource = "body">
-    <!--- 3) Check form field --->
+        <cfset variables.jobId = val(url.job_id)>
+        <cfset variables.jobIdSource = "url">
+    <cfelseif structKeyExists(variables.body, "job_id") and isNumeric(variables.body.job_id) and val(variables.body.job_id) gt 0>
+        <cfset variables.jobId = val(variables.body.job_id)>
+        <cfset variables.jobIdSource = "body">
     <cfelseif isNumeric(form.job_id) and val(form.job_id) gt 0>
-        <cfset jobId = val(form.job_id)>
-        <cfset jobIdSource = "form">
+        <cfset variables.jobId = val(form.job_id)>
+        <cfset variables.jobIdSource = "form">
     </cfif>
 
-    <cfif jobId lte 0>
+    <cfif variables.jobId lte 0>
         <cfset returnError("MISSING_JOB_ID", "job_id is required", 400, { job_id_source: "missing" })>
     </cfif>
-    <cfset arrayAppend(debug, "job_id_ok")>
+    <cfset arrayAppend(variables.debug, "job_id_ok")>
 
     <!--- F) Initialize service --->
-    <cfset v3Service = new services.ContactImportV3Service()>
-    <cfset arrayAppend(debug, "service_init")>
+    <cfset variables.v3Service = new services.ContactImportV3Service()>
+    <cfset arrayAppend(variables.debug, "service_init")>
 
     <!--- G) Verify job ownership and get current status --->
-    <cfset jobResult = v3Service.getJobForUser(jobId, userid)>
-    <cfif not jobResult.success>
-        <!--- Determine HTTP status based on error code --->
-        <cfset statusCode = 400>
-        <cfif jobResult.code eq "NOT_FOUND">
-            <cfset statusCode = 404>
-        <cfelseif jobResult.code eq "ACCESS_DENIED">
-            <cfset statusCode = 403>
+    <cfset variables.jobResult = variables.v3Service.getJobForUser(variables.jobId, variables.userid)>
+    <cfif not variables.jobResult.success>
+        <cfset variables.httpStatusCode = 400>
+        <cfif variables.jobResult.code eq "NOT_FOUND">
+            <cfset variables.httpStatusCode = 404>
+        <cfelseif variables.jobResult.code eq "ACCESS_DENIED">
+            <cfset variables.httpStatusCode = 403>
         </cfif>
-        <cfset returnError(jobResult.code, jobResult.message, statusCode)>
+        <cfset returnError(variables.jobResult.code, variables.jobResult.message, variables.httpStatusCode)>
     </cfif>
-    <cfset job = jobResult.data.job>
-    <cfset arrayAppend(debug, "job_loaded")>
+    <cfset variables.job = variables.jobResult.data.job>
+    <cfset arrayAppend(variables.debug, "job_loaded")>
 
     <!--- H) Validate job status - only allow finalize from these states --->
-    <cfset ALLOWED_STATUSES = ["reviewing", "finalizing"]>
-    <cfif not arrayFindNoCase(ALLOWED_STATUSES, job.status)>
+    <cfset variables.ALLOWED_STATUSES = ["reviewing", "finalizing"]>
+    <cfif not arrayFindNoCase(variables.ALLOWED_STATUSES, variables.job.status)>
         <cfset returnError(
             "INVALID_STATE",
-            "Cannot finalize from status: " & job.status & ". Allowed: " & arrayToList(ALLOWED_STATUSES, ", "),
+            "Cannot finalize from status: " & variables.job.status & ". Allowed: " & arrayToList(variables.ALLOWED_STATUSES, ", "),
             409,
-            { current_status: job.status, allowed: ALLOWED_STATUSES }
+            { current_status: variables.job.status, allowed: variables.ALLOWED_STATUSES }
         )>
     </cfif>
-    <cfset arrayAppend(debug, "status_ok")>
+    <cfset arrayAppend(variables.debug, "status_ok")>
 
     <!--- I) Call finalize service method --->
-    <cfset arrayAppend(debug, "finalize_called")>
-    <cfset finalizeResult = v3Service.finalizeJob(jobId, userid)>
+    <cfset arrayAppend(variables.debug, "finalize_called")>
+    <cflog file="importv3" text="[finalize] CALLING_SERVICE userid=#variables.userid# job_id=#variables.jobId# status=#variables.job.status#">
+    <cfset variables.finalizeResult = variables.v3Service.finalizeJob(variables.jobId, variables.userid)>
 
-    <cfif finalizeResult.success>
-        <cfset arrayAppend(debug, "done")>
-        <cfset response.success = true>
-        <cfset response.message = finalizeResult.message>
-        <cfset response.data = finalizeResult.data>
-        <cfset response.data.debug = debug>
+    <cfif variables.finalizeResult.success>
+        <cflog file="importv3" text="[finalize] SUCCESS userid=#variables.userid# job_id=#variables.jobId# elapsed_ms=#getTickCount() - variables.startTick#">
+        <cfset arrayAppend(variables.debug, "done")>
+        <cfset variables.response.success = true>
+        <cfset variables.response.message = variables.finalizeResult.message>
+        <cfset variables.response.data = variables.finalizeResult.data>
+        <cfset variables.response.data.debug = variables.debug>
     <cfelse>
-        <!--- Determine HTTP status based on error code --->
-        <cfset statusCode = 500>
-        <cfif finalizeResult.code eq "ALREADY_RUNNING">
-            <cfset statusCode = 409>
-        <cfelseif finalizeResult.code eq "ALREADY_COMPLETED">
-            <cfset statusCode = 409>
-        <cfelseif finalizeResult.code eq "LOCK_FAILED">
-            <cfset statusCode = 409>
+        <cfset variables.httpStatusCode = 500>
+        <cfif variables.finalizeResult.code eq "ALREADY_RUNNING">
+            <cfset variables.httpStatusCode = 409>
+        <cfelseif variables.finalizeResult.code eq "ALREADY_COMPLETED">
+            <cfset variables.httpStatusCode = 409>
+        <cfelseif variables.finalizeResult.code eq "LOCK_FAILED">
+            <cfset variables.httpStatusCode = 409>
         </cfif>
 
-        <cfset arrayAppend(debug, "finalize_failed")>
-        <cfset response.code = finalizeResult.code>
-        <cfset response.message = finalizeResult.message>
-        <cfif structKeyExists(finalizeResult, "data")>
-            <cfset response.data = finalizeResult.data>
+        <cfset arrayAppend(variables.debug, "finalize_failed")>
+        <cfset variables.response.code = variables.finalizeResult.code>
+        <cfset variables.response.message = variables.finalizeResult.message>
+        <cfif structKeyExists(variables.finalizeResult, "data")>
+            <cfset variables.response.data = variables.finalizeResult.data>
         </cfif>
-        <cfset response.data.debug = debug>
-        <cfset response.data.last_step = "finalize_called">
-        <cfheader statuscode="#statusCode#">
+        <cfset variables.response.data.debug = variables.debug>
+        <cfset variables.response.data.last_step = "finalize_called">
+        <cfheader statuscode="#variables.httpStatusCode#">
     </cfif>
 
     <cfcatch type="any">
-        <!--- Log finalize error (if service available) --->
-        <cfset arrayAppend(debug, "exception")>
+        <cflog file="importv3" text="[finalize] ERROR userid=#variables.userid# job_id=#variables.jobId# message=#cfcatch.message# detail=#cfcatch.detail#">
+        <cfset arrayAppend(variables.debug, "exception")>
         <cftry>
-            <cfif isObject(v3Service) and jobId gt 0>
-                <cfset v3Service.logEvent(
-                    job_id = jobId,
-                    userid = userid,
+            <cfif isObject(variables.v3Service) and variables.jobId gt 0>
+                <cfset variables.v3Service.logEvent(
+                    job_id = variables.jobId,
+                    userid = variables.userid,
                     event_type = "finalize_endpoint_error",
-                    detail = { error: cfcatch.message, detail: cfcatch.detail, debug: debug }
+                    detail = { error: cfcatch.message, detail: cfcatch.detail, debug: variables.debug }
                 )>
             </cfif>
             <cfcatch type="any"><!--- Ignore logging errors ---></cfcatch>
         </cftry>
 
-        <cfset response.code = "INTERNAL_ERROR">
-        <cfset response.message = "Finalize failed: " & cfcatch.message>
-        <cfset response.data.debug = debug>
-        <cfset response.data.last_step = arrayLen(debug) gt 1 ? debug[arrayLen(debug) - 1] : "start">
+        <cfset variables.response.code = "INTERNAL_ERROR">
+        <cfset variables.response.message = "Finalize failed: " & cfcatch.message>
+        <cfset variables.response.data.debug = variables.debug>
+        <cfset variables.response.data.last_step = arrayLen(variables.debug) gt 1 ? variables.debug[arrayLen(variables.debug) - 1] : "start">
         <cfheader statuscode="500">
     </cfcatch>
 </cftry>
 </cfsilent>
-<cfcontent type="application/json; charset=utf-8" reset="true"><cfoutput>#serializeJSON(response)#</cfoutput>
+<cfcontent type="application/json; charset=utf-8" reset="true"><cfoutput>#serializeJSON(variables.response)#</cfoutput>
