@@ -4,8 +4,9 @@
     For AJAX endpoints, set variables.isAjax = true before including this file
     to get JSON error responses instead of redirects.
 --->
-<cfif NOT isDefined("session.userid")
-      OR (session.userrole NEQ "Admin" AND session.userrole NEQ "Administrator")>
+<cfif NOT structKeyExists(session, "userid")
+      OR NOT isDefined("userRole")
+      OR (userRole NEQ "Admin" AND userRole NEQ "Administrator")>
 
     <cfif isDefined("variables.isAjax") AND variables.isAjax>
         <cfheader statuscode="403">
