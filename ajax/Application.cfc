@@ -7,6 +7,10 @@
     this.setClientCookies = true;
     this.loginStorage = "session";
 
+    // Preserve struct key case in serializeJSON so JS receives
+    // lowercase keys like "column_id" instead of "COLUMN_ID"
+    this.serialization.preserveCaseForStructKey = true;
+
     // Inherit datasource settings from main app
     host = ListFirst(cgi.server_name, ".");
     if (host EQ "app") {

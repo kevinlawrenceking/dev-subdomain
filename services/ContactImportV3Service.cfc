@@ -1481,19 +1481,22 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                         userid,
                         contactFullName,
                         recordname,
+                        contactBirthday,
                         user_yn,
                         created_at
                     ) VALUES (
                         :userid,
                         :contactFullName,
                         :recordname,
+                        :contactBirthday,
                         'Y',
                         NOW()
                     )",
                     {
                         userid: { value: arguments.userid, cfsqltype: "cf_sql_integer" },
                         contactFullName: { value: contactData.contactFullName, cfsqltype: "cf_sql_varchar" },
-                        recordname: { value: contactData.contactFullName, cfsqltype: "cf_sql_varchar" }
+                        recordname: { value: contactData.contactFullName, cfsqltype: "cf_sql_varchar" },
+                        contactBirthday: { value: contactData.contactBirthday, cfsqltype: "cf_sql_date", null: !len(trim(contactData.contactBirthday)) }
                     },
                     { datasource: application.datasource, result: "qInsertResult" }
                 );
@@ -1613,6 +1616,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
             "contactFullName": "",
             "firstName": "",
             "lastName": "",
+            "contactBirthday": "",
             "emails": [],
             "phones": [],
             "company": "",
@@ -1652,6 +1656,11 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                 case "contact_full_name":
                 case "full_name":
                     data.contactFullName = value;
+                    break;
+                case "birthday":
+                case "contactBirthday":
+                case "contact_birthday":
+                    data.contactBirthday = value;
                     break;
                 case "email_business":
                     arrayAppend(data.emails, { value: value, type: "Business" });

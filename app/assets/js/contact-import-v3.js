@@ -271,15 +271,16 @@
             },
             success: function(response) {
                 console.log('[V3] Upload response:', response);
-                if (response.success) {
+                if (cfGet(response, 'success')) {
                     // Extract job_id from response.data.job
-                    var job = response.data && response.data.job ? response.data.job : {};
-                    var jobId = job.job_id || job.JOB_ID || 0;
+                    var rData = cfGet(response, 'data') || {};
+                    var job = cfGet(rData, 'job') || {};
+                    var jobId = cfGet(job, 'job_id') || 0;
 
                     // Check if this is a duplicate file (V3 uses code field)
-                    if (response.code === 'DUPLICATE_FILE') {
-                        var dupeName = job.source_filename || job.SOURCE_FILENAME || 'this file';
-                        var dupeStatus = job.status || job.STATUS || 'unknown';
+                    if (cfGet(response, 'code') === 'DUPLICATE_FILE') {
+                        var dupeName = cfGet(job, 'source_filename') || 'this file';
+                        var dupeStatus = cfGet(job, 'status') || 'unknown';
                         console.log('[V3] Duplicate file detected:', dupeName, 'existing job status:', dupeStatus);
                         $j('#upload-progress').hide();
                         $j('#upload-area').show();
@@ -302,7 +303,7 @@
                     // Redirect to V3 job page
                     window.location.href = '/app/contacts-import-v3/?job_id=' + jobId;
                 } else {
-                    var errMsg = response.message || 'Upload failed';
+                    var errMsg = cfGet(response, 'message') || 'Upload failed';
                     showAlert('error', errMsg);
                     $j('#upload-area').show();
                     $j('#upload-progress').hide();
@@ -415,11 +416,11 @@
                 timeout: 120000,
                 success: function(response) {
                     $btn.prop('disabled', false).html(originalHtml);
-                    if (response.success) {
+                    if (cfGet(response, 'success')) {
                         showAlert('success', 'Validation refreshed. Reloading...');
                         setTimeout(function() { window.location.reload(); }, 800);
                     } else {
-                        showAlert('error', response.message || 'Refresh failed');
+                        showAlert('error', cfGet(response, 'message') || 'Refresh failed');
                     }
                 },
                 error: function(xhr) {
@@ -473,13 +474,14 @@
                     console.log('[V3] No debug array in response');
                 }
 
-                if (response.success) {
+                if (cfGet(response, 'success')) {
                     console.log('[V3] Parse successful, reloading page...');
                     // Reload page to show mapping step
                     window.location.reload();
                 } else {
-                    console.log('[V3] Parse failed:', response.message);
-                    showAlert('error', response.message || 'Parsing failed');
+                    var parseMsg = cfGet(response, 'message') || 'Parsing failed';
+                    console.log('[V3] Parse failed:', parseMsg);
+                    showAlert('error', parseMsg);
                     $j('#btn-parse').prop('disabled', false);
                     $j('#parse-progress').hide();
                 }
@@ -510,15 +512,28 @@
         });
     }
 
+    // Helper: get property from object handling ColdFusion uppercase key serialization
+    function cfGet(obj, key) {
+        if (!obj) return undefined;
+        if (obj[key] !== undefined) return obj[key];
+        if (obj[key.toUpperCase()] !== undefined) return obj[key.toUpperCase()];
+        return undefined;
+    }
+
     function loadColumnMappings() {
         console.log('[V3] ========== LOAD COLUMN MAPPINGS ==========');
         console.log('[V3] Loading column mappings for job:', state.jobId);
         $j.get('/ajax/importv3/columns.cfm?bypass=1&job_id=' + state.jobId, function(response) {
             console.log('[V3] Columns response:', response);
-            if (response.success) {
-                renderColumnMappings(response.data.columns, response.data.available_fields);
+            var success = cfGet(response, 'success');
+            var data = cfGet(response, 'data') || {};
+            if (success) {
+                var columns = cfGet(data, 'columns') || [];
+                var availFields = cfGet(data, 'available_fields') || [];
+                renderColumnMappings(columns, availFields);
             } else {
-                $j('#mapping-container').html('<p class="text-danger">' + response.message + '</p>');
+                var msg = cfGet(response, 'message') || 'Unknown error';
+                $j('#mapping-container').html('<p class="text-danger">' + msg + '</p>');
             }
         });
     }
@@ -539,18 +554,25 @@
         var html = '<table class="table table-sm" style="table-layout:fixed;width:100%;"><thead><tr><th style="width:150px;">Source Column</th><th>Sample Values</th><th style="width:200px;">Maps To</th></tr></thead><tbody>';
 
         columns.forEach(function(col) {
+            var colId = cfGet(col, 'column_id');
+            var sourceName = cfGet(col, 'source_name') || '';
+            var sourceIndex = cfGet(col, 'source_column_index');
+            var mappedField = cfGet(col, 'mapped_field') || cfGet(col, 'target_key') || '';
+
             // If backend didn't map, try exact match on source column name
-            var effectiveMapping = col.mapped_field || '';
-            if (!effectiveMapping && col.source_name) {
-                var srcNorm = normalize(col.source_name);
+            var effectiveMapping = mappedField;
+            if (!effectiveMapping && sourceName) {
+                var srcNorm = normalize(sourceName);
                 // 1) Check smart defaults first (e.g. "email" -> business email)
                 if (smartDefaults[srcNorm]) {
                     effectiveMapping = smartDefaults[srcNorm];
                 } else {
                     // 2) Fall back to normalized match against field key or display name
                     for (var i = 0; i < availableFields.length; i++) {
-                        if (srcNorm === normalize(availableFields[i].field) || srcNorm === normalize(availableFields[i].display_name)) {
-                            effectiveMapping = availableFields[i].field;
+                        var fKey = cfGet(availableFields[i], 'field') || '';
+                        var fName = cfGet(availableFields[i], 'display_name') || '';
+                        if (srcNorm === normalize(fKey) || srcNorm === normalize(fName)) {
+                            effectiveMapping = fKey;
                             break;
                         }
                     }
@@ -558,7 +580,7 @@
             }
 
             // Build sample values display
-            var samples = col.sample_values || col.SAMPLE_VALUES || [];
+            var samples = cfGet(col, 'sample_values') || [];
             var sampleHtml = '';
             if (samples.length > 0) {
                 var shown = samples.slice(0, 3);
@@ -571,15 +593,17 @@
             }
 
             html += '<tr>';
-            html += '<td><strong>' + escapeHtml(col.source_name || 'Column ' + (col.source_index + 1)) + '</strong></td>';
+            html += '<td><strong>' + escapeHtml(sourceName || 'Column ' + ((sourceIndex || 0) + 1)) + '</strong></td>';
             html += '<td style="max-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + sampleHtml + '</td>';
             html += '<td>';
-            html += '<select class="form-control form-control-sm mapping-select" data-column-id="' + col.column_id + '">';
+            html += '<select class="form-control form-control-sm mapping-select" data-column-id="' + colId + '">';
             html += '<option value="">(Do not import)</option>';
 
             availableFields.forEach(function(field) {
-                var selected = field.field === effectiveMapping ? 'selected' : '';
-                html += '<option value="' + field.field + '" ' + selected + '>' + escapeHtml(field.display_name) + '</option>';
+                var fKey = cfGet(field, 'field') || '';
+                var fName = cfGet(field, 'display_name') || '';
+                var selected = fKey === effectiveMapping ? 'selected' : '';
+                html += '<option value="' + fKey + '" ' + selected + '>' + escapeHtml(fName) + '</option>';
             });
 
             html += '</select>';
@@ -625,13 +649,15 @@
                 console.log('[V3] ========== RECOMPUTE RESPONSE ==========');
                 console.log('[V3] Recompute response:', response);
                 console.log('[V3] Response type:', typeof response);
-                console.log('[V3] Response success:', response.success);
-                if (response.success) {
+                var rSuccess = cfGet(response, 'success');
+                console.log('[V3] Response success:', rSuccess);
+                if (rSuccess) {
                     console.log('[V3] Success! Reloading page...');
                     window.location.reload();
                 } else {
-                    console.log('[V3] Failed:', response.message);
-                    showAlert('error', response.message || 'Failed to process');
+                    var rMsg = cfGet(response, 'message') || 'Failed to process';
+                    console.log('[V3] Failed:', rMsg);
+                    showAlert('error', rMsg);
                     $btn.prop('disabled', false).html(originalHtml);
                 }
             },
@@ -750,25 +776,25 @@
         $j.get(url, function(response) {
             console.log('[V3] ========== ROWS RESPONSE ==========');
             console.log('[V3] Rows response:', response);
-            console.log('[V3] Rows success:', response.success, 'Code:', response.code);
+            console.log('[V3] Rows success:', cfGet(response, 'success'), 'Code:', cfGet(response, 'code'));
             // Log debug breadcrumbs if present (handle both cases - CF returns uppercase)
-            var data = response.data || response.DATA || {};
-            var debugTrail = data.debug || data.DEBUG;
+            var data = cfGet(response, 'data') || {};
+            var debugTrail = cfGet(data, 'debug');
             if (debugTrail) {
                 console.log('[V3] Debug trail:', debugTrail.join(' -> '));
             }
-            if (response.success) {
+            if (cfGet(response, 'success')) {
                 // Handle both lowercase and uppercase keys (CF returns uppercase)
-                var rows = data.rows || data.ROWS || [];
-                var total = data.total || data.TOTAL || 0;
-                var page = data.page || data.PAGE || 1;
-                var totalPages = data.total_pages || data.TOTAL_PAGES || 1;
+                var rows = cfGet(data, 'rows') || [];
+                var total = cfGet(data, 'total') || 0;
+                var page = cfGet(data, 'page') || 1;
+                var totalPages = cfGet(data, 'total_pages') || cfGet(data, 'totalPages') || 1;
                 renderRows(rows);
                 renderPagination(total, page, totalPages);
                 updateStats();
             } else {
-                console.error('[V3] Load rows failed with code:', response.code);
-                $j('#review-tbody').html('<tr><td colspan="8" class="text-center text-danger">' + escapeHtml(response.message) + '</td></tr>');
+                console.error('[V3] Load rows failed with code:', cfGet(response, 'code'));
+                $j('#review-tbody').html('<tr><td colspan="8" class="text-center text-danger">' + escapeHtml(cfGet(response, 'message') || 'Unknown error') + '</td></tr>');
             }
         }).fail(function(xhr, status, error) {
             console.error('[V3] Load rows HTTP error:', xhr.status, status, error);
@@ -989,9 +1015,9 @@
             console.log('[V3] ========== STATS RESPONSE ==========');
             console.log('[V3] Stats response:', response);
             // CF serializes keys uppercase: handle both cases
-            var data = response.data || response.DATA || {};
-            var stats = data.stats || data.STATS;
-            if (response.success && stats) {
+            var data = cfGet(response, 'data') || {};
+            var stats = cfGet(data, 'stats');
+            if (cfGet(response, 'success') && stats) {
                 state.stats = stats;
                 $j('#stat-total').text(stats.total || 0);
                 $j('#stat-ready').text(stats.ready || 0);

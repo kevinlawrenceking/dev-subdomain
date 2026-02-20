@@ -360,6 +360,7 @@
 
     <!--- Build column lookup by column_id --->
     <cfset variables.columnMappings = {}>
+    <cfset variables.mappingSummary = []>
     <cfloop query="variables.qColumns">
         <cfset variables.columnMappings[variables.qColumns.column_id] = {
             "column_id": variables.qColumns.column_id,
@@ -369,7 +370,14 @@
             "target_key": isNull(variables.qColumns.target_key) ? "" : variables.qColumns.target_key,
             "transform_json": isNull(variables.qColumns.transform_json) ? "" : variables.qColumns.transform_json
         }>
+        <cfset arrayAppend(variables.mappingSummary,
+            variables.qColumns.source_column_name & "=" &
+            (isNull(variables.qColumns.target_key) ? "NULL" : variables.qColumns.target_key) & "(" &
+            (isNull(variables.qColumns.intent) ? "NULL" : variables.qColumns.intent) & ")")>
     </cfloop>
+    <cfset addDebug("column_mappings_detail: " & arrayToList(variables.mappingSummary, " | "))>
+    <cfset addDebug("column_mappings_keys: " & structKeyList(variables.columnMappings))>
+    <cflog file="importv3" text="V3 recompute column_mappings job_id=#variables.jobId# keys=#structKeyList(variables.columnMappings)# count=#structCount(variables.columnMappings)# mappings=#arrayToList(variables.mappingSummary, ' | ')#">
 
     <!--- E) Load all rows for this job --->
     <cfset addDebug("step=load_rows")>
@@ -442,9 +450,16 @@
                 <cfset variables.rawValue = isNull(variables.qFacts.raw_value) ? "" : variables.qFacts.raw_value>
 
                 <!--- Get column mapping --->
-                <cfset variables.columnMapping = structKeyExists(variables.columnMappings, variables.columnId) ? variables.columnMappings[variables.columnId] : {}>
+                <cfset variables.columnMappingFound = structKeyExists(variables.columnMappings, variables.columnId)>
+                <cfset variables.columnMapping = variables.columnMappingFound ? variables.columnMappings[variables.columnId] : {}>
                 <cfset variables.intent = structKeyExists(variables.columnMapping, "intent") ? variables.columnMapping.intent : "">
                 <cfset variables.targetKey = structKeyExists(variables.columnMapping, "target_key") ? variables.columnMapping.target_key : "">
+
+                <!--- First row: log every fact's column mapping resolution --->
+                <cfif variables.rowsProcessed eq 1>
+                    <cfset addDebug("row1_fact col_id=#variables.columnId# found=#variables.columnMappingFound# field=#variables.fieldName# intent=#variables.intent# target=#variables.targetKey# val=#left(variables.rawValue,30)#")>
+                    <cflog file="importv3" text="V3 recompute row1_fact job_id=#variables.jobId# col_id=#variables.columnId# found=#variables.columnMappingFound# field=#variables.fieldName# intent=#variables.intent# target=#variables.targetKey# effectiveName=#len(variables.targetKey) ? variables.targetKey : variables.fieldName#">
+                </cfif>
 
                 <!--- Skip ignored columns --->
                 <cfif variables.intent eq "ignore">
@@ -464,7 +479,7 @@
 
                 <!--- Apply transform_json if present (basic implementation) --->
                 <cfset variables.transformedValue = variables.rawValue>
-                <cfif len(variables.columnMapping.transform_json) gt 0>
+                <cfif structKeyExists(variables.columnMapping, "transform_json") and len(variables.columnMapping.transform_json) gt 0>
                     <cftry>
                         <cfset variables.transformRules = deserializeJSON(variables.columnMapping.transform_json)>
                         <!--- Apply trim transform --->
@@ -575,7 +590,14 @@
                 </cfif>
             </cfloop>
 
-            <!--- Row-level validation: require first_name or last_name --->
+            <!--- Diagnostic: log row data keys for first row to aid troubleshooting --->
+            <cfif variables.rowsProcessed eq 1>
+                <cfset addDebug("row1_data_keys=" & structKeyList(variables.rowData))>
+                <cflog file="importv3" text="V3 recompute row1_data_keys job_id=#variables.jobId# keys=#structKeyList(variables.rowData)#">
+            </cfif>
+
+            <!--- Row-level validation: require at least one name field --->
+            <!--- ContactFullName is the only DB field; first+last get concatenated during finalize --->
             <cfset variables.hasFirstName = structKeyExists(variables.rowData, "first_name") and len(variables.rowData.first_name)>
             <cfset variables.hasLastName = structKeyExists(variables.rowData, "last_name") and len(variables.rowData.last_name)>
             <cfset variables.hasFullName = structKeyExists(variables.rowData, "full_name") and len(variables.rowData.full_name)>
@@ -583,17 +605,6 @@
             <cfif not variables.hasFirstName and not variables.hasLastName and not variables.hasFullName>
                 <cfset variables.errorCount++>
                 <cfset arrayAppend(variables.rowErrors, { field: "_row", error: "At least one name field (first_name, last_name, or full_name) is required" })>
-            </cfif>
-
-            <!--- Check required fields per spec: first_name required, last_name required --->
-            <!--- NOTE: The spec says both required, but practically we accept full_name as alternative --->
-            <cfif not variables.hasFirstName and not variables.hasFullName>
-                <cfset variables.errorCount++>
-                <cfset arrayAppend(variables.rowErrors, { field: "first_name", error: "First name is required" })>
-            </cfif>
-            <cfif not variables.hasLastName and not variables.hasFullName>
-                <cfset variables.errorCount++>
-                <cfset arrayAppend(variables.rowErrors, { field: "last_name", error: "Last name is required" })>
             </cfif>
 
             <!--- Build validation summary JSON --->
@@ -737,9 +748,27 @@
             </cfswitch>
 
             <cfcatch type="any">
-                <!--- Log row processing error but continue to next row --->
-                <cfset addDebug("row_fail row_id=" & variables.rowId & " err=" & cfcatch.message)>
-                <cflog file="importv3" text="V3 recompute row_fail job_id=#variables.jobId# row_id=#variables.rowId# err=#cfcatch.message#">
+                <!--- Log row processing error and update DB status, then continue --->
+                <cfset addDebug("row_fail row_id=" & variables.rowId & " err=" & cfcatch.message & " detail=" & cfcatch.detail)>
+                <cflog file="importv3" text="V3 recompute row_fail job_id=#variables.jobId# row_id=#variables.rowId# err=#cfcatch.message# detail=#cfcatch.detail#">
+                <cftry>
+                    <cfset queryExecute(
+                        "UPDATE import_v3_rows
+                         SET status = 'problem',
+                             error_count = 1,
+                             validation_summary = :validation_summary,
+                             updated_at = NOW()
+                         WHERE row_id = :row_id",
+                        {
+                            row_id: { value: variables.rowId, cfsqltype: "cf_sql_integer" },
+                            validation_summary: { value: serializeJSON({ "errors": [{ "field": "_row", "error": "Processing error: " & cfcatch.message }], "warnings": [] }), cfsqltype: "cf_sql_longvarchar" }
+                        },
+                        { datasource: application.datasource }
+                    )>
+                    <cfcatch type="any">
+                        <cflog file="importv3" text="V3 recompute row_fail_update_error row_id=#variables.rowId# err=#cfcatch.message#">
+                    </cfcatch>
+                </cftry>
                 <cfset variables.problemRows++>
             </cfcatch>
         </cftry>
