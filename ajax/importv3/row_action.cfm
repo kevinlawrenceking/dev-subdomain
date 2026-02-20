@@ -253,8 +253,8 @@
     <cfset job = jobResult.data.job>
     <cfset arrayAppend(debug, "job_loaded")>
 
-    <!--- J) Status gate: Allow row actions from reviewing and finalizing states --->
-    <cfset ALLOWED_STATUSES = ["reviewing", "finalizing"]>
+    <!--- J) Status gate: Allow row actions from reviewing, finalizing, and completed states --->
+    <cfset ALLOWED_STATUSES = ["reviewing", "finalizing", "completed"]>
     <cfif not arrayFindNoCase(ALLOWED_STATUSES, job.status)>
         <cfset returnError(
             "INVALID_STATE",
@@ -271,16 +271,16 @@
     <cfif isBulk or arrayLen(rowIds) gt 1>
         <!--- Bulk operation --->
         <cfset actionResult = v3Service.bulkRowAction(
-            jobId = jobId,
-            rowIds = rowIds,
+            job_id = jobId,
+            row_ids = rowIds,
             action = action,
             userid = userid
         )>
     <cfelse>
         <!--- Single row operation --->
         <cfset actionResult = v3Service.setRowAction(
-            jobId = jobId,
-            rowId = rowIds[1],
+            job_id = jobId,
+            row_id = rowIds[1],
             action = action,
             userid = userid
         )>
