@@ -536,7 +536,7 @@
             'address':  'address1'
         };
 
-        var html = '<table class="table table-sm"><thead><tr><th>Source Column</th><th>Sample Values</th><th>Maps To</th></tr></thead><tbody>';
+        var html = '<table class="table table-sm" style="table-layout:fixed;width:100%;"><thead><tr><th style="width:150px;">Source Column</th><th>Sample Values</th><th style="width:200px;">Maps To</th></tr></thead><tbody>';
 
         columns.forEach(function(col) {
             // If backend didn't map, try exact match on source column name
@@ -572,7 +572,7 @@
 
             html += '<tr>';
             html += '<td><strong>' + escapeHtml(col.source_name || 'Column ' + (col.source_index + 1)) + '</strong></td>';
-            html += '<td>' + sampleHtml + '</td>';
+            html += '<td style="max-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + sampleHtml + '</td>';
             html += '<td>';
             html += '<select class="form-control form-control-sm mapping-select" data-column-id="' + col.column_id + '">';
             html += '<option value="">(Do not import)</option>';
