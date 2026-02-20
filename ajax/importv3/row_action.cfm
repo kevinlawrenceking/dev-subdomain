@@ -253,8 +253,8 @@
     <cfset job = jobResult.data.job>
     <cfset arrayAppend(debug, "job_loaded")>
 
-    <!--- J) Status gate: Only allow row actions from reviewing state --->
-    <cfset ALLOWED_STATUSES = ["reviewing"]>
+    <!--- J) Status gate: Allow row actions from reviewing and finalizing states --->
+    <cfset ALLOWED_STATUSES = ["reviewing", "finalizing"]>
     <cfif not arrayFindNoCase(ALLOWED_STATUSES, job.status)>
         <cfset returnError(
             "INVALID_STATE",

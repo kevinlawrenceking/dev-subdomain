@@ -2570,7 +2570,8 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                 case "create":
                 case "import_new":
                     dbAction = "import_new";
-                    // Keep current status (ready or dupe) - finalize will pick it up
+                    // For ignored rows, restore to ready so finalize picks them up
+                    // For dupe/ready rows, keep current status
                     newStatus = "";
                     break;
                 case "update":
@@ -2608,6 +2609,11 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
             // Don't allow changing imported/failed rows
             if (listFindNoCase("imported,updated,failed", qRow.status)) {
                 return fail(code = "INVALID_STATE", message = "Cannot change action on imported rows");
+            }
+
+            // Restore ignored rows back to ready when user includes them
+            if (dbAction eq "import_new" and qRow.status eq "ignored") {
+                newStatus = "ready";
             }
 
             // Update row
@@ -2742,10 +2748,12 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                       AND r.status NOT IN ('imported', 'updated', 'failed')
                 ";
             } else {
+                // For import_new: restore ignored rows back to ready, keep others as-is
                 updateSql = "
                     UPDATE import_v3_rows r
                     INNER JOIN import_v3_jobs j ON r.job_id = j.job_id
                     SET r.user_action = :action,
+                        r.status = CASE WHEN r.status = 'ignored' THEN 'ready' ELSE r.status END,
                         r.user_action_at = NOW(),
                         r.updated_at = NOW()
                     WHERE r.row_id IN (#arrayToList(safeIds)#)

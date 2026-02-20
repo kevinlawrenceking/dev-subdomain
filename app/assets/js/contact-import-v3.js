@@ -432,7 +432,7 @@
             'address':  'address1'
         };
 
-        var html = '<table class="table table-sm"><thead><tr><th>Source Column</th><th>Maps To</th><th>Confidence</th></tr></thead><tbody>';
+        var html = '<table class="table table-sm"><thead><tr><th>Source Column</th><th>Maps To</th></tr></thead><tbody>';
 
         columns.forEach(function(col) {
             // If backend didn't map, try exact match on source column name
@@ -465,13 +465,6 @@
             });
 
             html += '</select>';
-            html += '</td>';
-            html += '<td>';
-            if (col.mapped_field && col.confidence) {
-                var pct = Math.round(col.confidence * 100);
-                var badgeClass = pct >= 90 ? 'badge-success' : (pct >= 70 ? 'badge-warning' : 'badge-secondary');
-                html += '<span class="badge ' + badgeClass + '">' + pct + '%</span>';
-            }
             html += '</td>';
             html += '</tr>';
         });
@@ -653,7 +646,8 @@
             var emailClass = hasFieldError(validation, 'email_business') || hasFieldError(validation, 'email_personal') ? 'text-danger' : '';
             var phoneClass = hasFieldError(validation, 'phone_work') || hasFieldError(validation, 'phone_mobile') ? 'text-danger' : '';
 
-            html += '<tr data-row-id="' + rowId + '" class="' + (status === 'imported' ? 'table-light' : '') + '">';
+            var rowClass = status === 'imported' ? 'table-light' : (status === 'ignored' ? 'table-light text-muted' : '');
+            html += '<tr data-row-id="' + rowId + '" class="' + rowClass + '">';
             html += '<td><input type="checkbox" class="row-checkbox" data-row-id="' + rowId + '" ' + (status === 'imported' ? 'disabled' : '') + '></td>';
             html += '<td>' + rowNum + '</td>';
             html += '<td>' + escapeHtml(name) + '</td>';
@@ -663,12 +657,18 @@
             html += '<td><span class="status-badge status-' + status + '">' + status + '</span></td>';
             html += '<td>';
 
-            if (status === 'problem') {
-                html += '<button class="btn btn-xs btn-outline-primary btn-edit" data-row-id="' + rowId + '"><i class="fe-edit"></i></button> ';
+            if (status === 'ready') {
+                html += '<button class="btn btn-xs btn-outline-primary btn-edit" data-row-id="' + rowId + '" title="Edit"><i class="fe-edit"></i></button> ';
+                html += '<button class="btn btn-xs btn-outline-secondary btn-exclude" data-row-id="' + rowId + '" title="Exclude from import"><i class="fe-x-circle"></i></button> ';
+            } else if (status === 'problem') {
+                html += '<button class="btn btn-xs btn-outline-primary btn-edit" data-row-id="' + rowId + '" title="Edit & fix"><i class="fe-edit"></i></button> ';
+                html += '<button class="btn btn-xs btn-outline-secondary btn-exclude" data-row-id="' + rowId + '" title="Exclude from import"><i class="fe-x-circle"></i></button> ';
             } else if (status === 'dupe') {
-                html += '<button class="btn btn-xs btn-outline-warning btn-resolve-dupe" data-row-id="' + rowId + '"><i class="fe-users"></i></button> ';
+                html += '<button class="btn btn-xs btn-outline-warning btn-resolve-dupe" data-row-id="' + rowId + '" title="Resolve duplicate"><i class="fe-users"></i></button> ';
+            } else if (status === 'ignored') {
+                html += '<button class="btn btn-xs btn-outline-success btn-restore" data-row-id="' + rowId + '" title="Include in import"><i class="fe-check-circle"></i></button> ';
             } else if (status === 'imported' && createdContactId) {
-                html += '<a href="/app/contact/?contactid=' + createdContactId + '" class="btn btn-xs btn-outline-info"><i class="fe-eye"></i></a>';
+                html += '<a href="/app/contact/?contactid=' + createdContactId + '" class="btn btn-xs btn-outline-info" title="View contact"><i class="fe-eye"></i></a>';
             }
 
             html += '</td>';
@@ -708,6 +708,14 @@
 
         $j('.btn-resolve-dupe').click(function() {
             resolveDupe($j(this).data('row-id'));
+        });
+
+        $j('.btn-exclude').click(function() {
+            singleRowAction($j(this).data('row-id'), 'ignore');
+        });
+
+        $j('.btn-restore').click(function() {
+            singleRowAction($j(this).data('row-id'), 'create');
         });
 
         $j('.row-checkbox').change(function() {
@@ -833,7 +841,7 @@
         var $importBtn = $j('#bulk-import');
         $ignoreBtn.prop('disabled', true);
         $importBtn.prop('disabled', true);
-        var actionText = action === 'ignore' ? 'Skipping...' : 'Setting to import...';
+        var actionText = action === 'ignore' ? 'Excluding...' : 'Including...';
         $j('#selected-count').text(actionText);
 
         $j.ajax({
@@ -881,6 +889,45 @@
                 $ignoreBtn.prop('disabled', false);
                 $importBtn.prop('disabled', false);
                 updateSelectedCount();
+            }
+        });
+    }
+
+    function singleRowAction(rowId, action) {
+        console.log('[V3] Single row action:', action, 'Row:', rowId);
+
+        var csrfToken = $j('#csrf-token').val() || '';
+        if (!csrfToken) {
+            showAlert('error', 'Security token missing. Please refresh the page.');
+            return;
+        }
+
+        $j.ajax({
+            url: '/ajax/importv3/row_action.cfm?bypass=1',
+            type: 'POST',
+            contentType: 'application/json',
+            headers: { 'X-CSRF-Token': csrfToken },
+            data: JSON.stringify({
+                job_id: state.jobId,
+                row_id: rowId,
+                action: action,
+                csrf_token: csrfToken
+            }),
+            success: function(response) {
+                console.log('[V3] Row action response:', response);
+                if (response.success) {
+                    loadRows();
+                } else {
+                    showAlert('error', response.message);
+                }
+            },
+            error: function(xhr) {
+                var errorMsg = 'Action failed. Please try again.';
+                try {
+                    var errResponse = JSON.parse(xhr.responseText);
+                    if (errResponse.message) errorMsg = errResponse.message;
+                } catch (e) {}
+                showAlert('error', errorMsg);
             }
         });
     }

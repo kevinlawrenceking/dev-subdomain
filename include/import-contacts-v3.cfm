@@ -417,8 +417,8 @@ input[type="date"].form-control-sm {
                     <span class="ml-3" id="selected-count">0 selected</span>
                 </div>
                 <div>
-                    <button class="btn btn-sm btn-outline-secondary" id="bulk-ignore">Mark Ignored</button>
-                    <button class="btn btn-sm btn-outline-primary" id="bulk-import">Mark for Import</button>
+                    <button class="btn btn-sm btn-outline-secondary" id="bulk-ignore"><i class="fe-x-circle"></i> Exclude from Import</button>
+                    <button class="btn btn-sm btn-outline-success" id="bulk-import"><i class="fe-check-circle"></i> Include in Import</button>
                 </div>
             </div>
 
