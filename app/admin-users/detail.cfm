@@ -282,6 +282,7 @@
     (function() {
         var AJAX_BASE = '/app/admin-users/ajax/';
         var USER_ID = #val(variables.targetUserId)#;
+    </cfoutput>
         var userData = null;
         var pendingEmailTemplate = '';
 
@@ -550,6 +551,5 @@
         });
     })();
     </script>
-    </cfoutput>
 </body>
 </html>
