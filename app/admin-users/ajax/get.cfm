@@ -26,8 +26,8 @@
     <cfset variables.svc = new services.UserService()>
     <cfset variables.userData = variables.svc.GetUserDetails(variables.targetUserId)>
 
-    <!--- Check if user was found (GetUserDetails returns struct with keys from query, empty if not found) --->
-    <cfif structIsEmpty(variables.userData) or (structKeyExists(variables.userData, "userid") and variables.userData.userid eq "")>
+    <!--- Check if user was found (GetUserDetails returns struct, empty if not found) --->
+    <cfif structIsEmpty(variables.userData)>
         <cfset variables.response.message = "User not found">
         <cfheader statuscode="404">
         <cfcontent type="application/json; charset=utf-8" reset="true"><cfoutput>#serializeJSON(variables.response)#</cfoutput><cfabort>

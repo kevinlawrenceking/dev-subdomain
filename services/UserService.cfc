@@ -118,7 +118,7 @@
 </cffunction>
 
 <!--- Function to retrieve user details by user ID --->
-    <cffunction output="false" name="GetUserDetails" access="public" returntype="query" >
+    <cffunction output="false" name="GetUserDetails" access="public" returntype="struct" >
         <cfargument name="userid" type="numeric" required="yes">
 
 <cfquery result="result" name="details">
@@ -162,7 +162,30 @@
                 u.userid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#">
         </cfquery>
 
-<cfreturn details>
+<cfif details.recordCount eq 0>
+    <cfreturn {}>
+</cfif>
+
+<cfset userStruct = {}>
+<cfloop list="#details.columnList#" index="col">
+    <cfset userStruct[col] = details[col][1]>
+</cfloop>
+
+<!--- Rename keys to match expected names in ajax code --->
+<cfif structKeyExists(userStruct, "tzgeneral")>
+    <cfset userStruct.tzname = userStruct.tzgeneral>
+</cfif>
+<cfif structKeyExists(userStruct, "formatExample")>
+    <cfset userStruct.dateformatExample = userStruct.formatExample>
+</cfif>
+<cfif structKeyExists(userStruct, "region")>
+    <cfset userStruct.regionName = userStruct.region>
+</cfif>
+<cfif structKeyExists(userStruct, "countryname")>
+    <cfset userStruct.countryName = userStruct.countryname>
+</cfif>
+
+<cfreturn userStruct>
     </cffunction>
 
 <cffunction output="false" name="SELtaousers" access="public" returntype="query">
