@@ -34,9 +34,19 @@
     "elapsed_ms": 0
 }>
 
-<!--- Initialize structured logger --->
-<cfset variables.v3Logger = new services.ImportV3Logger(endpoint="recompute")>
-<cfset variables.response.correlation_id = variables.v3Logger.getCorrelationId()>
+<!--- Initialize structured logger (inside try/catch so CFC compilation errors don't crash the endpoint) --->
+<cfset variables.v3Logger = "">
+<cfset variables.loggerAvailable = false>
+<cftry>
+    <cfset variables.v3Logger = new services.ImportV3Logger(endpoint="recompute")>
+    <cfset variables.response.correlation_id = getCorrelationId()>
+    <cfset variables.loggerAvailable = true>
+<cfcatch type="any">
+    <!--- Logger CFC failed to load - continue without structured logging --->
+    <cfset arrayAppend(variables.response.debug, "WARN: ImportV3Logger failed to init: " & cfcatch.message)>
+    <cflog file="importv3" text="ImportV3Logger INIT FAILED: #cfcatch.message# | #cfcatch.detail#" type="error">
+</cfcatch>
+</cftry>
 
 <!--- Phase timing tracker --->
 <cfset variables.phaseTimes = {}>
@@ -75,6 +85,14 @@
 <!--- Phase 4.1: Store dupeRowData per row for two-pass processing --->
 <cfset variables.rowDupeData = []>
 
+<!--- Helper: safe correlation ID accessor --->
+<cffunction name="getCorrelationId" access="private" returntype="string" output="false">
+    <cfif variables.loggerAvailable>
+        <cfreturn getCorrelationId()>
+    </cfif>
+    <cfreturn "NO_LOGGER">
+</cffunction>
+
 <!--- Helper function to add debug breadcrumb + structured log --->
 <cffunction name="addDebug" access="private" returntype="void" output="false">
     <cfargument name="msg" type="string" required="true">
@@ -90,7 +108,10 @@
     <cfargument name="phaseName" type="string" required="true">
     <cfset variables.currentPhase = arguments.phaseName>
     <cfset variables.phaseStart = getTickCount()>
-    <cfset variables.v3Logger.info(arguments.phaseName, "phase_start")>
+    <cftry>
+        <cfif variables.loggerAvailable><cfset variables.v3Logger.info(arguments.phaseName, "phase_start")></cfif>
+    <cfcatch type="any"></cfcatch>
+    </cftry>
 </cffunction>
 
 <!--- Helper: end timing current phase --->
@@ -98,7 +119,10 @@
     <cfif len(variables.currentPhase) and variables.phaseStart gt 0>
         <cfset var elapsed = getTickCount() - variables.phaseStart>
         <cfset variables.phaseTimes[variables.currentPhase] = elapsed>
-        <cfset variables.v3Logger.info(variables.currentPhase, "phase_end ms=" & elapsed)>
+        <cftry>
+            <cfif variables.loggerAvailable><cfset variables.v3Logger.info(variables.currentPhase, "phase_end ms=" & elapsed)></cfif>
+        <cfcatch type="any"></cfcatch>
+        </cftry>
         <cfset addDebug("phase_end=" & variables.currentPhase & " ms=" & elapsed)>
         <cfset variables.currentPhase = "">
         <cfset variables.phaseStart = 0>
@@ -119,7 +143,7 @@
             "stage": arguments.stage,
             "elapsed_ms": getTickCount() - variables.recomputeStartTime
         }>
-        <cfset variables.v3Logger.warn("first_failure", arguments.errorMsg, variables.firstFailure)>
+        <cftry><cfif variables.loggerAvailable><cfset variables.v3Logger.warn("first_failure", arguments.errorMsg, variables.firstFailure)></cfif><cfcatch type="any"></cfcatch></cftry>
     </cfif>
 </cffunction>
 
@@ -141,7 +165,7 @@
         <cfcontent type="application/json; charset=utf-8" reset="true"><cfoutput>#serializeJSON(variables.response)#</cfoutput><cfabort>
     </cfif>
     <cfset variables.userid = session.userid>
-    <cfset variables.v3Logger.setUserId(variables.userid)>
+    <cfif variables.loggerAvailable><cfset variables.v3Logger.setUserId(variables.userid)></cfif>
     <cfset addDebug("step=auth_ok userid=" & variables.userid)>
 
     <!--- Runtime DSN + database diagnostics --->
@@ -231,7 +255,7 @@
         <cflog file="importv3" text="V3 recompute FAIL missing_job_id">
         <cfcontent type="application/json; charset=utf-8" reset="true"><cfoutput>#serializeJSON(variables.response)#</cfoutput><cfabort>
     </cfif>
-    <cfset variables.v3Logger.setJobId(variables.jobId)>
+    <cfif variables.loggerAvailable><cfset variables.v3Logger.setJobId(variables.jobId)></cfif>
     <cfset addDebug("job_id=" & variables.jobId)>
     <cflog file="importv3" text="V3 recompute job_id=#variables.jobId# userid=#variables.userid#">
 
@@ -420,7 +444,7 @@
                     userid = variables.userid,
                     event_type = "mappings_applied",
                     detail = { mappings_count: arrayLen(variables.jsonData.mappings) },
-                    correlation_id = variables.v3Logger.getCorrelationId()
+                    correlation_id = getCorrelationId()
                 )>
                 <cfset addDebug("mappings_applied count=" & variables.mappingCount)>
             <cfelse>
@@ -433,7 +457,7 @@
                     userid = variables.userid,
                     event_type = "mappings_parse_error",
                     detail = { error: cfcatch.message },
-                    correlation_id = variables.v3Logger.getCorrelationId()
+                    correlation_id = getCorrelationId()
                 )>
                 <cfset addDebug("mappings_parse_error: " & cfcatch.message)>
                 <cflog file="importv3" text="V3 recompute mappings_parse_error job_id=#variables.jobId# err=#cfcatch.message#">
@@ -449,7 +473,7 @@
         userid = variables.userid,
         event_type = "recompute_started",
         detail = { previous_status: variables.job.status, skip_dupes: variables.skipDupes },
-        correlation_id = variables.v3Logger.getCorrelationId()
+        correlation_id = getCorrelationId()
     )>
 
     <!--- D) Load column mappings for this job (reload after applying incoming mappings) --->
@@ -573,6 +597,7 @@
                 <cfif variables.rowsProcessed eq 1>
                     <cfset addDebug("row1_fact col_id=#variables.columnId# found=#variables.columnMappingFound# field=#variables.fieldName# intent=#variables.intent# target=#variables.targetKey# val=#left(variables.rawValue,30)#")>
                     <cflog file="importv3" text="V3 recompute row1_fact job_id=#variables.jobId# col_id=#variables.columnId# found=#variables.columnMappingFound# field=#variables.fieldName# intent=#variables.intent# target=#variables.targetKey# effectiveName=#len(variables.targetKey) ? variables.targetKey : variables.fieldName#">
+                    <cfif variables.loggerAvailable>
                     <cfset variables.v3Logger.info("row1_mapping", "col_id=#variables.columnId# field=#variables.fieldName# target=#variables.targetKey# intent=#variables.intent#", {
                         "column_id": variables.columnId,
                         "field_name": variables.fieldName,
@@ -581,6 +606,7 @@
                         "mapping_found": variables.columnMappingFound,
                         "sample_value": left(variables.rawValue, 30)
                     })>
+                    </cfif>
                 </cfif>
 
                 <!--- Skip ignored columns --->
@@ -872,7 +898,7 @@
             <cfcatch type="any">
                 <!--- Log row processing error and update DB status, then continue --->
                 <cfset captureFirstFailure(variables.rowId, variables.rowNum, cfcatch.message, "process_row")>
-                <cfset variables.v3Logger.error("row_fail", "row_id=" & variables.rowId & " row_num=" & variables.rowNum & " err=" & cfcatch.message, variables.v3Logger.extractErrorDetail(cfcatch))>
+                <cfif variables.loggerAvailable><cfset variables.v3Logger.error("row_fail", "row_id=" & variables.rowId & " row_num=" & variables.rowNum & " err=" & cfcatch.message, variables.v3Logger.extractErrorDetail(cfcatch))></cfif>
                 <cfset addDebug("row_fail row_id=" & variables.rowId & " err=" & cfcatch.message & " detail=" & cfcatch.detail)>
                 <cflog file="importv3" text="V3 recompute row_fail job_id=#variables.jobId# row_id=#variables.rowId# err=#cfcatch.message# detail=#cfcatch.detail#">
                 <cftry>
@@ -1047,7 +1073,7 @@
                 userid = variables.userid,
                 event_type = "status_transition_warning",
                 detail = { error: variables.statusResult.message, from_status: variables.job.status, to_status: "reviewing" },
-                correlation_id = variables.v3Logger.getCorrelationId()
+                correlation_id = getCorrelationId()
             )>
             <cfset addDebug("status_transition_warning: " & variables.statusResult.message)>
         <cfelse>
@@ -1070,7 +1096,7 @@
             ignored_rows: variables.ignoredRows,
             skip_dupes: variables.skipDupes
         },
-        correlation_id = variables.v3Logger.getCorrelationId()
+        correlation_id = getCorrelationId()
     )>
     <cflog file="importv3" text="V3 recompute DONE job_id=#variables.jobId# total=#variables.totalRows# valid=#variables.validRows# problem=#variables.problemRows# dupe=#variables.dupeRows# ignored=#variables.ignoredRows# skip_dupes=#variables.skipDupes#">
 
@@ -1107,9 +1133,9 @@
     <!--- Build success response --->
     <cfset variables.response.success = true>
     <cfset variables.response.message = "Recompute completed">
-    <cfset variables.response.elapsed_ms = variables.v3Logger.getElapsedMs()>
+    <cfset variables.response.elapsed_ms = variables.loggerAvailable ? variables.v3Logger.getElapsedMs() : (getTickCount() - variables.recomputeStartTime)>
     <cfset addDebug("step=metrics_final elapsed_total=" & variables.metrics.elapsed_ms_total & " elapsed_dupes=" & variables.metrics.elapsed_ms_dupes_total & " queries=" & variables.metrics.dupe_queries_total & " index_items=" & variables.metrics.dupe_index_items_total & " index_contacts=" & variables.metrics.dupe_index_contactids_total & " candidates_unique=" & variables.metrics.dupe_candidates_unique_total & " detail_batches=" & variables.metrics.dupe_details_fetch_batches & " mode=" & variables.metrics.dupe_detection_mode)>
-    <cfset variables.v3Logger.info("complete", "Recompute completed total=#variables.totalRows# valid=#variables.validRows# problem=#variables.problemRows# dupe=#variables.dupeRows#", variables.phaseTimes)>
+    <cfif variables.loggerAvailable><cfset variables.v3Logger.info("complete", "Recompute completed total=#variables.totalRows# valid=#variables.validRows# problem=#variables.problemRows# dupe=#variables.dupeRows#", variables.phaseTimes)></cfif>
     <cfset variables.response.data = {
         "job": {
             "job_id": variables.jobId,
@@ -1127,12 +1153,18 @@
     }>
 
     <cfcatch type="any">
-        <!--- Use structured logger for full error extraction --->
-        <cfset variables.errDetail = variables.v3Logger.extractErrorDetail(cfcatch)>
-        <cfset variables.v3Logger.fatal("recompute_failed", cfcatch.message, variables.errDetail)>
+        <!--- Use structured logger for full error extraction (with fallback if logger unavailable) --->
+        <cfset variables.errDetail = { "message": cfcatch.message, "detail": cfcatch.detail, "type": cfcatch.type, "sql": "", "tagcontext": [] }>
+        <cftry>
+            <cfif variables.loggerAvailable>
+                <cfset variables.errDetail = variables.v3Logger.extractErrorDetail(cfcatch)>
+                <cfset variables.v3Logger.fatal("recompute_failed", cfcatch.message, variables.errDetail)>
+            </cfif>
+        <cfcatch type="any"></cfcatch>
+        </cftry>
 
         <cfset addDebug("FATAL err=" & cfcatch.message & " detail=" & cfcatch.detail)>
-        <cflog file="importv3" text="V3 recompute fatal cid=#variables.v3Logger.getCorrelationId()# err=#cfcatch.message# detail=#cfcatch.detail#">
+        <cflog file="importv3" text="V3 recompute fatal cid=#getCorrelationId()# err=#cfcatch.message# detail=#cfcatch.detail#">
 
         <cftry>
             <cfset variables.v3Service.logEvent(
@@ -1140,7 +1172,7 @@
                 userid = variables.userid,
                 event_type = "recompute_failed",
                 detail = { error: cfcatch.message, detail: cfcatch.detail },
-                correlation_id = variables.v3Logger.getCorrelationId()
+                correlation_id = getCorrelationId()
             )>
             <cfcatch type="any"></cfcatch>
         </cftry>
@@ -1171,7 +1203,7 @@
 
         <cfset variables.response.code = "RECOMPUTE_FAILED">
         <cfset variables.response.message = "Recompute failed: " & cfcatch.message>
-        <cfset variables.response.elapsed_ms = variables.v3Logger.getElapsedMs()>
+        <cfset variables.response.elapsed_ms = variables.loggerAvailable ? variables.v3Logger.getElapsedMs() : (getTickCount() - variables.recomputeStartTime)>
 
         <cfset variables.response.data = {
             "error_type": variables.errDetail.type,

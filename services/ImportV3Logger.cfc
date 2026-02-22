@@ -147,8 +147,15 @@ component displayname="ImportV3Logger" accessors="false" output="false" {
                 var maxEntries = min(arrayLen(arguments.exception.tagcontext), 5);
                 for (var i = 1; i <= maxEntries; i++) {
                     var entry = arguments.exception.tagcontext[i];
+                    var tplName = "";
+                    if (structKeyExists(entry, "template") && len(entry.template)) {
+                        // Extract just the filename from the full path
+                        var tplPath = entry.template;
+                        var slashPos = max(tplPath.lastIndexOf("/"), tplPath.lastIndexOf(chr(92)));
+                        tplName = (slashPos gte 0) ? mid(tplPath, slashPos + 2, len(tplPath)) : tplPath;
+                    }
                     arrayAppend(info.tagcontext, {
-                        "template": structKeyExists(entry, "template") ? listLast(entry.template, "/\") : "",
+                        "template": tplName,
                         "line": structKeyExists(entry, "line") ? entry.line : 0
                     });
                 }
