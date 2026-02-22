@@ -1497,6 +1497,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                         recordname,
                         contactBirthday,
                         user_yn,
+                        IsDeleted,
                         created_at
                     ) VALUES (
                         :userid,
@@ -1504,6 +1505,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                         :recordname,
                         :contactBirthday,
                         'Y',
+                        0,
                         NOW()
                     )",
                     {
