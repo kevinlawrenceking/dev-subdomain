@@ -1013,13 +1013,13 @@
         </cfif>
 
         <cfset arrayAppend(setParts, "IsBetaTester = :isBeta")>
-        <cfset params.isBeta = { value: arguments.IsBetaTester ? 1 : 0, cfsqltype: "cf_sql_bit" }>
+        <cfset params.isBeta = { value: arguments.IsBetaTester ? 1 : 0, cfsqltype: "cf_sql_integer" }>
 
         <cfset arrayAppend(setParts, "isAudition = :isAud")>
-        <cfset params.isAud = { value: arguments.isAudition ? 1 : 0, cfsqltype: "cf_sql_bit" }>
+        <cfset params.isAud = { value: arguments.isAudition ? 1 : 0, cfsqltype: "cf_sql_integer" }>
 
         <cfset arrayAppend(setParts, "isAuditionModule = :isAudMod")>
-        <cfset params.isAudMod = { value: arguments.isAuditionModule ? 1 : 0, cfsqltype: "cf_sql_bit" }>
+        <cfset params.isAudMod = { value: arguments.isAuditionModule ? 1 : 0, cfsqltype: "cf_sql_integer" }>
 
         <!--- Password change if provided --->
         <cfif len(trim(arguments.newPassword))>
