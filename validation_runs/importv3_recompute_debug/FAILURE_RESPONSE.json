@@ -1,0 +1,34 @@
+{
+  "NOTE": "This file will be populated by the recompute endpoint at runtime.",
+  "PURPOSE": "Capture the verbatim JSON response when recompute fails.",
+  "HOW_TO_CAPTURE": "POST to /ajax/importv3/recompute.cfm with a valid job_id and save the full response body here.",
+  "EXPECTED_ERROR_IF_V3_3_NOT_APPLIED": {
+    "success": false,
+    "code": "SCHEMA_MISMATCH",
+    "message": "import_v3_columns is missing columns added by V3_3 migration: intent, target_key, transform_json. Run database/migrations/V3_3__import_v3_columns_add_mapping_fields.sql",
+    "data": {
+      "dsn": "<runtime>",
+      "db_name": "<runtime>",
+      "actual_columns": ["column_id", "job_id", "source_column_index", "source_column_name", "mapped_field", "is_custom_field", "custom_field_id", "confidence", "user_confirmed", "sample_values", "created_at", "updated_at"],
+      "missing_columns": ["intent", "target_key", "transform_json"],
+      "fix_sql": "ALTER TABLE import_v3_columns ADD COLUMN intent VARCHAR(20) DEFAULT NULL; ALTER TABLE import_v3_columns ADD COLUMN target_key VARCHAR(100) DEFAULT NULL; ALTER TABLE import_v3_columns ADD COLUMN transform_json TEXT DEFAULT NULL;",
+      "migration_file": "database/migrations/V3_3__import_v3_columns_add_mapping_fields.sql"
+    }
+  },
+  "EXPECTED_SUCCESS_AFTER_FIX": {
+    "success": true,
+    "code": "",
+    "message": "Recompute completed",
+    "data": {
+      "job": {
+        "job_id": "<N>",
+        "status": "reviewing",
+        "total_rows": "<N>",
+        "valid_rows": "<N>",
+        "problem_rows": "<N>",
+        "dupe_rows": "<N>",
+        "ignored_rows": "<N>"
+      }
+    }
+  }
+}

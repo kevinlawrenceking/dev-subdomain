@@ -21,7 +21,17 @@
     - INVALID_STATE: Job not in allowed status (parsed, mapping, reviewing)
     - LOCKED: Job is locked by another operation
     - RECOMPUTE_FAILED: Recompute operation failed
+    - SCHEMA_MISMATCH: Required columns missing from database tables
 --->
+
+<!--- ============================================================
+     OUTERMOST SAFETY WRAPPER
+     Guarantees JSON output even if variable init or function
+     definitions fail. Nothing above this point can throw.
+     ============================================================ --->
+<cfset variables.outerDebugSteps = []>
+<cfset variables.outerStartTime = getTickCount()>
+<cftry>
 
 <!--- Initialize response envelope with debug array --->
 <cfset variables.response = {
@@ -96,7 +106,13 @@
 <!--- Helper function to add debug breadcrumb + structured log --->
 <cffunction name="addDebug" access="private" returntype="void" output="false">
     <cfargument name="msg" type="string" required="true">
-    <cfset arrayAppend(variables.response.debug, "[" & timeFormat(now(), "HH:mm:ss.lll") & "] " & arguments.msg)>
+    <cfargument name="meta" type="struct" required="false" default="#{}#">
+    <cfset var entry = "[" & timeFormat(now(), "HH:mm:ss.lll") & "] " & arguments.msg>
+    <cfif structCount(arguments.meta)>
+        <cfset entry = entry & " | " & serializeJSON(arguments.meta)>
+    </cfif>
+    <cfset arrayAppend(variables.response.debug, entry)>
+    <cfset arrayAppend(variables.outerDebugSteps, entry)>
     <cftry>
         <cfset variables.v3Logger.debug("recompute", arguments.msg)>
     <cfcatch type="any"></cfcatch>
@@ -188,10 +204,12 @@
     </cfcatch>
     </cftry>
 
-    <!--- Introspect import_v3 table columns for diagnostics --->
+    <!--- Introspect import_v3 table columns for diagnostics (full metadata) --->
+    <cfset variables.tableCols = {}>
+    <cfset variables.tableColsFull = {}>
     <cftry>
         <cfset variables.qTableCols = queryExecute(
-            "SELECT TABLE_NAME, COLUMN_NAME
+            "SELECT TABLE_NAME, COLUMN_NAME, DATA_TYPE, IS_NULLABLE, COLUMN_DEFAULT
              FROM information_schema.COLUMNS
              WHERE TABLE_SCHEMA = DATABASE()
                AND TABLE_NAME IN ('import_v3_jobs','import_v3_rows','import_v3_facts','import_v3_columns')
@@ -199,12 +217,18 @@
             {},
             { datasource: application.datasource }
         )>
-        <cfset variables.tableCols = {}>
         <cfloop query="variables.qTableCols">
             <cfif not structKeyExists(variables.tableCols, variables.qTableCols.TABLE_NAME)>
                 <cfset variables.tableCols[variables.qTableCols.TABLE_NAME] = []>
+                <cfset variables.tableColsFull[variables.qTableCols.TABLE_NAME] = []>
             </cfif>
             <cfset arrayAppend(variables.tableCols[variables.qTableCols.TABLE_NAME], variables.qTableCols.COLUMN_NAME)>
+            <cfset arrayAppend(variables.tableColsFull[variables.qTableCols.TABLE_NAME], {
+                "column": variables.qTableCols.COLUMN_NAME,
+                "type": variables.qTableCols.DATA_TYPE,
+                "nullable": variables.qTableCols.IS_NULLABLE,
+                "default": isNull(variables.qTableCols.COLUMN_DEFAULT) ? "NULL" : variables.qTableCols.COLUMN_DEFAULT
+            })>
         </cfloop>
         <cfloop collection="#variables.tableCols#" item="variables.tblName">
             <cfset addDebug("schema[" & variables.tblName & "]=" & arrayToList(variables.tableCols[variables.tblName]))>
@@ -213,6 +237,38 @@
         <cfset addDebug("schema_introspect_error: " & cfcatch.message)>
     </cfcatch>
     </cftry>
+
+    <!--- SCHEMA GATE: Verify V3_3 migration columns exist in import_v3_columns --->
+    <cfset addDebug("step=schema_gate_v3_3")>
+    <cfset variables.v3ColsActual = structKeyExists(variables.tableCols, "import_v3_columns") ? variables.tableCols["import_v3_columns"] : []>
+    <cfset variables.requiredV3_3Cols = ["intent", "target_key", "transform_json"]>
+    <cfset variables.missingCols = []>
+    <cfloop array="#variables.requiredV3_3Cols#" index="variables.reqCol">
+        <cfif not arrayFindNoCase(variables.v3ColsActual, variables.reqCol)>
+            <cfset arrayAppend(variables.missingCols, variables.reqCol)>
+        </cfif>
+    </cfloop>
+    <cfif arrayLen(variables.missingCols) gt 0>
+        <cfset variables.response.code = "SCHEMA_MISMATCH">
+        <cfset variables.response.message = "import_v3_columns is missing columns added by V3_3 migration: " & arrayToList(variables.missingCols, ", ") & ". Run database/migrations/V3_3__import_v3_columns_add_mapping_fields.sql">
+        <cfset addDebug("FAIL: schema_mismatch missing_cols=" & arrayToList(variables.missingCols), {
+            "actual_columns": variables.v3ColsActual,
+            "required_columns": variables.requiredV3_3Cols,
+            "missing_columns": variables.missingCols,
+            "fix": "Run V3_3__import_v3_columns_add_mapping_fields.sql against " & variables.dbName
+        })>
+        <cfset variables.response.data = {
+            "dsn": variables.runtimeDSN,
+            "db_name": variables.dbName,
+            "actual_columns": variables.v3ColsActual,
+            "missing_columns": variables.missingCols,
+            "fix_sql": "ALTER TABLE import_v3_columns ADD COLUMN intent VARCHAR(20) DEFAULT NULL; ALTER TABLE import_v3_columns ADD COLUMN target_key VARCHAR(100) DEFAULT NULL; ALTER TABLE import_v3_columns ADD COLUMN transform_json TEXT DEFAULT NULL;",
+            "migration_file": "database/migrations/V3_3__import_v3_columns_add_mapping_fields.sql"
+        }>
+        <cflog file="importv3" text="V3 recompute FAIL schema_mismatch missing=#arrayToList(variables.missingCols)# db=#variables.dbName# dsn=#variables.runtimeDSN#">
+        <cfcontent type="application/json; charset=utf-8" reset="true"><cfoutput>#serializeJSON(variables.response)#</cfoutput><cfabort>
+    </cfif>
+    <cfset addDebug("schema_gate_v3_3 PASSED")>
 
     <!--- Parse JSON body first (for JSON content type requests) --->
     <cfset addDebug("step=parse_json_body")>
@@ -1219,6 +1275,44 @@
             "first_failure": variables.firstFailure
         }>
     </cfcatch>
+</cftry>
+
+<!--- ============================================================
+     OUTERMOST CATCH: Last-resort safety net.
+     If ANYTHING above threw before the inner try/catch could
+     handle it (variable init, function defs, etc.), this catches
+     it and returns the exact diagnostic JSON schema.
+     ============================================================ --->
+<cfcatch type="any">
+    <cfset var outerElapsed = getTickCount() - variables.outerStartTime>
+    <cfset var outerDsn = "">
+    <cfset var outerDbName = "">
+    <cftry>
+        <cfset outerDsn = structKeyExists(application, "datasource") ? application.datasource : "UNDEFINED">
+        <cfset var qDb = queryExecute("SELECT DATABASE() AS db_name", {}, { datasource: application.datasource })>
+        <cfset outerDbName = qDb.db_name>
+    <cfcatch type="any">
+        <cfset outerDbName = "QUERY_FAILED: " & cfcatch.message>
+    </cfcatch>
+    </cftry>
+
+    <!--- Build the exact diagnostic schema requested --->
+    <cfset var outerResponse = {
+        "ok": false,
+        "stage": "outermost_catch",
+        "dsn": outerDsn,
+        "db_name": outerDbName,
+        "message": cfcatch.message,
+        "detail": cfcatch.detail,
+        "type": cfcatch.type,
+        "sql": structKeyExists(cfcatch, "sql") ? cfcatch.sql : "",
+        "tagcontext": structKeyExists(cfcatch, "tagcontext") ? cfcatch.tagcontext : [],
+        "debug": variables.outerDebugSteps,
+        "elapsed_ms": outerElapsed
+    }>
+    <cflog file="importv3" text="V3 recompute OUTERMOST CATCH: #cfcatch.message# | #cfcatch.detail# | type=#cfcatch.type#" type="fatal">
+    <cfcontent type="application/json; charset=utf-8" reset="true"><cfoutput>#serializeJSON(outerResponse)#</cfoutput><cfabort>
+</cfcatch>
 </cftry>
 </cfsilent>
 <cfcontent type="application/json; charset=utf-8" reset="true"><cfoutput>#serializeJSON(variables.response)#</cfoutput>
