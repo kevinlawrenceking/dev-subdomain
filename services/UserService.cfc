@@ -123,6 +123,16 @@
 
 <cfquery result="result" name="details">
             SELECT
+                u.userid,
+                u.userRole,
+                u.userstatus,
+                u.recordname,
+                u.customerid,
+                u.IsDeleted,
+                u.IsBetaTester,
+                u.isSetup,
+                u.isAudition,
+                u.isAuditionModule,
                 u.viewtypeid,
                 tz.tzgeneral,
                 u.add1,
