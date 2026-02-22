@@ -311,16 +311,7 @@
             },
             error: function(xhr, status, error) {
                 console.error('[V3] Upload error:', error, xhr.responseText);
-                var errMsg = 'Upload failed. Please try again.';
-                if (xhr.responseText) {
-                    try {
-                        var resp = JSON.parse(xhr.responseText);
-                        if (resp.message) errMsg = resp.message;
-                    } catch(e) {
-                        errMsg += ' (Response: ' + xhr.responseText.substring(0, 200) + ')';
-                    }
-                }
-                showAlert('error', errMsg);
+                showErrorWithDebug(xhr, 'Upload failed.');
                 $j('#upload-area').show();
                 $j('#upload-progress').hide();
             }
@@ -425,7 +416,7 @@
                 },
                 error: function(xhr) {
                     $btn.prop('disabled', false).html(originalHtml);
-                    showAlert('error', 'Refresh failed. Please try again.');
+                    showErrorWithDebug(xhr, 'Refresh failed.');
                 }
             });
         });
@@ -493,19 +484,7 @@
                 console.error('[V3] Response text:', xhr.responseText);
 
                 // Try to parse debug from error response
-                try {
-                    var errResp = JSON.parse(xhr.responseText);
-                    console.log('[V3] Parsed error response:', errResp);
-                    if (errResp.debug && errResp.debug.length > 0) {
-                        console.log('[V3] Parse error debug log:');
-                        errResp.debug.forEach(function(line) {
-                            console.log('  ' + line);
-                        });
-                    }
-                } catch(e) {
-                    console.error('[V3] Could not parse error response as JSON:', e);
-                }
-                showAlert('error', 'Parsing failed. Please try again.');
+                showErrorWithDebug(xhr, 'Parsing failed.');
                 $j('#btn-parse').prop('disabled', false);
                 $j('#parse-progress').hide();
             }
@@ -663,11 +642,8 @@
             },
             error: function(xhr, status, error) {
                 console.error('[V3] ========== RECOMPUTE ERROR ==========');
-                console.error('[V3] Status:', status);
-                console.error('[V3] Error:', error);
-                console.error('[V3] Response text:', xhr.responseText);
-                console.error('[V3] Response status:', xhr.status);
-                showAlert('error', 'Failed to process. Please try again. (' + status + ')');
+                console.error('[V3] Status:', status, 'HTTP:', xhr.status);
+                showErrorWithDebug(xhr, 'Failed to process mappings.');
                 $btn.prop('disabled', false).html(originalHtml);
             },
             complete: function(xhr, status) {
@@ -1125,15 +1101,7 @@
             },
             error: function(xhr, status, error) {
                 console.error('[V3] Bulk action HTTP error:', xhr.status, status, error);
-                var errorMsg = 'Action failed. Please try again.';
-                try {
-                    var errResponse = JSON.parse(xhr.responseText);
-                    if (errResponse.message) errorMsg = errResponse.message;
-                    if (errResponse.data && errResponse.data.debug) {
-                        console.error('[V3] Debug trail:', errResponse.data.debug.join(' -> '));
-                    }
-                } catch (e) {}
-                showAlert('error', errorMsg);
+                showErrorWithDebug(xhr, 'Bulk action failed.');
                 $ignoreBtn.prop('disabled', false);
                 $importBtn.prop('disabled', false);
                 updateSelectedCount();
@@ -1170,12 +1138,7 @@
                 }
             },
             error: function(xhr) {
-                var errorMsg = 'Action failed. Please try again.';
-                try {
-                    var errResponse = JSON.parse(xhr.responseText);
-                    if (errResponse.message) errorMsg = errResponse.message;
-                } catch (e) {}
-                showAlert('error', errorMsg);
+                showErrorWithDebug(xhr, 'Row action failed.');
             }
         });
     }
@@ -1494,17 +1457,8 @@
             },
             error: function(xhr, status, error) {
                 console.error('[V3] Save error:', xhr.status, status, error);
-                console.error('[V3] Response text:', xhr.responseText);
-                var errorMsg = 'Failed to save. Please try again.';
-                try {
-                    var errResponse = JSON.parse(xhr.responseText);
-                    if (errResponse.message) errorMsg = errResponse.message;
-                    if (errResponse.data && errResponse.data.debug) {
-                        console.error('[V3] Debug trail:', errResponse.data.debug.join(' -> '));
-                    }
-                } catch (e) {}
                 $btn.prop('disabled', false).html('<i class="fe-check"></i> Save Changes');
-                showAlert('error', errorMsg);
+                showErrorWithDebug(xhr, 'Failed to save.');
             }
         });
     }
@@ -1606,16 +1560,8 @@
             },
             error: function(xhr, status, error) {
                 console.error('[V3] Dupe action HTTP error:', xhr.status, status, error);
-                var errorMsg = 'Action failed. Please try again.';
-                try {
-                    var errResponse = JSON.parse(xhr.responseText);
-                    if (errResponse.message) errorMsg = errResponse.message;
-                    if (errResponse.data && errResponse.data.debug) {
-                        console.error('[V3] Debug trail:', errResponse.data.debug.join(' -> '));
-                    }
-                } catch (e) {}
                 bsModal('#dupe-modal', 'hide');
-                showAlert('error', errorMsg);
+                showErrorWithDebug(xhr, 'Duplicate action failed.');
             }
         });
     }
@@ -1689,15 +1635,7 @@
             },
             error: function(xhr, status, error) {
                 console.error('[V3] Status change HTTP error:', xhr.status, status, error);
-                var errorMsg = 'Status change failed. Please try again.';
-                try {
-                    var errResponse = JSON.parse(xhr.responseText);
-                    if (errResponse.message) errorMsg = errResponse.message;
-                    if (errResponse.data && errResponse.data.debug) {
-                        console.error('[V3] Debug trail:', errResponse.data.debug.join(' -> '));
-                    }
-                } catch (e) {}
-                showAlert('error', errorMsg);
+                showErrorWithDebug(xhr, 'Status change failed.');
             }
         });
     }
@@ -1796,34 +1734,7 @@
             },
             error: function(xhr, status, error) {
                 console.error('[V3] Finalize HTTP error:', xhr.status, status, error);
-                console.error('[V3] Response text:', xhr.responseText);
-
-                // Phase 5.2: Improved error handling - parse JSON response if available
-                var errorMsg = 'Import failed. Please try again.';
-                var errorCode = '';
-                var debugTrail = [];
-
-                try {
-                    var errResponse = JSON.parse(xhr.responseText);
-                    if (errResponse.message) {
-                        errorMsg = errResponse.message;
-                    }
-                    if (errResponse.code) {
-                        errorCode = errResponse.code;
-                        console.error('[V3] Error code:', errorCode);
-                    }
-                    if (errResponse.data && errResponse.data.debug) {
-                        debugTrail = errResponse.data.debug;
-                        console.error('[V3] Debug trail:', debugTrail.join(' -> '));
-                    }
-                    if (errResponse.data && errResponse.data.last_step) {
-                        console.error('[V3] Last successful step:', errResponse.data.last_step);
-                    }
-                } catch (e) {
-                    console.error('[V3] Could not parse error response as JSON');
-                }
-
-                showAlert('error', errorMsg);
+                showErrorWithDebug(xhr, 'Import failed.');
                 $j('#finalize-progress').hide();
                 $j('#btn-finalize').prop('disabled', false);
             }
@@ -1855,7 +1766,7 @@
             },
             error: function(xhr) {
                 console.error('[V3] Preview error:', xhr.responseText);
-                showAlert('error', 'Preview failed. Please try again.');
+                showErrorWithDebug(xhr, 'Preview failed.');
                 $j('#dry-run-progress').hide();
                 $j('#btn-dry-run').prop('disabled', false);
             }
@@ -2016,7 +1927,83 @@
         setTimeout(function() {
             var el = document.getElementById(id);
             if (el) { el.style.opacity = '0'; setTimeout(function() { if (el.parentNode) el.remove(); }, 300); }
-        }, 5000);
+        }, 15000);
+    }
+
+    /**
+     * Show error with debug info from server response.
+     * Extracts correlation_id, error code, message, and debug trail.
+     * Falls back to generic message if response is not parseable.
+     */
+    function showErrorWithDebug(xhr, fallbackMsg) {
+        var response = null;
+        var msg = fallbackMsg || 'An error occurred.';
+        var code = '';
+        var correlationId = '';
+        var debugTrail = [];
+
+        // Try to parse response as JSON
+        try {
+            var rawText = (xhr && xhr.responseText) ? xhr.responseText : (typeof xhr === 'string' ? xhr : '');
+            if (rawText) {
+                response = JSON.parse(rawText);
+            } else if (typeof xhr === 'object' && xhr !== null && !xhr.responseText) {
+                // Already a parsed object
+                response = xhr;
+            }
+        } catch(e) {
+            // Not JSON - use status code
+            if (xhr && xhr.status) {
+                msg = fallbackMsg + ' (HTTP ' + xhr.status + ')';
+            }
+        }
+
+        if (response) {
+            var serverMsg = cfGet(response, 'message');
+            code = cfGet(response, 'code') || '';
+            correlationId = cfGet(response, 'correlation_id') || '';
+            debugTrail = cfGet(response, 'debug') || [];
+
+            if (serverMsg) {
+                msg = code ? '[' + code + '] ' + serverMsg : serverMsg;
+            }
+        }
+
+        // Log correlation ID to console for server log lookup
+        if (correlationId) {
+            console.log('[V3] Correlation ID: ' + correlationId + ' (use this to search server logs)');
+        }
+
+        // Log debug trail to console
+        if (debugTrail.length > 0) {
+            console.group('[V3] Debug trail (cid=' + correlationId + ')');
+            debugTrail.forEach(function(entry) {
+                if (typeof entry === 'string') {
+                    console.log(entry);
+                } else if (typeof entry === 'object') {
+                    var ts = cfGet(entry, 'ts') || '';
+                    var level = cfGet(entry, 'level') || '';
+                    var stage = cfGet(entry, 'stage') || '';
+                    var entryMsg = cfGet(entry, 'msg') || '';
+                    console.log('[' + ts + 'ms] [' + level + '] ' + stage + ': ' + entryMsg);
+                }
+            });
+            console.groupEnd();
+        }
+
+        // Show toast with error
+        showAlert('error', msg);
+
+        // Log any phase_times or first_failure from data
+        var data = response ? (cfGet(response, 'data') || {}) : {};
+        var phaseTimes = cfGet(data, 'phase_times');
+        var firstFailure = cfGet(data, 'first_failure');
+        if (phaseTimes && typeof phaseTimes === 'object' && Object.keys(phaseTimes).length > 0) {
+            console.log('[V3] Phase times:', phaseTimes);
+        }
+        if (firstFailure && typeof firstFailure === 'object' && Object.keys(firstFailure).length > 0) {
+            console.log('[V3] First failure:', firstFailure);
+        }
     }
 
 })();

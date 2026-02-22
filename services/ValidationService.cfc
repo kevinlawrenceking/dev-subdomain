@@ -194,7 +194,9 @@
             <cfset var pd = parseDateTime(trimmed)>
             <cfset result.normalized = dateFormat(pd, "yyyy-mm-dd")>
             <cfreturn result>
-            <cfcatch></cfcatch>
+            <cfcatch>
+                <cflog file="importv3_debug" text="[ImportV3] validateDate parseDateTime FAIL value=#trimmed# error=#cfcatch.message#" type="warning">
+            </cfcatch>
         </cftry>
     </cfif>
 

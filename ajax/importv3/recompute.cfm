@@ -29,8 +29,22 @@
     "code": "",
     "message": "",
     "debug": [],
-    "data": {}
+    "data": {},
+    "correlation_id": "",
+    "elapsed_ms": 0
 }>
+
+<!--- Initialize structured logger --->
+<cfset variables.v3Logger = new services.ImportV3Logger(endpoint="recompute")>
+<cfset variables.response.correlation_id = variables.v3Logger.getCorrelationId()>
+
+<!--- Phase timing tracker --->
+<cfset variables.phaseTimes = {}>
+<cfset variables.currentPhase = "">
+<cfset variables.phaseStart = 0>
+
+<!--- First-failure capture --->
+<cfset variables.firstFailure = {}>
 
 <!--- Initialize metrics tracking --->
 <cfset variables.metrics = {
@@ -61,10 +75,52 @@
 <!--- Phase 4.1: Store dupeRowData per row for two-pass processing --->
 <cfset variables.rowDupeData = []>
 
-<!--- Helper function to add debug breadcrumb --->
+<!--- Helper function to add debug breadcrumb + structured log --->
 <cffunction name="addDebug" access="private" returntype="void" output="false">
     <cfargument name="msg" type="string" required="true">
     <cfset arrayAppend(variables.response.debug, "[" & timeFormat(now(), "HH:mm:ss.lll") & "] " & arguments.msg)>
+    <cftry>
+        <cfset variables.v3Logger.debug("recompute", arguments.msg)>
+    <cfcatch type="any"></cfcatch>
+    </cftry>
+</cffunction>
+
+<!--- Helper: start timing a named phase --->
+<cffunction name="startPhase" access="private" returntype="void" output="false">
+    <cfargument name="phaseName" type="string" required="true">
+    <cfset variables.currentPhase = arguments.phaseName>
+    <cfset variables.phaseStart = getTickCount()>
+    <cfset variables.v3Logger.info(arguments.phaseName, "phase_start")>
+</cffunction>
+
+<!--- Helper: end timing current phase --->
+<cffunction name="endPhase" access="private" returntype="void" output="false">
+    <cfif len(variables.currentPhase) and variables.phaseStart gt 0>
+        <cfset var elapsed = getTickCount() - variables.phaseStart>
+        <cfset variables.phaseTimes[variables.currentPhase] = elapsed>
+        <cfset variables.v3Logger.info(variables.currentPhase, "phase_end ms=" & elapsed)>
+        <cfset addDebug("phase_end=" & variables.currentPhase & " ms=" & elapsed)>
+        <cfset variables.currentPhase = "">
+        <cfset variables.phaseStart = 0>
+    </cfif>
+</cffunction>
+
+<!--- Helper: capture first row failure --->
+<cffunction name="captureFirstFailure" access="private" returntype="void" output="false">
+    <cfargument name="rowId" type="numeric" required="true">
+    <cfargument name="rowNum" type="numeric" required="true">
+    <cfargument name="errorMsg" type="string" required="true">
+    <cfargument name="stage" type="string" required="true">
+    <cfif structIsEmpty(variables.firstFailure)>
+        <cfset variables.firstFailure = {
+            "row_id": arguments.rowId,
+            "row_num": arguments.rowNum,
+            "error": arguments.errorMsg,
+            "stage": arguments.stage,
+            "elapsed_ms": getTickCount() - variables.recomputeStartTime
+        }>
+        <cfset variables.v3Logger.warn("first_failure", arguments.errorMsg, variables.firstFailure)>
+    </cfif>
 </cffunction>
 
 <!--- URL param: skip_dupes --->
@@ -85,7 +141,54 @@
         <cfcontent type="application/json; charset=utf-8" reset="true"><cfoutput>#serializeJSON(variables.response)#</cfoutput><cfabort>
     </cfif>
     <cfset variables.userid = session.userid>
+    <cfset variables.v3Logger.setUserId(variables.userid)>
     <cfset addDebug("step=auth_ok userid=" & variables.userid)>
+
+    <!--- Runtime DSN + database diagnostics --->
+    <cfset addDebug("step=dsn_diagnostics")>
+    <cfset variables.runtimeDSN = structKeyExists(application, "datasource") ? application.datasource : "UNDEFINED">
+    <cfset addDebug("dsn=" & variables.runtimeDSN & " host=" & cgi.server_name)>
+    <cftry>
+        <cfset variables.qDbInfo = queryExecute(
+            "SELECT DATABASE() AS db_name, VERSION() AS mysql_version",
+            {},
+            { datasource: application.datasource }
+        )>
+        <cfset variables.dbName = variables.qDbInfo.db_name>
+        <cfset variables.mysqlVersion = variables.qDbInfo.mysql_version>
+        <cfset addDebug("db_name=" & variables.dbName & " mysql_version=" & variables.mysqlVersion)>
+    <cfcatch type="any">
+        <cfset variables.dbName = "QUERY_FAILED">
+        <cfset variables.mysqlVersion = "UNKNOWN">
+        <cfset addDebug("dsn_diag_error: " & cfcatch.message)>
+    </cfcatch>
+    </cftry>
+
+    <!--- Introspect import_v3 table columns for diagnostics --->
+    <cftry>
+        <cfset variables.qTableCols = queryExecute(
+            "SELECT TABLE_NAME, COLUMN_NAME
+             FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE()
+               AND TABLE_NAME IN ('import_v3_jobs','import_v3_rows','import_v3_facts','import_v3_columns')
+             ORDER BY TABLE_NAME, ORDINAL_POSITION",
+            {},
+            { datasource: application.datasource }
+        )>
+        <cfset variables.tableCols = {}>
+        <cfloop query="variables.qTableCols">
+            <cfif not structKeyExists(variables.tableCols, variables.qTableCols.TABLE_NAME)>
+                <cfset variables.tableCols[variables.qTableCols.TABLE_NAME] = []>
+            </cfif>
+            <cfset arrayAppend(variables.tableCols[variables.qTableCols.TABLE_NAME], variables.qTableCols.COLUMN_NAME)>
+        </cfloop>
+        <cfloop collection="#variables.tableCols#" item="variables.tblName">
+            <cfset addDebug("schema[" & variables.tblName & "]=" & arrayToList(variables.tableCols[variables.tblName]))>
+        </cfloop>
+    <cfcatch type="any">
+        <cfset addDebug("schema_introspect_error: " & cfcatch.message)>
+    </cfcatch>
+    </cftry>
 
     <!--- Parse JSON body first (for JSON content type requests) --->
     <cfset addDebug("step=parse_json_body")>
@@ -128,6 +231,7 @@
         <cflog file="importv3" text="V3 recompute FAIL missing_job_id">
         <cfcontent type="application/json; charset=utf-8" reset="true"><cfoutput>#serializeJSON(variables.response)#</cfoutput><cfabort>
     </cfif>
+    <cfset variables.v3Logger.setJobId(variables.jobId)>
     <cfset addDebug("job_id=" & variables.jobId)>
     <cflog file="importv3" text="V3 recompute job_id=#variables.jobId# userid=#variables.userid#">
 
@@ -315,7 +419,8 @@
                     job_id = variables.jobId,
                     userid = variables.userid,
                     event_type = "mappings_applied",
-                    detail = { mappings_count: arrayLen(variables.jsonData.mappings) }
+                    detail = { mappings_count: arrayLen(variables.jsonData.mappings) },
+                    correlation_id = variables.v3Logger.getCorrelationId()
                 )>
                 <cfset addDebug("mappings_applied count=" & variables.mappingCount)>
             <cfelse>
@@ -327,7 +432,8 @@
                     job_id = variables.jobId,
                     userid = variables.userid,
                     event_type = "mappings_parse_error",
-                    detail = { error: cfcatch.message }
+                    detail = { error: cfcatch.message },
+                    correlation_id = variables.v3Logger.getCorrelationId()
                 )>
                 <cfset addDebug("mappings_parse_error: " & cfcatch.message)>
                 <cflog file="importv3" text="V3 recompute mappings_parse_error job_id=#variables.jobId# err=#cfcatch.message#">
@@ -342,10 +448,12 @@
         job_id = variables.jobId,
         userid = variables.userid,
         event_type = "recompute_started",
-        detail = { previous_status: variables.job.status, skip_dupes: variables.skipDupes }
+        detail = { previous_status: variables.job.status, skip_dupes: variables.skipDupes },
+        correlation_id = variables.v3Logger.getCorrelationId()
     )>
 
     <!--- D) Load column mappings for this job (reload after applying incoming mappings) --->
+    <cfset startPhase("load_columns")>
     <cfset addDebug("step=load_column_mappings")>
     <cfset variables.qColumns = queryExecute(
         "SELECT column_id, source_column_index, source_column_name,
@@ -379,7 +487,10 @@
     <cfset addDebug("column_mappings_keys: " & structKeyList(variables.columnMappings))>
     <cflog file="importv3" text="V3 recompute column_mappings job_id=#variables.jobId# keys=#structKeyList(variables.columnMappings)# count=#structCount(variables.columnMappings)# mappings=#arrayToList(variables.mappingSummary, ' | ')#">
 
+    <cfset endPhase()>
+
     <!--- E) Load all rows for this job --->
+    <cfset startPhase("load_rows")>
     <cfset addDebug("step=load_rows")>
     <cfset variables.qRows = queryExecute(
         "SELECT row_id, row_num, raw_json, status, user_action
@@ -400,7 +511,10 @@
     <cfset variables.ignoredRows = 0>
     <cfset variables.rowsProcessed = 0>
 
+    <cfset endPhase()>
+
     <!--- F) Process each row --->
+    <cfset startPhase("process_rows")>
     <cfset addDebug("step=process_rows_start total=" & variables.totalRows)>
     <cfloop query="variables.qRows">
         <cfset variables.rowId = variables.qRows.row_id>
@@ -455,10 +569,18 @@
                 <cfset variables.intent = structKeyExists(variables.columnMapping, "intent") ? variables.columnMapping.intent : "">
                 <cfset variables.targetKey = structKeyExists(variables.columnMapping, "target_key") ? variables.columnMapping.target_key : "">
 
-                <!--- First row: log every fact's column mapping resolution --->
+                <!--- First row: log every fact's column mapping resolution (validates mapping correctness) --->
                 <cfif variables.rowsProcessed eq 1>
                     <cfset addDebug("row1_fact col_id=#variables.columnId# found=#variables.columnMappingFound# field=#variables.fieldName# intent=#variables.intent# target=#variables.targetKey# val=#left(variables.rawValue,30)#")>
                     <cflog file="importv3" text="V3 recompute row1_fact job_id=#variables.jobId# col_id=#variables.columnId# found=#variables.columnMappingFound# field=#variables.fieldName# intent=#variables.intent# target=#variables.targetKey# effectiveName=#len(variables.targetKey) ? variables.targetKey : variables.fieldName#">
+                    <cfset variables.v3Logger.info("row1_mapping", "col_id=#variables.columnId# field=#variables.fieldName# target=#variables.targetKey# intent=#variables.intent#", {
+                        "column_id": variables.columnId,
+                        "field_name": variables.fieldName,
+                        "target_key": variables.targetKey,
+                        "intent": variables.intent,
+                        "mapping_found": variables.columnMappingFound,
+                        "sample_value": left(variables.rawValue, 30)
+                    })>
                 </cfif>
 
                 <!--- Skip ignored columns --->
@@ -749,6 +871,8 @@
 
             <cfcatch type="any">
                 <!--- Log row processing error and update DB status, then continue --->
+                <cfset captureFirstFailure(variables.rowId, variables.rowNum, cfcatch.message, "process_row")>
+                <cfset variables.v3Logger.error("row_fail", "row_id=" & variables.rowId & " row_num=" & variables.rowNum & " err=" & cfcatch.message, variables.v3Logger.extractErrorDetail(cfcatch))>
                 <cfset addDebug("row_fail row_id=" & variables.rowId & " err=" & cfcatch.message & " detail=" & cfcatch.detail)>
                 <cflog file="importv3" text="V3 recompute row_fail job_id=#variables.jobId# row_id=#variables.rowId# err=#cfcatch.message# detail=#cfcatch.detail#">
                 <cftry>
@@ -774,9 +898,11 @@
         </cftry>
     </cfloop>
     <cfset addDebug("step=process_rows_end processed=" & variables.rowsProcessed)>
+    <cfset endPhase()>
 
     <!--- Phase 4.1 Pass 2: Batch fetch all candidate details, then score rows --->
     <cfif variables.dupeDetectionEnabled and structCount(variables.allCandidateIds) gt 0>
+        <cfset startPhase("dupe_pass2")>
         <cfset addDebug("step=dupe_pass2_start candidates_to_fetch=" & structCount(variables.allCandidateIds))>
         <cfset variables.dupePass2StartTime = getTickCount()>
 
@@ -881,9 +1007,11 @@
 
         <cfset variables.dupeElapsedTotal += (getTickCount() - variables.dupePass2StartTime)>
         <cfset addDebug("step=dupe_pass2_end elapsed_ms=" & (getTickCount() - variables.dupePass2StartTime))>
+        <cfset endPhase()>
     </cfif>
 
     <!--- I) Update job with counts --->
+    <cfset startPhase("update_counts")>
     <cfset addDebug("step=update_job_counts")>
     <cfset queryExecute(
         "UPDATE import_v3_jobs
@@ -905,7 +1033,10 @@
     )>
     <cfset addDebug("job_counts_updated valid=#variables.validRows# problem=#variables.problemRows# dupe=#variables.dupeRows# ignored=#variables.ignoredRows#")>
 
+    <cfset endPhase()>
+
     <!--- J) Transition job status to reviewing if currently parsed or mapping --->
+    <cfset startPhase("transition_status")>
     <cfset addDebug("step=transition_job_status")>
     <cfif variables.job.status eq "parsed" or variables.job.status eq "mapping">
         <cfset variables.statusResult = variables.v3Service.setJobStatus(variables.jobId, variables.userid, "reviewing")>
@@ -915,7 +1046,8 @@
                 job_id = variables.jobId,
                 userid = variables.userid,
                 event_type = "status_transition_warning",
-                detail = { error: variables.statusResult.message, from_status: variables.job.status, to_status: "reviewing" }
+                detail = { error: variables.statusResult.message, from_status: variables.job.status, to_status: "reviewing" },
+                correlation_id = variables.v3Logger.getCorrelationId()
             )>
             <cfset addDebug("status_transition_warning: " & variables.statusResult.message)>
         <cfelse>
@@ -937,7 +1069,8 @@
             dupe_rows: variables.dupeRows,
             ignored_rows: variables.ignoredRows,
             skip_dupes: variables.skipDupes
-        }
+        },
+        correlation_id = variables.v3Logger.getCorrelationId()
     )>
     <cflog file="importv3" text="V3 recompute DONE job_id=#variables.jobId# total=#variables.totalRows# valid=#variables.validRows# problem=#variables.problemRows# dupe=#variables.dupeRows# ignored=#variables.ignoredRows# skip_dupes=#variables.skipDupes#">
 
@@ -969,10 +1102,14 @@
         <!--- dupe_rows_with_keys stays as-is: it counts rows that HAD keys, not rows processed for dupes --->
     </cfif>
 
+    <cfset endPhase()>
+
     <!--- Build success response --->
     <cfset variables.response.success = true>
     <cfset variables.response.message = "Recompute completed">
+    <cfset variables.response.elapsed_ms = variables.v3Logger.getElapsedMs()>
     <cfset addDebug("step=metrics_final elapsed_total=" & variables.metrics.elapsed_ms_total & " elapsed_dupes=" & variables.metrics.elapsed_ms_dupes_total & " queries=" & variables.metrics.dupe_queries_total & " index_items=" & variables.metrics.dupe_index_items_total & " index_contacts=" & variables.metrics.dupe_index_contactids_total & " candidates_unique=" & variables.metrics.dupe_candidates_unique_total & " detail_batches=" & variables.metrics.dupe_details_fetch_batches & " mode=" & variables.metrics.dupe_detection_mode)>
+    <cfset variables.v3Logger.info("complete", "Recompute completed total=#variables.totalRows# valid=#variables.validRows# problem=#variables.problemRows# dupe=#variables.dupeRows#", variables.phaseTimes)>
     <cfset variables.response.data = {
         "job": {
             "job_id": variables.jobId,
@@ -984,20 +1121,26 @@
             "ignored_rows": variables.ignoredRows
         },
         "metrics": variables.metrics,
-        "warnings": variables.warnings
+        "warnings": variables.warnings,
+        "phase_times": variables.phaseTimes,
+        "first_failure": variables.firstFailure
     }>
 
     <cfcatch type="any">
-        <!--- Log recompute failed --->
+        <!--- Use structured logger for full error extraction --->
+        <cfset variables.errDetail = variables.v3Logger.extractErrorDetail(cfcatch)>
+        <cfset variables.v3Logger.fatal("recompute_failed", cfcatch.message, variables.errDetail)>
+
         <cfset addDebug("FATAL err=" & cfcatch.message & " detail=" & cfcatch.detail)>
-        <cflog file="importv3" text="V3 recompute fatal err=#cfcatch.message# detail=#cfcatch.detail#">
+        <cflog file="importv3" text="V3 recompute fatal cid=#variables.v3Logger.getCorrelationId()# err=#cfcatch.message# detail=#cfcatch.detail#">
 
         <cftry>
             <cfset variables.v3Service.logEvent(
                 job_id = variables.jobId,
                 userid = variables.userid,
                 event_type = "recompute_failed",
-                detail = { error: cfcatch.message, detail: cfcatch.detail }
+                detail = { error: cfcatch.message, detail: cfcatch.detail },
+                correlation_id = variables.v3Logger.getCorrelationId()
             )>
             <cfcatch type="any"></cfcatch>
         </cftry>
@@ -1027,12 +1170,21 @@
         <cfset addDebug("step=metrics_final elapsed_total=" & variables.metrics.elapsed_ms_total & " elapsed_dupes=" & variables.metrics.elapsed_ms_dupes_total & " queries=" & variables.metrics.dupe_queries_total & " index_items=" & variables.metrics.dupe_index_items_total & " index_contacts=" & variables.metrics.dupe_index_contactids_total & " candidates_unique=" & variables.metrics.dupe_candidates_unique_total & " detail_batches=" & variables.metrics.dupe_details_fetch_batches & " mode=" & variables.metrics.dupe_detection_mode)>
 
         <cfset variables.response.code = "RECOMPUTE_FAILED">
-        <cfset variables.response.message = "Recompute failed: " & cfcatch.message & " | Detail: " & cfcatch.detail>
+        <cfset variables.response.message = "Recompute failed: " & cfcatch.message>
+        <cfset variables.response.elapsed_ms = variables.v3Logger.getElapsedMs()>
+
         <cfset variables.response.data = {
-            "error_type": cfcatch.type,
-            "tagcontext": cfcatch.tagcontext[1].template & ":" & cfcatch.tagcontext[1].line,
+            "error_type": variables.errDetail.type,
+            "error_message": variables.errDetail.message,
+            "error_detail": variables.errDetail.detail,
+            "tagcontext": variables.errDetail.tagcontext,
+            "failed_sql": variables.errDetail.sql,
+            "dsn": structKeyExists(variables, "runtimeDSN") ? variables.runtimeDSN : "not_yet_resolved",
+            "db_name": structKeyExists(variables, "dbName") ? variables.dbName : "not_yet_resolved",
             "metrics": variables.metrics,
-            "warnings": variables.warnings
+            "warnings": variables.warnings,
+            "phase_times": variables.phaseTimes,
+            "first_failure": variables.firstFailure
         }>
     </cfcatch>
 </cftry>

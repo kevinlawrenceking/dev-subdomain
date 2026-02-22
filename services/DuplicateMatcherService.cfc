@@ -352,6 +352,8 @@
         <cfreturn result>
     </cfif>
 
+    <cftry>
+
     <!--- Track query count --->
     <cfif structKeyExists(arguments.metricsRef, "dupe_queries_total")>
         <cfset arguments.metricsRef.dupe_queries_total++>
@@ -425,6 +427,12 @@
             </cfswitch>
         </cfif>
     </cfloop>
+
+    <cfcatch type="any">
+        <cflog file="importv3_debug" text="[ImportV3] getCandidateDetailsBatch FAIL userid=#arguments.userid# contactIds_count=#arrayLen(arguments.contactIds)# error=#cfcatch.message# detail=#cfcatch.detail#" type="error">
+        <!--- Return partial result (whatever was populated before the error) --->
+    </cfcatch>
+    </cftry>
 
     <cfreturn result>
 </cffunction>

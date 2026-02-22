@@ -1,4 +1,12 @@
 <cfsilent>
+<!--- Auth gate: require logged-in admin session --->
+<cfif not structKeyExists(session, "userid") or not isNumeric(session.userid) or session.userid lte 0>
+    <cfcontent type="application/json" reset="true"><cfoutput>{"success":false,"code":"AUTH_REQUIRED","message":"Authentication required"}</cfoutput><cfabort>
+</cfif>
+<cfif NOT isDefined("session.isAdmin") OR session.isAdmin NEQ true>
+    <cfcontent type="application/json" reset="true"><cfoutput>{"success":false,"code":"ACCESS_DENIED","message":"Admin access required"}</cfoutput><cfabort>
+</cfif>
+
 <!--- Diagnostic endpoint to check V3 table status --->
 <cfset response = {
     "tables": {},

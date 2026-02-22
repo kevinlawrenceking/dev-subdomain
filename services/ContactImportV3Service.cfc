@@ -206,8 +206,13 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
             }
         } catch (any e) {
             result.found = false;
+            result.error = e.message;
+            result.errorType = e.type;
+            try {
+                writeLog(text="[ImportV3] getJob FAIL job_id=#arguments.job_id# error=#e.message# detail=#e.detail# type=#e.type#", file="importv3_debug", type="error");
+            } catch (any logErr) {}
         }
-        
+
         return result;
     }
     
@@ -235,8 +240,11 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                 );
             }
         } catch (any e) {
+            try {
+                writeLog(text="[ImportV3] assertJobOwnership FAIL job_id=#arguments.job_id# userid=#arguments.userid# error=#e.message# detail=#e.detail# type=#e.type#", file="importv3_debug", type="error");
+            } catch (any logErr) {}
             return fail(
-                code = "ACCESS_DENIED",
+                code = "OWNERSHIP_CHECK_ERROR",
                 message = "Unable to verify job ownership.",
                 data = { job_id: arguments.job_id }
             );
@@ -283,7 +291,10 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
             } catch (any logErr) {
                 // Ignore logging errors
             }
-            return fail(code = "INTERNAL_ERROR", message = "An error occurred: " & e.message & " | SQL Detail: " & e.detail, data = { job_id: arguments.job_id, error_detail: e.detail, error_type: e.type });
+            try {
+                writeLog(text="[ImportV3] getJobForUser FAIL job_id=#arguments.job_id# userid=#arguments.userid# error=#e.message# detail=#e.detail# type=#e.type#", file="importv3_debug", type="error");
+            } catch (any wlErr) {}
+            return fail(code = "INTERNAL_ERROR", message = "An error occurred loading this job. Check server logs for details.", data = { job_id: arguments.job_id, error_type: e.type });
         }
     }
 
@@ -336,6 +347,9 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
             }
             return true;
         } catch (any e) {
+            try {
+                writeLog(text="[ImportV3] logEvent FAIL job_id=#arguments.job_id# event_type=#arguments.event_type# error=#e.message# detail=#e.detail#", file="importv3_debug", type="error");
+            } catch (any wlErr) {}
             return false;
         }
     }
