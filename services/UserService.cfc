@@ -906,15 +906,14 @@
     <!--- Generate password hash --->
     <cfset var passwordSalt = hash(generateSecretKey("AES"), "SHA-512")>
     <cfset var passwordHash = hash(arguments.password & passwordSalt, "SHA-512")>
-    <cfset var recordname = trim(arguments.userFirstName) & " " & trim(arguments.userLastName)>
 
     <cftry>
         <cfset var qInsert = "">
         <cfset queryExecute(
             "INSERT INTO taousers_tbl (userFirstName, userLastName, userEmail, userRole, userstatus,
-                                   passwordHash, passwordSalt, recordname, avatarname, IsDeleted, isSetup)
+                                   passwordHash, passwordSalt, avatarname, IsDeleted, isSetup)
              VALUES (:firstName, :lastName, :email, :role, :status,
-                     :pwHash, :pwSalt, :recordname, :avatarname, 0, 0)",
+                     :pwHash, :pwSalt, :avatarname, 0, 0)",
             {
                 firstName: { value: trim(arguments.userFirstName), cfsqltype: "cf_sql_varchar" },
                 lastName: { value: trim(arguments.userLastName), cfsqltype: "cf_sql_varchar" },
@@ -923,7 +922,6 @@
                 status: { value: trim(arguments.userstatus), cfsqltype: "cf_sql_varchar" },
                 pwHash: { value: passwordHash, cfsqltype: "cf_sql_char" },
                 pwSalt: { value: passwordSalt, cfsqltype: "cf_sql_char" },
-                recordname: { value: recordname, cfsqltype: "cf_sql_varchar" },
                 avatarname: { value: trim(arguments.userFirstName), cfsqltype: "cf_sql_varchar" }
             },
             { datasource: application.datasource, result: "qInsert" }
@@ -986,19 +984,16 @@
     </cfif>
 
     <cftry>
-        <cfset var recordname = trim(arguments.userFirstName) & " " & trim(arguments.userLastName)>
 
         <cfset var setParts = [
             "userFirstName = :firstName",
             "userLastName = :lastName",
-            "userEmail = :email",
-            "recordname = :recordname"
+            "userEmail = :email"
         ]>
         <cfset var params = {
             firstName: { value: trim(arguments.userFirstName), cfsqltype: "cf_sql_varchar" },
             lastName: { value: trim(arguments.userLastName), cfsqltype: "cf_sql_varchar" },
             email: { value: trim(arguments.userEmail), cfsqltype: "cf_sql_varchar" },
-            recordname: { value: recordname, cfsqltype: "cf_sql_varchar" },
             uid: { value: arguments.userid, cfsqltype: "cf_sql_integer" }
         }>
 
