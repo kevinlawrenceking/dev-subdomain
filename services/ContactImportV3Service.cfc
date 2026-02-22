@@ -1491,7 +1491,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                 // D1) Insert into contactdetails
                 var qInsertResult = {};
                 queryExecute(
-                    "INSERT INTO contactdetails (
+                    "INSERT INTO contactdetails_tbl (
                         userid,
                         contactFullName,
                         recordname,

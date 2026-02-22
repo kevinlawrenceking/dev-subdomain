@@ -331,8 +331,31 @@
         <cfset arrayAppend(response.results, "contact_custom_fields table exists")>
     </cfif>
 
+    <!--- V3_3: Add mapping fields to import_v3_columns (intent, target_key, transform_json) --->
+    <cfset response.step = "V3_3: Check import_v3_columns mapping fields">
+    <cfquery name="qCheckIntent">
+        SELECT COUNT(*) AS cnt FROM information_schema.columns
+        WHERE table_schema = <cfqueryparam cfsqltype="cf_sql_varchar" value="#schema#">
+          AND table_name = 'import_v3_columns'
+          AND column_name = 'intent'
+    </cfquery>
+
+    <cfif qCheckIntent.cnt eq 0>
+        <cfset response.step = "V3_3: Adding intent, target_key, transform_json columns">
+        <cfquery>
+            ALTER TABLE import_v3_columns
+                ADD COLUMN intent VARCHAR(20) DEFAULT NULL,
+                ADD COLUMN target_key VARCHAR(100) DEFAULT NULL,
+                ADD COLUMN transform_json TEXT DEFAULT NULL
+        </cfquery>
+        <cfset arrayAppend(response.results, "V3_3: Added intent, target_key, transform_json to import_v3_columns")>
+        <cfset arrayAppend(response.tables_affected, "import_v3_columns (V3_3)")>
+    <cfelse>
+        <cfset arrayAppend(response.results, "V3_3: import_v3_columns mapping fields exist")>
+    </cfif>
+
     <cfset response.success = true>
-    <cfset response.message = "V3 migration completed. Created #arrayLen(response.tables_affected)# tables.">
+    <cfset response.message = "V3 migration completed. #arrayLen(response.tables_affected)# changes applied.">
 </cfif>
 
 <cfcatch type="any">
