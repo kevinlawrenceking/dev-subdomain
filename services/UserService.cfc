@@ -911,7 +911,7 @@
     <cftry>
         <cfset var qInsert = "">
         <cfset queryExecute(
-            "INSERT INTO taousers (userFirstName, userLastName, userEmail, userRole, userstatus,
+            "INSERT INTO taousers_tbl (userFirstName, userLastName, userEmail, userRole, userstatus,
                                    passwordHash, passwordSalt, recordname, avatarname, IsDeleted, isSetup)
              VALUES (:firstName, :lastName, :email, :role, :status,
                      :pwHash, :pwSalt, :recordname, :avatarname, 0, 0)",
@@ -1035,8 +1035,10 @@
             <cfset params.pwSalt = { value: newSalt, cfsqltype: "cf_sql_char" }>
         </cfif>
 
+        <cfset var sqlStatement = "UPDATE taousers_tbl SET " & arrayToList(setParts, ", ") & " WHERE userid = :uid">
+        <cflog file="admin_users" text="[update_user] SQL: #sqlStatement# | params: uid=#arguments.userid# firstName=#trim(arguments.userFirstName)# lastName=#trim(arguments.userLastName)# email=#trim(arguments.userEmail)#">
         <cfset queryExecute(
-            "UPDATE taousers SET " & arrayToList(setParts, ", ") & " WHERE userid = :uid",
+            sqlStatement,
             params,
             { datasource: application.datasource }
         )>
@@ -1045,8 +1047,16 @@
         <cfset result.message = "User updated successfully">
 
         <cfcatch type="any">
-            <cfset result.message = "Failed to update user: " & cfcatch.message>
-            <cflog file="admin_users" text="[update_user] ERROR userid=#arguments.userid#: #cfcatch.message#">
+            <cfset var errDetail = "">
+            <cfif structKeyExists(cfcatch, "detail") AND len(cfcatch.detail)>
+                <cfset errDetail = cfcatch.detail>
+            <cfelseif structKeyExists(cfcatch, "queryError") AND len(cfcatch.queryError)>
+                <cfset errDetail = cfcatch.queryError>
+            <cfelseif structKeyExists(cfcatch, "sql") AND len(cfcatch.sql)>
+                <cfset errDetail = "SQL: " & cfcatch.sql>
+            </cfif>
+            <cfset result.message = "Failed to update user: " & cfcatch.message & (len(errDetail) ? " | " & errDetail : "")>
+            <cflog file="admin_users" text="[update_user] ERROR userid=#arguments.userid#: #cfcatch.message# | detail=#errDetail# | type=#cfcatch.type#">
         </cfcatch>
     </cftry>
 
@@ -1068,7 +1078,7 @@
 
     <cftry>
         <cfset queryExecute(
-            "UPDATE taousers SET userstatus = :status WHERE userid = :uid",
+            "UPDATE taousers_tbl SET userstatus = :status WHERE userid = :uid",
             {
                 status: { value: arguments.newStatus, cfsqltype: "cf_sql_varchar" },
                 uid: { value: arguments.userid, cfsqltype: "cf_sql_integer" }

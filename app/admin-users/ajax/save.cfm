@@ -87,8 +87,9 @@
     </cfif>
 
     <cfcatch type="any">
-        <cfset variables.response.message = "Save failed: " & cfcatch.message>
-        <cflog file="admin_users" text="[save] ERROR: #cfcatch.message# #cfcatch.detail#">
+        <cfset variables.errDetail = structKeyExists(cfcatch, "detail") AND len(cfcatch.detail) ? cfcatch.detail : (structKeyExists(cfcatch, "queryError") AND len(cfcatch.queryError) ? cfcatch.queryError : "")>
+        <cfset variables.response.message = "Save failed: " & cfcatch.message & (len(variables.errDetail) ? " | " & variables.errDetail : "")>
+        <cflog file="admin_users" text="[save] ERROR: #cfcatch.message# | detail=#variables.errDetail# | type=#cfcatch.type#">
     </cfcatch>
 </cftry>
 </cfsilent>

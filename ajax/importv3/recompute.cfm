@@ -39,7 +39,7 @@
 <cfset variables.loggerAvailable = false>
 <cftry>
     <cfset variables.v3Logger = new services.ImportV3Logger(endpoint="recompute")>
-    <cfset variables.response.correlation_id = getCorrelationId()>
+    <cfset variables.response.correlation_id = variables.v3Logger.getCorrelationId()>
     <cfset variables.loggerAvailable = true>
 <cfcatch type="any">
     <!--- Logger CFC failed to load - continue without structured logging --->
@@ -88,7 +88,7 @@
 <!--- Helper: safe correlation ID accessor --->
 <cffunction name="getCorrelationId" access="private" returntype="string" output="false">
     <cfif variables.loggerAvailable>
-        <cfreturn getCorrelationId()>
+        <cfreturn variables.v3Logger.getCorrelationId()>
     </cfif>
     <cfreturn "NO_LOGGER">
 </cffunction>
