@@ -1494,7 +1494,6 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                     "INSERT INTO contactdetails_tbl (
                         userid,
                         contactFullName,
-                        recordname,
                         contactBirthday,
                         user_yn,
                         IsDeleted,
@@ -1502,7 +1501,6 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                     ) VALUES (
                         :userid,
                         :contactFullName,
-                        :recordname,
                         :contactBirthday,
                         'Y',
                         0,
@@ -1511,7 +1509,6 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                     {
                         userid: { value: arguments.userid, cfsqltype: "cf_sql_integer" },
                         contactFullName: { value: contactData.contactFullName, cfsqltype: "cf_sql_varchar" },
-                        recordname: { value: contactData.contactFullName, cfsqltype: "cf_sql_varchar" },
                         contactBirthday: { value: contactData.contactBirthday, cfsqltype: "cf_sql_date", null: !len(trim(contactData.contactBirthday)) }
                     },
                     { datasource: application.datasource, result: "qInsertResult" }
