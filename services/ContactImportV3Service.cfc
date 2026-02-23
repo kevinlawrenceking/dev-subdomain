@@ -371,7 +371,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
             switch (arguments.lock_purpose) {
                 case "finalize":
                     targetStatus = "finalizing";
-                    validSourceStatuses = ["reviewing"];
+                    validSourceStatuses = ["reviewing", "finalizing"];
                     break;
                 case "parse":
                     targetStatus = "parsing";
@@ -1209,7 +1209,22 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                 detail = { lock_token: lockToken }
             );
 
-            // B) Fetch rows eligible for import
+            // B) Reset rows that failed from a prior finalize attempt so they can be retried
+            var qReset = {};
+            queryExecute(
+                "UPDATE import_v3_rows
+                 SET status = 'ready', import_error = NULL, updated_at = NOW()
+                 WHERE job_id = :job_id
+                   AND status = 'failed'
+                   AND created_contactid IS NULL",
+                { job_id: { value: arguments.job_id, cfsqltype: "cf_sql_integer" } },
+                { datasource: application.datasource, result: "qReset" }
+            );
+            if (qReset.recordCount gt 0) {
+                writeLog(file="importv3", text="[finalizeJob] RESET_FAILED_ROWS job_id=" & arguments.job_id & " count=" & qReset.recordCount);
+            }
+
+            // C) Fetch rows eligible for import
             // Status = 'ready' OR (status = 'dupe' AND user_action = 'import_new')
             var qRows = queryExecute(
                 "SELECT r.row_id, r.row_num, r.status, r.user_action, r.created_contactid
@@ -1491,20 +1506,18 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                 // D1) Insert into contactdetails
                 var qInsertResult = {};
                 queryExecute(
-                    "INSERT INTO contactdetails_tbl (
+                    "INSERT INTO contactdetails (
                         userid,
                         contactFullName,
                         contactBirthday,
                         user_yn,
-                        IsDeleted,
-                        created_at
+                        IsDeleted
                     ) VALUES (
                         :userid,
                         :contactFullName,
                         :contactBirthday,
                         'Y',
-                        0,
-                        NOW()
+                        0
                     )",
                     {
                         userid: { value: arguments.userid, cfsqltype: "cf_sql_integer" },

@@ -1683,18 +1683,23 @@
         }
 
         // Phase 5.2: V3 ENDPOINT - send csrf_token in BOTH header AND body (belt+suspenders)
+        var requestPayload = {
+            job_id: state.jobId,
+            csrf_token: csrfToken
+        };
+        console.log('[V3] ========== FINALIZE REQUEST ==========');
+        console.log('[V3] Finalize payload:', JSON.stringify(requestPayload));
         $j.ajax({
             url: '/ajax/importv3/finalize.cfm?bypass=1',  // V3 ENDPOINT - bypass=1 required
             type: 'POST',
             contentType: 'application/json',
+            dataType: 'json',
             headers: {
                 'X-CSRF-Token': csrfToken  // Phase 5.2: Header CSRF (preferred)
             },
-            data: JSON.stringify({
-                job_id: state.jobId,
-                csrf_token: csrfToken  // Body CSRF (fallback)
-            }),
+            data: JSON.stringify(requestPayload),
             success: function(response) {
+                console.log('[V3] ========== FINALIZE RESPONSE ==========');
                 console.log('[V3] Finalize response:', response);
                 // Log debug breadcrumbs if present
                 if (response.data && response.data.debug) {
@@ -1702,38 +1707,54 @@
                 }
                 $j('#finalize-progress').hide();
 
-                if (response.success) {
+                if (response.success || response.SUCCESS) {
                     // Log import counts for debugging
-                    if (response.data && response.data.counts) {
-                        var c = response.data.counts;
+                    var respData = response.data || response.DATA || {};
+                    if (respData.counts || respData.COUNTS) {
+                        var c = respData.counts || respData.COUNTS;
                         console.log('[V3] Finalize counts: imported_new=' + (c.imported_new || c.IMPORTED_NEW || 0) +
                             ' updated=' + (c.updated_existing || c.UPDATED_EXISTING || 0) +
                             ' skipped_already=' + (c.skipped_already_imported || c.SKIPPED_ALREADY_IMPORTED || 0) +
                             ' failed=' + (c.failed || c.FAILED || 0));
                     }
-                    if (response.data && response.data.warnings) {
-                        var w = response.data.warnings || response.data.WARNINGS || [];
+                    if (respData.warnings || respData.WARNINGS) {
+                        var w = respData.warnings || respData.WARNINGS || [];
                         if (w.length > 0) {
                             console.warn('[V3] Finalize warnings:', w);
                         }
                     }
-                    showAlert('success', response.message || 'Import completed successfully!');
+                    showAlert('success', response.message || response.MESSAGE || 'Import completed successfully!');
                     setTimeout(function() {
                         window.location.reload();
                     }, 1500);
                 } else {
-                    console.error('[V3] Finalize failed with code:', response.code);
+                    var errCode = response.code || response.CODE || 'UNKNOWN';
+                    var errMsg = response.message || response.MESSAGE || 'Import failed';
+                    console.error('[V3] Finalize failed with code:', errCode, 'message:', errMsg);
+                    console.error('[V3] Full failure response:', JSON.stringify(response));
                     // Handle specific error codes with better UX
-                    if (response.code === 'NO_ROWS_ELIGIBLE') {
-                        showAlert('warning', response.message || 'No rows are ready for import. Please review and approve rows first.');
+                    if (errCode === 'NO_ROWS_ELIGIBLE') {
+                        showAlert('warning', errMsg || 'No rows are ready for import. Please review and approve rows first.');
                     } else {
-                        showAlert('error', response.message || 'Import failed');
+                        showAlert('error', errMsg);
                     }
                     $j('#btn-finalize').prop('disabled', false).html('<i class="fe-check-circle"></i> Import <span id="import-count">' + (state.stats.ready || '...') + '</span> Contacts');
                 }
             },
             error: function(xhr, status, error) {
+                console.error('[V3] ========== FINALIZE ERROR ==========');
                 console.error('[V3] Finalize HTTP error:', xhr.status, status, error);
+                console.error('[V3] Response text (first 2000 chars):', (xhr.responseText || '').substring(0, 2000));
+                // Try to parse response even on error
+                try {
+                    var errResp = JSON.parse(xhr.responseText);
+                    console.error('[V3] Parsed error response:', errResp);
+                    if (errResp.data && errResp.data.debug) {
+                        console.error('[V3] Error debug trail:', errResp.data.debug.join(' -> '));
+                    }
+                } catch(e) {
+                    console.error('[V3] Response is not JSON');
+                }
                 showErrorWithDebug(xhr, 'Import failed.');
                 $j('#finalize-progress').hide();
                 $j('#btn-finalize').prop('disabled', false);
