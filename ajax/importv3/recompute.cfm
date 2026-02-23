@@ -1284,34 +1284,34 @@
      it and returns the exact diagnostic JSON schema.
      ============================================================ --->
 <cfcatch type="any">
-    <cfset var outerElapsed = getTickCount() - variables.outerStartTime>
-    <cfset var outerDsn = "">
-    <cfset var outerDbName = "">
+    <cfset variables.outerElapsed = getTickCount() - variables.outerStartTime>
+    <cfset variables.outerDsn = "">
+    <cfset variables.outerDbName = "">
     <cftry>
-        <cfset outerDsn = structKeyExists(application, "datasource") ? application.datasource : "UNDEFINED">
-        <cfset var qDb = queryExecute("SELECT DATABASE() AS db_name", {}, { datasource: application.datasource })>
-        <cfset outerDbName = qDb.db_name>
+        <cfset variables.outerDsn = structKeyExists(application, "datasource") ? application.datasource : "UNDEFINED">
+        <cfset variables.outerQDb = queryExecute("SELECT DATABASE() AS db_name", {}, { datasource: application.datasource })>
+        <cfset variables.outerDbName = variables.outerQDb.db_name>
     <cfcatch type="any">
-        <cfset outerDbName = "QUERY_FAILED: " & cfcatch.message>
+        <cfset variables.outerDbName = "QUERY_FAILED: " & cfcatch.message>
     </cfcatch>
     </cftry>
 
     <!--- Build the exact diagnostic schema requested --->
-    <cfset var outerResponse = {
+    <cfset variables.outerResponse = {
         "ok": false,
         "stage": "outermost_catch",
-        "dsn": outerDsn,
-        "db_name": outerDbName,
+        "dsn": variables.outerDsn,
+        "db_name": variables.outerDbName,
         "message": cfcatch.message,
         "detail": cfcatch.detail,
         "type": cfcatch.type,
         "sql": structKeyExists(cfcatch, "sql") ? cfcatch.sql : "",
         "tagcontext": structKeyExists(cfcatch, "tagcontext") ? cfcatch.tagcontext : [],
         "debug": variables.outerDebugSteps,
-        "elapsed_ms": outerElapsed
+        "elapsed_ms": variables.outerElapsed
     }>
     <cflog file="importv3" text="V3 recompute OUTERMOST CATCH: #cfcatch.message# | #cfcatch.detail# | type=#cfcatch.type#" type="fatal">
-    <cfcontent type="application/json; charset=utf-8" reset="true"><cfoutput>#serializeJSON(outerResponse)#</cfoutput><cfabort>
+    <cfcontent type="application/json; charset=utf-8" reset="true"><cfoutput>#serializeJSON(variables.outerResponse)#</cfoutput><cfabort>
 </cfcatch>
 </cftry>
 </cfsilent>
