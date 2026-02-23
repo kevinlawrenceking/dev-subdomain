@@ -110,35 +110,83 @@
         <cfset session.csrf_token = createUUID()>
     </cfif>
 
-    <!--- C) Parse JSON request body (Phase 5.2: tolerant parsing) --->
+    <!--- C) Parse JSON request body (Phase 5.2: tolerant parsing, with diagnostics) --->
     <cfset variables.body = {}>
+    <cfset variables.rawBodyLen = 0>
+    <cfset variables.bodyParseError = "">
     <cftry>
         <cfset variables.httpData = getHttpRequestData()>
-        <cfset variables.rawBody = toString(variables.httpData.content)>
+        <cfset variables.rawContent = variables.httpData.content>
+
+        <!--- Handle byte array vs string: isBinary check + explicit UTF-8 decode --->
+        <cfif isBinary(variables.rawContent)>
+            <cfset variables.rawBody = charsetEncode(variables.rawContent, "utf-8")>
+        <cfelseif isSimpleValue(variables.rawContent)>
+            <cfset variables.rawBody = toString(variables.rawContent)>
+        <cfelse>
+            <cfset variables.rawBody = "">
+        </cfif>
+
+        <cfset variables.rawBodyLen = len(variables.rawBody)>
         <cfset variables.body = parseJsonBody(variables.rawBody)>
         <cfcatch type="any">
             <cfset variables.body = {}>
+            <cfset variables.bodyParseError = cfcatch.message>
         </cfcatch>
     </cftry>
     <cfset arrayAppend(variables.debug, "body_parsed")>
+    <cfset arrayAppend(variables.debug, "body_len=" & variables.rawBodyLen & " keys=" & structKeyList(variables.body))>
 
     <!--- D) Read CSRF token: header -> body -> form (Phase 5.2: belt+suspenders) --->
     <cfset variables.csrfToken = "">
     <cfset variables.csrfSource = "none">
 
-    <cfif structKeyExists(cgi, "http_x_csrf_token") and len(trim(cgi.http_x_csrf_token))>
-        <cfset variables.csrfToken = trim(cgi.http_x_csrf_token)>
-        <cfset variables.csrfSource = "header">
-    <cfelseif structKeyExists(variables.body, "csrf_token") and len(trim(variables.body.csrf_token))>
-        <cfset variables.csrfToken = trim(variables.body.csrf_token)>
-        <cfset variables.csrfSource = "body">
-    <cfelseif structKeyExists(form, "csrf_token") and len(trim(form.csrf_token))>
-        <cfset variables.csrfToken = trim(form.csrf_token)>
-        <cfset variables.csrfSource = "form">
+    <!--- D.1: Check HTTP header via getHttpRequestData().headers (more reliable than CGI scope) --->
+    <cftry>
+        <cfset variables.reqHeaders = variables.httpData.headers>
+        <cfif structKeyExists(variables.reqHeaders, "X-CSRF-Token") and len(trim(variables.reqHeaders["X-CSRF-Token"]))>
+            <cfset variables.csrfToken = trim(variables.reqHeaders["X-CSRF-Token"])>
+            <cfset variables.csrfSource = "header">
+        <cfelseif structKeyExists(variables.reqHeaders, "x-csrf-token") and len(trim(variables.reqHeaders["x-csrf-token"]))>
+            <cfset variables.csrfToken = trim(variables.reqHeaders["x-csrf-token"])>
+            <cfset variables.csrfSource = "header">
+        </cfif>
+    <cfcatch type="any"></cfcatch>
+    </cftry>
+
+    <!--- D.2: Fallback to CGI scope --->
+    <cfif not len(variables.csrfToken)>
+        <cfif structKeyExists(cgi, "http_x_csrf_token") and len(trim(cgi.http_x_csrf_token))>
+            <cfset variables.csrfToken = trim(cgi.http_x_csrf_token)>
+            <cfset variables.csrfSource = "cgi_header">
+        </cfif>
+    </cfif>
+
+    <!--- D.3: Fallback to JSON body --->
+    <cfif not len(variables.csrfToken)>
+        <cfif structKeyExists(variables.body, "csrf_token") and len(trim(variables.body.csrf_token))>
+            <cfset variables.csrfToken = trim(variables.body.csrf_token)>
+            <cfset variables.csrfSource = "body">
+        </cfif>
+    </cfif>
+
+    <!--- D.4: Fallback to form scope --->
+    <cfif not len(variables.csrfToken)>
+        <cfif structKeyExists(form, "csrf_token") and len(trim(form.csrf_token))>
+            <cfset variables.csrfToken = trim(form.csrf_token)>
+            <cfset variables.csrfSource = "form">
+        </cfif>
     </cfif>
 
     <cfif not len(variables.csrfToken)>
-        <cfset returnError("CSRF_INVALID", "CSRF token is required", 403, { csrf_source: "missing" })>
+        <cfset returnError("CSRF_INVALID", "CSRF token is required", 403, {
+            csrf_source: "missing",
+            body_len: variables.rawBodyLen,
+            body_keys: structKeyList(variables.body),
+            body_parse_error: variables.bodyParseError,
+            has_header: structKeyExists(cgi, "http_x_csrf_token"),
+            content_type: structKeyExists(variables.httpData, "headers") and structKeyExists(variables.httpData.headers, "Content-Type") ? variables.httpData.headers["Content-Type"] : "unknown"
+        })>
     </cfif>
     <cfif variables.csrfToken neq session.csrf_token>
         <cfset returnError("CSRF_INVALID", "Invalid CSRF token", 403, { csrf_source: variables.csrfSource })>
