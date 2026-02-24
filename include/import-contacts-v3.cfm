@@ -493,31 +493,31 @@ input[type="date"].form-control-sm {
             <div class="row mb-3" id="stats-bar">
                 <div class="col">
                     <div class="card card-body p-2 text-center" style="background: linear-gradient(135deg, var(--ct-link-color), var(--ct-link-hover-color)); color:##fff;">
-                        <div class="h4 mb-0" id="stat-total"><i class="fe-loader fe-spin" style="font-size:16px"></i></div>
+                        <div class="h4 mb-0" id="stat-total" style="color:##d0e8f7;"><i class="fe-loader fe-spin" style="font-size:16px"></i></div>
                         <small>Total</small>
                     </div>
                 </div>
                 <div class="col">
                     <div class="card card-body p-2 text-center" style="background: linear-gradient(135deg, var(--ct-link-color), var(--ct-link-hover-color)); color:##fff;">
-                        <div class="h4 mb-0" id="stat-ready"><i class="fe-loader fe-spin" style="font-size:16px"></i></div>
+                        <div class="h4 mb-0" id="stat-ready" style="color:##d0e8f7;"><i class="fe-loader fe-spin" style="font-size:16px"></i></div>
                         <small>Ready</small>
                     </div>
                 </div>
                 <div class="col">
                     <div class="card card-body p-2 text-center" style="background: linear-gradient(135deg, var(--ct-link-color), var(--ct-link-hover-color)); color:##fff;">
-                        <div class="h4 mb-0" id="stat-problem"><i class="fe-loader fe-spin" style="font-size:16px"></i></div>
+                        <div class="h4 mb-0" id="stat-problem" style="color:##d0e8f7;"><i class="fe-loader fe-spin" style="font-size:16px"></i></div>
                         <small>Problems</small>
                     </div>
                 </div>
                 <div class="col">
                     <div class="card card-body p-2 text-center" style="background: linear-gradient(135deg, var(--ct-link-color), var(--ct-link-hover-color)); color:##fff;">
-                        <div class="h4 mb-0" id="stat-dupe"><i class="fe-loader fe-spin" style="font-size:16px"></i></div>
+                        <div class="h4 mb-0" id="stat-dupe" style="color:##d0e8f7;"><i class="fe-loader fe-spin" style="font-size:16px"></i></div>
                         <small>Duplicates</small>
                     </div>
                 </div>
                 <div class="col">
                     <div class="card card-body p-2 text-center" style="background: linear-gradient(135deg, var(--ct-link-color), var(--ct-link-hover-color)); color:##fff;">
-                        <div class="h4 mb-0" id="stat-imported"><i class="fe-loader fe-spin" style="font-size:16px"></i></div>
+                        <div class="h4 mb-0" id="stat-imported" style="color:##d0e8f7;"><i class="fe-loader fe-spin" style="font-size:16px"></i></div>
                         <small>Imported</small>
                     </div>
                 </div>
@@ -527,7 +527,7 @@ input[type="date"].form-control-sm {
             <div class="mb-2">
                 <div class="input-group input-group-sm" style="max-width:350px;">
                     <input type="text" class="form-control" id="row-search" placeholder="Search by name, email, company, phone...">
-                    <span class="input-group-text"><i class="fe-search"></i></span>
+                    <span class="input-group-text" style="display:flex;align-items:center;"><i class="fe-search" style="font-size:18px;"></i></span>
                     <button class="btn btn-outline-secondary" type="button" id="row-search-clear" style="display:none;">
                         <i class="fe-x"></i>
                     </button>

@@ -919,6 +919,17 @@
 
                 $j('#import-count').text(stats.ready || 0);
 
+                // If all rows are imported, reload to show completed view
+                var total = stats.total || 0;
+                var imported = stats.imported || 0;
+                if (total > 0 && imported >= total) {
+                    window.location.reload();
+                    return;
+                }
+
+                // Show/hide "Continue to Import" button based on ready count
+                $j('#btn-goto-finalize').toggle((stats.ready || 0) > 0);
+
                 // Show warning if no ready rows
                 if ((stats.ready || 0) === 0) {
                     $j('#finalize-warning').show();
