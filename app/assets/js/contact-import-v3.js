@@ -1784,7 +1784,7 @@
         var html = '<div id="' + id + '" style="background:' + c.bg + ';border:1px solid ' + c.border + ';color:' + c.text + ';' +
             'padding:12px 40px 12px 16px;border-radius:6px;margin-bottom:10px;position:relative;' +
             'box-shadow:0 4px 12px rgba(0,0,0,0.15);font-size:14px;opacity:0;transition:opacity 0.3s ease;">' +
-            '<i class="' + icon + '" style="margin-right:8px;"></i>' + escapeHtml(message) +
+            '<i class="' + icon + '" style="margin-right:8px;"></i>' + message +
             '<span style="position:absolute;top:8px;right:12px;cursor:pointer;font-size:18px;line-height:1;opacity:0.6;" ' +
             'onclick="this.parentElement.remove()">&times;</span></div>';
 

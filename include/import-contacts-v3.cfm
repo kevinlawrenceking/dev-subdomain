@@ -320,11 +320,6 @@ input[type="date"].form-control-sm {
             <strong>File:</strong> #activeJob.source_filename#
             <span class="mx-2">|</span>
             <strong>Status:</strong> <span id="current-status" class="status-badge status-#lcase(activeJob.status)#">#activeJob.status#</span>
-            <cfif listFindNoCase("completed,failed,cancelled", activeJob.status)>
-                <button class="btn btn-sm btn-outline-warning ms-2" id="btn-reset-to-review" data-job-id="#activeJob.job_id#" title="Move job back to reviewing so you can re-examine or re-import rows">
-                    <i class="fe-rotate-ccw"></i> Reset to Review
-                </button>
-            </cfif>
             <cfif activeJob.status neq "cancelled" and activeJob.status neq "completed">
                 <button class="btn btn-sm btn-outline-danger ms-2" id="btn-cancel-job" data-job-id="#activeJob.job_id#" title="Cancel this import job">
                     <i class="fe-x-circle"></i> Cancel
@@ -332,21 +327,6 @@ input[type="date"].form-control-sm {
             </cfif>
         </div>
         <div class="d-flex align-items-center gap-2">
-            <cfif listFindNoCase("reviewing,finalizing,completed,failed", activeJob.status)>
-            <div class="dropdown d-inline-block">
-                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" id="status-change-btn">
-                    Change Status
-                </button>
-                <ul class="dropdown-menu">
-                    <cfif activeJob.status eq "finalizing" or activeJob.status eq "completed" or activeJob.status eq "failed">
-                    <li><a class="dropdown-item btn-change-status" href="##" data-new-status="reviewing"><i class="fe-refresh-cw"></i> Return to Review</a></li>
-                    </cfif>
-                    <cfif activeJob.status neq "cancelled">
-                    <li><a class="dropdown-item btn-change-status text-danger" href="##" data-new-status="cancelled"><i class="fe-x-circle"></i> Cancel Import</a></li>
-                    </cfif>
-                </ul>
-            </div>
-            </cfif>
             <a href="/app/contacts-import-v3/" class="btn btn-sm btn-outline-secondary">Start New Import</a>
         </div>
     </div>
@@ -424,25 +404,25 @@ input[type="date"].form-control-sm {
             <!--- Stats bar --->
             <div class="row mb-3" id="stats-bar">
                 <div class="col">
-                    <div class="card card-body p-2 text-center">
+                    <div class="card card-body p-2 text-center" style="background: linear-gradient(135deg, var(--ct-link-color), var(--ct-link-hover-color)); color:##fff;">
                         <div class="h4 mb-0" id="stat-total"><i class="fe-loader fe-spin" style="font-size:16px"></i></div>
-                        <small class="text-muted">Total</small>
+                        <small>Total</small>
                     </div>
                 </div>
                 <div class="col">
-                    <div class="card card-body p-2 text-center bg-success text-white">
+                    <div class="card card-body p-2 text-center" style="background: linear-gradient(135deg, var(--ct-link-color), var(--ct-link-hover-color)); color:##fff;">
                         <div class="h4 mb-0" id="stat-ready"><i class="fe-loader fe-spin" style="font-size:16px"></i></div>
                         <small>Ready</small>
                     </div>
                 </div>
                 <div class="col">
-                    <div class="card card-body p-2 text-center bg-danger text-white">
+                    <div class="card card-body p-2 text-center" style="background: linear-gradient(135deg, var(--ct-link-color), var(--ct-link-hover-color)); color:##fff;">
                         <div class="h4 mb-0" id="stat-problem"><i class="fe-loader fe-spin" style="font-size:16px"></i></div>
                         <small>Problems</small>
                     </div>
                 </div>
                 <div class="col">
-                    <div class="card card-body p-2 text-center bg-warning">
+                    <div class="card card-body p-2 text-center" style="background: linear-gradient(135deg, var(--ct-link-color), var(--ct-link-hover-color)); color:##fff;">
                         <div class="h4 mb-0" id="stat-dupe"><i class="fe-loader fe-spin" style="font-size:16px"></i></div>
                         <small>Duplicates</small>
                     </div>
@@ -458,8 +438,8 @@ input[type="date"].form-control-sm {
             <!--- Search bar --->
             <div class="mb-2">
                 <div class="input-group input-group-sm" style="max-width:350px;">
-                    <span class="input-group-text"><i class="fe-search"></i></span>
                     <input type="text" class="form-control" id="row-search" placeholder="Search by name, email, company, phone...">
+                    <span class="input-group-text"><i class="fe-search"></i></span>
                     <button class="btn btn-outline-secondary" type="button" id="row-search-clear" style="display:none;">
                         <i class="fe-x"></i>
                     </button>
