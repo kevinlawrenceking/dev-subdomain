@@ -1256,16 +1256,22 @@
     }
 
     function saveEdit() {
-        // Reverse map camelCase form names back to underscore for the server
-        var reverseKeyMap = { firstName: 'first_name', lastName: 'last_name', contactType: 'contact_type', contactFullName: 'contact_full_name' };
+        // Send camelCase keys as-is - they match fact field_name in the DB
         var data = {};
 
         $j('#edit-form input, #edit-form select, #edit-form textarea').each(function() {
             var name = $j(this).attr('name');
             if (name) {
-                data[reverseKeyMap[name] || name] = $j(this).val();
+                data[name] = $j(this).val();
             }
         });
+
+        // Recompute contactFullName from first + last
+        if (data.firstName !== undefined || data.lastName !== undefined) {
+            var fn = (data.firstName || '').trim();
+            var ln = (data.lastName || '').trim();
+            data.contactFullName = (fn + ' ' + ln).trim();
+        }
 
         console.log('[V3] Saving edit for row:', currentEditRowId, 'Data:', data);
 

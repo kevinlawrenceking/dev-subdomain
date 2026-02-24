@@ -2128,7 +2128,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                 searchClause = "AND r.row_id IN (
                     SELECT DISTINCT f.row_id FROM import_v3_facts f
                     WHERE f.row_id IN (SELECT r2.row_id FROM import_v3_rows r2 WHERE r2.job_id = :job_id_search)
-                      AND f.field_name IN ('first_name','last_name','contactFullName','email_business','email_personal','company','phone_work','phone_mobile')
+                      AND f.field_name IN ('firstName','lastName','contactFullName','email_business','email_personal','company','phone_work','phone_mobile')
                       AND f.normalized_value LIKE :search_term
                 )";
             }
@@ -2594,9 +2594,12 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
 
             if (len(fullName)) {
                 queryExecute(
-                    "UPDATE import_v3_facts
-                     SET normalized_value = :fullName, updated_at = NOW()
-                     WHERE row_id = :row_id AND field_name = 'contactFullName'",
+                    "INSERT INTO import_v3_facts (row_id, column_id, field_name, raw_value, normalized_value, is_valid, updated_at)
+                     VALUES (:row_id, 0, 'contactFullName', :fullName, :fullName, 1, NOW())
+                     ON DUPLICATE KEY UPDATE
+                         raw_value = :fullName,
+                         normalized_value = :fullName,
+                         updated_at = NOW()",
                     {
                         row_id: { value: arguments.row_id, cfsqltype: "cf_sql_integer" },
                         fullName: { value: fullName, cfsqltype: "cf_sql_varchar" }
