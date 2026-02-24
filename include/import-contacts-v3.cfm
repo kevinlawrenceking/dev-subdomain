@@ -212,6 +212,60 @@ input[type="date"].form-control-sm {
     padding-top: 0.2rem;
     padding-bottom: 0.2rem;
 }
+
+/* Breadcrumb stepper */
+.import-stepper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 24px;
+    padding: 16px 0;
+}
+.import-stepper .step-item {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    font-weight: 500;
+    color: #adb5bd;
+}
+.import-stepper .step-item .step-circle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #dee2e6;
+    color: #6c757d;
+    font-size: 14px;
+    font-weight: 600;
+    margin-right: 8px;
+    flex-shrink: 0;
+}
+.import-stepper .step-item.active .step-circle {
+    background: #406e8e;
+    color: #fff;
+}
+.import-stepper .step-item.active .step-label {
+    color: #406e8e;
+    font-weight: 600;
+}
+.import-stepper .step-item.completed .step-circle {
+    background: #28a745;
+    color: #fff;
+}
+.import-stepper .step-item.completed .step-label {
+    color: #28a745;
+}
+.import-stepper .step-arrow {
+    margin: 0 16px;
+    color: #dee2e6;
+    font-size: 16px;
+}
+.import-stepper .step-item.completed + .step-arrow,
+.import-stepper .step-item.active + .step-arrow {
+    color: #406e8e;
+}
 </style>
 
 <!--- ============================================================
@@ -350,22 +404,56 @@ input[type="date"].form-control-sm {
     </cfif>
 
     <!--- ============================================================
+         BREADCRUMB STEPPER - Shows progress through all 4 steps
+         ============================================================ --->
+    <cfset stepNum = 2><!--- default: Parse --->
+    <cfif activeJob.status eq "created" or activeJob.status eq "pending" or activeJob.status eq "uploaded" or activeJob.status eq "parsing">
+        <cfset stepNum = 2>
+    <cfelseif activeJob.status eq "parsed" or activeJob.status eq "mapping">
+        <cfset stepNum = 2><!--- still step 2 (Map Columns is part of Parse step) --->
+    <cfelseif activeJob.status eq "reviewing" or activeJob.status eq "importing">
+        <cfset stepNum = 3>
+    <cfelseif activeJob.status eq "finalizing">
+        <cfset stepNum = 4>
+    <cfelseif activeJob.status eq "completed">
+        <cfset stepNum = 5><!--- all done --->
+    </cfif>
+
+    <div class="import-stepper" id="import-stepper">
+        <div class="step-item <cfif stepNum gt 1>completed<cfelseif stepNum eq 1>active</cfif>">
+            <span class="step-circle"><cfif stepNum gt 1><i class="fe-check"></i><cfelse>1</cfif></span>
+            <span class="step-label">Upload</span>
+        </div>
+        <span class="step-arrow"><i class="fe-chevron-right"></i></span>
+        <div class="step-item <cfif stepNum gt 2>completed<cfelseif stepNum eq 2>active</cfif>">
+            <span class="step-circle"><cfif stepNum gt 2><i class="fe-check"></i><cfelse>2</cfif></span>
+            <span class="step-label">Parse</span>
+        </div>
+        <span class="step-arrow"><i class="fe-chevron-right"></i></span>
+        <div class="step-item <cfif stepNum gt 3>completed<cfelseif stepNum eq 3>active</cfif>">
+            <span class="step-circle"><cfif stepNum gt 3><i class="fe-check"></i><cfelse>3</cfif></span>
+            <span class="step-label">Review</span>
+        </div>
+        <span class="step-arrow"><i class="fe-chevron-right"></i></span>
+        <div class="step-item <cfif stepNum gt 4>completed<cfelseif stepNum eq 4>active</cfif>">
+            <span class="step-circle"><cfif stepNum gt 4><i class="fe-check"></i><cfelse>4</cfif></span>
+            <span class="step-label">Import</span>
+        </div>
+    </div>
+
+    <!--- ============================================================
          WORKFLOW STEPS - Show appropriate step based on job status
-         Step 2: Parse | Step 2: Map Columns | Step 3: Review | Step 4: Finalize
+         Step 2: Parse & Map Columns | Step 3: Review | Step 4: Finalize
          ============================================================ --->
     <cfif activeJob.status eq "created" or activeJob.status eq "pending" or activeJob.status eq "uploaded">
-        <!--- STEP 2a: Parse File - job is uploaded but not yet parsed --->
+        <!--- STEP 2: Auto-parse - triggers automatically via JS --->
         <div class="import-step" id="step-parse">
             <h5><span class="step-number">2</span> Parsing File</h5>
-            <p>Click to parse and analyze your file.</p>
-            <button class="btn btn-primary" id="btn-parse" style="background: linear-gradient(135deg, var(--ct-link-color), var(--ct-link-hover-color)); border:none;">
-                <i class="fe-play"></i> Parse File
-            </button>
-            <div class="import-progress mt-3" id="parse-progress" style="display:none">
+            <div class="import-progress mt-3" id="parse-progress">
                 <div class="progress">
                     <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%; background: linear-gradient(135deg, var(--ct-link-color), var(--ct-link-hover-color));"></div>
                 </div>
-                <p class="mt-2 text-center">Parsing file...</p>
+                <p class="mt-2 text-center">Parsing and analyzing your file...</p>
             </div>
         </div>
 

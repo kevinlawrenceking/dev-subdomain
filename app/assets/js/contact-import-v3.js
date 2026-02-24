@@ -89,7 +89,10 @@
             console.log('[V3] Active job:', state.jobId, 'Status:', status);
             console.log('[V3] state object:', JSON.stringify(state));
 
-            if (status === 'parsed' || status === 'mapping') {
+            if (status === 'uploaded' || status === 'created' || status === 'pending') {
+                // Auto-parse: no button needed, just start parsing immediately
+                parseFile();
+            } else if (status === 'parsed' || status === 'mapping') {
                 loadColumnMappings();
             } else if (status === 'reviewing' || status === 'finalizing' || status === 'completed') {
                 loadRows();
@@ -322,13 +325,6 @@
 
     function initJobActions() {
         console.log('[V3] initJobActions called');
-        // Parse button
-        var parseBtn = $j('#btn-parse');
-        console.log('[V3] Parse button found:', parseBtn.length > 0);
-        parseBtn.click(function() {
-            console.log('[V3] Parse button CLICKED!');
-            parseFile();
-        });
 
         // Confirm mapping button
         $j('#btn-confirm-mapping').click(function() {
@@ -441,7 +437,6 @@
 
         console.log('[V3] Sending request to /ajax/importv3/parse.cfm?bypass=1');
 
-        $j('#btn-parse').prop('disabled', true);
         $j('#parse-progress').show();
 
         $j.ajax({
@@ -471,7 +466,6 @@
                     var parseMsg = cfGet(response, 'message') || 'Parsing failed';
                     console.log('[V3] Parse failed:', parseMsg);
                     showAlert('error', parseMsg);
-                    $j('#btn-parse').prop('disabled', false);
                     $j('#parse-progress').hide();
                 }
             },
@@ -483,7 +477,6 @@
 
                 // Try to parse debug from error response
                 showErrorWithDebug(xhr, 'Parsing failed.');
-                $j('#btn-parse').prop('disabled', false);
                 $j('#parse-progress').hide();
             }
         });
@@ -690,6 +683,7 @@
         $j('#btn-goto-finalize').click(function() {
             $j('#step-review').hide();
             $j('#step-finalize').show();
+            updateStepper(4);
             window.scrollTo(0, 0);
         });
 
@@ -697,6 +691,7 @@
         $j('#btn-back-to-review').click(function() {
             $j('#step-finalize').hide();
             $j('#step-review').show();
+            updateStepper(3);
             window.scrollTo(0, 0);
         });
     }
@@ -1733,6 +1728,27 @@
     // ========================================
     // UTILITIES
     // ========================================
+
+    // Update breadcrumb stepper to reflect current step
+    function updateStepper(activeStep) {
+        var $stepper = $j('#import-stepper');
+        if (!$stepper.length) return;
+        $stepper.find('.step-item').each(function(idx) {
+            var stepNum = idx + 1;
+            var $item = $j(this);
+            var $circle = $item.find('.step-circle');
+            $item.removeClass('active completed');
+            if (stepNum < activeStep) {
+                $item.addClass('completed');
+                $circle.html('<i class="fe-check"></i>');
+            } else if (stepNum === activeStep) {
+                $item.addClass('active');
+                $circle.html(stepNum);
+            } else {
+                $circle.html(stepNum);
+            }
+        });
+    }
 
     // Bootstrap 5 modal helper (BS5 dropped jQuery .modal() plugin)
     function bsModal(selector, action) {
