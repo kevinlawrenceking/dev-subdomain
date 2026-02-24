@@ -217,15 +217,6 @@ input[type="date"].form-control-sm {
 <!--- ============================================================
      PAGE HEADER
      ============================================================ --->
-<div class="row">
-    <div class="col-12">
-        <div class="page-title-box">
-            <h4 class="page-title">
-                Import Contacts
-            </h4>
-        </div>
-    </div>
-</div>
 
 <!--- Toast alert container for V3 AJAX notifications --->
 <div id="v3-alert-container"></div>
@@ -509,30 +500,11 @@ input[type="date"].form-control-sm {
                 </li>
             </ul>
 
-            <!--- Select all across pages banner --->
-            <div class="alert alert-info py-2 mb-0" id="select-all-banner" style="display:none;">
-                <span id="select-all-page-text"></span>
-                <a href="##" id="select-all-matching" class="fw-bold ms-1"></a>
-                <a href="##" id="clear-all-selection" class="ms-2 text-muted" style="display:none;">Clear selection</a>
-            </div>
-
-            <!--- Bulk actions --->
-            <div class="d-flex justify-content-between align-items-center my-3" id="bulk-actions" style="display:none;">
-                <div>
-                    <span class="ml-3" id="selected-count">0 selected</span>
-                </div>
-                <div>
-                    <button class="btn btn-sm btn-outline-secondary" id="bulk-ignore"><i class="fe-x-circle"></i> Exclude from Import</button>
-                    <button class="btn btn-sm btn-outline-success" id="bulk-import"><i class="fe-check-circle"></i> Include in Import</button>
-                </div>
-            </div>
-
             <!--- Review table --->
             <div class="table-responsive">
                 <table class="table table-sm table-hover review-table" id="review-table">
                     <thead>
                         <tr>
-                            <th width="30"><input type="checkbox" id="check-all"></th>
                             <th width="40">##</th>
                             <th>Name</th>
                             <th>Email</th>
@@ -543,7 +515,7 @@ input[type="date"].form-control-sm {
                         </tr>
                     </thead>
                     <tbody id="review-tbody">
-                        <tr><td colspan="8" class="text-center p-4"><i class="fe-loader fe-spin"></i> Loading rows...</td></tr>
+                        <tr><td colspan="7" class="text-center p-4"><i class="fe-loader fe-spin"></i> Loading rows...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -556,12 +528,26 @@ input[type="date"].form-control-sm {
                     </ul>
                 </nav>
             </div>
+
+            <!--- Continue to finalize button --->
+            <cfif activeJob.status neq "completed">
+            <div class="text-end mt-4">
+                <button class="btn btn-lg" id="btn-goto-finalize" style="background: linear-gradient(135deg, var(--ct-link-color), var(--ct-link-hover-color)); color:##fff; border:none;">
+                    Continue to Import <i class="fe-arrow-right"></i>
+                </button>
+            </div>
+            </cfif>
         </div>
 
         <!--- STEP 4: Preview & Finalize Import
               Dry-run shows what will happen; Finalize creates contacts --->
         <cfif activeJob.status neq "completed">
-        <div class="import-step" id="step-finalize">
+        <div class="import-step" id="step-finalize" style="display:none;">
+            <div class="mb-3">
+                <button class="btn btn-sm btn-outline-secondary" id="btn-back-to-review">
+                    <i class="fe-arrow-left"></i> Back to Review
+                </button>
+            </div>
             <h5><span class="step-number">4</span> Preview & Finalize Import</h5>
             <p class="text-muted">Review what will be imported, then finalize to import contacts into your account.</p>
             <div class="alert alert-warning" id="finalize-warning" style="display:none">

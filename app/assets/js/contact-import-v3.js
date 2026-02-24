@@ -174,8 +174,6 @@
         currentFilter: '',
         currentPage: 1,
         pageSize: 50,
-        selectedRows: new Set(),
-        selectAllMatchingFilter: '',
         stats: {},
         searchQuery: ''
     };
@@ -688,52 +686,18 @@
             loadRows();
         });
 
-        // Check all (page-level)
-        $j('#check-all').change(function() {
-            var checked = this.checked;
-            $j('.row-checkbox').each(function() {
-                this.checked = checked;
-                var rowId = parseInt($j(this).data('row-id'));
-                if (checked) {
-                    state.selectedRows.add(rowId);
-                } else {
-                    state.selectedRows.delete(rowId);
-                }
-            });
-            state.selectAllMatchingFilter = '';
-            updateSelectedCount();
-            updateSelectAllBanner(checked);
+        // Wizard navigation: Step 3 -> Step 4
+        $j('#btn-goto-finalize').click(function() {
+            $j('#step-review').hide();
+            $j('#step-finalize').show();
+            window.scrollTo(0, 0);
         });
 
-        // Select all matching rows across all pages
-        $j('#select-all-matching').click(function(e) {
-            e.preventDefault();
-            state.selectAllMatchingFilter = state.currentFilter || 'all';
-            var totalForFilter = getTotalForCurrentFilter();
-            $j('#select-all-banner').html(
-                '<strong>All ' + totalForFilter + ' matching rows selected.</strong> ' +
-                '<a href="#" id="clear-all-selection" class="ms-2">Clear selection</a>'
-            ).show();
-            $j('#clear-all-selection').click(function(ev) {
-                ev.preventDefault();
-                clearAllSelection();
-            });
-            updateSelectedCount();
-        });
-
-        // Clear all selection
-        $j('#clear-all-selection').click(function(e) {
-            e.preventDefault();
-            clearAllSelection();
-        });
-
-        // Bulk actions
-        $j('#bulk-ignore').click(function() {
-            bulkAction('ignore');
-        });
-
-        $j('#bulk-import').click(function() {
-            bulkAction('create');
+        // Wizard navigation: Step 4 -> Step 3
+        $j('#btn-back-to-review').click(function() {
+            $j('#step-finalize').hide();
+            $j('#step-review').show();
+            window.scrollTo(0, 0);
         });
     }
 
@@ -741,7 +705,7 @@
         console.log('[V3] Loading rows for job:', state.jobId, 'Filter:', state.currentFilter);
 
         // Phase 7: Show loading indicator
-        $j('#review-tbody').html('<tr><td colspan="8" class="text-center p-4"><i class="fe-loader fe-spin"></i> Loading rows...</td></tr>');
+        $j('#review-tbody').html('<tr><td colspan="7" class="text-center p-4"><i class="fe-loader fe-spin"></i> Loading rows...</td></tr>');
 
         var url = '/ajax/importv3/rows.cfm?bypass=1&job_id=' + state.jobId +
             '&status=' + encodeURIComponent(state.currentFilter) +
@@ -770,11 +734,11 @@
                 updateStats();
             } else {
                 console.error('[V3] Load rows failed with code:', cfGet(response, 'code'));
-                $j('#review-tbody').html('<tr><td colspan="8" class="text-center text-danger">' + escapeHtml(cfGet(response, 'message') || 'Unknown error') + '</td></tr>');
+                $j('#review-tbody').html('<tr><td colspan="7" class="text-center text-danger">' + escapeHtml(cfGet(response, 'message') || 'Unknown error') + '</td></tr>');
             }
         }).fail(function(xhr, status, error) {
             console.error('[V3] Load rows HTTP error:', xhr.status, status, error);
-            $j('#review-tbody').html('<tr><td colspan="8" class="text-center text-danger">Failed to load rows. Please refresh the page.</td></tr>');
+            $j('#review-tbody').html('<tr><td colspan="7" class="text-center text-danger">Failed to load rows. Please refresh the page.</td></tr>');
         });
     }
 
@@ -786,7 +750,7 @@
 
     function renderRows(rows) {
         if (!rows || rows.length === 0) {
-            $j('#review-tbody').html('<tr><td colspan="8" class="text-center text-muted p-4">No rows found</td></tr>');
+            $j('#review-tbody').html('<tr><td colspan="7" class="text-center text-muted p-4">No rows found</td></tr>');
             return;
         }
 
@@ -816,7 +780,6 @@
 
             var rowClass = status === 'imported' ? 'table-light' : (status === 'ignored' ? 'table-light text-muted' : '');
             html += '<tr data-row-id="' + rowId + '" class="' + rowClass + '">';
-            html += '<td><input type="checkbox" class="row-checkbox" data-row-id="' + rowId + '" ' + (status === 'imported' ? 'disabled' : '') + '></td>';
             html += '<td>' + rowNum + '</td>';
             html += '<td>' + escapeHtml(name) + '</td>';
             html += '<td class="' + emailClass + '">' + escapeHtml(email) + '</td>';
@@ -844,7 +807,7 @@
 
             // Show validation errors
             if (status === 'problem' && errors && errors.length > 0) {
-                html += '<tr class="bg-light"><td></td><td colspan="7">';
+                html += '<tr class="bg-light"><td colspan="7">';
                 html += '<small class="text-danger">';
                 errors.forEach(function(err) {
                     var errField = err.field || err.FIELD || '';
@@ -856,7 +819,7 @@
 
             // Show duplicate info
             if (status === 'dupe' && duplicates && duplicates.length > 0) {
-                html += '<tr class="bg-warning-light"><td></td><td colspan="7">';
+                html += '<tr class="bg-warning-light"><td colspan="7">';
                 html += '<small class="text-warning"><i class="fe-alert-triangle"></i> ';
                 var dupeName = duplicates[0].contactFullName || duplicates[0].CONTACTFULLNAME || duplicates[0].recordname || duplicates[0].RECORDNAME || 'Unknown';
                 html += 'Possible duplicate of: <strong>' + escapeHtml(dupeName) + '</strong>';
@@ -884,16 +847,6 @@
 
         $j('.btn-restore').click(function() {
             singleRowAction($j(this).data('row-id'), 'create');
-        });
-
-        $j('.row-checkbox').change(function() {
-            var rowId = parseInt($j(this).data('row-id'));
-            if (this.checked) {
-                state.selectedRows.add(rowId);
-            } else {
-                state.selectedRows.delete(rowId);
-            }
-            updateSelectedCount();
         });
     }
 
@@ -944,45 +897,6 @@
                 loadRows();
             }
         });
-    }
-
-    function updateSelectAllBanner(allPageChecked) {
-        var totalForFilter = getTotalForCurrentFilter();
-        var visibleCount = $j('.row-checkbox').length;
-        if (allPageChecked && totalForFilter > visibleCount) {
-            $j('#select-all-page-text').text('All ' + visibleCount + ' rows on this page are selected.');
-            $j('#select-all-matching').text('Select all ' + totalForFilter + ' matching rows').show();
-            $j('#clear-all-selection').hide();
-            $j('#select-all-banner').show();
-        } else {
-            $j('#select-all-banner').hide();
-        }
-    }
-
-    function clearAllSelection() {
-        state.selectAllMatchingFilter = '';
-        state.selectedRows.clear();
-        $j('.row-checkbox').prop('checked', false);
-        $j('#check-all').prop('checked', false);
-        $j('#select-all-banner').hide();
-        updateSelectedCount();
-    }
-
-    function getTotalForCurrentFilter() {
-        if (!state.stats) return 0;
-        var f = state.currentFilter;
-        if (!f || f === 'all' || f === '') return state.stats.total || 0;
-        return state.stats[f] || 0;
-    }
-
-    function updateSelectedCount() {
-        var count = state.selectAllMatchingFilter ? getTotalForCurrentFilter() : state.selectedRows.size;
-        $j('#selected-count').text(count + ' selected');
-        if (count > 0) {
-            $j('#bulk-actions').show();
-        } else {
-            $j('#bulk-actions').hide();
-        }
     }
 
     function updateStats() {
@@ -1040,71 +954,6 @@
                 }
                 $j('#precheck-details').html(precheckHtml);
                 $j('#finalize-precheck').show();
-            }
-        });
-    }
-
-    function bulkAction(action) {
-        if (state.selectedRows.size === 0 && !state.selectAllMatchingFilter) return;
-        console.log('[V3] Bulk action:', action, 'selectAllFilter:', state.selectAllMatchingFilter, 'Rows:', Array.from(state.selectedRows));
-
-        // Phase 7: Get CSRF token for row_action
-        var csrfToken = $j('#csrf-token').val() || '';
-        if (!csrfToken) {
-            console.error('[V3] CSRF token not found for bulk action');
-            showAlert('error', 'Security token missing. Please refresh the page.');
-            return;
-        }
-
-        // Phase 7: Disable bulk action buttons during processing
-        var $ignoreBtn = $j('#bulk-ignore');
-        var $importBtn = $j('#bulk-import');
-        $ignoreBtn.prop('disabled', true);
-        $importBtn.prop('disabled', true);
-        var actionText = action === 'ignore' ? 'Excluding...' : 'Including...';
-        $j('#selected-count').text(actionText);
-
-        $j.ajax({
-            url: '/ajax/importv3/row_action.cfm?bypass=1',  // V3 ENDPOINT
-            type: 'POST',
-            contentType: 'application/json',
-            headers: {
-                'X-CSRF-Token': csrfToken  // Phase 7: Header CSRF (preferred)
-            },
-            data: JSON.stringify(state.selectAllMatchingFilter ? {
-                job_id: state.jobId,
-                select_all_filter: state.selectAllMatchingFilter === 'all' ? (state.currentFilter || '') : state.selectAllMatchingFilter,
-                action: action,
-                csrf_token: csrfToken
-            } : {
-                job_id: state.jobId,
-                row_ids: Array.from(state.selectedRows),
-                action: action,
-                csrf_token: csrfToken
-            }),
-            success: function(response) {
-                console.log('[V3] Bulk action response:', response);
-                // Log debug breadcrumbs if present
-                if (response.data && response.data.debug) {
-                    console.log('[V3] Debug trail:', response.data.debug.join(' -> '));
-                }
-                if (response.success) {
-                    clearAllSelection();
-                    loadRows();
-                } else {
-                    console.error('[V3] Bulk action failed with code:', response.code);
-                    showAlert('error', response.message);
-                    $ignoreBtn.prop('disabled', false);
-                    $importBtn.prop('disabled', false);
-                    updateSelectedCount();
-                }
-            },
-            error: function(xhr, status, error) {
-                console.error('[V3] Bulk action HTTP error:', xhr.status, status, error);
-                showErrorWithDebug(xhr, 'Bulk action failed.');
-                $ignoreBtn.prop('disabled', false);
-                $importBtn.prop('disabled', false);
-                updateSelectedCount();
             }
         });
     }
