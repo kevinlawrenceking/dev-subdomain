@@ -468,7 +468,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
         string error_message = ""
     ) {
         try {
-            cflog(file="importv3", text="[service] setJobStatus START job_id=#arguments.job_id# userid=#arguments.userid# new_status=#arguments.new_status#");
+            writeLog(file="importv3", text="[service] setJobStatus START job_id=" & arguments.job_id & " userid=" & arguments.userid & " new_status=" & arguments.new_status);
             if (!arrayFindNoCase(variables.VALID_STATUSES, arguments.new_status)) {
                 return fail(code = "INVALID_STATUS", message = "Invalid status: " & arguments.new_status, data = { valid_statuses: variables.VALID_STATUSES });
             }
@@ -1310,7 +1310,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
             // D) Update job status based on actual import results
             // Only count genuinely new imports (not skipped/idempotent rows)
             var newlyImported = counts.imported_new + counts.updated_existing;
-            cflog(file="importv3", text="[finalize] COMPLETION_CHECK job_id=#arguments.job_id# imported_new=#counts.imported_new# updated_existing=#counts.updated_existing# skipped_already=#counts.skipped_already_imported# failed=#counts.failed# newlyImported=#newlyImported#");
+            writeLog(file="importv3", text="[finalize] COMPLETION_CHECK job_id=" & arguments.job_id & " imported_new=" & counts.imported_new & " updated_existing=" & counts.updated_existing & " skipped_already=" & counts.skipped_already_imported & " failed=" & counts.failed & " newlyImported=" & newlyImported);
 
             if (newlyImported gt 0) {
                 // Contacts were actually created/updated this run - mark completed
