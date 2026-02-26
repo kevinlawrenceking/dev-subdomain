@@ -169,6 +169,7 @@
 
 <cfset addDebug("V3 recompute start, skip_dupes=" & variables.skipDupes)>
 <cflog file="importv3" text="V3 recompute start skip_dupes=#variables.skipDupes#">
+<cflog file="importv3" text="importv3 field_name convention: camelCase (snake_case accepted for legacy reads)">
 
 <cftry>
     <!--- A) Auth: Require logged-in session userid --->
@@ -435,11 +436,11 @@
                         <cfset variables.colId = val(variables.mapping.column_id)>
                         <cfset variables.targetField = trim(variables.mapping.field)>
 
-                        <!--- Map JS camelCase field names to snake_case for validation --->
+                        <!--- Map field names to canonical keys (camelCase matches columns.cfm available_fields) --->
                         <cfset variables.fieldNameMap = {
-                            "firstName": "first_name",
-                            "lastName": "last_name",
-                            "contactFullName": "full_name",
+                            "firstName": "firstName",
+                            "lastName": "lastName",
+                            "contactFullName": "contactFullName",
                             "email_business": "email_business",
                             "email_personal": "email_personal",
                             "phone_work": "phone_work",
@@ -462,7 +463,7 @@
                             "notes": "notes",
                             "tags": "tags",
                             "category": "category",
-                            "contactType": "contact_type",
+                            "contactType": "contactType",
                             "relationship_system": "relationship_system"
                         }>
 
@@ -794,6 +795,14 @@
                 </cfif>
             </cfloop>
 
+            <!--- Invariant: warn if any fact used a legacy snake_case field_name --->
+            <cfset variables.legacyNames = "first_name,last_name,full_name,contact_type">
+            <cfloop list="#variables.legacyNames#" index="variables.legacyCheck">
+                <cfif structKeyExists(variables.rowData, variables.legacyCheck)>
+                    <cflog file="importv3" text="[INVARIANT_WARN] snake_case field_name detected job_id=#variables.jobId# row_id=#variables.rowId# field=#variables.legacyCheck# -- expected camelCase">
+                </cfif>
+            </cfloop>
+
             <!--- Diagnostic: log row data keys for first row to aid troubleshooting --->
             <cfif variables.rowsProcessed eq 1>
                 <cfset addDebug("row1_data_keys=" & structKeyList(variables.rowData))>
@@ -802,13 +811,13 @@
 
             <!--- Row-level validation: require at least one name field --->
             <!--- ContactFullName is the only DB field; first+last get concatenated during finalize --->
-            <cfset variables.hasFirstName = structKeyExists(variables.rowData, "first_name") and len(variables.rowData.first_name)>
-            <cfset variables.hasLastName = structKeyExists(variables.rowData, "last_name") and len(variables.rowData.last_name)>
-            <cfset variables.hasFullName = structKeyExists(variables.rowData, "full_name") and len(variables.rowData.full_name)>
+            <cfset variables.hasFirstName = (structKeyExists(variables.rowData, "firstName") and len(variables.rowData.firstName)) or (structKeyExists(variables.rowData, "first_name") and len(variables.rowData.first_name))>
+            <cfset variables.hasLastName = (structKeyExists(variables.rowData, "lastName") and len(variables.rowData.lastName)) or (structKeyExists(variables.rowData, "last_name") and len(variables.rowData.last_name))>
+            <cfset variables.hasFullName = (structKeyExists(variables.rowData, "contactFullName") and len(variables.rowData.contactFullName)) or (structKeyExists(variables.rowData, "full_name") and len(variables.rowData.full_name))>
 
             <cfif not variables.hasFirstName and not variables.hasLastName and not variables.hasFullName>
                 <cfset variables.errorCount++>
-                <cfset arrayAppend(variables.rowErrors, { field: "_row", error: "At least one name field (first_name, last_name, or full_name) is required" })>
+                <cfset arrayAppend(variables.rowErrors, { field: "_row", error: "At least one name field (firstName, lastName, or contactFullName) is required" })>
             </cfif>
 
             <!--- Build validation summary JSON --->
@@ -832,14 +841,20 @@
                 <!--- Map rowData fields to DuplicateMatcherService expected format --->
                 <cfset variables.dupeRowData = {}>
 
-                <!--- Map first_name/last_name to firstName/lastName --->
-                <cfif structKeyExists(variables.rowData, "first_name")>
+                <!--- Map name fields to dupe matcher expected format --->
+                <cfif structKeyExists(variables.rowData, "firstName")>
+                    <cfset variables.dupeRowData["firstName"] = variables.rowData.firstName>
+                <cfelseif structKeyExists(variables.rowData, "first_name")>
                     <cfset variables.dupeRowData["firstName"] = variables.rowData.first_name>
                 </cfif>
-                <cfif structKeyExists(variables.rowData, "last_name")>
+                <cfif structKeyExists(variables.rowData, "lastName")>
+                    <cfset variables.dupeRowData["lastName"] = variables.rowData.lastName>
+                <cfelseif structKeyExists(variables.rowData, "last_name")>
                     <cfset variables.dupeRowData["lastName"] = variables.rowData.last_name>
                 </cfif>
-                <cfif structKeyExists(variables.rowData, "full_name")>
+                <cfif structKeyExists(variables.rowData, "contactFullName")>
+                    <cfset variables.dupeRowData["contactFullName"] = variables.rowData.contactFullName>
+                <cfelseif structKeyExists(variables.rowData, "full_name")>
                     <cfset variables.dupeRowData["contactFullName"] = variables.rowData.full_name>
                 </cfif>
 
