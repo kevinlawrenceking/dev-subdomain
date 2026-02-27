@@ -266,12 +266,11 @@
     </div>
 </div>
 
-<cfoutput>
 <script>
 (function() {
     var $ = jQuery;
     var AJAX_BASE = '/app/admin-users/ajax/';
-    var USER_ID = #val(variables.targetUserId)#;
+    var USER_ID = <cfoutput>#val(variables.targetUserId)#</cfoutput>;
     var userData = null;
     var pendingEmailTemplate = '';
 
@@ -538,4 +537,3 @@
     });
 })();
 </script>
-</cfoutput>
