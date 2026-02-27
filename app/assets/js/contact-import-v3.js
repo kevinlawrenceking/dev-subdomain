@@ -919,10 +919,11 @@
 
                 $j('#import-count').text(stats.ready || 0);
 
-                // If all rows are imported, reload to show completed view
+                // If all rows are imported and we're not already on the completed view, reload
                 var total = stats.total || 0;
                 var imported = stats.imported || 0;
-                if (total > 0 && imported >= total) {
+                var currentStatus = ($j('#job-status').val() || '').toLowerCase();
+                if (total > 0 && imported >= total && currentStatus !== 'completed') {
                     window.location.reload();
                     return;
                 }
