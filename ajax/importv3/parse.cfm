@@ -171,12 +171,7 @@
         </cfif>
     </cfif>
 
-    <!--- D) VCF (vCard) parsing is not yet implemented - return early with informative message --->
-    <cfif variables.job.file_type eq "vcf">
-        <cfset variables.response.code = "UNSUPPORTED_FILE_TYPE">
-        <cfset variables.response.message = "VCF (vCard) parsing is not yet supported">
-        <cfcontent type="application/json" reset="true"><cfoutput>#serializeJSON(variables.response)#</cfoutput><cfabort>
-    </cfif>
+    <!--- D) VCF is now supported (parsed below alongside CSV/XLS) --->
 
     <!--- E) Acquire job lock to prevent concurrent parse operations --->
     <cfset variables.lockResult = variables.v3Service.acquireJobLock(
@@ -283,6 +278,98 @@
                 </cfloop>
                 <cfset arrayAppend(variables.dataRows, variables.rowData)>
             </cfloop>
+        <cfelseif variables.job.file_type eq "vcf">
+            <cfset addDebug("Parsing VCF file...")>
+            <!--- Parse VCF (vCard) file --->
+            <cfset variables.fileContent = fileRead(variables.filePath, "utf-8")>
+            <cfset addDebug("File read, length=" & len(variables.fileContent))>
+
+            <!--- Normalize line endings: CRLF -> LF, CR -> LF --->
+            <cfset variables.fileContent = replace(variables.fileContent, chr(13) & chr(10), chr(10), "all")>
+            <cfset variables.fileContent = replace(variables.fileContent, chr(13), chr(10), "all")>
+
+            <!--- Split into raw lines --->
+            <cfset variables.rawLines = listToArray(variables.fileContent, chr(10), true)>
+            <cfset addDebug("Raw lines: " & arrayLen(variables.rawLines))>
+
+            <!--- Unfold continuation lines (RFC 2425: line starting with space/tab is continuation) --->
+            <cfset variables.unfoldedLines = unfoldVCFLines(variables.rawLines)>
+            <cfset addDebug("Unfolded lines: " & arrayLen(variables.unfoldedLines))>
+
+            <!--- Split into vCard blocks --->
+            <cfset variables.vcardBlocks = []>
+            <cfset variables.currentBlock = []>
+            <cfset variables.inCard = false>
+            <cfloop array="#variables.unfoldedLines#" index="variables.vcfLine">
+                <cfset variables.vcfLineTrimmed = trim(variables.vcfLine)>
+                <cfif uCase(variables.vcfLineTrimmed) eq "BEGIN:VCARD">
+                    <cfset variables.inCard = true>
+                    <cfset variables.currentBlock = []>
+                <cfelseif uCase(variables.vcfLineTrimmed) eq "END:VCARD" and variables.inCard>
+                    <cfset variables.inCard = false>
+                    <cfset arrayAppend(variables.vcardBlocks, variables.currentBlock)>
+                <cfelseif variables.inCard and len(variables.vcfLineTrimmed) gt 0>
+                    <cfset arrayAppend(variables.currentBlock, variables.vcfLineTrimmed)>
+                </cfif>
+            </cfloop>
+            <cfset addDebug("vCard blocks found: " & arrayLen(variables.vcardBlocks))>
+
+            <cfif arrayLen(variables.vcardBlocks) eq 0>
+                <cfthrow message="VCF file contains no contacts">
+            </cfif>
+
+            <!--- Define fixed VCF virtual columns --->
+            <cfset variables.vcfHeaderDefs = [
+                { name: "First Name", field: "firstName" },
+                { name: "Last Name", field: "lastName" },
+                { name: "Full Name", field: "contactFullName" },
+                { name: "Business Email", field: "email_business" },
+                { name: "Personal Email", field: "email_personal" },
+                { name: "Work Phone", field: "phone_work" },
+                { name: "Mobile Phone", field: "phone_mobile" },
+                { name: "Home Phone", field: "phone_home" },
+                { name: "Company", field: "company" },
+                { name: "Title", field: "title" },
+                { name: "Address Line 1", field: "address1" },
+                { name: "City", field: "city" },
+                { name: "State", field: "state" },
+                { name: "Zip Code", field: "zip" },
+                { name: "Country", field: "country" },
+                { name: "Birthday", field: "birthday" },
+                { name: "Website", field: "website" },
+                { name: "Notes", field: "notes" },
+                { name: "Tags", field: "tags" }
+            ]>
+
+            <!--- Build headers array from definitions --->
+            <cfloop array="#variables.vcfHeaderDefs#" index="variables.hDef">
+                <cfset arrayAppend(variables.headers, variables.hDef.name)>
+            </cfloop>
+
+            <!--- Parse each vCard block into a row --->
+            <cfset variables.skippedCards = 0>
+            <cfloop array="#variables.vcardBlocks#" index="variables.block">
+                <cfset variables.rowData = parseVCardBlock(variables.block, arrayLen(variables.vcfHeaderDefs))>
+                <!--- Skip completely empty vCards --->
+                <cfset variables.hasData = false>
+                <cfloop from="1" to="#arrayLen(variables.rowData)#" index="variables.rdIdx">
+                    <cfif len(trim(variables.rowData[variables.rdIdx])) gt 0>
+                        <cfset variables.hasData = true>
+                        <cfbreak>
+                    </cfif>
+                </cfloop>
+                <cfif variables.hasData>
+                    <cfset arrayAppend(variables.dataRows, variables.rowData)>
+                <cfelse>
+                    <cfset variables.skippedCards++>
+                </cfif>
+            </cfloop>
+            <cfset addDebug("Data rows parsed: " & arrayLen(variables.dataRows) & " (skipped empty: " & variables.skippedCards & ")")>
+
+            <cfif arrayLen(variables.dataRows) eq 0>
+                <cfthrow message="VCF file contains no contacts with data">
+            </cfif>
+
         </cfif>
 
         <cfcatch type="any">
@@ -419,7 +506,43 @@
         </cfif>
     </cfloop>
 
-    <!--- M) Update job row counts in import_v3_jobs --->
+    <!--- M-VCF) Auto-map columns for VCF files (columns are deterministic, no manual mapping needed) --->
+    <cfset variables.isAutoMapped = false>
+    <cfif variables.job.file_type eq "vcf" and isDefined("variables.vcfHeaderDefs")>
+        <cfset addDebug("VCF auto-mapping columns...")>
+        <cfloop from="1" to="#arrayLen(variables.vcfHeaderDefs)#" index="variables.vcfColIdx">
+            <cfset variables.vcfColIndex = variables.vcfColIdx - 1>
+            <cfset variables.vcfFieldName = variables.vcfHeaderDefs[variables.vcfColIdx].field>
+            <cfif structKeyExists(variables.colIdMap, variables.vcfColIndex)>
+                <cfset queryExecute(
+                    "UPDATE import_v3_columns
+                     SET intent = 'contact_field',
+                         target_key = :target_key,
+                         user_confirmed = 1,
+                         updated_at = NOW()
+                     WHERE column_id = :column_id
+                       AND job_id = :job_id",
+                    {
+                        column_id: { value: variables.colIdMap[variables.vcfColIndex], cfsqltype: "cf_sql_integer" },
+                        job_id: { value: variables.jobId, cfsqltype: "cf_sql_integer" },
+                        target_key: { value: variables.vcfFieldName, cfsqltype: "cf_sql_varchar", maxlength: 100 }
+                    },
+                    { datasource: application.datasource }
+                )>
+            </cfif>
+        </cfloop>
+        <cfset variables.isAutoMapped = true>
+        <cfset addDebug("VCF auto-mapping complete - " & arrayLen(variables.vcfHeaderDefs) & " columns mapped")>
+
+        <cfset variables.v3Service.logEvent(
+            job_id = variables.jobId,
+            userid = variables.userid,
+            event_type = "vcf_auto_mapped",
+            detail = { columns_mapped: arrayLen(variables.vcfHeaderDefs) }
+        )>
+    </cfif>
+
+    <!--- N) Update job row counts in import_v3_jobs --->
     <cfset queryExecute(
         "UPDATE import_v3_jobs
          SET total_rows = :total_rows,
@@ -479,7 +602,8 @@
         },
         "columns_created": variables.qFinalCounts.columns_count,
         "rows_created": variables.qFinalCounts.rows_count,
-        "facts_created": variables.qFinalCounts.facts_count
+        "facts_created": variables.qFinalCounts.facts_count,
+        "auto_mapped": variables.isAutoMapped
     }>
     <cfset addDebug("SUCCESS - Parse complete!")>
     <cflog file="importv3" text="[parse] SUCCESS userid=#variables.userid# job_id=#variables.jobId# columns=#variables.qFinalCounts.columns_count# rows=#variables.qFinalCounts.rows_count# facts=#variables.qFinalCounts.facts_count#">
@@ -569,4 +693,387 @@
     </cfloop>
 
     <cfreturn result>
+</cffunction>
+
+<!--- ==================== VCF HELPER FUNCTIONS ==================== --->
+
+<!--- unfoldVCFLines: Handle RFC 2425 line folding (continuation lines starting with space/tab) --->
+<cffunction name="unfoldVCFLines" access="private" returntype="array" output="false">
+    <cfargument name="rawLines" type="array" required="true">
+
+    <cfset var result = []>
+    <cfset var i = 0>
+
+    <cfloop from="1" to="#arrayLen(arguments.rawLines)#" index="i">
+        <cfset var line = arguments.rawLines[i]>
+        <!--- Check if line starts with space or tab (continuation of previous line) --->
+        <cfif len(line) gt 0 and (left(line, 1) eq " " or left(line, 1) eq chr(9)) and arrayLen(result) gt 0>
+            <!--- Append to previous line, stripping the leading whitespace character --->
+            <cfset result[arrayLen(result)] = result[arrayLen(result)] & mid(line, 2, len(line) - 1)>
+        <cfelse>
+            <cfset arrayAppend(result, line)>
+        </cfif>
+    </cfloop>
+
+    <cfreturn result>
+</cffunction>
+
+<!--- unescapeVCF: Handle vCard escaped characters (\n, \,, \\) --->
+<cffunction name="unescapeVCF" access="private" returntype="string" output="false">
+    <cfargument name="value" type="string" required="true">
+
+    <cfset var result = arguments.value>
+    <!--- Order matters: unescape \\ first (to temp placeholder), then \n and \,, then restore \\ --->
+    <cfset result = replace(result, "\\", chr(0), "all")>
+    <cfset result = replace(result, "\n", chr(10), "all")>
+    <cfset result = replace(result, "\N", chr(10), "all")>
+    <cfset result = replace(result, "\,", ",", "all")>
+    <cfset result = replace(result, chr(0), "\", "all")>
+
+    <cfreturn result>
+</cffunction>
+
+<!--- parseVCFPropertyTypes: Extract type= values from property parameters --->
+<cffunction name="parseVCFPropertyTypes" access="private" returntype="struct" output="false">
+    <cfargument name="params" type="array" required="true">
+
+    <cfset var result = { types: {}, hasPref: false }>
+
+    <cfloop array="#arguments.params#" index="local.param">
+        <cfset local.paramUpper = uCase(trim(local.param))>
+        <!--- Handle type=VALUE format --->
+        <cfif left(local.paramUpper, 5) eq "TYPE=">
+            <cfset local.typeVal = mid(local.paramUpper, 6, len(local.paramUpper) - 5)>
+            <!--- Handle comma-separated types: type=CELL,VOICE --->
+            <cfloop list="#local.typeVal#" index="local.singleType">
+                <cfset local.singleType = trim(local.singleType)>
+                <cfif local.singleType eq "PREF">
+                    <cfset result.hasPref = true>
+                <cfelse>
+                    <cfset result.types[local.singleType] = true>
+                </cfif>
+            </cfloop>
+        <!--- Handle bare type values (vCard 2.1 style): CELL, WORK, HOME, etc. --->
+        <cfelseif local.paramUpper eq "PREF">
+            <cfset result.hasPref = true>
+        <cfelseif listFindNoCase("CELL,WORK,HOME,VOICE,FAX,IPHONE,MAIN,OTHER,INTERNET", local.paramUpper)>
+            <cfset result.types[local.paramUpper] = true>
+        </cfif>
+    </cfloop>
+
+    <cfreturn result>
+</cffunction>
+
+<!--- parseVCardBlock: Parse a single vCard block into an 18-element row array --->
+<cffunction name="parseVCardBlock" access="private" returntype="array" output="false">
+    <cfargument name="blockLines" type="array" required="true">
+    <cfargument name="columnCount" type="numeric" required="true">
+
+    <!--- Initialize empty row with correct number of columns --->
+    <cfset var row = []>
+    <cfloop from="1" to="#arguments.columnCount#" index="local.ci">
+        <cfset arrayAppend(row, "")>
+    </cfloop>
+
+    <!--- Temporary collectors for multi-value properties --->
+    <cfset var phones = []>
+    <cfset var emails = []>
+    <cfset var addresses = []>
+    <cfset var urls = []>
+    <cfset var noteParts = []>
+
+    <!--- Parse each property line --->
+    <cfloop array="#arguments.blockLines#" index="local.line">
+        <cfset local.workLine = local.line>
+
+        <!--- Strip Apple itemN. grouping prefix (e.g., item1.EMAIL -> EMAIL) --->
+        <cfif reFindNoCase("^item\d+\.", local.workLine)>
+            <cfset local.workLine = reReplaceNoCase(local.workLine, "^item\d+\.", "")>
+        </cfif>
+
+        <!--- Skip X-ABLabel lines (Apple label metadata) --->
+        <cfif left(uCase(local.workLine), 10) eq "X-ABLABEL:">
+            <cfcontinue>
+        </cfif>
+
+        <!--- Split on first colon: left = propName;params, right = value --->
+        <cfset local.colonPos = find(":", local.workLine)>
+        <cfif local.colonPos eq 0>
+            <cfcontinue>
+        </cfif>
+        <cfset local.propLeft = left(local.workLine, local.colonPos - 1)>
+        <cfset local.propValue = mid(local.workLine, local.colonPos + 1, len(local.workLine) - local.colonPos)>
+
+        <!--- Split propLeft on semicolon: first element is property name, rest are params --->
+        <cfset local.propParts = listToArray(local.propLeft, ";", true)>
+        <cfset local.propName = uCase(trim(local.propParts[1]))>
+        <cfset local.propParams = []>
+        <cfif arrayLen(local.propParts) gt 1>
+            <cfloop from="2" to="#arrayLen(local.propParts)#" index="local.pp">
+                <cfset arrayAppend(local.propParams, local.propParts[local.pp])>
+            </cfloop>
+        </cfif>
+
+        <!--- Parse type parameters --->
+        <cfset local.typeInfo = parseVCFPropertyTypes(local.propParams)>
+
+        <!--- Unescape the value --->
+        <cfset local.propValue = unescapeVCF(local.propValue)>
+
+        <!--- Route by property name --->
+        <cfswitch expression="#local.propName#">
+
+            <!--- N: Name components - N:Last;First;Middle;Prefix;Suffix --->
+            <cfcase value="N">
+                <cfset local.nameParts = listToArray(local.propValue, ";", true)>
+                <!--- lastName = component 0 (family name) --->
+                <cfif arrayLen(local.nameParts) gte 1>
+                    <cfset row[2] = trim(local.nameParts[1])>
+                </cfif>
+                <!--- firstName = component 1 (given name), optionally + component 2 (middle) --->
+                <cfif arrayLen(local.nameParts) gte 2>
+                    <cfset local.givenName = trim(local.nameParts[2])>
+                    <cfif arrayLen(local.nameParts) gte 3 and len(trim(local.nameParts[3])) gt 0>
+                        <cfset local.givenName = local.givenName & " " & trim(local.nameParts[3])>
+                    </cfif>
+                    <cfset row[1] = trim(local.givenName)>
+                </cfif>
+            </cfcase>
+
+            <!--- FN: Formatted name --->
+            <cfcase value="FN">
+                <cfset row[3] = trim(local.propValue)>
+            </cfcase>
+
+            <!--- TEL: Phone number --->
+            <cfcase value="TEL">
+                <cfif len(trim(local.propValue)) gt 0>
+                    <!--- Skip fax-only numbers --->
+                    <cfif not (structKeyExists(local.typeInfo.types, "FAX") and structCount(local.typeInfo.types) eq 1)>
+                        <cfset arrayAppend(phones, {
+                            value: trim(local.propValue),
+                            types: local.typeInfo.types,
+                            hasPref: local.typeInfo.hasPref
+                        })>
+                    </cfif>
+                </cfif>
+            </cfcase>
+
+            <!--- EMAIL: Email address --->
+            <cfcase value="EMAIL">
+                <cfif len(trim(local.propValue)) gt 0>
+                    <cfset arrayAppend(emails, {
+                        value: trim(local.propValue),
+                        types: local.typeInfo.types,
+                        hasPref: local.typeInfo.hasPref
+                    })>
+                </cfif>
+            </cfcase>
+
+            <!--- ORG: Organization/Company --->
+            <cfcase value="ORG">
+                <!--- ORG value may be "Company;" or "Company;Department" - take first part --->
+                <cfset local.orgParts = listToArray(local.propValue, ";", true)>
+                <cfif arrayLen(local.orgParts) gte 1 and len(trim(local.orgParts[1])) gt 0>
+                    <cfset row[9] = trim(local.orgParts[1])>
+                </cfif>
+            </cfcase>
+
+            <!--- TITLE: Job title --->
+            <cfcase value="TITLE">
+                <cfset row[10] = trim(local.propValue)>
+            </cfcase>
+
+            <!--- ADR: Address - PO;Extended;Street;City;Region;PostalCode;Country --->
+            <cfcase value="ADR">
+                <cfset local.adrParts = listToArray(local.propValue, ";", true)>
+                <cfset arrayAppend(addresses, {
+                    parts: local.adrParts,
+                    types: local.typeInfo.types,
+                    hasPref: local.typeInfo.hasPref
+                })>
+            </cfcase>
+
+            <!--- BDAY: Birthday --->
+            <cfcase value="BDAY">
+                <cfset local.bdayVal = trim(local.propValue)>
+                <!--- Handle compact YYYYMMDD format -> YYYY-MM-DD --->
+                <cfif reFindNoCase("^\d{8}$", local.bdayVal)>
+                    <cfset local.bdayVal = left(local.bdayVal, 4) & "-" & mid(local.bdayVal, 5, 2) & "-" & right(local.bdayVal, 2)>
+                </cfif>
+                <cfset row[16] = local.bdayVal>
+            </cfcase>
+
+            <!--- URL: Website --->
+            <cfcase value="URL">
+                <cfif len(trim(local.propValue)) gt 0>
+                    <cfset arrayAppend(urls, {
+                        value: trim(local.propValue),
+                        types: local.typeInfo.types,
+                        hasPref: local.typeInfo.hasPref
+                    })>
+                </cfif>
+            </cfcase>
+
+            <!--- NOTE: Notes --->
+            <cfcase value="NOTE">
+                <cfif len(trim(local.propValue)) gt 0>
+                    <cfset arrayAppend(noteParts, trim(local.propValue))>
+                </cfif>
+            </cfcase>
+
+            <!--- CATEGORIES: Tags (column 19) --->
+            <cfcase value="CATEGORIES">
+                <cfif len(trim(local.propValue)) gt 0>
+                    <!--- Append to existing tags if any --->
+                    <cfif len(row[19]) gt 0>
+                        <cfset row[19] = row[19] & "," & trim(local.propValue)>
+                    <cfelse>
+                        <cfset row[19] = trim(local.propValue)>
+                    </cfif>
+                </cfif>
+            </cfcase>
+
+        </cfswitch>
+    </cfloop>
+
+    <!--- Resolve phones: assign best match for each slot --->
+    <!--- Column 6 = phone_work, Column 7 = phone_mobile, Column 8 = phone_home --->
+    <cfset var phoneWork = "">
+    <cfset var phoneMobile = "">
+    <cfset var phoneHome = "">
+    <cfset var phoneWorkScore = -1>
+    <cfset var phoneMobileScore = -1>
+    <cfset var phoneHomeScore = -1>
+
+    <cfloop array="#phones#" index="local.ph">
+        <cfset local.score = 0>
+        <cfset local.slot = "">
+
+        <!--- Determine best slot for this phone --->
+        <cfif structKeyExists(local.ph.types, "CELL") or structKeyExists(local.ph.types, "IPHONE")>
+            <cfset local.slot = "mobile">
+            <cfset local.score = 10>
+        <cfelseif structKeyExists(local.ph.types, "WORK") or structKeyExists(local.ph.types, "MAIN")>
+            <cfset local.slot = "work">
+            <cfset local.score = 10>
+        <cfelseif structKeyExists(local.ph.types, "HOME")>
+            <cfset local.slot = "home">
+            <cfset local.score = 10>
+        </cfif>
+        <cfif local.ph.hasPref>
+            <cfset local.score = local.score + 5>
+        </cfif>
+
+        <!--- Assign to slot if better than current --->
+        <cfif local.slot eq "mobile" and local.score gt phoneMobileScore>
+            <cfset phoneMobile = local.ph.value>
+            <cfset phoneMobileScore = local.score>
+        <cfelseif local.slot eq "work" and local.score gt phoneWorkScore>
+            <cfset phoneWork = local.ph.value>
+            <cfset phoneWorkScore = local.score>
+        <cfelseif local.slot eq "home" and local.score gt phoneHomeScore>
+            <cfset phoneHome = local.ph.value>
+            <cfset phoneHomeScore = local.score>
+        <cfelseif local.slot eq "">
+            <!--- Generic phone (no matching type) -> assign to first empty slot --->
+            <cfif not len(phoneMobile)>
+                <cfset phoneMobile = local.ph.value>
+                <cfset phoneMobileScore = local.score>
+            <cfelseif not len(phoneHome)>
+                <cfset phoneHome = local.ph.value>
+                <cfset phoneHomeScore = local.score>
+            <cfelseif not len(phoneWork)>
+                <cfset phoneWork = local.ph.value>
+                <cfset phoneWorkScore = local.score>
+            </cfif>
+        </cfif>
+    </cfloop>
+    <cfset row[6] = phoneWork>
+    <cfset row[7] = phoneMobile>
+    <cfset row[8] = phoneHome>
+
+    <!--- Resolve emails: assign best match for each slot --->
+    <!--- Column 4 = email_business, Column 5 = email_personal --->
+    <cfset var emailBiz = "">
+    <cfset var emailPersonal = "">
+    <cfloop array="#emails#" index="local.em">
+        <cfif structKeyExists(local.em.types, "WORK")>
+            <cfif not len(emailBiz)>
+                <cfset emailBiz = local.em.value>
+            </cfif>
+        <cfelse>
+            <!--- HOME, INTERNET, or no type -> personal --->
+            <cfif not len(emailPersonal)>
+                <cfset emailPersonal = local.em.value>
+            <cfelseif not len(emailBiz)>
+                <!--- Overflow to business slot if personal is full --->
+                <cfset emailBiz = local.em.value>
+            </cfif>
+        </cfif>
+    </cfloop>
+    <cfset row[4] = emailBiz>
+    <cfset row[5] = emailPersonal>
+
+    <!--- Resolve address: pick preferred or first --->
+    <cfif arrayLen(addresses) gt 0>
+        <cfset var bestAddr = addresses[1]>
+        <cfloop array="#addresses#" index="local.addr">
+            <cfif local.addr.hasPref>
+                <cfset bestAddr = local.addr>
+                <cfbreak>
+            </cfif>
+        </cfloop>
+        <cfset var ap = bestAddr.parts>
+        <!--- ADR: PO(0);Extended(1);Street(2);City(3);Region(4);PostalCode(5);Country(6) --->
+        <cfset var street = "">
+        <cfif arrayLen(ap) gte 1 and len(trim(ap[1])) gt 0>
+            <cfset street = trim(ap[1])>
+        </cfif>
+        <cfif arrayLen(ap) gte 3 and len(trim(ap[3])) gt 0>
+            <cfif len(street) gt 0>
+                <cfset street = street & ", " & trim(ap[3])>
+            <cfelse>
+                <cfset street = trim(ap[3])>
+            </cfif>
+        </cfif>
+        <!--- Replace newlines in street with comma-space --->
+        <cfset street = replace(street, chr(10), ", ", "all")>
+        <cfset row[11] = street>
+        <!--- City --->
+        <cfif arrayLen(ap) gte 4>
+            <cfset row[12] = trim(ap[4])>
+        </cfif>
+        <!--- State/Region --->
+        <cfif arrayLen(ap) gte 5>
+            <cfset row[13] = trim(ap[5])>
+        </cfif>
+        <!--- Zip/Postal Code --->
+        <cfif arrayLen(ap) gte 6>
+            <cfset row[14] = trim(ap[6])>
+        </cfif>
+        <!--- Country --->
+        <cfif arrayLen(ap) gte 7>
+            <cfset row[15] = trim(ap[7])>
+        </cfif>
+    </cfif>
+
+    <!--- Resolve URL: pick preferred or first --->
+    <cfif arrayLen(urls) gt 0>
+        <cfset var bestUrl = urls[1]>
+        <cfloop array="#urls#" index="local.u">
+            <cfif local.u.hasPref>
+                <cfset bestUrl = local.u>
+                <cfbreak>
+            </cfif>
+        </cfloop>
+        <cfset row[17] = bestUrl.value>
+    </cfif>
+
+    <!--- Combine notes --->
+    <cfif arrayLen(noteParts) gt 0>
+        <cfset row[18] = arrayToList(noteParts, chr(10))>
+    </cfif>
+
+    <cfreturn row>
 </cffunction>

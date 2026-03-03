@@ -459,9 +459,17 @@
                 }
 
                 if (cfGet(response, 'success')) {
-                    console.log('[V3] Parse successful, reloading page...');
-                    // Reload page to show mapping step
-                    window.location.reload();
+                    var respData = cfGet(response, 'data') || {};
+                    var isAutoMapped = cfGet(respData, 'auto_mapped');
+                    if (isAutoMapped) {
+                        // VCF: columns are auto-mapped, trigger recompute then reload to review grid
+                        console.log('[V3] VCF auto-mapped, triggering recompute...');
+                        triggerAutoRecompute();
+                    } else {
+                        console.log('[V3] Parse successful, reloading page...');
+                        // Reload page to show mapping step
+                        window.location.reload();
+                    }
                 } else {
                     var parseMsg = cfGet(response, 'message') || 'Parsing failed';
                     console.log('[V3] Parse failed:', parseMsg);
@@ -478,6 +486,30 @@
                 // Try to parse debug from error response
                 showErrorWithDebug(xhr, 'Parsing failed.');
                 $j('#parse-progress').hide();
+            }
+        });
+    }
+
+    // VCF auto-recompute: after VCF parse with auto-mapped columns, trigger recompute
+    // so rows get validated and job transitions to "reviewing" status
+    function triggerAutoRecompute() {
+        console.log('[V3] ========== AUTO RECOMPUTE (VCF) ==========');
+        $j('#parse-progress').show();
+
+        $j.ajax({
+            url: '/ajax/importv3/recompute.cfm?bypass=1',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ job_id: state.jobId }),
+            timeout: 120000,
+            success: function(response) {
+                console.log('[V3] Auto-recompute response:', response);
+                window.location.reload();
+            },
+            error: function(xhr, status, error) {
+                console.error('[V3] Auto-recompute failed:', error);
+                // Reload anyway - user can trigger recompute manually via column mapping
+                window.location.reload();
             }
         });
     }
