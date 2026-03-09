@@ -71,7 +71,7 @@
      ======================================== --->
 
 <cffunction name="validatePhone" access="public" returntype="struct" output="false"
-    hint="Validate and normalize phone number">
+    hint="Accept and pass through phone number without validation">
     <cfargument name="value" type="string" required="true">
 
     <cfset var result = {
@@ -88,43 +88,8 @@
         <cfreturn result>
     </cfif>
 
-    <!--- Extract digits and plus sign --->
-    <cfset var cleaned = reReplace(trimmed, "[^0-9+]", "", "ALL")>
-
-    <!--- Handle leading plus --->
-    <cfset var hasPlus = left(cleaned, 1) eq "+">
-    <cfset var digitsOnly = reReplace(cleaned, "[^0-9]", "", "ALL")>
-
-    <!--- Check minimum length --->
-    <cfif len(digitsOnly) lt 7>
-        <cfset result.valid = false>
-        <cfset result.error = "Phone number too short (minimum 7 digits)">
-        <cfset result.normalized = trimmed>
-        <cfreturn result>
-    </cfif>
-
-    <!--- Check maximum length --->
-    <cfif len(digitsOnly) gt 15>
-        <cfset result.valid = false>
-        <cfset result.error = "Phone number too long (maximum 15 digits)">
-        <cfset result.normalized = trimmed>
-        <cfreturn result>
-    </cfif>
-
-    <!--- Format based on length --->
-    <cfif len(digitsOnly) eq 10 and not hasPlus>
-        <!--- US format: (XXX) XXX-XXXX --->
-        <cfset result.normalized = "(" & left(digitsOnly, 3) & ") " & mid(digitsOnly, 4, 3) & "-" & right(digitsOnly, 4)>
-    <cfelseif len(digitsOnly) eq 11 and left(digitsOnly, 1) eq "1" and not hasPlus>
-        <!--- US with country code: +1 (XXX) XXX-XXXX --->
-        <cfset result.normalized = "+1 (" & mid(digitsOnly, 2, 3) & ") " & mid(digitsOnly, 5, 3) & "-" & right(digitsOnly, 4)>
-    <cfelseif hasPlus>
-        <!--- International format: +XX XXX XXX XXXX --->
-        <cfset result.normalized = "+" & digitsOnly>
-    <cfelse>
-        <!--- Keep as-is but cleaned --->
-        <cfset result.normalized = digitsOnly>
-    </cfif>
+    <!--- Pass through the trimmed value as-is, no validation --->
+    <cfset result.normalized = trimmed>
 
     <cfreturn result>
 </cffunction>

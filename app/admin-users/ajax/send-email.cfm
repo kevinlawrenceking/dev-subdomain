@@ -7,7 +7,7 @@
     - userid (required): Target user ID
     - template (required): "welcome" or "password_reset"
 
-    Returns JSON: { success, message }
+    Returns JSON: { success, message, debug }
 
     Welcome email: Looks up or creates a setup UUID in the thrivecart table,
     then sends the standard welcome/setup email.
@@ -20,35 +20,50 @@
 <cfinclude template="../admin-guard.cfm">
 
 <cfset variables.response = { "success": false, "message": "", "data": {} }>
+<cfset variables.debugLog = []>
+
+<!--- Helper to add timestamped debug entries --->
+<cffunction name="addDebug" access="private" returntype="void" output="false">
+    <cfargument name="msg" type="string" required="true">
+    <cfset arrayAppend(variables.debugLog, "[" & timeFormat(now(), "HH:mm:ss.lll") & "] " & arguments.msg)>
+</cffunction>
 
 <cftry>
     <cfparam name="form.userid" default="0">
     <cfparam name="form.template" default="">
 
     <cfset variables.targetUserId = val(form.userid)>
+    <cfset addDebug("start: userid=#variables.targetUserId# template=#form.template#")>
+
     <cfif variables.targetUserId lte 0>
         <cfset variables.response.message = "Valid userid is required">
+        <cfset variables.response.debug = variables.debugLog>
         <cfcontent type="application/json; charset=utf-8" reset="true"><cfoutput>#serializeJSON(variables.response)#</cfoutput><cfabort>
     </cfif>
 
     <cfset variables.templateName = lcase(trim(form.template))>
     <cfif not listFindNoCase("welcome,password_reset", variables.templateName)>
         <cfset variables.response.message = "Invalid template. Allowed: welcome, password_reset">
+        <cfset variables.response.debug = variables.debugLog>
         <cfcontent type="application/json; charset=utf-8" reset="true"><cfoutput>#serializeJSON(variables.response)#</cfoutput><cfabort>
     </cfif>
 
     <!--- Load user data --->
+    <cfset addDebug("loading user data")>
     <cfset variables.svc = new services.UserService()>
     <cfset variables.userData = variables.svc.GetUserDetails(variables.targetUserId)>
 
     <cfif structIsEmpty(variables.userData) or (structKeyExists(variables.userData, "userid") and variables.userData.userid eq "")>
+        <cfset addDebug("FAIL: user not found")>
         <cfset variables.response.message = "User not found">
+        <cfset variables.response.debug = variables.debugLog>
         <cfcontent type="application/json; charset=utf-8" reset="true"><cfoutput>#serializeJSON(variables.response)#</cfoutput><cfabort>
     </cfif>
 
     <cfset variables.userEmail = variables.userData.userEmail>
     <cfset variables.userFirst = variables.userData.userFirstName>
     <cfset variables.hostName = cgi.server_name>
+    <cfset addDebug("user loaded: email=#variables.userEmail# firstName=#variables.userFirst# host=#variables.hostName#")>
 
     <!--- ================================================================
          WELCOME EMAIL
@@ -57,9 +72,12 @@
 
         <!--- Get or create setup UUID via thrivecart table (linked by customerid) --->
         <cfset variables.customerId = variables.userData.customerid>
+        <cfset addDebug("welcome: customerid=#variables.customerId#")>
 
         <cfif not isNumeric(variables.customerId) or variables.customerId lte 0>
+            <cfset addDebug("FAIL: no customerid")>
             <cfset variables.response.message = "This user has no customer/thrivecart record. Welcome email requires a customerid.">
+            <cfset variables.response.debug = variables.debugLog>
             <cfcontent type="application/json; charset=utf-8" reset="true"><cfoutput>#serializeJSON(variables.response)#</cfoutput><cfabort>
         </cfif>
 
@@ -71,7 +89,9 @@
         )>
 
         <cfif variables.qTC.recordCount eq 0>
+            <cfset addDebug("FAIL: no thrivecart record for customerid=#variables.customerId#")>
             <cfset variables.response.message = "No thrivecart record found for customerid " & variables.customerId>
+            <cfset variables.response.debug = variables.debugLog>
             <cfcontent type="application/json; charset=utf-8" reset="true"><cfoutput>#serializeJSON(variables.response)#</cfoutput><cfabort>
         </cfif>
 
@@ -80,6 +100,7 @@
         <!--- Generate new UUID if empty --->
         <cfif not len(trim(variables.setupUUID))>
             <cfset variables.setupUUID = createUUID()>
+            <cfset addDebug("generated new setup UUID")>
             <cfset queryExecute(
                 "UPDATE thrivecart SET uuid = :uuid WHERE id = :cid",
                 {
@@ -88,11 +109,16 @@
                 },
                 { datasource: application.datasource }
             )>
+        <cfelse>
+            <cfset addDebug("existing setup UUID found")>
         </cfif>
 
         <!--- Send welcome email --->
+        <cfset addDebug("sending welcome email to=#variables.userEmail# from=support@theactorsoffice.com server=127.0.0.1:25")>
         <cftry>
             <cfmail
+                server="127.0.0.1"
+                port="25"
                 from="support@theactorsoffice.com"
                 to="#variables.userEmail#"
                 subject="#variables.userFirst#, set up your profile for The Actor's Office!"
@@ -116,14 +142,19 @@
             </cfoutput>
             </cfmail>
 
+            <cfset addDebug("cfmail executed OK (spooled)")>
             <cflog file="admin_users" text="[send-email] WELCOME sent to userid=#variables.targetUserId# email=#variables.userEmail# by admin=#session.userid#">
 
             <cfset variables.response.success = true>
             <cfset variables.response.message = "Welcome email sent to " & variables.userEmail>
 
             <cfcatch type="any">
+                <cfset addDebug("CFMAIL ERROR: " & cfcatch.message & " | " & cfcatch.detail)>
                 <cfset variables.response.message = "Failed to send welcome email: " & cfcatch.message>
-                <cflog file="admin_users" text="[send-email] WELCOME FAILED userid=#variables.targetUserId#: #cfcatch.message#">
+                <cfif len(cfcatch.detail)>
+                    <cfset variables.response.message = variables.response.message & " - " & cfcatch.detail>
+                </cfif>
+                <cflog file="admin_users" text="[send-email] WELCOME FAILED userid=#variables.targetUserId#: #cfcatch.message# | #cfcatch.detail#">
             </cfcatch>
         </cftry>
 
@@ -134,6 +165,7 @@
 
         <!--- Generate recover UUID and store it --->
         <cfset variables.recoverUUID = createUUID()>
+        <cfset addDebug("password_reset: generated recover UUID")>
         <cfset queryExecute(
             "UPDATE taousers SET recover = :recover WHERE userid = :uid",
             {
@@ -145,10 +177,13 @@
 
         <!--- Get customerid for the reset link --->
         <cfset variables.customerId = variables.userData.customerid>
+        <cfset addDebug("sending password_reset email to=#variables.userEmail# from=support@theactorsoffice.com server=127.0.0.1:25")>
 
         <!--- Send password reset email --->
         <cftry>
             <cfmail
+                server="127.0.0.1"
+                port="25"
                 from="support@theactorsoffice.com"
                 to="#variables.userEmail#"
                 subject="The Actor's Office - Password Reset"
@@ -169,22 +204,30 @@
             </cfoutput>
             </cfmail>
 
+            <cfset addDebug("cfmail executed OK (spooled)")>
             <cflog file="admin_users" text="[send-email] PASSWORD_RESET sent to userid=#variables.targetUserId# email=#variables.userEmail# by admin=#session.userid#">
 
             <cfset variables.response.success = true>
             <cfset variables.response.message = "Password reset email sent to " & variables.userEmail>
 
             <cfcatch type="any">
+                <cfset addDebug("CFMAIL ERROR: " & cfcatch.message & " | " & cfcatch.detail)>
                 <cfset variables.response.message = "Failed to send password reset email: " & cfcatch.message>
-                <cflog file="admin_users" text="[send-email] PASSWORD_RESET FAILED userid=#variables.targetUserId#: #cfcatch.message#">
+                <cfif len(cfcatch.detail)>
+                    <cfset variables.response.message = variables.response.message & " - " & cfcatch.detail>
+                </cfif>
+                <cflog file="admin_users" text="[send-email] PASSWORD_RESET FAILED userid=#variables.targetUserId#: #cfcatch.message# | #cfcatch.detail#">
             </cfcatch>
         </cftry>
     </cfif>
 
     <cfcatch type="any">
+        <cfset addDebug("OUTER ERROR: " & cfcatch.message & " | " & cfcatch.detail)>
         <cfset variables.response.message = "Email send failed: " & cfcatch.message>
         <cflog file="admin_users" text="[send-email] ERROR: #cfcatch.message# #cfcatch.detail#">
     </cfcatch>
 </cftry>
+
+<cfset variables.response.debug = variables.debugLog>
 </cfsilent>
 <cfcontent type="application/json; charset=utf-8" reset="true"><cfoutput>#serializeJSON(variables.response)#</cfoutput>

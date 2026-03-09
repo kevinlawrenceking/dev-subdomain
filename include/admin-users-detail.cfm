@@ -412,9 +412,11 @@
 
     function previewEmail(template) {
         pendingEmailTemplate = template;
+        console.log('[AdminEmail] Preview request: template=' + template + ' userid=' + USER_ID);
 
         $.get(AJAX_BASE + 'preview-email.cfm', { userid: USER_ID, template: template })
             .done(function(resp) {
+                console.log('[AdminEmail] Preview response:', resp);
                 if (resp.success || resp.SUCCESS) {
                     var data = resp.data || resp.DATA;
                     $('#previewTo').text(data.to || data.TO);
@@ -423,29 +425,42 @@
                     $('#previewBody').html(data.body || data.BODY);
                     new bootstrap.Modal('#emailPreviewModal').show();
                 } else {
+                    console.warn('[AdminEmail] Preview failed:', resp.message || resp.MESSAGE);
                     $('#emailActionResult').html('<span class="text-danger">' + escapeHtml(resp.message || resp.MESSAGE) + '</span>');
                 }
             })
-            .fail(function() {
+            .fail(function(xhr, status, error) {
+                console.error('[AdminEmail] Preview AJAX error:', status, error, xhr.responseText);
                 $('#emailActionResult').html('<span class="text-danger">Preview failed</span>');
             });
     }
 
     function sendEmail() {
         $('#btnConfirmSendEmail').prop('disabled', true).text('Sending...');
+        console.log('[AdminEmail] Send request: template=' + pendingEmailTemplate + ' userid=' + USER_ID);
 
         $.post(AJAX_BASE + 'send-email.cfm', { userid: USER_ID, template: pendingEmailTemplate })
             .done(function(resp) {
+                console.log('[AdminEmail] Send response:', resp);
+                var debugLog = resp.debug || resp.DEBUG;
+                if (debugLog && debugLog.length) {
+                    console.group('[AdminEmail] Server debug log');
+                    debugLog.forEach(function(entry) { console.log(entry); });
+                    console.groupEnd();
+                }
                 bootstrap.Modal.getInstance(document.getElementById('emailPreviewModal')).hide();
                 if (resp.success || resp.SUCCESS) {
+                    console.log('[AdminEmail] Send OK:', resp.message || resp.MESSAGE);
                     $('#emailActionResult').html('<span class="text-success">' + escapeHtml(resp.message || resp.MESSAGE) + '</span>');
                 } else {
+                    console.warn('[AdminEmail] Send failed:', resp.message || resp.MESSAGE);
                     $('#emailActionResult').html('<span class="text-danger">' + escapeHtml(resp.message || resp.MESSAGE) + '</span>');
                 }
             })
-            .fail(function() {
+            .fail(function(xhr, status, error) {
+                console.error('[AdminEmail] Send AJAX error:', status, error, xhr.responseText);
                 bootstrap.Modal.getInstance(document.getElementById('emailPreviewModal')).hide();
-                $('#emailActionResult').html('<span class="text-danger">Send failed</span>');
+                $('#emailActionResult').html('<span class="text-danger">Send failed: ' + escapeHtml(error || status) + '</span>');
             })
             .always(function() {
                 $('#btnConfirmSendEmail').prop('disabled', false).text('Send Email');

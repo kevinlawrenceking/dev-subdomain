@@ -758,6 +758,17 @@
                         <cfset variables.errorCount++>
                         <cfset arrayAppend(variables.rowErrors, { field: variables.effectiveFieldName, error: variables.vResult.error })>
                     </cfif>
+                <!--- Tags: pass through comma-separated values without length restriction --->
+                <cfelseif variables.effectiveFieldName eq "tags" and len(variables.transformedValue)>
+                    <cfset variables.normalizedValue = trim(variables.transformedValue)>
+                <!--- Notes: use large max length --->
+                <cfelseif variables.effectiveFieldName eq "notes" and len(variables.transformedValue)>
+                    <cfset variables.vResult = variables.validationService.validateString(variables.transformedValue, 65535)>
+                    <cfset variables.normalizedValue = variables.vResult.normalized>
+                    <cfif len(variables.vResult.warning)>
+                        <cfset variables.warningCount++>
+                        <cfset arrayAppend(variables.rowWarnings, { field: variables.effectiveFieldName, warning: variables.vResult.warning })>
+                    </cfif>
                 <!--- String validation (default) --->
                 <cfelse>
                     <cfset variables.vResult = variables.validationService.validateString(variables.transformedValue)>
