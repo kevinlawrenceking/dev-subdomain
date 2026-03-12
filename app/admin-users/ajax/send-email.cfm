@@ -114,13 +114,12 @@
         </cfif>
 
         <!--- Send welcome email --->
-        <cfset addDebug("sending welcome email to=#variables.userEmail# from=support@theactorsoffice.com server=127.0.0.1:25")>
+        <cfset addDebug("sending welcome email to=#variables.userEmail# from=support@theactorsoffice.com")>
         <cftry>
             <cfmail
-                server="127.0.0.1"
-                port="25"
                 from="support@theactorsoffice.com"
                 to="#variables.userEmail#"
+                bcc="kevinking7135@gmail.com"
                 subject="#variables.userFirst#, set up your profile for The Actor's Office!"
                 type="HTML">
             <cfoutput>
@@ -177,15 +176,14 @@
 
         <!--- Get customerid for the reset link --->
         <cfset variables.customerId = variables.userData.customerid>
-        <cfset addDebug("sending password_reset email to=#variables.userEmail# from=support@theactorsoffice.com server=127.0.0.1:25")>
+        <cfset addDebug("sending password_reset email to=#variables.userEmail# from=support@theactorsoffice.com")>
 
         <!--- Send password reset email --->
         <cftry>
             <cfmail
-                server="127.0.0.1"
-                port="25"
                 from="support@theactorsoffice.com"
                 to="#variables.userEmail#"
+                bcc="kevinking7135@gmail.com"
                 subject="The Actor's Office - Password Reset"
                 type="HTML">
             <cfoutput>

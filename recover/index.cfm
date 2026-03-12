@@ -2,31 +2,31 @@
 <cfparam name="p" default="" />
  
 
-<cfquery result="result" name="findit" datasource="#application.dsn#">
-        SELECT verid 
-        FROM taoversions  
-        ORDER BY isactive DESC, verid DESC 
+<!--- dsn is set by Application.cfm via env detection --->
+<cfif not isDefined("dsn") or not len(dsn)>
+    <cfset dsn = listFirst(cgi.server_name, ".") EQ "app" ? "abo" : "abod" />
+</cfif>
+
+<cfquery result="result" name="findit" datasource="#dsn#">
+        SELECT verid
+        FROM taoversions
+        ORDER BY isactive DESC, verid DESC
         LIMIT 1
     </cfquery>
 
 <cfset current_ver = findit.verid />
 
-<!--- Use datasource configured in Application.cfc --->
-<cfset dsn = application.dsn />
-
-<cfif #isdefined('recoverid')# >
-<cfoutput>Select * from taousers where userid = #recoverid#</cfoutput>
+<cfif structKeyExists(url, "recoverid") and len(trim(url.recoverid))>
 <cfquery name="U" datasource="#dsn#">
-Select * from taousers where userid = #recoverid#
+Select * from taousers where userid = <cfqueryparam value="#url.recoverid#" cfsqltype="cf_sql_integer">
 </cfquery>
-<cfelseif #isdefined('recover')#>
+<cfelseif structKeyExists(url, "recover") and len(trim(url.recover))>
 <cfquery name="U" datasource="#dsn#">
-Select * from taousers where recover = '#recover#'
+Select * from taousers where recover = <cfqueryparam value="#url.recover#" cfsqltype="cf_sql_varchar">
 </cfquery>
-
-<cfoutput>
-
-    <cfset cookie.recover = '#recover#' /></cfoutput>
+<cfset cookie.recover = url.recover />
+<cfelse>
+<cflocation url="/app/dashboard_new/" />
 </cfif>
 <cfoutput>
 <Cfset img_loc = "/media-#dsn#/images" />
