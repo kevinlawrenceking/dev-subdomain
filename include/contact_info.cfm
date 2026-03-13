@@ -563,7 +563,7 @@ x</button>
 
                                 <Cfset email="#emailcheck.email#" />
 
-                                <a href="mailto:#email#" class="<cfoutput>#tool_button#</cfoutput>" title="#email#">
+                                <a href="##" onclick="window.location.href='mailto:#email#'; return false;" class="<cfoutput>#tool_button#</cfoutput>" title="#email#">
 
                                     <i class="fe-mail"></i>
 
