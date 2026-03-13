@@ -1188,16 +1188,16 @@ document.addEventListener("DOMContentLoaded", function () {
             </div>
             <div class="modal-body p-0">
                 <div class="list-group list-group-flush">
-                    <a href="https://mail.google.com/mail/?view=cm&to=#email#&body=%0A%0APowered%20by%20The%20Actors%20Office" target="_blank" class="list-group-item list-group-item-action d-flex align-items-center" data-bs-dismiss="modal">
+                    <a href="javascript:;" onclick="window.open('https://mail.google.com/mail/?view=cm&to=#email#&body=%0A%0APowered%20by%20The%20Actors%20Office','_blank'); $('##emailOptionsModal').modal('hide');" class="list-group-item list-group-item-action d-flex align-items-center">
                         <i class="mdi mdi-google font-18 me-2 text-danger"></i> Gmail
                     </a>
-                    <a href="https://outlook.live.com/mail/0/deeplink/compose?to=#email#&body=%0A%0APowered%20by%20The%20Actors%20Office" target="_blank" class="list-group-item list-group-item-action d-flex align-items-center" data-bs-dismiss="modal">
+                    <a href="javascript:;" onclick="window.open('https://outlook.live.com/mail/0/deeplink/compose?to=#email#&body=%0A%0APowered%20by%20The%20Actors%20Office','_blank'); $('##emailOptionsModal').modal('hide');" class="list-group-item list-group-item-action d-flex align-items-center">
                         <i class="mdi mdi-microsoft-outlook font-18 me-2 text-primary"></i> Outlook
                     </a>
-                    <a href="https://compose.mail.yahoo.com/?to=#email#&body=%0A%0APowered%20by%20The%20Actors%20Office" target="_blank" class="list-group-item list-group-item-action d-flex align-items-center" data-bs-dismiss="modal">
+                    <a href="javascript:;" onclick="window.open('https://compose.mail.yahoo.com/?to=#email#&body=%0A%0APowered%20by%20The%20Actors%20Office','_blank'); $('##emailOptionsModal').modal('hide');" class="list-group-item list-group-item-action d-flex align-items-center">
                         <i class="mdi mdi-yahoo font-18 me-2 text-purple"></i> Yahoo Mail
                     </a>
-                    <a href="javascript:;" onclick="window.location.href='mailto:#email#?body=%0A%0APowered%20by%20The%20Actors%20Office';" class="list-group-item list-group-item-action d-flex align-items-center" data-bs-dismiss="modal">
+                    <a href="javascript:;" onclick="window.location.href='mailto:#email#?body=%0A%0APowered%20by%20The%20Actors%20Office'; $('##emailOptionsModal').modal('hide');" class="list-group-item list-group-item-action d-flex align-items-center">
                         <i class="fe-mail font-18 me-2 text-secondary"></i> Default Mail App
                     </a>
                     <a href="javascript:;" onclick="navigator.clipboard.writeText('#email#'); $(this).html('<i class=\'mdi mdi-check font-18 me-2 text-success\'></i> Copied!'); setTimeout(function(){ $('##emailOptionsModal').modal('hide'); }, 800);" class="list-group-item list-group-item-action d-flex align-items-center">
