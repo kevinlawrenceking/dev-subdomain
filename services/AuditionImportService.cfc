@@ -1594,6 +1594,20 @@ component displayname="AuditionImportService" accessors="true" output="false" {
     // GET USER JOB HISTORY
     // =============================================================
 
+    public query function auditionImports(required numeric userid) {
+        return queryExecute(
+            "SELECT DISTINCT u.uploadid, u.timestamp
+             FROM uploads u
+             JOIN auditionsimport ai ON ai.uploadid = u.uploadid
+             WHERE u.userid = :userid
+             ORDER BY u.timestamp DESC",
+            {
+                userid: { value: arguments.userid, cfsqltype: "cf_sql_integer" }
+            },
+            { datasource: application.datasource }
+        );
+    }
+
     public query function getUserJobHistory(required numeric userid, numeric limit = 25) {
         return queryExecute(
             "SELECT job_id, source_filename, file_type, status, created_at, finished_at,

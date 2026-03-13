@@ -469,10 +469,10 @@ x</button>
                             <h5>#notsActive.actiondetails#</h5>
                             <p>#notsActive.actionInfo#</p>
                             <cfif #notsActive.actionLinkID# is "2">
-                                <cfset newactionlinkURL="mailto:#emaillink#" />
                                 <cfif #emailcheck.recordcount# is "1">
                                     <cfset emaillink="#emailcheck.email#" />
                                 </cfif>
+                                <cfset newactionlinkURL="mailto:#emaillink#" />
                             </cfif>
                             <cfif #notsActive.actionLinkID# is "6">
                                 <cfset newendlink="#details.contactfullname#" />
@@ -563,7 +563,7 @@ x</button>
 
                                 <Cfset email="#emailcheck.email#" />
 
-                                <a href="mailto:#email#" class="<cfoutput>#tool_button#</cfoutput>" data-bs- data-bs-placement="top" title="" data-bs-original-title="Email">
+                                <a href="mailto:#email#" class="<cfoutput>#tool_button#</cfoutput>" data-bs-toggle="tooltip" data-bs-placement="top" title="Email">
 
                                     <i class="fe-mail"></i>
 
@@ -581,7 +581,7 @@ x</button>
 
                             <cfoutput>
 
-                                <a href="tel:#anchorPhoneNumber#" class="<cfoutput>#tool_button#</cfoutput>" data-bs- data-bs-placement="top" title="" data-bs-original-title="Voice Call">
+                                <a href="tel:#anchorPhoneNumber#" class="<cfoutput>#tool_button#</cfoutput>" data-bs-toggle="tooltip" data-bs-placement="top" title="Voice Call">
 
                                     <i class="fe-phone-call"></i>
 
