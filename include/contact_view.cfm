@@ -124,7 +124,7 @@
                         <cfif #emailcheck.recordcount# is "1">
                             <cfoutput>
                                 <Cfset email="#emailcheck.email#" />
-                                <a href="mailto:#email#" class="text-reset font-18 py-1 px-2 d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="Email">
+                                <a href="mailto:#email#" class="text-reset font-18 py-1 px-2 d-inline-block" target="_blank" title="#email#">
                                     <i class="fe-mail"></i>
                                 </a>
                             </cfoutput>
@@ -134,7 +134,7 @@
                             <Cfset phonenumber=phonecheck.phonenumber />
                             <cfinclude template="/include/formatPhoneNumber.cfm" />
                             <cfoutput>
-                                <a href="tel:#anchorPhoneNumber#" class="text-reset font-18 py-1 px-2 d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="Voice Call">
+                                <a href="tel:#anchorPhoneNumber#" class="text-reset font-18 py-1 px-2 d-inline-block" target="_blank" title="Voice Call">
                                     <i class="fe-phone-call"></i>
                                 </a>
                             </cfoutput>

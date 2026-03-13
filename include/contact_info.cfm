@@ -563,7 +563,7 @@ x</button>
 
                                 <Cfset email="#emailcheck.email#" />
 
-                                <a href="mailto:#email#" class="<cfoutput>#tool_button#</cfoutput>" data-bs-toggle="tooltip" data-bs-placement="top" title="Email">
+                                <a href="mailto:#email#" class="<cfoutput>#tool_button#</cfoutput>" target="_blank" title="#email#">
 
                                     <i class="fe-mail"></i>
 
@@ -581,7 +581,7 @@ x</button>
 
                             <cfoutput>
 
-                                <a href="tel:#anchorPhoneNumber#" class="<cfoutput>#tool_button#</cfoutput>" data-bs-toggle="tooltip" data-bs-placement="top" title="Voice Call">
+                                <a href="tel:#anchorPhoneNumber#" class="<cfoutput>#tool_button#</cfoutput>" target="_blank" title="Voice Call">
 
                                     <i class="fe-phone-call"></i>
 
