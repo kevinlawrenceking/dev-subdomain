@@ -563,10 +563,8 @@ x</button>
 
                                 <Cfset email="#emailcheck.email#" />
 
-                                <a href="##" onclick="window.location.href='mailto:#email#'; return false;" class="<cfoutput>#tool_button#</cfoutput>" title="#email#">
-
+                                <a href="javascript:;" class="<cfoutput>#tool_button#</cfoutput>" data-bs-toggle="modal" data-bs-target="##emailOptionsModal" title="#email#">
                                     <i class="fe-mail"></i>
-
                                 </a>
 
                             </cfoutput>
@@ -1178,3 +1176,37 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 });
 </script>
+
+<cfif emailcheck.recordcount is "1">
+<cfoutput>
+<div id="emailOptionsModal" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header py-2">
+                <h5 class="modal-title">Email #email#</h5>
+                <button type="button" class="close" data-bs-dismiss="modal"><i class="mdi mdi-close-thick"></i></button>
+            </div>
+            <div class="modal-body p-0">
+                <div class="list-group list-group-flush">
+                    <a href="https://mail.google.com/mail/?view=cm&to=#email#&body=%0A%0APowered%20by%20The%20Actors%20Office" target="_blank" class="list-group-item list-group-item-action d-flex align-items-center" data-bs-dismiss="modal">
+                        <i class="mdi mdi-google font-18 me-2 text-danger"></i> Gmail
+                    </a>
+                    <a href="https://outlook.live.com/mail/0/deeplink/compose?to=#email#&body=%0A%0APowered%20by%20The%20Actors%20Office" target="_blank" class="list-group-item list-group-item-action d-flex align-items-center" data-bs-dismiss="modal">
+                        <i class="mdi mdi-microsoft-outlook font-18 me-2 text-primary"></i> Outlook
+                    </a>
+                    <a href="https://compose.mail.yahoo.com/?to=#email#&body=%0A%0APowered%20by%20The%20Actors%20Office" target="_blank" class="list-group-item list-group-item-action d-flex align-items-center" data-bs-dismiss="modal">
+                        <i class="mdi mdi-yahoo font-18 me-2 text-purple"></i> Yahoo Mail
+                    </a>
+                    <a href="javascript:;" onclick="window.location.href='mailto:#email#?body=%0A%0APowered%20by%20The%20Actors%20Office';" class="list-group-item list-group-item-action d-flex align-items-center" data-bs-dismiss="modal">
+                        <i class="fe-mail font-18 me-2 text-secondary"></i> Default Mail App
+                    </a>
+                    <a href="javascript:;" onclick="navigator.clipboard.writeText('#email#'); $(this).html('<i class=\'mdi mdi-check font-18 me-2 text-success\'></i> Copied!'); setTimeout(function(){ $('##emailOptionsModal').modal('hide'); }, 800);" class="list-group-item list-group-item-action d-flex align-items-center">
+                        <i class="mdi mdi-content-copy font-18 me-2 text-muted"></i> Copy Email Address
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</cfoutput>
+</cfif>
