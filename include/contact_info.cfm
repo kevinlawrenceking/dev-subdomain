@@ -563,7 +563,7 @@ x</button>
 
                                 <Cfset email="#emailcheck.email#" />
 
-                                <a href="mailto:#email#" class="<cfoutput>#tool_button#</cfoutput>" target="_blank" title="#email#">
+                                <a href="mailto:#email#" class="<cfoutput>#tool_button#</cfoutput>" title="#email#">
 
                                     <i class="fe-mail"></i>
 

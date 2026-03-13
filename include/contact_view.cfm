@@ -124,7 +124,7 @@
                         <cfif #emailcheck.recordcount# is "1">
                             <cfoutput>
                                 <Cfset email="#emailcheck.email#" />
-                                <a href="mailto:#email#" class="text-reset font-18 py-1 px-2 d-inline-block" target="_blank" title="#email#">
+                                <a href="mailto:#email#" class="text-reset font-18 py-1 px-2 d-inline-block" title="#email#">
                                     <i class="fe-mail"></i>
                                 </a>
                             </cfoutput>

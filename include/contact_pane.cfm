@@ -114,7 +114,7 @@
 
                                     <cfif ActiveCategories.valueCategory is "Email">
                                         <h5 class="mb-2">
-                                            <a href="mailto:#valuetext#" target="_blank">#valuetext#</a>
+                                            <a href="mailto:#valuetext#">#valuetext#</a>
                                             <a href="javascript:;" class="ms-2" data-bs-toggle="modal" data-bs-target="##remoteUpdateC#itemid#" title="Update Email">
                                                 <i class="mdi mdi-square-edit-outline"></i>
                                             </a>

@@ -118,7 +118,7 @@
           <div class="tao-card-social">
             <cfif card_footer_type eq "social">
               <cfif card_email neq "">
-                <a href="mailto:#card_email#" target="_blank" title="#card_email#">
+                <a href="mailto:#card_email#" title="#card_email#">
                   <i class="fe-mail"></i>
                 </a>
               </cfif>
