@@ -259,25 +259,61 @@
             <cfset addDebug("Data rows parsed: " & arrayLen(variables.dataRows))>
 
         <cfelseif variables.job.file_type eq "xls" or variables.job.file_type eq "xlsx">
-            <!--- Parse Excel using cfspreadsheet --->
-            <cfspreadsheet action="read" src="#variables.filePath#" query="spreadsheetData" headerrow="1">
+            <!--- Parse Excel using cfspreadsheet; fall back to CSV if POI rejects the file --->
+            <cfset variables.excelParsed = false>
+            <cftry>
+                <cfspreadsheet action="read" src="#variables.filePath#" query="spreadsheetData" headerrow="1">
+                <cfset variables.excelParsed = true>
+                <cfcatch type="any">
+                    <cfset addDebug("Excel parse failed (" & cfcatch.message & "), trying CSV fallback...")>
+                </cfcatch>
+            </cftry>
 
-            <!--- Get headers from column names --->
-            <cfset variables.rawHeaders = listToArray(variables.spreadsheetData.columnList)>
-            <cfset variables.headers = processHeaders(variables.rawHeaders)>
+            <cfif variables.excelParsed>
+                <!--- Get headers from column names --->
+                <cfset variables.rawHeaders = listToArray(variables.spreadsheetData.columnList)>
+                <cfset variables.headers = processHeaders(variables.rawHeaders)>
 
-            <!--- Get data rows --->
-            <cfloop query="variables.spreadsheetData">
-                <cfset variables.rowData = []>
-                <cfloop list="#variables.spreadsheetData.columnList#" index="colName">
-                    <cfset variables.cellValue = variables.spreadsheetData[variables.colName][variables.spreadsheetData.currentRow]>
-                    <cfif isNull(variables.cellValue)>
-                        <cfset variables.cellValue = "">
-                    </cfif>
-                    <cfset arrayAppend(variables.rowData, toString(variables.cellValue))>
+                <!--- Get data rows --->
+                <cfloop query="variables.spreadsheetData">
+                    <cfset variables.rowData = []>
+                    <cfloop list="#variables.spreadsheetData.columnList#" index="colName">
+                        <cfset variables.cellValue = variables.spreadsheetData[variables.colName][variables.spreadsheetData.currentRow]>
+                        <cfif isNull(variables.cellValue)>
+                            <cfset variables.cellValue = "">
+                        </cfif>
+                        <cfset arrayAppend(variables.rowData, toString(variables.cellValue))>
+                    </cfloop>
+                    <cfset arrayAppend(variables.dataRows, variables.rowData)>
                 </cfloop>
-                <cfset arrayAppend(variables.dataRows, variables.rowData)>
-            </cfloop>
+            <cfelse>
+                <!--- Fallback: try reading as CSV (file may be CSV saved with .xls/.xlsx extension) --->
+                <cfset addDebug("Attempting CSV fallback for " & variables.job.file_type & " file...")>
+                <cfset variables.fileContent = fileRead(variables.filePath, "utf-8")>
+                <cfset variables.fileContent = replace(variables.fileContent, chr(13) & chr(10), chr(10), "all")>
+                <cfset variables.fileContent = replace(variables.fileContent, chr(13), chr(10), "all")>
+                <cfset variables.lines = listToArray(variables.fileContent, chr(10))>
+                <cfif arrayLen(variables.lines) eq 0>
+                    <cfthrow message="File is empty and not a valid Excel workbook">
+                </cfif>
+                <cfset variables.firstLine = variables.lines[1]>
+                <cfset variables.commaCount = len(variables.firstLine) - len(replace(variables.firstLine, ",", "", "all"))>
+                <cfset variables.tabCount = len(variables.firstLine) - len(replace(variables.firstLine, chr(9), "", "all"))>
+                <cfset variables.delimiter = ",">
+                <cfif variables.tabCount gt variables.commaCount>
+                    <cfset variables.delimiter = chr(9)>
+                </cfif>
+                <cfset variables.headerRow = parseCSVLine(variables.firstLine, variables.delimiter)>
+                <cfset variables.headers = processHeaders(variables.headerRow)>
+                <cfloop from="2" to="#arrayLen(variables.lines)#" index="i">
+                    <cfset variables.lineText = trim(variables.lines[i])>
+                    <cfif len(variables.lineText) gt 0>
+                        <cfset variables.rowData = parseCSVLine(variables.lineText, variables.delimiter)>
+                        <cfset arrayAppend(variables.dataRows, variables.rowData)>
+                    </cfif>
+                </cfloop>
+                <cfset addDebug("CSV fallback succeeded: " & arrayLen(variables.headers) & " headers, " & arrayLen(variables.dataRows) & " rows")>
+            </cfif>
         <cfelseif variables.job.file_type eq "vcf">
             <cfset addDebug("Parsing VCF file...")>
             <!--- Parse VCF (vCard) file --->

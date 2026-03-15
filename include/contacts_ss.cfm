@@ -27,7 +27,11 @@ WHERE userid = <Cfqueryparam value="#userid#" cfsqltype="CF_SQL_INTEGER" />
 
 <cfif #isdefined('byimport')#>
     <cfif #byimport# is not "">
-    and contactid in (SELECT contactid FROM contactsimport WHERE uploadid = #byimport# )
+    and contactid in (
+        SELECT contactid FROM contactsimport WHERE uploadid = <cfqueryparam value="#byimport#" cfsqltype="CF_SQL_INTEGER" />
+        UNION
+        SELECT created_contactid FROM import_v3_rows WHERE job_id = <cfqueryparam value="#byimport#" cfsqltype="CF_SQL_INTEGER" /> AND created_contactid IS NOT NULL
+    )
     </cfif>
     </cfif>
 

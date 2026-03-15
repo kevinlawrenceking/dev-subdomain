@@ -550,7 +550,17 @@
         var smartDefaults = {
             'email':    'email_business',
             'phone':    'phone_mobile',
-            'address':  'address1'
+            'address':  'address1',
+            'tag':      'tags',
+            'tag1':     'tags',
+            'tag2':     'tags',
+            'category': 'tags',
+            'postalcode': 'zip',
+            'zipcode':  'zip',
+            'streetaddress': 'address1',
+            'jobtitle': 'title',
+            'meetingdate': 'relationship_start',
+            'relationshipsystem': 'relationship_system'
         };
 
         var html = '<table class="table table-sm" style="table-layout:fixed;width:100%;"><thead><tr><th style="width:150px;">Source Column</th><th>Sample Values</th><th style="width:200px;">Maps To</th></tr></thead><tbody>';
@@ -1019,10 +1029,10 @@
             }),
             success: function(response) {
                 console.log('[V3] Row action response:', response);
-                if (response.success) {
+                if (cfGet(response, 'success')) {
                     loadRows();
                 } else {
-                    showAlert('error', response.message);
+                    showAlert('error', cfGet(response, 'message') || 'Action failed');
                 }
             },
             error: function(xhr) {
@@ -1063,13 +1073,17 @@
         // Fetch single row detail - V3 ENDPOINT
         $j.get('/ajax/importv3/row.cfm?bypass=1&job_id=' + state.jobId + '&row_id=' + rowId, function(response) {
             console.log('[V3] Row detail response:', response);
-            // ColdFusion serializes struct keys uppercase — handle both
-            var rowData = response.data.row || response.data.ROW;
-            if (response.success && rowData) {
+            // ColdFusion serializes struct keys uppercase - use cfGet helper
+            var rData = cfGet(response, 'data') || {};
+            var rowData = cfGet(rData, 'row');
+            if (cfGet(response, 'success') && rowData) {
                 renderEditModal(rowData);
             } else {
-                showAlert('error', 'Could not find row data');
+                showAlert('error', cfGet(response, 'message') || 'Could not load row data');
             }
+        }).fail(function(xhr, status, error) {
+            console.error('[V3] Edit row fetch error:', xhr.status, status, error);
+            showErrorWithDebug(xhr, 'Failed to load row for editing.');
         });
     }
 
@@ -1086,8 +1100,8 @@
             }
             return out;
         }
-        currentEditData = normalizeKeys(row.data || {});
-        var validation = normalizeKeys(row.validation || {});
+        currentEditData = normalizeKeys(cfGet(row, 'data') || {});
+        var validation = normalizeKeys(cfGet(row, 'validation') || {});
 
         // Group fields by category for better organization
         var fieldGroups = {
@@ -1336,17 +1350,19 @@
             success: function(response) {
                 console.log('[V3] Save response:', response);
                 // Log debug breadcrumbs if present
-                if (response.data && response.data.debug) {
-                    console.log('[V3] Debug trail:', response.data.debug.join(' -> '));
+                var rData = cfGet(response, 'data') || {};
+                var rDebug = cfGet(rData, 'debug');
+                if (rDebug) {
+                    console.log('[V3] Debug trail:', rDebug.join(' -> '));
                 }
                 $btn.prop('disabled', false).html('<i class="fe-check"></i> Save Changes');
-                if (response.success) {
+                if (cfGet(response, 'success')) {
                     bsModal('#edit-modal', 'hide');
                     showAlert('success', 'Row updated and revalidated');
                     loadRows();
                 } else {
-                    console.error('[V3] Fact update failed with code:', response.code);
-                    showAlert('error', response.message || 'Validation failed');
+                    console.error('[V3] Fact update failed with code:', cfGet(response, 'code'));
+                    showAlert('error', cfGet(response, 'message') || 'Validation failed');
                 }
             },
             error: function(xhr, status, error) {
@@ -1366,11 +1382,17 @@
         // V3 ENDPOINT
         $j.get('/ajax/importv3/row.cfm?bypass=1&job_id=' + state.jobId + '&row_id=' + rowId, function(response) {
             console.log('[V3] Dupe row response:', response);
-            if (!response.success || !response.data.row) return;
+            var rSuccess = cfGet(response, 'success');
+            var rData = cfGet(response, 'data') || {};
+            var rRow = cfGet(rData, 'row');
+            if (!rSuccess || !rRow) {
+                showAlert('error', cfGet(response, 'message') || 'Could not load duplicate info');
+                return;
+            }
 
-            var row = response.data.row;
-            var data = row.data || {};
-            var dupes = row.duplicates || [];
+            var row = rRow;
+            var data = cfGet(row, 'data') || {};
+            var dupes = cfGet(row, 'duplicates') || [];
 
             var html = '<div class="row">';
 
@@ -1378,31 +1400,37 @@
             html += '<div class="col-md-6">';
             html += '<h6>Importing:</h6>';
             html += '<table class="table table-sm">';
-            html += '<tr><td><strong>Name</strong></td><td>' + escapeHtml(data.contactFullName || (data.firstName + ' ' + data.lastName)) + '</td></tr>';
-            html += '<tr><td><strong>Email</strong></td><td>' + escapeHtml(data.email_business || data.email_personal || '-') + '</td></tr>';
-            html += '<tr><td><strong>Phone</strong></td><td>' + escapeHtml(data.phone_work || data.phone_mobile || '-') + '</td></tr>';
-            html += '<tr><td><strong>Company</strong></td><td>' + escapeHtml(data.company || '-') + '</td></tr>';
+            html += '<tr><td><strong>Name</strong></td><td>' + escapeHtml(cfGet(data, 'contactFullName') || ((cfGet(data, 'firstName') || '') + ' ' + (cfGet(data, 'lastName') || ''))) + '</td></tr>';
+            html += '<tr><td><strong>Email</strong></td><td>' + escapeHtml(cfGet(data, 'email_business') || cfGet(data, 'email_personal') || '-') + '</td></tr>';
+            html += '<tr><td><strong>Phone</strong></td><td>' + escapeHtml(cfGet(data, 'phone_work') || cfGet(data, 'phone_mobile') || '-') + '</td></tr>';
+            html += '<tr><td><strong>Company</strong></td><td>' + escapeHtml(cfGet(data, 'company') || '-') + '</td></tr>';
             html += '</table>';
             html += '</div>';
 
             // Existing contact
             if (dupes.length > 0) {
                 var match = dupes[0];
+                var bestScore = cfGet(row, 'best_match_score');
+                var matchName = cfGet(match, 'contactFullName') || cfGet(match, 'recordname') || '';
+                var matchEmail = cfGet(match, 'email');
+                var matchPhone = cfGet(match, 'phone');
+                var matchReasons = cfGet(match, 'reasons');
+                var matchContactId = cfGet(match, 'contactid');
                 html += '<div class="col-md-6">';
-                html += '<h6>Existing Contact' + (row.best_match_score ? ' (Score: ' + row.best_match_score + ')' : '') + ':</h6>';
+                html += '<h6>Existing Contact' + (bestScore ? ' (Score: ' + bestScore + ')' : '') + ':</h6>';
                 html += '<table class="table table-sm">';
-                html += '<tr><td><strong>Name</strong></td><td>' + escapeHtml(match.contactFullName || match.recordname) + '</td></tr>';
-                if (match.email) {
-                    html += '<tr><td><strong>Email</strong></td><td class="text-success">' + escapeHtml(match.email) + '</td></tr>';
+                html += '<tr><td><strong>Name</strong></td><td>' + escapeHtml(matchName) + '</td></tr>';
+                if (matchEmail) {
+                    html += '<tr><td><strong>Email</strong></td><td class="text-success">' + escapeHtml(matchEmail) + '</td></tr>';
                 }
-                if (match.phone) {
-                    html += '<tr><td><strong>Phone</strong></td><td class="text-success">' + escapeHtml(match.phone) + '</td></tr>';
+                if (matchPhone) {
+                    html += '<tr><td><strong>Phone</strong></td><td class="text-success">' + escapeHtml(matchPhone) + '</td></tr>';
                 }
                 html += '</table>';
-                if (match.reasons && match.reasons.length > 0) {
-                    html += '<p class="text-muted small">Match reasons: ' + match.reasons.join(', ') + '</p>';
+                if (matchReasons && matchReasons.length > 0) {
+                    html += '<p class="text-muted small">Match reasons: ' + matchReasons.join(', ') + '</p>';
                 }
-                html += '<a href="/app/contact/?contactid=' + match.contactid + '" target="_blank" class="btn btn-xs btn-outline-info">View Contact</a>';
+                html += '<a href="/app/contact/?contactid=' + matchContactId + '" target="_blank" class="btn btn-xs btn-outline-info">View Contact</a>';
                 html += '</div>';
             }
 
@@ -1410,6 +1438,9 @@
 
             $j('#dupe-modal-body').html(html);
             bsModal('#dupe-modal', 'show');
+        }).fail(function(xhr, status, error) {
+            console.error('[V3] Resolve dupe fetch error:', xhr.status, status, error);
+            showErrorWithDebug(xhr, 'Failed to load duplicate info.');
         });
     }
 
@@ -1441,15 +1472,17 @@
             success: function(response) {
                 console.log('[V3] Row action response:', response);
                 // Log debug breadcrumbs if present
-                if (response.data && response.data.debug) {
-                    console.log('[V3] Debug trail:', response.data.debug.join(' -> '));
+                var rData = cfGet(response, 'data') || {};
+                var rDebug = cfGet(rData, 'debug');
+                if (rDebug) {
+                    console.log('[V3] Debug trail:', rDebug.join(' -> '));
                 }
                 bsModal('#dupe-modal', 'hide');
-                if (response.success) {
+                if (cfGet(response, 'success')) {
                     loadRows();
                 } else {
-                    console.error('[V3] Dupe action failed with code:', response.code);
-                    showAlert('error', response.message);
+                    console.error('[V3] Dupe action failed with code:', cfGet(response, 'code'));
+                    showAlert('error', cfGet(response, 'message'));
                 }
             },
             error: function(xhr, status, error) {

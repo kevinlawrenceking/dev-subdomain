@@ -1,5 +1,6 @@
 <!--- This ColdFusion page handles the display and submission of notes related to a contact, including visibility options and a text editor for note details. --->
 
+<cfparam name="rcontactid" default="0" />
 <cfinclude template="/include/qry/relationships_13_1.cfm" />
 
 <div class="row">
@@ -19,7 +20,7 @@
                     <cfoutput>
                         <!--- Hidden inputs for form submission --->
                         <input type="hidden" name="returnurl" value="#returnurl#" />
-                        <input type="hidden" name="rcontactid" value="#contactid#" />
+                        <input type="hidden" name="rcontactid" value="#Val(rcontactid)#" />
                         <input type="hidden" name="audprojectid" value="#audprojectid#" />
                         <input type="hidden" name="userid" value="#userid#" />
                     </cfoutput>

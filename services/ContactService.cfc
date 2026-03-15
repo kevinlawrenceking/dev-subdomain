@@ -604,7 +604,8 @@
         </cfif>
 
 <cfif len(trim(arguments.byimport))>
-            <cfset sql &= " AND contactid IN ( SELECT contactid FROM contactsimport WHERE uploadid = ? )">
+            <cfset sql &= " AND contactid IN ( SELECT contactid FROM contactsimport WHERE uploadid = ? UNION SELECT created_contactid FROM import_v3_rows WHERE job_id = ? AND created_contactid IS NOT NULL )">
+            <cfset paramList.append({value=arguments.byimport, cfsqltype="CF_SQL_INTEGER"})>
             <cfset paramList.append({value=arguments.byimport, cfsqltype="CF_SQL_INTEGER"})>
         </cfif>
 

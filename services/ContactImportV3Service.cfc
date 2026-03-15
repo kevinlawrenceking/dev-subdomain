@@ -1572,6 +1572,24 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                 );
             }
 
+            // D5) Insert notes if provided
+            if (len(trim(contactData.notes))) {
+                try {
+                    queryExecute(
+                        "INSERT INTO noteslog (userid, contactid, noteDetails, isPublic)
+                         VALUES (:userid, :contactid, :noteDetails, 1)",
+                        {
+                            userid: { value: arguments.userid, cfsqltype: "cf_sql_integer" },
+                            contactid: { value: newContactId, cfsqltype: "cf_sql_integer" },
+                            noteDetails: { value: left(trim(contactData.notes), 2000), cfsqltype: "cf_sql_longvarchar" }
+                        },
+                        { datasource: application.datasource }
+                    );
+                } catch (any noteErr) {
+                    writeLog(file="importv3", text="[processRowForImport] NOTE_INSERT_WARNING job_id=" & arguments.job_id & " row_id=" & arguments.row_id & " error=" & noteErr.message);
+                }
+            }
+
             // E) Log success event (no PII)
             logEvent(
                 job_id = arguments.job_id,
@@ -1743,7 +1761,8 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                     data.notes = value;
                     break;
                 case "tags":
-                    // Tags might be comma-separated
+                case "category":
+                    // Tags (and legacy category) might be comma-separated
                     var tagList = listToArray(value, ",");
                     for (var tag in tagList) {
                         if (len(trim(tag))) {
@@ -2495,31 +2514,57 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                 var errCode = !isValid ? (structKeyExists(vr, "code") ? vr.code : "INVALID") : "";
                 var errMsg = !isValid ? (structKeyExists(vr, "error") ? vr.error : "") : "";
 
-                // Upsert the fact
+                // Update existing fact by field_name first (avoids column_id collision
+                // when mapped_field doesn't match the camelCase key from the edit form)
+                var updateResult = {};
                 queryExecute(
-                    "INSERT INTO import_v3_facts (row_id, column_id, field_name, raw_value, normalized_value, is_valid, validation_code, validation_message, updated_at)
-                     SELECT :row_id, COALESCE(c.column_id, 0), :field_name, :raw_value, :normalized_value, :is_valid, :validation_code, :validation_message, NOW()
-                     FROM (SELECT 1) AS dummy
-                     LEFT JOIN import_v3_columns c ON c.job_id = :job_id AND c.mapped_field = :field_name
-                     ON DUPLICATE KEY UPDATE
+                    "UPDATE import_v3_facts
+                     SET normalized_value = :normalized_value,
                          raw_value = :raw_value,
-                         normalized_value = :normalized_value,
                          is_valid = :is_valid,
                          validation_code = :validation_code,
                          validation_message = :validation_message,
-                         updated_at = NOW()",
+                         updated_at = NOW()
+                     WHERE row_id = :row_id AND field_name = :field_name",
                     {
                         row_id: { value: arguments.row_id, cfsqltype: "cf_sql_integer" },
-                        job_id: { value: arguments.job_id, cfsqltype: "cf_sql_integer" },
                         field_name: { value: fieldName, cfsqltype: "cf_sql_varchar" },
-                        raw_value: { value: newValue, cfsqltype: "cf_sql_varchar", null: !len(newValue) },
-                        normalized_value: { value: normalizedVal, cfsqltype: "cf_sql_varchar", null: !len(normalizedVal) },
+                        raw_value: { value: newValue, cfsqltype: "cf_sql_longvarchar", null: !len(newValue) },
+                        normalized_value: { value: normalizedVal, cfsqltype: "cf_sql_longvarchar", null: !len(normalizedVal) },
                         is_valid: { value: isValid ? 1 : 0, cfsqltype: "cf_sql_integer" },
                         validation_code: { value: errCode, cfsqltype: "cf_sql_varchar", null: isValid },
                         validation_message: { value: errMsg, cfsqltype: "cf_sql_varchar", null: isValid }
                     },
-                    { datasource: application.datasource }
+                    { datasource: application.datasource, result: "updateResult" }
                 );
+
+                // If no existing fact matched, insert a new one
+                if (updateResult.recordCount eq 0) {
+                    queryExecute(
+                        "INSERT INTO import_v3_facts (row_id, column_id, field_name, raw_value, normalized_value, is_valid, validation_code, validation_message, updated_at)
+                         SELECT :row_id, COALESCE(c.column_id, 0), :field_name, :raw_value, :normalized_value, :is_valid, :validation_code, :validation_message, NOW()
+                         FROM (SELECT 1) AS dummy
+                         LEFT JOIN import_v3_columns c ON c.job_id = :job_id AND c.mapped_field = :field_name
+                         ON DUPLICATE KEY UPDATE
+                             field_name = :field_name,
+                             normalized_value = :normalized_value,
+                             is_valid = :is_valid,
+                             validation_code = :validation_code,
+                             validation_message = :validation_message,
+                             updated_at = NOW()",
+                        {
+                            row_id: { value: arguments.row_id, cfsqltype: "cf_sql_integer" },
+                            job_id: { value: arguments.job_id, cfsqltype: "cf_sql_integer" },
+                            field_name: { value: fieldName, cfsqltype: "cf_sql_varchar" },
+                            raw_value: { value: newValue, cfsqltype: "cf_sql_longvarchar", null: !len(newValue) },
+                            normalized_value: { value: normalizedVal, cfsqltype: "cf_sql_longvarchar", null: !len(normalizedVal) },
+                            is_valid: { value: isValid ? 1 : 0, cfsqltype: "cf_sql_integer" },
+                            validation_code: { value: errCode, cfsqltype: "cf_sql_varchar", null: isValid },
+                            validation_message: { value: errMsg, cfsqltype: "cf_sql_varchar", null: isValid }
+                        },
+                        { datasource: application.datasource }
+                    );
+                }
 
                 arrayAppend(updatedFields, fieldName);
 
