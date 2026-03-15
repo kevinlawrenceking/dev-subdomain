@@ -1510,19 +1510,22 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                         userid,
                         contactFullName,
                         contactBirthday,
+                        contactmeetingdate,
                         user_yn,
                         IsDeleted
                     ) VALUES (
                         :userid,
                         :contactFullName,
                         :contactBirthday,
+                        :contactmeetingdate,
                         'Y',
                         0
                     )",
                     {
                         userid: { value: arguments.userid, cfsqltype: "cf_sql_integer" },
                         contactFullName: { value: contactData.contactFullName, cfsqltype: "cf_sql_varchar" },
-                        contactBirthday: { value: contactData.contactBirthday, cfsqltype: "cf_sql_date", null: !len(trim(contactData.contactBirthday)) }
+                        contactBirthday: { value: contactData.contactBirthday, cfsqltype: "cf_sql_date", null: !len(trim(contactData.contactBirthday)) },
+                        contactmeetingdate: { value: contactData.relationship_start, cfsqltype: "cf_sql_date", null: !len(trim(contactData.relationship_start)) }
                     },
                     { datasource: application.datasource, result: "qInsertResult" }
                 );
@@ -1678,7 +1681,8 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
             "twitter": "",
             "instagram": "",
             "notes": "",
-            "tags": []
+            "tags": [],
+            "relationship_start": ""
         };
 
         for (var fact in arguments.qFacts) {
@@ -1760,6 +1764,9 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                 case "notes":
                     data.notes = value;
                     break;
+                case "relationship_start":
+                    data.relationship_start = value;
+                    break;
                 case "tags":
                 case "category":
                     // Tags (and legacy category) might be comma-separated
@@ -1826,14 +1833,14 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
             }
         }
 
-        // Insert company
-        if (len(trim(arguments.contactData.company))) {
+        // Insert company (also fires when title-only, so title is never dropped)
+        if (len(trim(arguments.contactData.company)) || len(trim(arguments.contactData.title))) {
             queryExecute(
                 "INSERT INTO contactitems (contactid, valueCategory, valueType, valueCompany, valueTitle, itemStatus)
                  VALUES (:contactid, 'Company', 'Company', :company, :title, 'Active')",
                 {
                     contactid: { value: arguments.contactid, cfsqltype: "cf_sql_integer" },
-                    company: { value: trim(arguments.contactData.company), cfsqltype: "cf_sql_varchar" },
+                    company: { value: trim(arguments.contactData.company), cfsqltype: "cf_sql_varchar", null: !len(trim(arguments.contactData.company)) },
                     title: { value: trim(arguments.contactData.title), cfsqltype: "cf_sql_varchar", null: !len(trim(arguments.contactData.title)) }
                 },
                 { datasource: application.datasource }
