@@ -123,12 +123,12 @@
                                 </cfif>
 <Cfoutput>
                                 <div class="form-group mb-3">
-                                    <label for="emailaddress">Email Address</label>
+                                    <label for="j_username">Email Address</label>
                                     <input class="form-control" type="email" id="j_username" name="j_username" value="#htmlEditFormat(u)#" required placeholder="Enter your email" />
                                 </div>
 
                        <div class="form-group mb-3">
-    <label for="password">Password</label>
+    <label for="j_password">Password</label>
     <div class="input-group input-group-merge">
         <input type="password" id="j_password" name="j_password" class="form-control" value="#htmlEditFormat(p)#" placeholder="Enter your password" />
         <div class="input-group-append">
