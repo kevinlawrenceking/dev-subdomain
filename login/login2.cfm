@@ -324,13 +324,13 @@ console.log('Password length:', #len(form.j_password)#);
 console.groupEnd();
 
 console.group('User Lookup (raw, no join)');
-console.log('Found:', #debugUserRaw.recordcount eq 1#);
+console.log('Found:', #debugUserRaw.recordcount eq 1 ? 'true' : 'false'#);
 <cfif debugUserRaw.recordcount eq 1>
 console.log('userid:', #debugUserRaw.userid#);
 console.log('userstatus:', '#jsStringFormat(debugUserRaw.userstatus)#');
 console.log('passwordHash length:', #len(debugUserRaw.passwordHash)#, '(trimmed:', #len(trim(debugUserRaw.passwordHash))#, ')');
 console.log('passwordSalt length:', #len(debugUserRaw.passwordSalt)#, '(trimmed:', #len(trim(debugUserRaw.passwordSalt))#, ')');
-console.log('Legacy userPassword present:', #len(debugUserRaw.userPassword) gt 0#);
+console.log('Legacy userPassword present:', #len(debugUserRaw.userPassword) gt 0 ? 'true' : 'false'#);
 </cfif>
 console.groupEnd();
 
@@ -348,16 +348,16 @@ console.log('Stored hash:', '#jsStringFormat(storedHash)#');
 console.log('Stored hash length:', #len(storedHash)#);
 console.log('Computed hash:', '#jsStringFormat(computedHash)#');
 console.log('Computed hash length:', #len(computedHash)#);
-console.log('EQ match:', #hashMatch#);
-console.log('Trimmed match:', #(trim(computedHash) EQ trim(storedHash))#);
+console.log('EQ match:', #hashMatch ? 'true' : 'false'#);
+console.log('Trimmed match:', #(trim(computedHash) EQ trim(storedHash)) ? 'true' : 'false'#);
 <cfif NOT hashMatch>
 console.warn('MISMATCH — running algorithm tests:');
-console.log('SHA(pw, no salt):', #(testSHA EQ storedHash)#);
-console.log('SHA-256(pw, no salt):', #(testSHA256 EQ storedHash)#);
-console.log('SHA-512(pw, no salt):', #(testSHA512 EQ storedHash)#);
-console.log('MD5(pw, no salt):', #(testMD5 EQ storedHash)#);
-console.log('SHA-512(pw, trimmed salt):', #(testTrimSalt EQ storedHash)#);
-console.log('SHA-512(pw, trimmed salt) vs trimmed stored:', #(testTrimSalt EQ trim(storedHash))#);
+console.log('SHA(pw, no salt):', #(testSHA EQ storedHash) ? 'true' : 'false'#);
+console.log('SHA-256(pw, no salt):', #(testSHA256 EQ storedHash) ? 'true' : 'false'#);
+console.log('SHA-512(pw, no salt):', #(testSHA512 EQ storedHash) ? 'true' : 'false'#);
+console.log('MD5(pw, no salt):', #(testMD5 EQ storedHash) ? 'true' : 'false'#);
+console.log('SHA-512(pw, trimmed salt):', #(testTrimSalt EQ storedHash) ? 'true' : 'false'#);
+console.log('SHA-512(pw, trimmed salt) vs trimmed stored:', #(testTrimSalt EQ trim(storedHash)) ? 'true' : 'false'#);
 </cfif>
 console.groupEnd();
 </cfif>
