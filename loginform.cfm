@@ -65,7 +65,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="robots" content="noindex">
     <link rel="shortcut icon" href="/media/shared/images/favicon.ico">
-    <link href="/app/assets/css/app.min.css" rel="stylesheet" type="text/css" />
+    <link href="/app/assets/css/app.min.css" rel="stylesheet" type="text/css" id="app-style" />
     <link href="/app/assets/css/icons.min.css" rel="stylesheet" type="text/css" />
     <script src="/app/assets/js/jquery-3.6.0.min.js"></script>
 </head>
@@ -82,12 +82,12 @@
                                 <div class="auth-logo">
                                     <a href="index.html" class="logo no-hover-effect logo-dark text-center">
                                         <span class="logo no-hover-effect-lg">
-                                            <img src="/media/shared/taowhite.png" alt="" height="60" />
+                                            <img src="<cfoutput>/media-#application.dsn#/images/taowhite.png</cfoutput>" alt="" height="60" />
                                         </span>
                                     </a>
                                     <a href="index.html" class="logo no-hover-effect logo-light text-center">
                                         <span class="logo no-hover-effect-lg">
-                                            <img src="/media/shared/images/logo-dark.png" alt="" height="22" />
+                                            <img src="<cfoutput>/media-#application.dsn#/images/logo-dark.png</cfoutput>" alt="" height="22" />
                                         </span>
                                     </a>
                                 </div>
