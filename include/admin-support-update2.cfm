@@ -27,7 +27,7 @@
         <cfset emailcc = "jodie@jodiebentley.com, support@theactorsoffice.com" />
         <cfset emailsubject = "Ready for Testing Approval" />
         <cfset emailmessage = "Please review the Testing Script and approve for Testing." />
-        <cfset emaillink = "https://#host#.theactorsoffice.com/app/testing/?recid=#form.ticketid#" />
+        <cfset emaillink = "https://#host#.theactorsoffice.com/app/admin-support-details/?recid=#form.ticketid#" />
         <cfset emaillinkname = "REVIEW" />
 
         <!--- Include the email template if email should be sent --->
