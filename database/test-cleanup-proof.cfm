@@ -10,6 +10,7 @@
 
     Run this as an admin user with importV3Enabled feature flag.
 --->
+<cfinclude template="/database/admin-guard.cfm">
 <cfoutput>
 <html>
 <head>

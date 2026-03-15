@@ -8,6 +8,7 @@
     Equivalent to: database/migrations/V3_2__contact_import_v3_dupe_indexes.sql
     Rollback:      database/migrations/V3_2__contact_import_v3_dupe_indexes_ROLLBACK.sql
 --->
+<cfinclude template="/database/admin-guard.cfm">
 <cfsetting requesttimeout="300">
 <cfset dsn = application.dsn>
 <cfset schemaName = application.information_schema>

@@ -1,5 +1,6 @@
 <cfsilent>
 <!--- Migration Runner for Contact Import V2 (V2_0 + V2_1) --->
+<cfinclude template="/database/admin-guard.cfm">
 </cfsilent>
 <cfset response = {success: false, step: "", message: "", results: []}>
 <cftry>

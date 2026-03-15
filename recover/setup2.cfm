@@ -15,11 +15,11 @@
 
         <cfquery name="update" datasource="#dsn#">
     UPDATE taousers
-    set passwordHash = <cfqueryparam cfsqltype="char" value="#hash(form.pass1 & new_passwordSalt,'SHA-512')#" />
+    SET passwordHash = <cfqueryparam cfsqltype="char" value="#hash(form.pass1 & new_passwordSalt,'SHA-512')#" />
             ,recover = ''
-            ,userPassword = <cfqueryparam cfsqltype="cf_sql_varchar" value="#form.pass1#" />
+            ,userPassword = ''
             ,passwordSalt = <cfqueryparam cfsqltype="char" value="#new_passwordSalt#" />
-    where  userid = <cfqueryparam cfsqltype="cf_sql_integer" value="#form.new_userid#" />
+    WHERE userid = <cfqueryparam cfsqltype="cf_sql_integer" value="#form.new_userid#" />
     </cfquery>
 
 <cfset cookie.userid = form.new_userid />

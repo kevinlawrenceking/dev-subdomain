@@ -3,6 +3,7 @@
     Verifies: 1. Output structure, 2. Ownership check, 3. Feature flag gating
     Run as admin user via browser.
 --->
+<cfinclude template="/database/admin-guard.cfm">
 <cfoutput>
 <html>
 <head>

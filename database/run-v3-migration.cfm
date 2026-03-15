@@ -2,6 +2,7 @@
 <!--- Migration Runner for Contact Import V3 (V3_0) --->
 <!--- Usage: /database/run-v3-migration.cfm?run=yes --->
 <!--- Rollback: /database/run-v3-migration.cfm?run=yes&rollback=yes --->
+<cfinclude template="/database/admin-guard.cfm">
 </cfsilent>
 <cfset response = {success: false, step: "", message: "", results: [], tables_affected: []}>
 <cftry>

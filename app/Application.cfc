@@ -240,34 +240,60 @@
 
     <!--- 2) Admin Bypass via URL.u --->
     <cfif len(url.u) AND isNumeric(url.u)>
-      <cfset session.userid = url.u />
-      <cfset userid = session.userid />
-      <cfinclude template="/include/qry/fetchUsers.cfm" />
 
-      <cfset session.impersonating = true />
+      <!--- RULE 1: Authentication gate — reject unauthenticated ?u= --->
+      <cfif NOT structKeyExists(session, "userid")>
+        <cflocation url="/loginform.cfm" addToken="false" />
+      </cfif>
 
-      <cfscript>
-        session.userMediaPath = application.baseMediaPath & "\\users\\" & session.userID;
-        session.userMediaUrl  = application.baseMediaUrl  & "/users/" & session.userID;
+      <!--- RULE 2: Self-match — normal login redirect, skip to post-login block --->
+      <cfif url.u NEQ session.userid>
 
-        session.userCalendarPath = session.userMediaPath & "\\calendar\\" & calendarname & ".ics";
-        session.userCalendarUrl  = "https://" & host & ".theactorsoffice.com/media-" & application.dsn & "/calendar/" & calendarname & ".ics";
+        <!--- RULE 3: Admin impersonation gate — verify requester is admin --->
+        <cfquery name="adminCheck" datasource="#application.dsn#" maxrows="1">
+          SELECT userRole
+          FROM taousers
+          WHERE userid = <cfqueryparam value="#session.userid#" cfsqltype="cf_sql_integer" />
+        </cfquery>
 
-        session.userContactsPath = session.userMediaPath & "\\contacts";
-        session.userContactsUrl  = session.userMediaUrl  & "/contacts";
+        <cfif adminCheck.recordCount EQ 0
+              OR (adminCheck.userRole NEQ "Admin" AND adminCheck.userRole NEQ "Administrator")>
+          <cflocation url="/loginform.cfm?pwrong=Y" addToken="false" />
+        </cfif>
 
-        session.userImportsPath = session.userMediaPath & "\\imports";
-        session.userImportsUrl  = session.userMediaUrl  & "/imports";
+        <!--- Admin confirmed — impersonate target user --->
+        <cfset session.userid = url.u />
+        <cfset userid = session.userid />
+        <cfinclude template="/include/qry/fetchUsers.cfm" />
 
-        session.userExportsPath = session.userMediaPath & "\\exports";
-        session.userExportsUrl  = session.userMediaUrl  & "/exports";
+        <cfset session.impersonating = true />
 
-        session.userSharePath = session.userMediaPath & "\\share";
-        session.userShareUrl  = session.userMediaUrl  & "/share";
+        <cfscript>
+          session.userMediaPath = application.baseMediaPath & "\\users\\" & session.userID;
+          session.userMediaUrl  = application.baseMediaUrl  & "/users/" & session.userID;
 
-        session.userAvatarPath = session.userMediaPath & "\\avatar.jpg";
-        session.userAvatarUrl  = session.userMediaUrl  & "/avatar.jpg";
-      </cfscript>
+          session.userCalendarPath = session.userMediaPath & "\\calendar\\" & calendarname & ".ics";
+          session.userCalendarUrl  = "https://" & host & ".theactorsoffice.com/media-" & application.dsn & "/calendar/" & calendarname & ".ics";
+
+          session.userContactsPath = session.userMediaPath & "\\contacts";
+          session.userContactsUrl  = session.userMediaUrl  & "/contacts";
+
+          session.userImportsPath = session.userMediaPath & "\\imports";
+          session.userImportsUrl  = session.userMediaUrl  & "/imports";
+
+          session.userExportsPath = session.userMediaPath & "\\exports";
+          session.userExportsUrl  = session.userMediaUrl  & "/exports";
+
+          session.userSharePath = session.userMediaPath & "\\share";
+          session.userShareUrl  = session.userMediaUrl  & "/share";
+
+          session.userAvatarPath = session.userMediaPath & "\\avatar.jpg";
+          session.userAvatarUrl  = session.userMediaUrl  & "/avatar.jpg";
+        </cfscript>
+
+      </cfif>
+      <!--- Self-match (url.u == session.userid): no action, post-login block handles it --->
+
     </cfif>
 
     <!--- 3) Login gate (allow login pages) --->

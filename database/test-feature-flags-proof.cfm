@@ -3,6 +3,7 @@
     Verifies: 1. Flag defaults, 2. Allowlist, 3. Global flag, 4. Dashboard data
     Run as admin user via browser. All test data is cleaned up at the end.
 --->
+<cfinclude template="/database/admin-guard.cfm">
 <cfoutput>
 <html>
 <head>

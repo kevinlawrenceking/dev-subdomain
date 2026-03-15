@@ -26,7 +26,7 @@
     <cfset header = "Email Sent" />
     
     <cfquery result="result" name="find" datasource="#dsn#" >
-    Select * from taousers where useremail = '#email#'
+    Select * from taousers where useremail = <cfqueryparam value="#email#" cfsqltype="cf_sql_varchar">
     </cfquery>
     
     <cfif #find.recordcount# is "1">
@@ -35,7 +35,7 @@
     
         <cfquery result="result" name="update" datasource="#dsn#">
         update taousers set recover = <cfqueryparam value="#recover#" cfsqltype="cf_sql_varchar" />
-        where useremail = '#email#'
+        where useremail = <cfqueryparam value="#email#" cfsqltype="cf_sql_varchar">
         </cfquery> 
         
         <cfmail from="support@theactorsoffice.com" to="#find.useremail#"  bcc="kevinking7135@gmail.com" subject="The Actor's Office - Password Recovery" type="HTML">

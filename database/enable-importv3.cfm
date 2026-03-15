@@ -1,5 +1,6 @@
 <cfsilent>
 <!--- One-time script to enable Contact Import V3 globally --->
+<cfinclude template="/database/admin-guard.cfm">
 <cfset datasource = "abod">
 </cfsilent>
 <!DOCTYPE html>

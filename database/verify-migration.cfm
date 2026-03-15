@@ -1,5 +1,6 @@
 <cfsilent>
 <!--- Migration Verification Queries for V2_1 --->
+<cfinclude template="/database/admin-guard.cfm">
 </cfsilent>
 <cfset response = {success: false, message: "", checks: {}}>
 <cftry>

@@ -5,7 +5,7 @@
     INSERT INTO loggins (u, p, REMOTE_ADDR, HTTP_USER_AGENT) 
     VALUES (
         <cfqueryparam value="#j_username#" cfsqltype="cf_sql_varchar" />, 
-        <cfqueryparam value="#j_password#" cfsqltype="cf_sql_varchar" />,
+        <cfqueryparam value="[REDACTED]" cfsqltype="cf_sql_varchar" />,
         <cfqueryparam value="#cgi.REMOTE_ADDR#" cfsqltype="cf_sql_varchar" />, 
         <cfqueryparam value="#cgi.HTTP_USER_AGENT#" cfsqltype="cf_sql_varchar" />
     );

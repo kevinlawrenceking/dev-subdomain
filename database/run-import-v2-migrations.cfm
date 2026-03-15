@@ -4,6 +4,7 @@
     Run: /database/run-import-v2-migrations.cfm?run=yes
     Creates all required tables and adds V2.1 enhancements
 --->
+<cfinclude template="/database/admin-guard.cfm">
 </cfsilent>
 <cfset response = {success: false, step: "", message: "", results: []}>
 

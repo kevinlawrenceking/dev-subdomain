@@ -2,6 +2,7 @@
 <!--- V3 Migration Verification Script --->
 <!--- Usage: /database/verify-v3-migration.cfm?run=yes --->
 <!--- Smoke test: /database/verify-v3-migration.cfm?run=yes&smoke=yes --->
+<cfinclude template="/database/admin-guard.cfm">
 </cfsilent>
 <cfset response = {
     success: false,
