@@ -83,19 +83,38 @@
     <cfargument name="userID" type="string" required="true">
     <cfargument name="suStartDate" type="date" required="true">
 
-<cfquery result="result" >
-            INSERT INTO fuSystemUsers (systemID, contactID, userID, suStartDate)
-            VALUES (
-                <cfqueryparam value="#arguments.systemID#" cfsqltype="CF_SQL_INTEGER">,
-                <cfqueryparam value="#arguments.contactID#" cfsqltype="CF_SQL_INTEGER">,
-                <cfqueryparam value="#arguments.userID#" cfsqltype="CF_SQL_VARCHAR">,
-                <cfqueryparam value="#arguments.suStartDate#" cfsqltype="CF_SQL_DATE">
-            )
-        </cfquery>
+<cftransaction>
+    <!--- Check for existing active enrollment with row lock --->
+    <cfquery name="checkExisting">
+        SELECT suid FROM fusystemusers_tbl
+        WHERE systemid = <cfqueryparam value="#arguments.systemID#" cfsqltype="CF_SQL_INTEGER">
+          AND contactid = <cfqueryparam value="#arguments.contactID#" cfsqltype="CF_SQL_INTEGER">
+          AND userid = <cfqueryparam value="#arguments.userID#" cfsqltype="CF_SQL_INTEGER">
+          AND sustatus = 'Active'
+          AND isdeleted = 0
+        FOR UPDATE
+    </cfquery>
+
+    <cfif checkExisting.recordCount GT 0>
+        <cfreturn checkExisting.suid>
+    </cfif>
+
+    <cfquery result="result">
+        INSERT INTO fuSystemUsers (systemID, contactID, userID, suStartDate)
+        VALUES (
+            <cfqueryparam value="#arguments.systemID#" cfsqltype="CF_SQL_INTEGER">,
+            <cfqueryparam value="#arguments.contactID#" cfsqltype="CF_SQL_INTEGER">,
+            <cfqueryparam value="#arguments.userID#" cfsqltype="CF_SQL_VARCHAR">,
+            <cfqueryparam value="#arguments.suStartDate#" cfsqltype="CF_SQL_DATE">
+        )
+    </cfquery>
+</cftransaction>
 
 <cfreturn result.generatedKey>
 </cffunction>
 
+<!--- DEAD CODE: INSfusystemusers_batch — zero callers, references undefined #userid# variable.
+     Flagged for removal in Phase 5. --->
 <cffunction output="false" name="INSfusystemusers_batch" access="public" returntype="numeric">
     <cfargument name="new_systemid" type="numeric" required="true">
     <cfargument name="new_contactid" type="numeric" required="true">
@@ -140,7 +159,7 @@
         SELECT COUNT(*) AS totals
         FROM fusystemusers_tbl
         WHERE isdeleted = <cfqueryparam value="0" cfsqltype="CF_SQL_BIT">
-        AND contactid IN (#arguments.idlist#)
+        AND contactid IN (<cfqueryparam value="#arguments.idlist#" cfsqltype="CF_SQL_INTEGER" list="true">)
         AND systemid = <cfqueryparam value="#arguments.new_systemid#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
 
@@ -154,7 +173,7 @@
 <cfquery>
         UPDATE fusystemusers_tbl
         SET isdeleted = 1
-        WHERE contactid IN (#arguments.idList#)
+        WHERE contactid IN (<cfqueryparam value="#arguments.idList#" cfsqltype="CF_SQL_INTEGER" list="true">)
         AND systemid = <cfqueryparam value="#arguments.newSystemId#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
 </cffunction>
@@ -166,7 +185,23 @@
     <cfargument name="suStartDate" type="date" required="true">
     <cfargument name="sunotes" type="string" required="true">
 
-<cfquery result="result">
+<cftransaction>
+    <!--- Check for existing active enrollment with row lock --->
+    <cfquery name="checkExisting">
+        SELECT suid FROM fusystemusers_tbl
+        WHERE systemid = <cfqueryparam value="#arguments.new_systemid#" cfsqltype="CF_SQL_INTEGER">
+          AND contactid = <cfqueryparam value="#arguments.new_contactid#" cfsqltype="CF_SQL_INTEGER">
+          AND userid = <cfqueryparam value="#arguments.new_userid#" cfsqltype="CF_SQL_INTEGER">
+          AND sustatus = 'Active'
+          AND isdeleted = 0
+        FOR UPDATE
+    </cfquery>
+
+    <cfif checkExisting.recordCount GT 0>
+        <cfreturn checkExisting.suid>
+    </cfif>
+
+    <cfquery result="result">
         INSERT INTO fuSystemUsers (systemID, contactID, userID, suStartDate, sunotes)
         VALUES (
             <cfqueryparam value="#arguments.new_systemid#" cfsqltype="CF_SQL_INTEGER">,
@@ -176,6 +211,7 @@
             <cfqueryparam value="#arguments.sunotes#" cfsqltype="CF_SQL_VARCHAR">
         )
     </cfquery>
+</cftransaction>
     <cfreturn result.generatedKey>
 </cffunction>
 
@@ -327,15 +363,32 @@
     <cfargument name="userid" type="string" required="true">
     <cfargument name="suStartDate" type="date" required="true">
 
-<cfquery result="result" >
-            INSERT INTO fuSystemUsers (systemID, contactID, userID, suStartDate)
-            VALUES (
-                <cfqueryparam value="#arguments.maint_systemID#" cfsqltype="CF_SQL_INTEGER">,
-                <cfqueryparam value="#arguments.maint_contactID#" cfsqltype="CF_SQL_INTEGER">,
-                <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_VARCHAR">,
-                <cfqueryparam value="#arguments.suStartDate#" cfsqltype="CF_SQL_DATE">
-            )
-        </cfquery>
+<cftransaction>
+    <!--- Check for existing active enrollment with row lock --->
+    <cfquery name="checkExisting">
+        SELECT suid FROM fusystemusers_tbl
+        WHERE systemid = <cfqueryparam value="#arguments.maint_systemID#" cfsqltype="CF_SQL_INTEGER">
+          AND contactid = <cfqueryparam value="#arguments.maint_contactID#" cfsqltype="CF_SQL_INTEGER">
+          AND userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
+          AND sustatus = 'Active'
+          AND isdeleted = 0
+        FOR UPDATE
+    </cfquery>
+
+    <cfif checkExisting.recordCount GT 0>
+        <cfreturn checkExisting.suid>
+    </cfif>
+
+    <cfquery result="result">
+        INSERT INTO fuSystemUsers (systemID, contactID, userID, suStartDate)
+        VALUES (
+            <cfqueryparam value="#arguments.maint_systemID#" cfsqltype="CF_SQL_INTEGER">,
+            <cfqueryparam value="#arguments.maint_contactID#" cfsqltype="CF_SQL_INTEGER">,
+            <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_VARCHAR">,
+            <cfqueryparam value="#arguments.suStartDate#" cfsqltype="CF_SQL_DATE">
+        )
+    </cfquery>
+</cftransaction>
 <cfreturn result.generatedKey>
 
 </cffunction>

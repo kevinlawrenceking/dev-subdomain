@@ -238,24 +238,25 @@
         } />
 
         <cftry>
-            <!--- Check if already enrolled --->
-            <cfquery name="checkExisting">
-                SELECT suid
-                FROM fusystemusers
-                WHERE contactid = <cfqueryparam value="#arguments.contactid#" cfsqltype="CF_SQL_INTEGER">
-                  AND systemid = <cfqueryparam value="#arguments.systemid#" cfsqltype="CF_SQL_INTEGER">
-                  AND userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
-                  AND sustatus = 'Active'
-                  AND isdeleted = 0
-            </cfquery>
-
-            <cfif checkExisting.recordCount GT 0>
-                <cfset result.message = "Contact already enrolled in this system" />
-                <cfset result.data.suid = checkExisting.suid />
-                <cfreturn result />
-            </cfif>
-
             <cftransaction>
+                <!--- Check if already enrolled — inside transaction with FOR UPDATE to prevent races --->
+                <cfquery name="checkExisting">
+                    SELECT suid
+                    FROM fusystemusers_tbl
+                    WHERE contactid = <cfqueryparam value="#arguments.contactid#" cfsqltype="CF_SQL_INTEGER">
+                      AND systemid = <cfqueryparam value="#arguments.systemid#" cfsqltype="CF_SQL_INTEGER">
+                      AND userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
+                      AND sustatus = 'Active'
+                      AND isdeleted = 0
+                    FOR UPDATE
+                </cfquery>
+
+                <cfif checkExisting.recordCount GT 0>
+                    <cfset result.message = "Contact already enrolled in this system" />
+                    <cfset result.data.suid = checkExisting.suid />
+                    <cfreturn result />
+                </cfif>
+
                 <!--- Create system enrollment --->
                 <cfset var formattedDate = DateFormat(arguments.startDate, "yyyy-mm-dd") />
 
@@ -382,7 +383,7 @@
         } />
 
         <cftry>
-            <!--- Check for existing maintenance system --->
+            <!--- Check for existing ACTIVE maintenance system --->
             <cfquery name="checkMaintenance">
                 SELECT su.suid
                 FROM fusystemusers su
@@ -390,6 +391,7 @@
                 WHERE su.contactid = <cfqueryparam value="#arguments.contactid#" cfsqltype="CF_SQL_INTEGER">
                   AND su.userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
                   AND s.systemtype = 'Maintenance List'
+                  AND su.sustatus = 'Active'
                   AND su.isdeleted = 0
             </cfquery>
 
