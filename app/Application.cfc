@@ -303,6 +303,11 @@
       <cflocation url="/loginform.cfm" addToken="false" />
     </cfif>
 
+    <!--- Generate CSRF token for session if not already present --->
+    <cfif structKeyExists(session, "userid") AND NOT structKeyExists(session, "csrfToken")>
+      <cfset session.csrfToken = CSRFGenerateToken() />
+    </cfif>
+
     <!--- 4) Post-login user paths --->
     <cfif structKeyExists(session, "userid")>
       <cfset userid = session.userid />

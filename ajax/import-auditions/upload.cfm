@@ -63,7 +63,7 @@
             filefield="form.file"
             destination="#variables.uploadDir#\"
             nameconflict="MAKEUNIQUE"
-            accept=".csv,.xls,.xlsx,text/csv,text/plain,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/octet-stream">
+            accept=".csv,.xls,.xlsx,text/csv,text/plain,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
         <cfcatch type="any">
             <cfset variables.response.code = "UPLOAD_FAILED">
             <cfset variables.response.message = "File upload failed: " & cfcatch.message>

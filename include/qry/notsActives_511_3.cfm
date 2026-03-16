@@ -11,9 +11,10 @@
     INNER JOIN fuActionLinks l ON l.actionlinkid = a.actionlinkid
     INNER JOIN notstatuses ns ON ns.notstatus = n.notStatus
     INNER JOIN contactdetails c ON c.contactid = f.contactid
-    WHERE au.userid = #userid#
+    WHERE au.userid = <cfqueryparam value="#userid#" cfsqltype="cf_sql_integer">
     AND c.userid = au.userid
     AND n.notstartdate IS NOT NULL
-    AND DATE(n.notstartdate) <= '#DateFormat(Now(),'yyyy-mm-dd')#'
+    AND DATE(n.notstartdate) <= <cfqueryparam value="#Now()#" cfsqltype="cf_sql_date">
     AND n.notstatus = 'Pending'
+    AND n.isdeleted = 0
 </cfquery>

@@ -4,5 +4,5 @@
     <!--- Query to select all fields from taousers where userid matches the provided userid. --->
     SELECT * 
     FROM taousers 
-    WHERE userid = #userid#
+    WHERE userid = <cfqueryparam value="#userid#" cfsqltype="cf_sql_integer">
 </cfquery>

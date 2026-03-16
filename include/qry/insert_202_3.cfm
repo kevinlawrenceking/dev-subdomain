@@ -2,7 +2,7 @@
 
 <cfquery name="insert">
     <!--- Insert a new contact item into the CONTACTITEMS table --->
-    INSERT INTO CONTACTITEMS (
+    INSERT INTO contactitems_tbl (
         CONTACTID,
         VALUETYPE,
         VALUECATEGORY,
@@ -10,10 +10,10 @@
         ITEMSTATUS
     )
     VALUES (
-        #CONTACTID#,
+        <cfqueryparam value="#CONTACTID#" cfsqltype="cf_sql_integer">,
         'Business',
         'Email',
-        '#workemail#',
+        <cfqueryparam value="#workemail#" cfsqltype="cf_sql_varchar">,
         'Active'
     )
 </cfquery>

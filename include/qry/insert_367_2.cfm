@@ -1,7 +1,7 @@
 <!--- This ColdFusion page inserts a new contact item into the CONTACTITEMS table --->
 <cfquery name="insert">
     <!--- Insert a new contact item with specified details --->
-    INSERT INTO CONTACTITEMS (
+    INSERT INTO contactitems_tbl (
         CONTACTID,
         VALUETYPE,
         VALUECATEGORY,
@@ -9,10 +9,10 @@
         ITEMSTATUS
     )
     VALUES (
-        #new_contactid#,
+        <cfqueryparam value="#new_contactid#" cfsqltype="cf_sql_integer">,
         'Tags',
         'Tag',
-        '#cdtype#',
+        <cfqueryparam value="#cdtype#" cfsqltype="cf_sql_varchar">,
         'Active'
     )
 </cfquery>

@@ -9,9 +9,9 @@
 
     <!--- Output hidden fields for form submission --->
     <cfoutput>  
-        <input type="hidden" name="new_sitetypeid" value="#url.New_sitetypeid#" />
+        <input type="hidden" name="new_sitetypeid" value="#encodeForHTMLAttribute(url.New_sitetypeid)#" />
         <input type="hidden" name="userid" value="#userid#" />
-        <input type="hidden" name="target_id" value="#url.new_sitetypeid#" />
+        <input type="hidden" name="target_id" value="#encodeForHTMLAttribute(url.new_sitetypeid)#" />
         <input type="hidden" name="target" value="#target#" />
         <input type="hidden" name="application.retinaIcons14Path" value="#application.retinaIcons14Path#" />
     </cfoutput>

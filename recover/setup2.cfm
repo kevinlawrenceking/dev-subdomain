@@ -14,7 +14,7 @@
 <cfset new_passwordSalt=hash(generateSecretKey("AES"),"SHA-512") />
 
         <cfquery name="update" datasource="#dsn#">
-    UPDATE taousers
+    UPDATE taousers_tbl
     SET passwordHash = <cfqueryparam cfsqltype="char" value="#hash(form.pass1 & new_passwordSalt,'SHA-512')#" />
             ,recover = ''
             ,userPassword = ''

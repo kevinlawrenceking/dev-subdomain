@@ -20,7 +20,7 @@ INNER JOIN (
     SELECT DISTINCT u.suid
     FROM fusystemusers u
     INNER JOIN funotifications n ON n.suid = u.suid
-    WHERE u.suStatus = 'Completed' AND n.notstatus = 'Pending'
+    WHERE u.suStatus = 'Completed' AND n.notstatus = 'Pending' AND n.isdeleted = 0
 ) AS sub ON sub.suid = u.suid
 SET u.suStatus = 'Active'
 </cfquery>

@@ -54,6 +54,11 @@
 
 <cffunction name="onRequestStart" returntype="boolean" output="false">
     <cfargument name="targetPage" type="string" required="true">
+    <!--- Require authenticated session for all setup pages --->
+    <cfif NOT structKeyExists(session, "userid")>
+        <cfheader statuscode="403">
+        <cfabort>
+    </cfif>
     <cfreturn true>
 </cffunction>
 

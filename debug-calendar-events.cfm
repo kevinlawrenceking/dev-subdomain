@@ -4,6 +4,12 @@
     DATE: 2025-08-08
 --->
 
+<!--- Require authenticated session --->
+<cfif NOT structKeyExists(session, "userid")>
+    <cfheader statuscode="403">
+    <cfabort>
+</cfif>
+
 <cfinclude template="/include/qry/eventtypes_user.cfm" />
 <cfinclude template="/include/qry/events_byuser.cfm" />
 

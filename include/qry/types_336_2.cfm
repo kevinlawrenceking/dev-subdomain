@@ -3,6 +3,6 @@
 <cfquery name="types">
     SELECT eventtypename 
     FROM eventtypes_user 
-    WHERE userid = #userid# 
+    WHERE userid = <cfqueryparam value="#userid#" cfsqltype="cf_sql_integer">
     ORDER BY eventtypename
 </cfquery>

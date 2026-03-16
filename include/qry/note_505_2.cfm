@@ -3,5 +3,5 @@
     <!--- Retrieve notes based on the provided note ID --->
     SELECT * 
     FROM noteslog 
-    WHERE noteid = #noteid#
+    WHERE noteid = <cfqueryparam value="#noteid#" cfsqltype="cf_sql_integer">
 </cfquery>

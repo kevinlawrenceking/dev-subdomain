@@ -119,7 +119,7 @@
                                 <input type="hidden" name="pwpass" value="Y" />
                                 
                                 <cfif structKeyExists(url, "xu")>
-                                    <input type="hidden" name="xu" value="#url.xu#" />
+                                    <input type="hidden" name="xu" value="#encodeForHTMLAttribute(url.xu)#" />
                                 </cfif>
 <Cfoutput>
                                 <div class="form-group mb-3">

@@ -10,6 +10,13 @@
 
   <cffunction name="onRequestStart" returntype="boolean">
     <cfargument name="targetPage" required="true">
+    <!--- Require authenticated session for all app AJAX endpoints --->
+    <cfif NOT structKeyExists(session, "userid")>
+      <cfheader statuscode="401">
+      <cfcontent type="application/json" reset="true">
+      <cfoutput>{"success":false,"message":"Authentication required"}</cfoutput>
+      <cfabort>
+    </cfif>
     <cfreturn true>
   </cffunction>
 

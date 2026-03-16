@@ -36,7 +36,7 @@ VALUES (
     UPDATE thrivecart
     set status =
     <cfqueryparam cfsqltype="cf_sql_varchar" value="Completed" />
-    where id = #id#
+    where id = <cfqueryparam cfsqltype="cf_sql_integer" value="#id#" />
 </cfquery>
 
 <cflocation url="setup-complete.cfm?userid=#select_userid#" />

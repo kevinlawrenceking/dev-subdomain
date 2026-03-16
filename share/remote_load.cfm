@@ -25,7 +25,7 @@
     <div style="background:##e6e6ff;padding:10px;margin:10px 0;border:1px solid ##9370db;">
         <h3>Remote Load Processing</h3>
         <ul>
-            <li>Share Token: <cfoutput>#url.shareToken#</cfoutput></li>
+            <li>Share Token: <cfoutput>#encodeForHTML(url.shareToken)#</cfoutput></li>
             <li>DSN: <cfoutput>#dsn#</cfoutput></li>
         </ul>
     </div>
@@ -53,7 +53,7 @@
                     INNER JOIN 
                         taousers u ON s.userID = u.userID
                     WHERE 
-                        s.token = '<cfoutput>#url.shareToken#</cfoutput>'
+                        s.token = '<cfoutput>#encodeForJavaScript(url.shareToken)#</cfoutput>'
                         AND s.isActive = 1
                         AND (s.expiryDate IS NULL OR s.expiryDate >= NOW())
                 </code>
@@ -157,7 +157,7 @@
                 <div style="background:##ffe6e6;padding:10px;margin:10px 0;border:1px solid red;">
                     <h3>Invalid Token</h3>
                     <p>The provided token is invalid, has expired, or has been deactivated.</p>
-                    <p>Token: <cfoutput>#url.shareToken#</cfoutput></p>
+                    <p>Token: <cfoutput>#encodeForHTML(url.shareToken)#</cfoutput></p>
                 </div>
             </cfif>
             <cfinclude template="invalid_token.cfm" />

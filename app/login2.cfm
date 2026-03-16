@@ -32,17 +32,16 @@
     <cfset userpassword2 = Hash(j_password & loginQuery.passwordSalt, "SHA-512") />
 
     <!--- Validate the password  --->
-    <cfif loginQuery.passwordHash eq userpassword2> --->
+    <cfif loginQuery.passwordHash eq userpassword2>
         <!--- Set the session variable --->
         <cfset userid = loginQuery.userid />
         <cfset session.userid = userid />
-here<cfabort>
         <cflocation url="#loginQuery.status_url#" addtoken="false" />
- <cfelse> 
+    <cfelse>
         <!--- Invalid password, redirect to login with error message --->
         <cflocation url="/loginform.cfm?pwrong=Y" addtoken="false" />
-    </cfif> 
+    </cfif>
 <cfelse>
- No matching user found, redirect to login with error message --->
+    <!--- No matching user found, redirect to login with error message --->
     <cflocation url="/loginform.cfm?pwrong=Y" addtoken="false" />
 </cfif>

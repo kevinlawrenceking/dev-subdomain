@@ -10,13 +10,17 @@
 
 <cfinclude template="/include/qry/attachdetails_25_1.cfm" />
 
-<cfoutput>
-    <cfset attachfilename = "#attachdetails.attachfilename#" />
-</cfoutput>
+<!--- Strip path separators to prevent directory traversal --->
+<cfset attachfilename = getFileFromPath(attachdetails.attachfilename) />
+
+<!--- Verify filename has no traversal sequences --->
+<cfif find("..", attachfilename) GT 0 OR find("/", attachfilename) GT 0 OR find("\", attachfilename) GT 0>
+    <p>Invalid filename.</p><cfabort>
+</cfif>
 
 <!--- Check if the file exists before attempting to delete it. --->
 <cfif FileExists("#session.userMediaPath#\#attachfilename#")>
-    <cffile action="delete" 
+    <cffile action="delete"
             file="#session.userMediaPath#\#attachfilename#">
     
     <cfinclude template="/include/qry/del_25_2.cfm" />

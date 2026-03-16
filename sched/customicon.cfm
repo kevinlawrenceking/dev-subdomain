@@ -1,6 +1,6 @@
  
 
-<cfquery result="result" datasource="abo" name="x">
+<cfquery result="result" datasource="#application.dsn#" name="x">
 SELECT id,sitename,siteurl,siteicon FROM sitelinks_user WHERE iscustom = 1 AND siteicon = 'unknown.png' AND id = 29125
 </cfquery>
 
@@ -34,7 +34,7 @@ SELECT id,sitename,siteurl,siteicon FROM sitelinks_user WHERE iscustom = 1 AND s
             <cfimage action="write" destination="#image_dir#/custom_#id#.png" source="#imageObj#" format="png"></cfimage>
             
             <!--- Update Record --->
-            <cfquery result="result" datasource="abo" name="update">
+            <cfquery result="result" datasource="#application.dsn#" name="update">
             update sitelinks_user 
             set siteicon = '#new_siteicon#'
             where id = #id#

@@ -29,7 +29,7 @@
 <!--- ============================================================
       TEMPORARY DEBUG FLAG — set to false when done troubleshooting
       ============================================================ --->
-<cfset debugLogin = true />
+<cfset debugLogin = false />
 
 <!--- 1) Main login query (with userstatuses join) --->
 <cfquery name="loginQuery" datasource="#dsn#" maxrows="1">

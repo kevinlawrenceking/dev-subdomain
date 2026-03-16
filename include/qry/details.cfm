@@ -81,11 +81,17 @@
     </cfoutput>
 </cfsavecontent>
 
+<!--- Validate recid to prevent SQL injection --->
+<cfif ftype NEQ "text" AND NOT isNumeric(recid)>
+    <cfset recid = 0 />
+</cfif>
+<cfset recid = replace(replace(recid, "'", "", "all"), ";", "", "all") />
+
 <!--- Determine the WHERE clause based on ftype --->
 <cfif #ftype# is "text">
     <cfset where = "WHERE t.#FindKey.fname# = '#recid#'" />
 <cfelse>
-    <cfset where = "WHERE t.#FindKey.fname# = #recid#" />
+    <cfset where = "WHERE t.#FindKey.fname# = #val(recid)#" />
 </cfif>
 
 <!--- Query to get details based on results query and where clause --->

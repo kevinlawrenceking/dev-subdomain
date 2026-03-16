@@ -1,8 +1,10 @@
 <!--- This ColdFusion page retrieves user data based on the provided user ID and orders the results. --->
 
+<!--- Sanitize ORDER BY column name to prevent SQL injection --->
+<cfset orderby = reReplace(orderby, "[^a-zA-Z0-9_]", "", "all")>
+
 <cfquery name="#tname#_sel">
-    <!--- Select ID and NAME from the specified table for the given user ID --->
-    SELECT a.#fid# as ID, 
+    SELECT a.#fid# as ID,
            a.#fname# as NAME
     FROM #tname# a
     WHERE 0=0

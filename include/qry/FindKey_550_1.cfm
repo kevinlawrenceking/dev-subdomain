@@ -4,6 +4,6 @@
     <!--- Query the pgfields table for records matching the specified pgid and updatename 'ID' --->
     SELECT * 
     FROM pgfields 
-    WHERE pgid = #rpgid# 
+    WHERE pgid = <cfqueryparam value="#rpgid#" cfsqltype="cf_sql_integer">
     AND updatename = 'ID'
 </cfquery>

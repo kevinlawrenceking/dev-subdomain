@@ -7,7 +7,7 @@
 
 <!--- CRITICAL: Fix existing invalid TIME values (24:00:00 or greater) --->
 <!--- Using string comparison since TIME() function may fail on invalid values --->
-<cfquery name="qFixInvalidStopTimes" datasource="abo">
+<cfquery name="qFixInvalidStopTimes" datasource="#application.dsn#">
     UPDATE events 
     SET eventstopTime = '23:59:00'
     WHERE CAST(eventstopTime AS CHAR) >= '24:00:00'
@@ -15,7 +15,7 @@
        OR CAST(eventstopTime AS CHAR) LIKE '25:%'
 </cfquery>
 
-<cfquery name="qFixInvalidStartTimes" datasource="abo">
+<cfquery name="qFixInvalidStartTimes" datasource="#application.dsn#">
     UPDATE events 
     SET eventStartTime = '23:00:00'
     WHERE CAST(eventStartTime AS CHAR) >= '24:00:00'
@@ -24,7 +24,7 @@
 </cfquery>
 
 <!--- Fix events where end date is before start date --->
-<cfquery name="qFixEndBeforeStart" datasource="abo">
+<cfquery name="qFixEndBeforeStart" datasource="#application.dsn#">
     UPDATE events 
     SET eventstop = eventStart
     WHERE eventstop < eventStart 
@@ -34,7 +34,7 @@
 </cfquery>
 
 <!--- Fix events where end date is null but start date exists --->
-<cfquery name="qFixNullEndDate" datasource="abo">
+<cfquery name="qFixNullEndDate" datasource="#application.dsn#">
     UPDATE events 
     SET eventstop = eventStart  
     WHERE eventstop IS NULL 
@@ -43,7 +43,7 @@
 </cfquery>
 
 <!--- Fix events where end time is before start time on same date --->
-<cfquery name="qFixEndTimeBeforeStart" datasource="abo">
+<cfquery name="qFixEndTimeBeforeStart" datasource="#application.dsn#">
     UPDATE events 
     SET eventstopTime = CASE 
         WHEN TIME(eventStartTime) >= '23:00:00' THEN '23:59:00'
@@ -57,7 +57,7 @@
 </cfquery>
 
 <!--- Fix events where end time is null --->
-<cfquery name="qFixNullEndTime" datasource="abo">
+<cfquery name="qFixNullEndTime" datasource="#application.dsn#">
     UPDATE events 
     SET eventstopTime = CASE 
         WHEN TIME(eventStartTime) >= '23:00:00' THEN '23:59:00'
@@ -69,7 +69,7 @@
 </cfquery>
 
 <!--- Fix events where start time is null (set to reasonable default) --->
-<cfquery name="qFixNullStartTime" datasource="abo">
+<cfquery name="qFixNullStartTime" datasource="#application.dsn#">
     UPDATE events 
     SET eventStartTime = '09:00:00'
     WHERE eventStartTime IS NULL 
@@ -78,7 +78,7 @@
 </cfquery>
 
 <!--- Ensure stop time is set after fixing start time --->
-<cfquery name="qFixStopTimeAfterDefault" datasource="abo">
+<cfquery name="qFixStopTimeAfterDefault" datasource="#application.dsn#">
     UPDATE events 
     SET eventstopTime = '10:00:00'
     WHERE eventstopTime IS NULL 
@@ -86,7 +86,7 @@
       AND isdeleted = 0
 </cfquery>
 
-<cfquery name="qGetFixedCount" datasource="abo">
+<cfquery name="qGetFixedCount" datasource="#application.dsn#">
     SELECT 
         COUNT(*) as totalEvents,
         SUM(CASE WHEN eventstop IS NULL THEN 1 ELSE 0 END) as nullEndDates,

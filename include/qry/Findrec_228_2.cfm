@@ -4,5 +4,5 @@
     <!--- Query to select the record name from the specified table based on the provided key and record ID. --->
     SELECT recordname 
     FROM #rpg_comptable#_tbl 
-    WHERE #findkey.fname# = #recid#
+    WHERE #findkey.fname# = <cfqueryparam value="#recid#" cfsqltype="cf_sql_integer">
 </cfquery>

@@ -71,8 +71,9 @@
             notstatuses ns ON ns.notstatus = n.notStatus 
         WHERE 
             n.suID = <cfqueryparam value="#arguments.suid#" cfsqltype="CF_SQL_INTEGER"> 
-            AND au.userID = f.userID 
-            AND n.notStatus = 'Pending' 
+            AND au.userID = f.userID
+            AND n.notStatus = 'Pending'
+            AND n.isdeleted = 0
             AND n.notStartDate IS NULL 
         ORDER BY 
             a.actionNo, a.actionID
@@ -101,7 +102,8 @@
             userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER"> AND
             suID = <cfqueryparam value="#arguments.suid#" cfsqltype="CF_SQL_INTEGER"> AND
             notstatus = <cfqueryparam value="Pending" cfsqltype="CF_SQL_VARCHAR"> AND
-            notstartdate IS NOT NULL
+            notstartdate IS NOT NULL AND
+            isdeleted = 0
     </cfquery>
 
     <!--- Determine the final notstartdate value --->
@@ -286,6 +288,7 @@
         WHERE 
             n.notID = <cfqueryparam value="#arguments.notid#" cfsqltype="CF_SQL_INTEGER">
             AND au.userid = n.userid
+            AND n.isdeleted = 0
     </cfquery>
 
 <cfreturn result>
@@ -390,6 +393,7 @@
             INNER JOIN fusystems s ON s.systemID = f.systemID
             INNER JOIN fuactions a ON a.actionID = n.actionID
             WHERE f.contactID = <cfqueryparam value="#arguments.currentid#" cfsqltype="cf_sql_integer">
+              AND n.isdeleted = 0
         </cfquery>
 
 <cfreturn notsall>
@@ -449,6 +453,7 @@
               AND f.suID = <cfqueryparam value="#arguments.sysActiveSuid#" cfsqltype="cf_sql_integer">
               AND au.userID = <cfqueryparam value="#arguments.userid#" cfsqltype="cf_sql_integer">
               AND n.notStartDate IS NOT NULL
+              AND n.isdeleted = 0
               AND DATE(n.notStartDate) <= <cfqueryparam value="#DateFormat(Now(), 'yyyy-mm-dd')#" cfsqltype="cf_sql_date">
             <cfif arguments.hide_completed is "Y">
               AND n.notStatus NOT IN ('Completed', 'Skipped')
@@ -515,7 +520,7 @@
               AND f.suID = <cfqueryparam value="#arguments.sysActiveSuid#" cfsqltype="cf_sql_integer">
               AND au.userID = <cfqueryparam value="#arguments.userid#" cfsqltype="cf_sql_integer">
               AND n.notStartDate IS NOT NULL
-         
+              AND n.isdeleted = 0
             ORDER BY n.notEndDate,n.notStartDate, n.notid
         </cfquery>
 
@@ -553,8 +558,8 @@ WHERE
     AND n.notstartdate IS NOT NULL 
     AND DATE(n.notstartdate) <= <cfqueryparam value="#DateFormat(Now(),'yyyy-mm-dd')#" cfsqltype="CF_SQL_DATE"> 
     AND n.notstatus = <cfqueryparam value="Pending" cfsqltype="CF_SQL_VARCHAR">
-    
-ORDER BY 
+    AND n.isdeleted = 0
+ORDER BY
     n.notstartdate;
     </cfquery>
 
@@ -684,6 +689,7 @@ ORDER BY
             AND n.notstartdate IS NOT NULL
             AND DATE(n.notstartdate) <= <cfqueryparam value="#currentStartDate#" cfsqltype="CF_SQL_DATE">
             AND n.notstatus = 'Pending'
+            AND n.isdeleted = 0
         </cfquery>
 
 <cfset remindersTotal = reminders.reminderstotal>
@@ -733,6 +739,7 @@ ORDER BY
             AND n.notstartdate IS NOT NULL
             AND DATE(n.notstartdate) <= <cfqueryparam value="#DateFormat(Now(), 'yyyy-mm-dd')#" cfsqltype="CF_SQL_DATE">
             AND n.notstatus = <cfqueryparam value="Pending" cfsqltype="CF_SQL_VARCHAR">
+            AND n.isdeleted = 0
         </cfquery>
 
 <cfreturn result>
@@ -772,7 +779,8 @@ ORDER BY
 <cfquery result="result" name="qNotifications" >
             SELECT n.notID
             FROM funotifications n
-            WHERE n.notid IN (#arguments.batchlist#)
+            WHERE n.notid IN (<cfqueryparam value="#arguments.batchlist#" cfsqltype="CF_SQL_INTEGER" list="true">)
+              AND n.isdeleted = 0
         </cfquery>
 
 <cfreturn qNotifications>

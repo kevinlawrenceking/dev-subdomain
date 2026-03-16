@@ -78,6 +78,7 @@
     f.userID = <cfqueryparam value="#session.userID#" cfsqltype="cf_sql_integer">
   </cfif>
     AND n.notStartDate IS NOT NULL
+    AND n.isdeleted = 0
     AND n.notStartDate <= <cfqueryparam value="#now()#" cfsqltype="cf_sql_timestamp">
     <cfif showInactive EQ 0>
       AND n.notStatus = 'Pending'

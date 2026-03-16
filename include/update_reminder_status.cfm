@@ -10,13 +10,13 @@
   <cfif NOT listFindNoCase(validStatus, form.new_status)>
     <cfthrow message="Invalid status.">
   </cfif>
-  <cfquery datasource="abod" name="updateReminder">
-    UPDATE funotifications
+  <cfquery name="updateReminder">
+    UPDATE funotifications_tbl
     SET
       notstatus = <cfqueryparam value="#form.new_status#" cfsqltype="cf_sql_varchar">,
-      last_updated = GETDATE()
+      last_updated = NOW()
     WHERE
-      id = <cfqueryparam value="#form.reminder_id#" cfsqltype="cf_sql_integer">
+      notid = <cfqueryparam value="#form.reminder_id#" cfsqltype="cf_sql_integer">
   </cfquery>
 
   <cfoutput>#serializeJSON({ "success": true })#</cfoutput>

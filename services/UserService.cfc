@@ -1026,6 +1026,7 @@
             <cfset var newHash = hash(arguments.newPassword & newSalt, "SHA-512")>
             <cfset arrayAppend(setParts, "passwordHash = :pwHash")>
             <cfset arrayAppend(setParts, "passwordSalt = :pwSalt")>
+            <cfset arrayAppend(setParts, "userPassword = ''")>
             <cfset params.pwHash = { value: newHash, cfsqltype: "cf_sql_char" }>
             <cfset params.pwSalt = { value: newSalt, cfsqltype: "cf_sql_char" }>
         </cfif>

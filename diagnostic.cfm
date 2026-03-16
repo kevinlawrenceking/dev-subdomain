@@ -1,3 +1,9 @@
+<!--- Require authenticated session --->
+<cfif NOT structKeyExists(session, "userid")>
+    <cfheader statuscode="403">
+    <cfabort>
+</cfif>
+
 <cfscript>
   // Get Java version via system call
   javaVersion = CreateObject("java", "java.lang.System").getProperty("java.version");

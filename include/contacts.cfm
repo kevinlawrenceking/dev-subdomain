@@ -277,7 +277,7 @@ Tables: contactdetails, contactitems, contactsimport, tags_user, fusystemusers
 <cfquery name="tags">
     SELECT tagid, tagname 
     FROM tags_user 
-    WHERE userid = #userid# 
+    WHERE userid = <cfqueryparam value="#userid#" cfsqltype="cf_sql_integer">
     ORDER BY tagname
 </cfquery>
 

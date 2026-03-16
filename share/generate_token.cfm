@@ -4,6 +4,12 @@
     DATE: 2025-07-19
 --->
 
+<!--- Require authenticated session for admin token generation --->
+<cfif NOT structKeyExists(session, "userid")>
+    <cfheader statuscode="403">
+    <cfabort>
+</cfif>
+
 <!--- Make sure Application.cfc is initialized --->
 <cfif not structKeyExists(application, "dsn")>
     <cfset onApplicationStart() />
@@ -105,11 +111,11 @@
         <table>
             <tr>
                 <th>User</th>
-                <td><cfoutput>#userInfo.userfirstname# #userInfo.userlastname# (ID: #url.userId#)</cfoutput></td>
+                <td><cfoutput>#encodeForHTML(userInfo.userfirstname)# #encodeForHTML(userInfo.userlastname)# (ID: #int(url.userId)#)</cfoutput></td>
             </tr>
             <tr>
                 <th>Share Type</th>
-                <td><cfoutput>#url.shareType#</cfoutput></td>
+                <td><cfoutput>#encodeForHTML(url.shareType)#</cfoutput></td>
             </tr>
             <tr>
                 <th>Token</th>

@@ -229,7 +229,7 @@
         <p>Attempting INSERT into contactdetails...</p>
         <cfset qInsertResult = {}>
         <cfset queryExecute(
-            "INSERT INTO contactdetails (userid, contactFullName, contactBirthday, user_yn, IsDeleted)
+            "INSERT INTO contactdetails_tbl (userid, contactFullName, contactBirthday, user_yn, IsDeleted)
              VALUES (:userid, :name, NULL, 'Y', 0)",
             {
                 userid: { value: session.userid, cfsqltype: "cf_sql_integer" },
@@ -241,7 +241,7 @@
 
         <!--- Clean up: delete the test contact --->
         <cfset queryExecute(
-            "DELETE FROM contactdetails WHERE contactid = :cid",
+            "DELETE FROM contactdetails_tbl WHERE contactid = :cid",
             { cid: { value: qInsertResult.generatedKey, cfsqltype: "cf_sql_integer" } },
             { datasource: application.datasource }
         )>

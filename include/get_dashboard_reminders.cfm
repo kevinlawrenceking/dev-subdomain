@@ -54,7 +54,8 @@
 
     WHERE c.userid = <cfqueryparam value="#userid#" cfsqltype="cf_sql_integer">
       AND n.notStartDate IS NOT NULL
-      AND n.notStatus = 'Pending' 
+      AND n.notStatus = 'Pending'
+      AND n.isdeleted = 0
       AND n.notStartDate <= <cfqueryparam value="#now()#" cfsqltype="cf_sql_timestamp">
   ) ranked_reminders
   

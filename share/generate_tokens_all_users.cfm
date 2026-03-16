@@ -4,6 +4,12 @@
     DATE: 2025-08-14
 --->
 
+<!--- Require authenticated session for admin token generation --->
+<cfif NOT structKeyExists(session, "userid")>
+    <cfheader statuscode="403">
+    <cfabort>
+</cfif>
+
 <!--- Make sure Application.cfc is initialized --->
 <cfif not structKeyExists(application, "dsn")>
     <cfset onApplicationStart() />
@@ -40,12 +46,12 @@
             
             <h2>Current Parameters</h2>
             <ul>
-                <li><strong>Share Type:</strong> <cfoutput>#url.shareType#</cfoutput></li>
-                <li><strong>Expiry Days:</strong> <cfoutput>#url.expiryDays#</cfoutput></li>
+                <li><strong>Share Type:</strong> <cfoutput>#encodeForHTML(url.shareType)#</cfoutput></li>
+                <li><strong>Expiry Days:</strong> <cfoutput>#encodeForHTML(url.expiryDays)#</cfoutput></li>
             </ul>
             
             <h2>Actions</h2>
-            <a href="<cfoutput>?shareType=#url.shareType#&expiryDays=#url.expiryDays#&confirm=true</cfoutput>" class="btn btn-primary">
+            <a href="<cfoutput>?shareType=#encodeForURL(url.shareType)#&amp;expiryDays=#encodeForURL(url.expiryDays)#&amp;confirm=true</cfoutput>" class="btn btn-primary">
                 ✓ Yes, Generate Tokens for All Users
             </a>
             <a href="generate_token.cfm" class="btn btn-secondary">
@@ -199,11 +205,11 @@
         <table>
             <tr>
                 <th>Share Type</th>
-                <td><cfoutput>#url.shareType#</cfoutput></td>
+                <td><cfoutput>#encodeForHTML(url.shareType)#</cfoutput></td>
             </tr>
             <tr>
                 <th>Expiry Days</th>
-                <td><cfoutput>#url.expiryDays#</cfoutput></td>
+                <td><cfoutput>#encodeForHTML(url.expiryDays)#</cfoutput></td>
             </tr>
             <tr>
                 <th>Generated At</th>
@@ -217,7 +223,7 @@
         
         <cfif tokensSkipped gt 0>
             <div class="warning">
-                <strong>ℹ️ Note:</strong> <cfoutput>#tokensSkipped#</cfoutput> tokens were skipped because those users already have active tokens for the "<cfoutput>#url.shareType#</cfoutput>" share type.
+                <strong>Note:</strong> <cfoutput>#tokensSkipped#</cfoutput> tokens were skipped because those users already have active tokens for the "<cfoutput>#encodeForHTML(url.shareType)#</cfoutput>" share type.
             </div>
         </cfif>
         

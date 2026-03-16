@@ -41,14 +41,14 @@ and col1 like '%#bylike#%'
     </cfif>
 
 <cfif #uploadid# is not "0">
-    and contactid in (SELECT contactid FROM contactsimport WHERE uploadid = #uploadid#)
+    and contactid in (SELECT contactid FROM contactsimport WHERE uploadid = <cfqueryparam value="#uploadid#" cfsqltype="cf_sql_integer">)
 
 </cfif>
 
 <cfif len(trim(search))>
 
 <cfif #trim(search)# is "no system">
-    and contactid NOT IN (SELECT contactid FROM contacts_ss_followup WHERE userid = #userid#) AND contactid NOT IN (SELECT contactid FROM contacts_ss_maint WHERE userid = #userid#) AND contactid NOT IN (SELECT contactid FROM contacts_ss_target WHERE userid = #userid#)
+    and contactid NOT IN (SELECT contactid FROM contacts_ss_followup WHERE userid = <cfqueryparam value="#userid#" cfsqltype="cf_sql_integer">) AND contactid NOT IN (SELECT contactid FROM contacts_ss_maint WHERE userid = <cfqueryparam value="#userid#" cfsqltype="cf_sql_integer">) AND contactid NOT IN (SELECT contactid FROM contacts_ss_target WHERE userid = <cfqueryparam value="#userid#" cfsqltype="cf_sql_integer">)
 
 <cfelse>
 AND

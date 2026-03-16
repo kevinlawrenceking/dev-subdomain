@@ -396,9 +396,10 @@
         <cfset arrayAppend(params, {value: searchTerm, cfsqltype: "CF_SQL_VARCHAR"})>
     </cfif>
 
-    <!--- Apply ordering --->
+    <!--- Apply ordering (sanitize column name to prevent SQL injection) --->
     <cfif structKeyExists(arguments.filtersStruct, "orderBy") AND len(trim(arguments.filtersStruct.orderBy))>
-        <cfset sql &= " ORDER BY #arguments.filtersStruct.orderBy#">
+        <cfset var safeOrderBy = reReplace(arguments.filtersStruct.orderBy, "[^a-zA-Z0-9_.]", "", "all")>
+        <cfset sql &= " ORDER BY #safeOrderBy#">
         <cfif structKeyExists(arguments.filtersStruct, "orderDir") AND arguments.filtersStruct.orderDir EQ "DESC">
             <cfset sql &= " DESC">
         <cfelse>

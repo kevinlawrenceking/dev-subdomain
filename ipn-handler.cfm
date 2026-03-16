@@ -1,4 +1,6 @@
 <cftry>
+    <!--- Determine datasource from hostname --->
+    <cfset dsn = ListFirst(cgi.server_name, ".") EQ "app" ? "abo" : "abod" />
     <cfset httpData = getHttpRequestData()>
     <cfset rawPostData = httpData.content>
 
@@ -12,7 +14,7 @@
     </cfloop>
 
     <!--- Insert into thrivecart_tbl --->
-    <cfquery datasource="abo">
+    <cfquery datasource="#dsn#">
         INSERT INTO thrivecart_tbl (
             CustomerFirst,
             CustomerLast,

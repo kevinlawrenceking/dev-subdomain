@@ -3,5 +3,5 @@
     <!--- Update the isdeleted field to 0 for the specified user ID --->
     UPDATE actionusers_tbl
     SET isdeleted = 0
-    WHERE id = #new_id#
+    WHERE id = <cfqueryparam value="#new_id#" cfsqltype="cf_sql_integer">
 </cfquery>

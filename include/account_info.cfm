@@ -88,7 +88,7 @@ Last Updated: 2025
         <cfquery name="update">
             UPDATE actionusers_tbl
             SET isdeleted = 0
-            WHERE id = #new_id#
+            WHERE id = <cfqueryparam value="#new_id#" cfsqltype="cf_sql_integer">
         </cfquery>
         <cfset ctaction = "view" />
     </cfcase>

@@ -31,7 +31,7 @@
     ,u.tzid
     FROM taousers u
 <Cfif #target_userid# is not "0">
-WHERE u.userid = #target_userid#
+WHERE u.userid = <cfqueryparam value="#target_userid#" cfsqltype="cf_sql_integer">
 </cfif>
 </cfquery>
 

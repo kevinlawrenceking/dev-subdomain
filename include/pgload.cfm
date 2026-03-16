@@ -42,11 +42,14 @@
 <cfinclude template="/include/fetchPageService.cfm" />
 
 <cfif pgFilename NEQ "">
-    <!--- Define the full path of the file you want to check. --->
-    <cfset filePath = expandPath("/include/qry/#pgFilename#")>
+    <!--- Guard against path traversal in database-sourced filename --->
+    <cfif find("..", pgFilename) EQ 0 AND find("/", pgFilename) EQ 0 AND find("\", pgFilename) EQ 0>
+        <!--- Define the full path of the file you want to check. --->
+        <cfset filePath = expandPath("/include/qry/#pgFilename#")>
 
-    <!--- Check if the file exists and only include if it does. --->
-    <cfif fileExists(filePath)>
-        <cfinclude template="/include/qry/#pgFilename#" />
+        <!--- Check if the file exists and only include if it does. --->
+        <cfif fileExists(filePath)>
+            <cfinclude template="/include/qry/#pgFilename#" />
+        </cfif>
     </cfif>
 </cfif>

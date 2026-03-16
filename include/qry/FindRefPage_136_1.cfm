@@ -37,5 +37,5 @@
     FROM pgpages p
     INNER JOIN pgcomps c ON c.compID = p.compID
     INNER JOIN pgapps a ON a.appID = c.appid
-    WHERE p.pgid = #ref_pgid#
+    WHERE p.pgid = <cfqueryparam value="#ref_pgid#" cfsqltype="cf_sql_integer">
 </cfquery>

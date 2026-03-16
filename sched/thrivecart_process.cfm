@@ -8,7 +8,7 @@
 <cfparam name="dbug" default="N" />
 
 <!--- Use datasource from Application.cfc --->
-<cfset dsn = "abo" />
+<cfset dsn = application.dsn />
 <cfset rev = application.rev />
 <cfset suffix = application.suffix />
 <cfset information_schema = application.information_schema />
@@ -21,7 +21,7 @@
 
 <cfset to_email = "kevinking7135@gmail.com" />
 
-<cfquery result="result"  name="U" datasource="abo">
+<cfquery result="result"  name="U" datasource="#application.dsn#">
     SELECT th.id
     ,th.CustomerFirst
     ,th.CustomerLast
@@ -49,7 +49,7 @@
             <cfset new_planName = "#u.planName#" />
         </cfoutput>
 
-        <cfquery result="result" name="update" datasource="abo">
+        <cfquery result="result" name="update" datasource="#application.dsn#">
             UPDATE thrivecart
             SET uuid = <cfqueryparam cfsqltype="cf_sql_varchar" value="#new_uuid#" />
             WHERE id = <cfqueryparam cfsqltype="cf_sql_integer" value="#new_id#" />
@@ -111,7 +111,7 @@
             </cfcatch>
         </cftry>
 
-        <cfquery result="result" name="update2" datasource="abo">
+        <cfquery result="result" name="update2" datasource="#application.dsn#">
             UPDATE thrivecart
             SET status = <cfqueryparam cfsqltype="cf_sql_varchar" value="Emailed" />
             WHERE id = <cfqueryparam cfsqltype="cf_sql_integer" value="#new_id#" />
