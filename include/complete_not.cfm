@@ -76,6 +76,9 @@
 
 </cfoutput>
 
+<!--- WO-5.1: Transaction wrapper for all notification completion writes --->
+<cftransaction>
+
 <!--- Include the add notification query --->
 <cfinclude template="/include/qry/updateNotificationCompleted.cfm"/>
 <cfif #dbug# is "Y">
@@ -291,6 +294,9 @@
   </cfif>
 </cfif>
 </cfif>
+
+</cftransaction>
+<!--- /WO-5.1: End transaction wrapper --->
 
 <Cfif #dbug# is "Y">
 <Cfabort />

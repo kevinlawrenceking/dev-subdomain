@@ -70,6 +70,15 @@
 <cfset new_opencallname = local.new_opencallname />
 <cfset focusid = local.focusid />
 
+<!--- WO-5.1: Validate numeric inputs --->
+<cfset new_audroleid = val(new_audroleid) />
+<cfset audprojectid = val(audprojectid) />
+<cfset new_catid = val(new_catid) />
+<cfset secid = val(secid) />
+<cfset userid = val(userid) />
+<cfset new_audroletypeid = val(new_audroletypeid) />
+<cfset new_audsourceid = val(new_audsourceid) />
+
 <!--- Include necessary query files for deletion and processing. --->
 <cfinclude template="/include/qry/delete_287_1.cfm" />
 <cfinclude template="/include/qry/delete_287_2.cfm" />

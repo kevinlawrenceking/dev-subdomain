@@ -5,10 +5,18 @@
 <cfparam name="NEW_Iscallback" default="0" />
 <cfparam name="NEW_ISbooked" default="0" />
 
+<!--- WO-5.1: Validate numeric inputs --->
+<cfset new_iscallback = val(new_iscallback) />
+<cfset new_isredirect = val(new_isredirect) />
+<cfset new_ispin = val(new_ispin) />
+<cfset new_isbooked = val(new_isbooked) />
+<cfset audroleid = val(audroleid) />
+<cfset eventid = val(eventid) />
+
 <!--- Output SQL update statement for audition roles --->
 <cfoutput>
     update audroles
-    set 
+    set
         iscallback = #new_iscallback#,
         isredirect = #new_isredirect#,
         ispin = #new_ispin#,

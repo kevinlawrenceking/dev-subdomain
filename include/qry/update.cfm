@@ -7,6 +7,16 @@
 <!--- Query to find the key based on pgid and updatename --->
 <cfinclude template="/include/qry/FindKey_550_1.cfm" />
 
+<!--- WO-5B: Validate RPG identifiers from metadata --->
+<cfif NOT reFindNoCase("^[a-z_][a-z0-9_]{0,63}$", trim(rpg_compTable))>
+    <cflog file="qry_update" text="BLOCKED: invalid table name rpg_compTable='#htmlEditFormat(rpg_compTable)#'" />
+    <cfabort>
+</cfif>
+<cfif NOT reFindNoCase("^[a-z_][a-z0-9_]{0,63}$", trim(findkey.fname))>
+    <cflog file="qry_update" text="BLOCKED: invalid column name findkey.fname='#htmlEditFormat(findkey.fname)#'" />
+    <cfabort>
+</cfif>
+
 <cfoutput>
     <cfset pg_comptable = "#rpg_compTable#" />
 </cfoutput>
@@ -25,19 +35,28 @@
         #sql_start#
         
         <cfloop query="findresults">
+            <!--- WO-5B: Validate per-row identifiers --->
+            <cfif len(trim(fname)) AND NOT reFindNoCase("^[a-z_][a-z0-9_]{0,63}$", trim(fname))><cfcontinue /></cfif>
+            <cfif len(trim(comptableb)) AND NOT reFindNoCase("^[a-z_][a-z0-9_]{0,63}$", trim(comptableb))><cfcontinue /></cfif>
+            <cfif len(trim(findresults.talias)) AND NOT reFindNoCase("^[a-z_][a-z0-9_]{0,63}$", trim(findresults.talias))><cfcontinue /></cfif>
             <cfif #comptableb# is  "">
                 ,t.#fname# as col#currentrow#
             <cfelse>
                 ,#Findresults.talias#.recordname as col#currentrow#
             </cfif>
-            , '#updatename#' as head#currentrow# 
+            , '#updatename#' as head#currentrow#
             , #FindResults.det_cols# as pgcol#currentrow#
         </cfloop>
-        
+
         FROM #rpg_compTable# t
-        
+
         <cfloop query="findjoins">
             <cfset talias = findjoins.talias />
+            <!--- WO-5B: Validate join identifiers --->
+            <cfif NOT reFindNoCase("^[a-z_][a-z0-9_]{0,63}$", trim(comptableb))><cfcontinue /></cfif>
+            <cfif NOT reFindNoCase("^[a-z_][a-z0-9_]{0,63}$", trim(talias))><cfcontinue /></cfif>
+            <cfif len(trim(fnameb)) AND NOT reFindNoCase("^[a-z_][a-z0-9_]{0,63}$", trim(fnameb))><cfcontinue /></cfif>
+            <cfif len(trim(fname)) AND NOT reFindNoCase("^[a-z_][a-z0-9_]{0,63}$", trim(fname))><cfcontinue /></cfif>
             INNER JOIN #comptableb# #talias# ON #talias#.#fnameb# = t.#fname#
         </cfloop> 
         

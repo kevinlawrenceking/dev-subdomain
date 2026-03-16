@@ -1,10 +1,14 @@
 <!--- This ColdFusion page confirms the deletion of a media item and processes the deletion request. --->
 
+<!--- WO-5.1: Validate numeric inputs --->
+<cfset mediaid = val(mediaid) />
+<cfset new_secid = val(new_secid) />
+
 <cfinclude template="/include/qry/audmedia_details_226_1.cfm" />
 
 <cfoutput>
     <center>
-        Are you sure you want<BR>to delete <strong>#audmedia_details.mediaType#: #audmedia_details.medianame#</strong>?
+        Are you sure you want<BR>to delete <strong>#htmlEditFormat(audmedia_details.mediaType)#: #htmlEditFormat(audmedia_details.medianame)#</strong>?
     </center>
 </cfoutput>
 <p></p>
@@ -12,16 +16,16 @@
 <!--- Save the delete query in a variable for later use. --->
 <cfsavecontent variable="dqry">
     <cfoutput>
-        update audmedia set IsDeleted = 1 WHERE mediaid = #mediaid#
+        update audmedia set IsDeleted = 1 WHERE mediaid = #val(mediaid)#
     </cfoutput>
 </cfsavecontent>
 
 <!--- Form to confirm deletion of the media item. --->
 <form action="/include/remoteDeleteaudMedia2.cfm" method="post" class="needs-validation" novalidate>
     <cfoutput>
-        <input type="hidden" name="mediaid" value="#mediaid#" />
-        <input type="hidden" name="secid" value="#new_secid#" />
-        <input type="hidden" name="dqry" value="#dqry#" />
+        <input type="hidden" name="mediaid" value="#val(mediaid)#" />
+        <input type="hidden" name="secid" value="#val(new_secid)#" />
+        <input type="hidden" name="dqry" value="#htmlEditFormat(dqry)#" />
     </cfoutput>
 
     <p>&nbsp;</p>

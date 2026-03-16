@@ -4,6 +4,9 @@
     <cfargument name="userid" type="numeric" required="true">
     <cfargument name="target_id_system" type="numeric" required="true">
 
+    <!--- WO-4.4: Transaction wraps DELETE + INSERT to prevent partial restore --->
+    <cftransaction>
+
     <!--- Step 1: Delete existing action users for the user and target system --->
     <cfquery name="deleteActionUsers">
       delete from  actionusers_tbl
@@ -61,6 +64,8 @@
       WHERE a.systemid = <cfqueryparam value="#arguments.target_id_system#" cfsqltype="CF_SQL_INTEGER">
       AND au.actionid IS NULL
     </cfquery>
+
+    </cftransaction><!--- end WO-4.4 transaction --->
 
     <!--- Capture the number of inserted rows --->
     <cfset insertCount=insertResult.recordCount>

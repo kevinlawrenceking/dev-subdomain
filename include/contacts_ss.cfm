@@ -11,17 +11,23 @@
     <cfset search = form["search[value]"]>
 </cfif>
 
+<!--- WO-5B: Validate dynamic table name --->
+<cfif NOT reFindNoCase("^[a-z_][a-z0-9_]{0,63}$", trim(contacts_table))>
+    <cflog file="contacts_ss" text="BLOCKED: invalid table name contacts_table='#htmlEditFormat(contacts_table)#'" />
+    <cfabort>
+</cfif>
+
 <!--- Data set after filtering --->
 
 <cfquery result="result"  name="qFiltered" >
-SELECT contactid,col1,col2,col2b,col3,col4,col5,userid, hlink 
+SELECT contactid,col1,col2,col2b,col3,col4,col5,userid, hlink
     from #contacts_table#
 
 WHERE userid = <Cfqueryparam value="#userid#" cfsqltype="CF_SQL_INTEGER" />
 
 <cfif #isdefined('bytag')#>
     <cfif #bytag# is not "">
-    and contactid in (SELECT contactid from contactitems  WHERE valuetype = 'tags' AND itemstatus = 'active' AND valuetext='#bytag#' )
+    and contactid in (SELECT contactid from contactitems  WHERE valuetype = 'tags' AND itemstatus = 'active' AND valuetext=<cfqueryparam cfsqltype="cf_sql_varchar" value="#bytag#" /> )
     </cfif>
     </cfif>
 
@@ -37,7 +43,7 @@ WHERE userid = <Cfqueryparam value="#userid#" cfsqltype="CF_SQL_INTEGER" />
 
 <cfif #isdefined('bylike')#>
 
-and col1 like '%#bylike#%'
+and col1 like <cfqueryparam cfsqltype="cf_sql_varchar" value="%#bylike#%" />
     </cfif>
 
 <cfif #uploadid# is not "0">

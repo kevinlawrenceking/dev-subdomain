@@ -15,7 +15,7 @@
     <cfset thrivecart_cancel_canceldate=x.canceldate />
 
 <cfquery result="result"  name="Find">
-        SELECT * from thrivecart where invoiceid = '#thrivecart_cancel_invoiceid#'
+        SELECT * from thrivecart where invoiceid = <cfqueryparam cfsqltype="cf_sql_varchar" value="#thrivecart_cancel_invoiceid#" />
     </cfquery>
 
     <cfif #find.recordcount# is "0">
@@ -40,7 +40,7 @@
             </cfoutput>
 
 <cfquery result="result"  name="FindUser" maxrows="1">
-            SELECT * from taousers where customerid = #thrivecart_id#
+            SELECT * from taousers where customerid = <cfqueryparam cfsqltype="cf_sql_integer" value="#thrivecart_id#" />
         </cfquery>
 
         <cfif #finduser.recordcount# is "1">
@@ -57,7 +57,7 @@
             UPDATE thrivecart
             SET STATUS = 'Cancelled'
             ,canceldate = <cfqueryparam cfsqltype="cf_sql_timestamp" value="#thrivecart_cancel_canceldate#" />
-            WHERE id = #thrivecart_id#
+            WHERE id = <cfqueryparam cfsqltype="cf_sql_integer" value="#thrivecart_id#" />
             </cfquery>
             <cfoutput>
             <p>[#thrivecart_id#] Thrivecart status set to CANCELLED, canceldate set to #thrivecart_cancel_canceldate#</p>
@@ -66,7 +66,7 @@
             <cfquery result="result"  name="update_thrivecart_cancel">
             UPDATE thrivecart_cancel
             SET STATUS = 'Cancelled'
-            WHERE id = #thrivecart_cancel_id#
+            WHERE id = <cfqueryparam cfsqltype="cf_sql_integer" value="#thrivecart_cancel_id#" />
             </cfquery>
             
                      <cfoutput>
@@ -76,7 +76,7 @@
 <cfquery result="result"  name="update_user">
             update taousers
             set userstatus = 'Cancelling'
-            where userid = #new_userid#
+            where userid = <cfqueryparam cfsqltype="cf_sql_integer" value="#new_userid#" />
             </cfquery>
                              <cfoutput>
             <p>[#new_userid#] User status set to CANCELLING</p>
@@ -106,7 +106,7 @@ WHERE c.canceldate <= CURRENT_DATE()  AND u.userstatus <> 'Cancelled'
                update taousers
                set userstatus = 'Cancelled',
                isdeleted = 1
-               where userid = #Y.new_userid#
+               where userid = <cfqueryparam cfsqltype="cf_sql_integer" value="#Y.new_userid#" />
             </cfquery>
 
 <cfoutput>

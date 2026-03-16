@@ -34,7 +34,7 @@
 
     </cfquery>
     <cfquery name="users" datasource="#dsn#">
-    Select * from taousers where userid = #session.userid#
+    Select * from taousers where userid = <cfqueryparam cfsqltype="cf_sql_integer" value="#session.userid#" />
     </cfquery>
     <cfset recid=result.generatedkey>
         
@@ -92,7 +92,7 @@
             FROM tickets t
             INNER JOIN taousers u ON u.userid = t.userid
             INNER JOIN pgpages p ON p.pgid = t.pgid
-            WHERE t.ticketid = #recid#
+            WHERE t.ticketid = <cfqueryparam cfsqltype="cf_sql_integer" value="#recid#" />
         </cfquery>
 
         <cfset to_email="#details.useremail#" />

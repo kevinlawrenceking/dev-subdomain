@@ -30,7 +30,7 @@
 <cfset currentURL = cgi.server_name/>
 <cfset host = ListFirst(currentURL, ".")/>
 
-<cfquery  name="FindUser">
+<cfquery name="FindUser">
     SELECT
     u.userid
     ,u.userFirstName
@@ -41,12 +41,15 @@
     ,u.userRole
     ,u.contactid AS userContactID
     FROM taousers u
-    WHERE u.userid = #userid#
+    WHERE u.userid = <cfqueryparam cfsqltype="cf_sql_integer" value="#userid#" />
 </cfquery>
 
-<cfquery  name="INSERT" result="result">
+<!--- WO-4.4: Transaction wraps upload record + staging inserts + transfer + date fix --->
+<cftransaction>
+
+<cfquery name="INSERT" result="result">
     INSERT INTO `uploads` (userid)
-    values (#userid#)
+    VALUES (<cfqueryparam cfsqltype="cf_sql_integer" value="#userid#" />)
 </cfquery>
 
 <cfset new_uploadid = result.generatedkey>
@@ -200,12 +203,13 @@ columnnames="projDate,projName,audRoleName,audcatsubname,audsource,cdfirstname,c
 <cfinclude template="transfer_audition.cfm" />
 
 
-    <cfquery  name="fix">
+    <cfquery name="fix">
 UPDATE audprojects p
 INNER JOIN auditionsimport i ON i.audprojectid = p.audprojectid
 SET p.projdate = i.projdate
 WHERE STR_TO_DATE(i.projdate, '%Y-%m-%d') IS NOT NULL;
 </cfquery>
 
+</cftransaction><!--- end WO-4.4 transaction --->
 
 <cflocation url="/app/auditions-import/?uploadid=#new_uploadid#">

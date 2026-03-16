@@ -17,6 +17,17 @@
 <cfparam name="t4" default="0" />
 <cfparam name="contactid" default="0" />
 
+<!--- WO-5.1: Whitelist validation for dynamic identifiers --->
+<cfif NOT reFindNoCase("^[a-z_][a-z0-9_]{0,63}$", trim(rpg_comptable))>
+    <cflog file="remoteUpdateFormUpdate" text="BLOCKED: invalid table name rpg_comptable='#htmlEditFormat(rpg_comptable)#'" />
+    <cfabort>
+</cfif>
+<cfif NOT reFindNoCase("^[a-z_][a-z0-9_]{0,63}$", trim(fid))>
+    <cflog file="remoteUpdateFormUpdate" text="BLOCKED: invalid column name fid='#htmlEditFormat(fid)#'" />
+    <cfabort>
+</cfif>
+<cfset recid = val(recid) />
+
 <cfoutput>
     <!--- Set user and company parameters for output --->
     <cfparam name="userid" default="#userid#" />
@@ -24,7 +35,7 @@
     <cfparam name="compTable" default="#rpg_comptable#" />
     <cfparam name="recname" default="#fid#" />
     <cfparam name="compName" default="#rpg_compname#" />
-    
+
     userid: #userid#<BR>
     compid: #rpg_compid#<BR>
     comptable: #rpg_comptable#<BR>
@@ -38,6 +49,11 @@
         <cfoutput>
             <cfset fname = "#rpgupdate.Fname#" />
             <cfset ftype = "#rpgupdate.ftype#" />
+            <!--- WO-5.1: Validate field name from RPG metadata --->
+            <cfif NOT reFindNoCase("^[a-z_][a-z0-9_]{0,63}$", trim(fname))>
+                <cflog file="remoteUpdateFormUpdate" text="BLOCKED: invalid field name fname='#htmlEditFormat(fname)#'" />
+                <cfcontinue>
+            </cfif>
             fname: #rpgupdate.Fname#<BR>
             ftype: #rpgupdate.ftype#<BR>
             

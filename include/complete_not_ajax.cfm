@@ -109,6 +109,9 @@
   </cfoutput>
 </cfif>
 
+<!--- WO-4.4: Transaction wraps all writes in the completion workflow --->
+<cftransaction>
+
 <!--- Update Notification --->
 <cfinclude template="/include/qry/updateNotificationCompleted.cfm" />
 <cfset debugCounters.updatedNotifications++ />
@@ -319,6 +322,8 @@ notsnext.recordcount: #notsnext.recordcount#
     </cfif>
   </cfif>
 </cfif>
+
+</cftransaction><!--- end WO-4.4 transaction --->
 
 <!--- Final Debug Summary --->
 <cfif dbug EQ "Y">

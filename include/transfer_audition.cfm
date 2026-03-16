@@ -37,13 +37,61 @@
 
 <cfinclude template="/include/remote_load.cfm"/>
 
+<!--- WO-4.1: Pre-load all reference data in batch (replaces per-row lookups) --->
 
+<!--- Pre-load: existing project names for duplicate check --->
+<cfquery name="existingProjects">
+    SELECT projname FROM audprojects
+    WHERE userid = <cfqueryparam value="#session.userid#" cfsqltype="cf_sql_integer" />
+    AND isdeleted = <cfqueryparam value="0" cfsqltype="cf_sql_bit" />
+</cfquery>
+<cfset projectNameSet = structNew() />
+<cfloop query="existingProjects">
+    <cfset projectNameSet[lcase(trim(existingProjects.projname))] = true />
+</cfloop>
 
+<!--- Pre-load: all categories by name --->
+<cfquery name="allCategories">
+    SELECT audcatid, audcatname FROM audcategories
+</cfquery>
+<cfset categoryMap = structNew() />
+<cfloop query="allCategories">
+    <cfset categoryMap[lcase(trim(allCategories.audcatname))] = allCategories.audcatid />
+</cfloop>
 
+<!--- Pre-load: all active sources by name --->
+<cfquery name="allSources">
+    SELECT audsourceid, audsource FROM audsources
+    WHERE isdeleted = <cfqueryparam value="0" cfsqltype="cf_sql_bit" />
+</cfquery>
+<cfset sourceMap = structNew() />
+<cfloop query="allSources">
+    <cfset sourceMap[lcase(trim(allSources.audsource))] = allSources.audsourceid />
+</cfloop>
 
-
-
-
+<!--- Pre-load: all category+subcategory combos for processing loop --->
+<cfquery name="allSubcats">
+    SELECT s.audsubcatid, s.audsubcatname, c.audcatid, c.audcatname,
+           CONCAT(c.audcatname, '-', s.audSubCatName) AS fullname
+    FROM audcategories c
+    INNER JOIN audsubcategories s ON s.audcatid = c.audcatid
+    WHERE c.isdeleted = <cfqueryparam value="0" cfsqltype="cf_sql_bit" />
+    AND s.isdeleted = <cfqueryparam value="0" cfsqltype="cf_sql_bit" />
+</cfquery>
+<cfset subcatMap = structNew() />
+<cfset catDetailMap = structNew() />
+<cfloop query="allSubcats">
+    <cfset subcatMap[lcase(trim(allSubcats.fullname))] = allSubcats.audsubcatid />
+    <!--- Also map category name to audcatid for the secondary lookup --->
+    <cfset catDetailMap[lcase(trim(allSubcats.audcatname))] = structNew() />
+    <cfset catDetailMap[lcase(trim(allSubcats.audcatname))].audcatid = allSubcats.audcatid />
+</cfloop>
+<!--- Also build subcatByCat map for the fallback cat+subcat lookup --->
+<cfset subcatByCatMap = structNew() />
+<cfloop query="allSubcats">
+    <cfset subKey = allSubcats.audcatid & "|" & lcase(trim(allSubcats.audsubcatname)) />
+    <cfset subcatByCatMap[subKey] = allSubcats.audsubcatid />
+</cfloop>
 
 <cfquery name="y">
     SELECT *
@@ -51,27 +99,19 @@
     WHERE uploadid = <cfqueryparam value="#new_uploadid#" cfsqltype="cf_sql_integer">
 </cfquery>
 
+<!--- VALIDATION LOOP: uses pre-loaded maps instead of per-row queries --->
 <cfloop query="y">
 
 <cfset new_status = "Valid" />
 
-
-
-    <cfquery name="find" maxrows="1">
-        SELECT * FROM audprojects 
-        WHERE projname = <cfqueryparam value="#y.projname#" cfsqltype="cf_sql_varchar"> 
-        AND userid = <cfqueryparam value="#session.userid#" cfsqltype="cf_sql_integer"> 
-        AND isdeleted = <cfqueryparam value="0" cfsqltype="cf_sql_bit">
-    </cfquery>
-
-    <cfif #find.recordcount# is not "0">
+    <!--- WO-4.1: Project duplicate check via pre-loaded set (was per-row SELECT) --->
+    <cfif structKeyExists(projectNameSet, lcase(trim(y.projname)))>
 
         <cfset new_status="Invalid" />
 
         <cftry>
             <cfset auditionImportErrorService.INSauditionsimport_error(id=y.id, errorMsg="Duplicate project")>
             <cfcatch type="any">
-                <!--- Log error but continue processing --->
                 <cflog text="Error logging duplicate project for ID #y.id#: #cfcatch.message#" file="audition_import">
             </cfcatch>
         </cftry>
@@ -79,110 +119,93 @@
     </cfif>
 
 
-<cfif #y.projname# is "">
+<cfif y.projname is "">
     <cfset new_status="Invalid" />
     <cftry>
         <cfset auditionImportErrorService.INSauditionsimport_error_24355(id=y.id, errorMsg="Missing project name")>
         <cfcatch type="any">
-            <!--- Log error but continue processing --->
             <cflog text="Error logging missing project name for ID #y.id#: #cfcatch.message#" file="audition_import">
         </cfcatch>
     </cftry>
 </cfif>
 
 
-<cfif #y.audrolename# is "">
+<cfif y.audrolename is "">
     <cfset new_status="Invalid" />
     <cftry>
         <cfset auditionImportErrorService.INSauditionsimport_error_24356(id=y.id, errorMsg="Missing Role name")>
         <cfcatch type="any">
-            <!--- Log error but continue processing --->
             <cflog text="Error logging missing role name for ID #y.id#: #cfcatch.message#" file="audition_import">
         </cfcatch>
     </cftry>
 </cfif>
 
+    <!--- WO-4.1: Category check via pre-loaded map (was per-row SELECT) --->
+    <cfset catFound = structKeyExists(categoryMap, lcase(trim(y.audcatname))) />
 
-
-
-
-
-    <cfquery name="findcat">
-        SELECT audcatid FROM audcategories 
-        WHERE audcatname = <cfqueryparam value="#y.audcatname#" cfsqltype="cf_sql_varchar">
-    </cfquery>
-
-
-<cfif #findcat.recordcount# is not "1">
+<cfif NOT catFound>
     <cfset new_status="Invalid" />
     <cftry>
         <cfset auditionImportErrorService.INSauditionsimport_error_24358(id=y.id, errorMsg="Invalid Category")>
         <cfcatch type="any">
-            <!--- Log error but continue processing --->
             <cflog text="Error logging invalid category for ID #y.id#: #cfcatch.message#" file="audition_import">
         </cfcatch>
     </cftry>
 </cfif>
 
+    <!--- WO-4.1: Source check via pre-loaded map (was per-row SELECT) --->
+    <cfset sourceFound = structKeyExists(sourceMap, lcase(trim(y.audsource))) />
 
-
-
-    <cfquery name="findsource">
-        SELECT * FROM audsources 
-        WHERE isdeleted = <cfqueryparam value="0" cfsqltype="cf_sql_bit"> 
-        AND audsource = <cfqueryparam value="#y.audsource#" cfsqltype="cf_sql_varchar">
-    </cfquery>
-
-
-<cfif #findsource.recordcount# is not "1">
+<cfif NOT sourceFound>
     <cfset new_status="Invalid" />
     <cftry>
         <cfset auditionImportErrorService.INSauditionsimport_error_24360(id=y.id, errorMsg="Invalid Source")>
         <cfcatch type="any">
-            <!--- Log error but continue processing --->
             <cflog text="Error logging invalid source for ID #y.id#: #cfcatch.message#" file="audition_import">
         </cfcatch>
     </cftry>
 </cfif>
 
-
-
-
-
-
         <cfquery name="update">
             UPDATE auditionsimport
-            SET status = <cfqueryparam value="#new_status#" cfsqltype="cf_sql_varchar"> 
+            SET status = <cfqueryparam value="#new_status#" cfsqltype="cf_sql_varchar">
             WHERE id = <cfqueryparam value="#y.id#" cfsqltype="cf_sql_integer">
         </cfquery>
 
         </cfloop>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+<!--- WO-4.1: Pre-load contacts for the processing loop --->
 <cfquery name="x">
     SELECT *
     FROM auditionsimport
-    WHERE uploadid = <cfqueryparam value="#new_uploadid#" cfsqltype="cf_sql_integer"> 
+    WHERE uploadid = <cfqueryparam value="#new_uploadid#" cfsqltype="cf_sql_integer">
     AND status = <cfqueryparam value="Valid" cfsqltype="cf_sql_varchar">
 </cfquery>
 
+<cfif x.recordcount GT 0>
+    <!--- Build list of CD names to pre-load --->
+    <cfset cdNameList = "" />
+    <cfloop query="x">
+        <cfset cdfn = trim(x.cdfirstname) & " " & trim(x.cdlastname) />
+        <cfif len(trim(cdfn)) GT 1>
+            <cfset cdNameList = listAppend(cdNameList, cdfn) />
+        </cfif>
+    </cfloop>
 
+    <cfset contactMap = structNew() />
+    <cfif len(cdNameList)>
+        <cfquery name="existingContacts">
+            SELECT contactid, contactfullname FROM contactdetails
+            WHERE userid = <cfqueryparam value="#userid#" cfsqltype="cf_sql_integer" />
+            AND contactfullname IN (<cfqueryparam value="#cdNameList#" cfsqltype="cf_sql_varchar" list="true" />)
+        </cfquery>
+        <cfloop query="existingContacts">
+            <cfset contactMap[lcase(trim(existingContacts.contactfullname))] = existingContacts.contactid />
+        </cfloop>
+    </cfif>
+</cfif>
+
+<!--- PROCESSING LOOP --->
 <cfloop query="x">
 <cfset new_projdate = this.formatDate(x.projdate) />
 
@@ -192,19 +215,13 @@
     <cfset new_projdate = Now()>
 </cfif>
 
-
-
 <cfset cdfullname = x.cdfirstname & " " & x.cdlastname />
 
-            <cfquery name="findcd">
-                SELECT * FROM contactdetails 
-                WHERE contactfullname = <cfqueryparam value="#cdfullname#" cfsqltype="cf_sql_varchar">
-                AND userid = <cfqueryparam value="#userid#" cfsqltype="cf_sql_integer">
-            </cfquery>
-            
-       
+            <!--- WO-4.1: Contact lookup via pre-loaded map (was per-row SELECT) --->
+            <cfset cdKey = lcase(trim(cdfullname)) />
+            <cfset cdExists = structKeyExists(contactMap, cdKey) />
 
-            <cfif #findcd.recordcount# is "0" and #x.cdfirstname# is not "">
+            <cfif NOT cdExists and x.cdfirstname is not "">
                 <cfoutput>contact not found, adding...<BR></cfoutput>
                 <cfquery name="add" result="result">
                     INSERT INTO contactdetails (userid,contactFullName)
@@ -237,9 +254,16 @@
                     )
                 </cfquery>
 
+                <!--- Add newly created contact to the map so subsequent rows find it --->
+                <cfset contactMap[cdKey] = new_contactid />
+
                 <cfelse>
 
-                    <cfset new_contactid=0 />
+                    <cfif cdExists>
+                        <cfset new_contactid = contactMap[cdKey] />
+                    <cfelse>
+                        <cfset new_contactid=0 />
+                    </cfif>
             </cfif>
 
             <cfset new_status="Added" />
@@ -258,25 +282,15 @@
 
     <cfset new_audrolename=trim(x.audrolename) />
 
-    <cfif #x.audcatname# is not "">
+    <cfif x.audcatname is not "">
 
-
-            <cfquery name="find_subcat" maxrows="1">
-                SELECT s.audsubcatid
-                FROM audcategories c INNER JOIN audsubcategories s ON s.audcatid = c.audcatid 
-                WHERE c.isdeleted = <cfqueryparam value="0" cfsqltype="cf_sql_bit"> 
-                AND s.isdeleted = <cfqueryparam value="0" cfsqltype="cf_sql_bit">
-                AND CONCAT(c.audcatname,"-",s.audSubCatName) = <cfqueryparam value="#x.audcatname#" cfsqltype="cf_sql_varchar">
-            </cfquery>
-        
-        
-
-            <cfif #find_subcat.recordcount# is "1">
-subcat found<BR>
-                <cfset new_audsubcatid=find_subcat.audsubcatid />
+            <!--- WO-4.1: Subcategory lookup via pre-loaded map (was per-row SELECT with JOIN) --->
+            <cfset subcatKey = lcase(trim(x.audcatname)) />
+            <cfif structKeyExists(subcatMap, subcatKey)>
+                <cfset new_audsubcatid = subcatMap[subcatKey] />
             </cfif>
         </cfif>
- 
+
 
        <cfset iscallback=0 />
               <cfset isredirect=0 />
@@ -284,20 +298,19 @@ subcat found<BR>
                             <cfset isbooked=0 />
 
 
-            
-    <cfif #x.callback_yn# is "Y">
+    <cfif x.callback_yn is "Y">
         <cfset iscallback=1 />
     </cfif>
 
-    <cfif #x.redirect_yn# is "Y">
+    <cfif x.redirect_yn is "Y">
         <cfset isredirect=1 />
     </cfif>
 
-    <cfif #x.pin_yn# is "Y">
+    <cfif x.pin_yn is "Y">
         <cfset ispin=1 />
     </cfif>
 
-    <cfif #x.booked_yn# is "Y">
+    <cfif x.booked_yn is "Y">
         <cfset isbooked=1 />
     </cfif>
 
@@ -308,38 +321,26 @@ subcat found<BR>
     <cfset new_audRoleName=x.audRoleName />
 
 
-    <cfif #x.audcatname# is not "">
+    <cfif x.audcatname is not "">
 
-        <cfquery name="find_cat">
-            SELECT * FROM audcategories 
-            WHERE audcatname = <cfqueryparam value="#x.audcatname#" cfsqltype="cf_sql_varchar"> 
-            AND isdeleted = <cfqueryparam value="0" cfsqltype="cf_sql_bit">
-        </cfquery>
-        <cfoutput>   SELECT * FROM audcategories WHERE audcatname = '#x.audcatname#' and isdeleted is false<BR></cfoutput>
-        <cfif find_cat.recordcount eq 1>
+        <!--- WO-4.1: Category lookup via pre-loaded map (was per-row SELECT) --->
+        <cfset catKey = lcase(trim(x.audcatname)) />
+        <cfif structKeyExists(catDetailMap, catKey)>
 
-            <cfset new_audcatid=find_cat.audcatid />
+            <cfset new_audcatid = catDetailMap[catKey].audcatid />
 
-            <cfquery name="find_subcat" maxrows="1">
-                SELECT * FROM audsubcategories 
-                WHERE audcatid = <cfqueryparam value="#new_audcatid#" cfsqltype="cf_sql_integer"> 
-                AND audsubcatname = <cfqueryparam value="#x.audsubcatname#" cfsqltype="cf_sql_varchar">
-            </cfquery>
-            <cfoutput>           SELECT * FROM audsubcategories WHERE audcatid = #new_audcatid# and audsubcatname = '#x.audsubcatname#'<BR /></cfoutput>
-            <cfif #find_subcat.recordcount# is "1">
+            <!--- WO-4.1: Subcategory lookup via pre-loaded map (was per-row SELECT) --->
+            <cfset subKey = new_audcatid & "|" & lcase(trim(x.audsubcatname)) />
+            <cfif structKeyExists(subcatByCatMap, subKey)>
 
-                <cfset new_audsubcatid=find_subcat.audsubcatid />
-                
-                <Cfoutput>new_audsubcatid: #find_subcat.audsubcatid#<BR></Cfoutput>
+                <cfset new_audsubcatid = subcatByCatMap[subKey] />
+
             </cfif>
         </cfif>
     </cfif>
 
 
-
-
-
-    <cfquery name="audprojects_ins"  result="result">
+    <cfquery name="audprojects_ins" result="result">
 
         INSERT INTO audprojects (
         projName,
@@ -378,31 +379,25 @@ subcat found<BR>
 <cfoutput>new audprojectid: #new_audprojectid#<BR/></cfoutput>
 
 
-    <cfif #x.audsource# is not "">
+    <cfif x.audsource is not "">
 
-        <cfquery name="find_source">
-            SELECT * FROM audsources 
-            WHERE audsource = <cfqueryparam value="#x.audsource#" cfsqltype="cf_sql_varchar"> 
-            AND isdeleted = <cfqueryparam value="0" cfsqltype="cf_sql_bit">
-        </cfquery>
-
-        <cfif find_source.recordcount eq 1>
-
-            <cfset new_audsourceid=find_source.audsourceid />
-
-
+        <!--- WO-4.1: Source lookup via pre-loaded map (was per-row SELECT) --->
+        <cfset srcKey = lcase(trim(x.audsource)) />
+        <cfif structKeyExists(sourceMap, srcKey)>
+            <cfset new_audsourceid = sourceMap[srcKey] />
         </cfif>
+
     </cfif>
 
 
-<cfif #new_audRoleName# is "">
+<cfif new_audRoleName is "">
 
 <cfset new_audRoleName = "Unknown" />
 
 </cfif>
 
 
-    <cfquery name="audroles_ins"  result="result">
+    <cfquery name="audroles_ins" result="result">
 
         INSERT INTO audroles (
         audRoleName,
@@ -444,11 +439,9 @@ subcat found<BR>
 
     <cfset new_audRoleID=result.GENERATEDKEY />
 
-    <cfif #x.note# is not "">
+    <cfif x.note is not "">
 
-
-
-        <cfquery  name="InsertNote">
+        <cfquery name="InsertNote">
             INSERT INTO noteslog (userid,noteDetails,isPublic,audprojectid,contactid)
             VALUES (
             <cfqueryparam cfsqltype="cf_sql_integer" value="#userid#" />
@@ -468,8 +461,8 @@ subcat found<BR>
 
     <cfquery name="update_contact">
         UPDATE auditionsimport
-        SET status = <cfqueryparam value="#new_status#" cfsqltype="cf_sql_varchar">, 
-            audprojectid = <cfqueryparam value="#new_audprojectid#" cfsqltype="cf_sql_integer"> 
+        SET status = <cfqueryparam value="#new_status#" cfsqltype="cf_sql_varchar">,
+            audprojectid = <cfqueryparam value="#new_audprojectid#" cfsqltype="cf_sql_integer">
         WHERE id = <cfqueryparam value="#x.id#" cfsqltype="cf_sql_integer">
     </cfquery>
 
