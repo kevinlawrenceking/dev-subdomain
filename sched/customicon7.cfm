@@ -85,12 +85,12 @@
 
          <cfset image_dir_uat="C:\home\theactorsoffice.com\wwwroot\uat-subdomain\app\assets\images\retina-circular-icons\14" />
 
-<cfhttp url="https://icon.horse/icon/#domain#?apikey=996ca328-b4b1-47a7-8d41-e5255525ab6b&fallback_bg=406e8e&size=small&ignore_other_sizes=false" method="get" getAsBinary="yes" result="icoResult"></cfhttp>
+<cfhttp url="https://icon.horse/icon/#domain#?apikey=#application.secrets.iconHorseApiKey#&fallback_bg=406e8e&size=small&ignore_other_sizes=false" method="get" getAsBinary="yes" result="icoResult"></cfhttp>
 
          <cfdump var="#icoResult#">
 
              <p>
-                 <cfoutput>cfhttp: https://icon.horse/icon/#domain#?apikey=996ca328-b4b1-47a7-8d41-e5255525ab6b&fallback_bg=406e8e&size=small&ignore_other_sizes=false</cfoutput>
+                 <cfoutput>cfhttp: https://icon.horse/icon/#domain#?apikey=#application.secrets.iconHorseApiKey#&fallback_bg=406e8e&size=small&ignore_other_sizes=false</cfoutput>
              </p>
 
              <cfif icoResult.statusCode EQ "200 OK">

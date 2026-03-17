@@ -1,5 +1,5 @@
 <!--- This ColdFusion page displays billing information including invoice ID, purchase date, trial end date, product, and plan details. --->
-<cfset authToken = "4OWaGHPXFibE">
+<cfset authToken = application.secrets.paykickstartAuthToken>
 <cfset userEmail eq userEmail>
 <cfset apiUrl = "https://app.paykickstart.com/api/billing-customer?auth_token=#authToken#&email=#urlEncodedFormat(userEmail)#">
 

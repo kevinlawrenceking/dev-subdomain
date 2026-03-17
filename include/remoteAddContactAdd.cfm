@@ -11,6 +11,25 @@
 <cfparam name="new_systemtype" default="None" /> 
 <cfparam name="company" default="" />
 
+<!--- Server-side validation --->
+<cfparam name="contactfullname" default="">
+<cfparam name="workemail" default="">
+<cfparam name="workphone" default="">
+<cfparam name="new_tag" default="">
+<cfset contactfullname = left(trim(contactfullname), 500)>
+<cfset workemail = left(trim(workemail), 320)>
+<cfset workphone = left(trim(workphone), 50)>
+<cfset company = left(trim(company), 500)>
+<cfif NOT len(contactfullname)>
+    <cflocation url="/app/myaccount/?err=name_required" addtoken="false">
+</cfif>
+<cfif len(workemail) AND NOT isValid("email", workemail)>
+    <cfset workemail = ""><!--- discard invalid email rather than insert garbage --->
+</cfif>
+
+<!--- Transaction wraps contact creation + all related inserts --->
+<cftransaction>
+
 <!--- Include the query to add a new contact --->
 <cfinclude template="/include/qry/add_201_1.cfm" />
 <cfset currentid = contactid />
@@ -39,6 +58,10 @@
 
 <cfset select_contactid = contactid />
 <cfset select_userid = userid />
+
+</cftransaction>
+
+<!--- Folder setup is filesystem, not DB — runs after transaction commits --->
 <cfinclude template="/include/contactfolder_setup.cfm" />
 
 <!--- Redirect based on the source parameter --->

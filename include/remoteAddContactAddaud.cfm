@@ -12,6 +12,9 @@
 <cfparam name="company" default="" />
 <cfparam name="company_new" default="" />
 
+<!--- Transaction wraps contact creation + all related inserts --->
+<cftransaction>
+
 <!--- Include the initial query for adding contact information --->
 <cfinclude template="/include/qry/add_202_1.cfm" />
 <cfset currentid = newContactId />
@@ -46,7 +49,6 @@
 
 <cfset select_contactid = contactid />
 <cfset select_userid = userid />
-<cfinclude template="/include/contactfolder_setup.cfm" />
 
 <!--- Include the query for adding additional contact information --->
 <cfinclude template="/include/qry/add_cd_202_7.cfm" />
@@ -56,17 +58,22 @@
 <!--- Check if events list is provided --->
 <cfif #events_list# is not "">
     <cfset EventNumbers = listToArray(events_list, ",")>
-    
+
     <!--- Loop through each event number and process it --->
     <cfloop array="#EventNumbers#" index="eventNumber">
         <cfinclude template="/include/qry/findnumber_202_8.cfm" />
-        
+
         <!--- Check if the event number is not found, then insert it --->
         <cfif #findnumber.recordcount# is "0">
             <cfinclude template="/include/qry/inserts_202_9.cfm" />
         </cfif>
     </cfloop>
 </cfif>
+
+</cftransaction>
+
+<!--- Folder setup is filesystem, not DB — runs after transaction commits --->
+<cfinclude template="/include/contactfolder_setup.cfm" />
 
 <!--- Redirect to the audition page with project ID and section ID --->
 <cflocation url="/app/audition/?audprojectid=#audprojectid#&secid=175" />

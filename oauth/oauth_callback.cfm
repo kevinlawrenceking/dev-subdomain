@@ -32,9 +32,9 @@
 </cfif>
 
 <cfset authorizationCode = trim(URL.code)>
-<cfset clientId = "764716537559-ncfiag8dl4p05v7c9kcoltss0ou3heki.apps.googleusercontent.com">
-<cfset clientSecret = "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">
-<cfset redirectUri = "https://app.theactorsoffice.com/oauth/oauth_callback.cfm">
+<cfset clientId = application.secrets.googleOAuthClientId>
+<cfset clientSecret = application.secrets.googleOAuthClientSecret>
+<cfset redirectUri = application.secrets.googleOAuthRedirectUri>
 <cfset tokenUrl = "https://oauth2.googleapis.com/token">
 
 <cfhttp url="#tokenUrl#" method="post" result="tokenResponse" charset="utf-8">

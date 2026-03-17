@@ -62,9 +62,40 @@
                 </cfif>
             </cfoutput>
         </cfloop>
+        <cfif structKeyExists(session, "csrfToken")>
+          <cfoutput><meta name="csrf-token" content="#session.csrfToken#"></cfoutput>
+        </cfif>
     </head>
 
     <body class="loading" style="background-color: #406E8E; font-family: 'Source Sans Pro', sans-serif;">
+        <script>
+          (function(){
+            var token = document.querySelector('meta[name="csrf-token"]');
+            if (token && typeof jQuery !== 'undefined') {
+              jQuery.ajaxSetup({
+                beforeSend: function(xhr, settings) {
+                  if (settings.type && settings.type !== 'GET') {
+                    xhr.setRequestHeader('X-CSRF-Token', token.getAttribute('content'));
+                  }
+                }
+              });
+            }
+            if (token) {
+              document.addEventListener('submit', function(e) {
+                var form = e.target;
+                if (form.tagName === 'FORM' && form.method && form.method.toLowerCase() === 'post') {
+                  if (!form.querySelector('input[name="csrfToken"]')) {
+                    var input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'csrfToken';
+                    input.value = token.getAttribute('content');
+                    form.appendChild(input);
+                  }
+                }
+              });
+            }
+          })();
+        </script>
         <div class="account-pages mt-3 mb-3">
             <div class="container">
                 <div class="row justify-content-center">

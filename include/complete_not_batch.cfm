@@ -81,6 +81,9 @@
     <cfset uniquename = NotificationDetails.uniquename />
     <cfset IsUnique = NotificationDetails.IsUnique />
 
+    <!--- Transaction per notification — partial failure for one does not corrupt others --->
+    <cftransaction>
+
     <!--- Update Notification --->
     <cfinclude template="/include/qry/updateNotificationCompleted.cfm" />
 
@@ -120,6 +123,8 @@
         <cfinclude template="/include/add_system.cfm" />
       </cfif>
     </cfif>
+
+    </cftransaction>
 
     <cfset results.processed++ />
 

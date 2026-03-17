@@ -66,10 +66,30 @@
 <cfparam name="isbooked" default="0" />
 <cfset userid = session.userid />
 
+<!--- Server-side validation: critical fields that affect DB writes --->
+<cfset new_userid = session.userid><!--- Force to session user — never trust form-supplied userid --->
+<cfif NOT isNumeric(new_audStepID)><cfset new_audStepID = 1></cfif>
+<cfif NOT isNumeric(new_audcatid)><cfset new_audcatid = 1></cfif>
+<cfif NOT isNumeric(new_audsubcatid)><cfset new_audsubcatid = 6></cfif>
+<cfif NOT isNumeric(new_audtypeid)><cfset new_audtypeid = 1></cfif>
+<cfif NOT isNumeric(new_audroletypeid)><cfset new_audroletypeid = 1></cfif>
+<cfif NOT isNumeric(new_durid)><cfset new_durid = 4></cfif>
+<cfif new_audplatformid NEQ "CustomPlatform" AND NOT isNumeric(new_audplatformid)><cfset new_audplatformid = 4></cfif>
+<cfif len(trim(new_eventStart)) AND NOT isDate(new_eventStart)><cfset new_eventStart = ""></cfif>
+<cfif isNumeric(new_contactid)><cfset new_contactid = int(new_contactid)><cfelse><cfset new_contactid = 0></cfif>
+<cfset new_projname = left(trim(new_projname), 500)>
+<cfset new_projDescription = left(trim(new_projDescription), 5000)>
+<cfset new_audrolename = left(trim(new_audrolename), 500)>
+<cfset cdfullname = left(trim(cdfullname), 500)>
+<cfset cdco = left(trim(cdco), 500)>
+
 <!--- Initialize new_contactid if not set --->
 <cfif len(trim(new_contactid)) EQ 0 OR new_contactid EQ 0>
     <cfset new_contactid = 0 />
 </cfif>
+
+<!--- Transaction wraps all audition creation writes --->
+<cftransaction>
 
 <!--- Process new contact if new_contactid is 0 and cdfullname is not empty --->
 <cfif new_contactid EQ 0 AND len(trim(cdfullname)) GT 0>
@@ -141,6 +161,8 @@
 <cfif new_contactid NEQ 0>
     <cfinclude template="/include/qry/add_cd_28_12.cfm" />
 </cfif>
+
+</cftransaction>
 
 <cflocation url="/app/audition/?audprojectid=#new_audprojectid#&isnew=1" />
 

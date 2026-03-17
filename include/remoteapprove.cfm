@@ -22,6 +22,9 @@
     
     <!--- Form for approving the ticket --->
     <form class="px-3 col-md-12" id="<cfoutput>approveform#details.recid#</cfoutput>" method="post" action="/include/remoteapprove2.cfm">
+        <cfif structKeyExists(session, "csrfToken")>
+            <cfoutput><input type="hidden" name="csrfToken" value="#session.csrfToken#" /></cfoutput>
+        </cfif>
         <cfoutput query="details">
             <input type="hidden" name="oldverid" value="#oldverid#" />
             <input type="hidden" name="new_ticketid" value="#details.recid#" />

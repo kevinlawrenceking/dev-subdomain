@@ -66,6 +66,9 @@
     <cfset endRecur = JavaCast("null", "")>
 </cfif>
 
+<!--- Transaction wraps all event creation writes (event + contacts + notes + audition) --->
+<cftransaction>
+
 <cfinclude template="/include/qry/add_14_1.cfm" />
 <cfinclude template="/include/qry/t_14_2.cfm" />
 <cfinclude template="/include/qry/tt_14_3.cfm" />
@@ -122,6 +125,8 @@
     <cfinclude template="/include/qry/audroles_ins.cfm" />
     <cfinclude template="/include/qry/auditions_ins.cfm" />
 </cfif>
+
+</cftransaction>
 
 <!--- Determine return URL based on contact ID --->
 <cfif rcontactid EQ 0>

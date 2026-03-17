@@ -2,10 +2,15 @@
 
 <cfscript>
     // === Application Settings ===
-    this.name = "Setup";                          
-    this.sessionManagement = true;                
-    this.applicationTimeout = createTimeSpan(1,0,0,0);  
-    this.sessionTimeout     = createTimeSpan(0,0,30,0); 
+    this.name = "Setup";
+    this.sessionManagement = true;
+    this.applicationTimeout = createTimeSpan(1,0,0,0);
+    this.sessionTimeout     = createTimeSpan(0,0,30,0);
+
+    // Session cookie hardening
+    this.sessioncookie.httponly = true;
+    this.sessioncookie.secure = true;
+    this.sessioncookie.samesite = "Strict"; 
 
     // Compiler settings
     this.searchImplicitScopes = true;   

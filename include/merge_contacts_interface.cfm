@@ -39,6 +39,9 @@
 </cfloop>
 
 <form id="mergeForm" method="post" action="/app/contact-duplicates/">
+    <cfif structKeyExists(session, "csrfToken")>
+        <cfoutput><input type="hidden" name="csrfToken" value="#session.csrfToken#" /></cfoutput>
+    </cfif>
     <input type="hidden" name="action" value="merge" />
     <input type="hidden" name="userid" value="<cfoutput>#userid#</cfoutput>" />
     

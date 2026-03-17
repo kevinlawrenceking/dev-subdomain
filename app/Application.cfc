@@ -37,6 +37,11 @@
     this.mappings["/app"] = expandPath(".");
     this.strictVariables = false;
 
+    // Session cookie hardening
+    this.sessioncookie.httponly = true;
+    this.sessioncookie.secure = true;
+    this.sessioncookie.samesite = "Strict";
+
     // Make CF act looser on variable resolution and avoid null pitfalls
     this.searchImplicitScopes = true;
     this.enableNullSupport = false;
@@ -115,6 +120,16 @@
         auditionSubmitSiteUserService = new services.AuditionSubmitSiteUserService()
         // contactService = new services.ContactService()
         // projectService = new services.ProjectService()
+      };
+
+      // External API credentials — read from server environment variables.
+      // Fallback to empty string so code fails visibly if env is not set.
+      application.secrets = {
+        googleOAuthClientId     = server.system.environment["TAO_GOOGLE_OAUTH_CLIENT_ID"] ?: "",
+        googleOAuthClientSecret = server.system.environment["TAO_GOOGLE_OAUTH_CLIENT_SECRET"] ?: "",
+        googleOAuthRedirectUri  = server.system.environment["TAO_GOOGLE_OAUTH_REDIRECT_URI"] ?: "https://app.theactorsoffice.com/oauth/oauth_callback.cfm",
+        paykickstartAuthToken   = server.system.environment["TAO_PAYKICKSTART_AUTH_TOKEN"] ?: "",
+        iconHorseApiKey         = server.system.environment["TAO_ICONHORSE_API_KEY"] ?: ""
       };
 
       // Initialize feature flags with DB-driven values (cached)
@@ -308,6 +323,30 @@
       <cfset session.csrfToken = CSRFGenerateToken() />
     </cfif>
 
+    <!--- CSRF validation for form POST requests from authenticated users --->
+    <cfif cgi.REQUEST_METHOD EQ "POST" AND structKeyExists(session, "csrfToken")>
+      <cfset var submittedCsrf = "">
+      <cfif structKeyExists(form, "csrfToken")>
+        <cfset submittedCsrf = form.csrfToken>
+      </cfif>
+      <cfif NOT len(trim(submittedCsrf)) OR NOT CSRFVerifyToken(submittedCsrf)>
+        <cflog file="tao_csrf" type="warning"
+               text="CSRF form POST rejected: #cgi.SCRIPT_NAME# | userid=#structKeyExists(session,'userid') ? session.userid : 'none'#">
+        <cfheader statuscode="403">
+        <cfcontent type="text/html" reset="true">
+        <cfoutput>
+          <!DOCTYPE html><html><head><title>Access Denied</title>
+          <style>body{font-family:Arial,sans-serif;text-align:center;padding:60px 20px;color:##333}
+          h2{font-size:22px}p{font-size:15px;color:##666}a{color:##2563eb}</style></head>
+          <body><h2>Security token missing or invalid</h2>
+          <p>Your form submission could not be verified. Please go back and try again.</p>
+          <p><a href="javascript:history.back()">Go Back</a></p>
+          </body></html>
+        </cfoutput>
+        <cfabort>
+      </cfif>
+    </cfif>
+
     <!--- 4) Post-login user paths --->
     <cfif structKeyExists(session, "userid")>
       <cfset userid = session.userid />
@@ -353,12 +392,28 @@
     <cfinclude template="#arguments.targetPage#" />
   </cffunction>
 
-  <!--- Error handler that returns JSON for AJAX requests --->
+  <!--- Error handler: log full details server-side, return safe response to client --->
   <cffunction name="onError" access="public" returntype="void" output="true">
     <cfargument name="exception" />
     <cfargument name="eventName" />
 
-    <!--- Detect if this is an AJAX request --->
+    <!--- 1) Always log the full error server-side --->
+    <cftry>
+      <cfset var errDetail = arguments.exception.message>
+      <cfif structKeyExists(arguments.exception, "detail") AND len(arguments.exception.detail)>
+        <cfset errDetail = errDetail & " | " & arguments.exception.detail>
+      </cfif>
+      <cfif structKeyExists(arguments.exception, "tagContext") AND isArray(arguments.exception.tagContext) AND arrayLen(arguments.exception.tagContext)>
+        <cfset errDetail = errDetail & " | " & arguments.exception.tagContext[1].template & ":" & arguments.exception.tagContext[1].line>
+      </cfif>
+      <cfif structKeyExists(arguments.exception, "sql")>
+        <cfset errDetail = errDetail & " | SQL: " & left(arguments.exception.sql, 500)>
+      </cfif>
+      <cflog file="tao_errors" type="error" text="[#cgi.SCRIPT_NAME#] #errDetail#">
+    <cfcatch><cflog file="tao_errors" type="error" text="onError logging failed: #cfcatch.message#"></cfcatch>
+    </cftry>
+
+    <!--- 2) Detect if this is an AJAX request --->
     <cfset var isAjax = (
       structKeyExists(cgi, "HTTP_X_REQUESTED_WITH") AND lcase(cgi.HTTP_X_REQUESTED_WITH) eq "xmlhttprequest"
     ) OR (
@@ -368,21 +423,28 @@
     )>
 
     <cfif isAjax>
-      <!--- Return JSON error for AJAX requests --->
-      <cfset var errorResponse = {
-        success: false,
-        message: "Server error: " & arguments.exception.message,
-        detail: arguments.exception.detail ?: "",
-        type: arguments.exception.type ?: "unknown"
-      }>
-      <cfif structKeyExists(arguments.exception, "sql")>
-        <cfset errorResponse.sql = left(arguments.exception.sql, 300)>
-      </cfif>
+      <!--- Return safe JSON error — no internals exposed --->
+      <cfheader statuscode="500">
       <cfcontent type="application/json" reset="true">
-      <cfoutput>#serializeJSON(errorResponse)#</cfoutput>
+      <cfoutput>#serializeJSON({
+        "success": false,
+        "message": "An unexpected error occurred. Please try again or contact support."
+      })#</cfoutput>
     <cfelse>
-      <!--- HTML dump for browser requests (debug mode) --->
-      <cfdump var="#arguments.exception#" label="CF Error" top="2" />
+      <!--- Return safe HTML error page — no stack trace, no SQL, no file paths --->
+      <cfheader statuscode="500">
+      <cfcontent type="text/html" reset="true">
+      <cfoutput>
+      <!DOCTYPE html>
+      <html><head><title>Error</title>
+      <style>body{font-family:Arial,sans-serif;text-align:center;padding:60px 20px;color:##333}
+      h1{font-size:24px;margin-bottom:12px}p{font-size:16px;color:##666}
+      a{color:##2563eb;text-decoration:none}</style></head>
+      <body><h1>Something went wrong</h1>
+      <p>An unexpected error occurred. Please try again or <a href="/app/">return to the dashboard</a>.</p>
+      <p style="font-size:13px;color:##999;margin-top:30px">If this persists, contact support.</p>
+      </body></html>
+      </cfoutput>
     </cfif>
     <cfabort />
   </cffunction>
