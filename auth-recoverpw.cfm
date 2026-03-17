@@ -18,6 +18,13 @@
     <cfset application.suffix = "_1.5" />
 </cfif>
 
+<cfif NOT structKeyExists(application, "baseMediaUrl")>
+    <cfset application.baseMediaUrl = "/media-" & application.dsn />
+</cfif>
+<cfif NOT structKeyExists(application, "imagesUrl")>
+    <cfset application.imagesUrl = application.baseMediaUrl & "/images" />
+</cfif>
+
 <cfset dsn = application.dsn />
 <cfset suffix = application.suffix />
 <cfset information_schema = application.information_schema />
