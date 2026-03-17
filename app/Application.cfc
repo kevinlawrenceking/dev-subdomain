@@ -413,6 +413,22 @@
       <cfif structKeyExists(arguments.exception, "sql")>
         <cfset errDetail = errDetail & " | SQL: " & left(arguments.exception.sql, 500)>
       </cfif>
+      <!--- Dig into rootCause/cause for wrapped exceptions (e.g. onRequestStart failures) --->
+      <cfif structKeyExists(arguments.exception, "rootCause")>
+        <cfset var rc = arguments.exception.rootCause>
+        <cfif isStruct(rc)>
+          <cfif structKeyExists(rc, "message")><cfset errDetail = errDetail & " | ROOT: " & rc.message></cfif>
+          <cfif structKeyExists(rc, "detail") AND len(rc.detail)><cfset errDetail = errDetail & " | " & rc.detail></cfif>
+          <cfif structKeyExists(rc, "tagContext") AND isArray(rc.tagContext) AND arrayLen(rc.tagContext)>
+            <cfset errDetail = errDetail & " | " & rc.tagContext[1].template & ":" & rc.tagContext[1].line>
+          </cfif>
+        </cfif>
+      <cfelseif structKeyExists(arguments.exception, "cause")>
+        <cfset var ca = arguments.exception.cause>
+        <cfif isStruct(ca) AND structKeyExists(ca, "message")>
+          <cfset errDetail = errDetail & " | CAUSE: " & ca.message>
+        </cfif>
+      </cfif>
       <cflog file="tao_errors" type="error" text="[#cgi.SCRIPT_NAME#] #errDetail#">
     <cfcatch><cflog file="tao_errors" type="error" text="onError logging failed: #cfcatch.message#"></cfcatch>
     </cftry>

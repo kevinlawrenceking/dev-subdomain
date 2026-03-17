@@ -3,7 +3,7 @@
 
 <!--- Make an HTTP GET request to the Google Calendar API to retrieve the calendar list --->
 <cfhttp url="#apiUrl#" method="get" result="calendarListResponse">
-    <cfhttpparam type="header" name="Authorization" value="Bearer #session.userData.access_token#">
+    <cfhttpparam type="header" name="Authorization" value="Bearer #accessToken#">
 </cfhttp>
 
 <!--- Abort the processing of the page to prevent further execution --->
