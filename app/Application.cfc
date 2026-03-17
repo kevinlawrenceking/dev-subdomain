@@ -123,13 +123,17 @@
       };
 
       // External API credentials — read from server environment variables.
-      // Fallback to empty string so code fails visibly if env is not set.
+      // Use structKeyExists to safely handle missing env vars on any CF engine.
+      var env = {};
+      if (structKeyExists(server, "system") && structKeyExists(server.system, "environment")) {
+        env = server.system.environment;
+      }
       application.secrets = {
-        googleOAuthClientId     = server.system.environment["TAO_GOOGLE_OAUTH_CLIENT_ID"] ?: "",
-        googleOAuthClientSecret = server.system.environment["TAO_GOOGLE_OAUTH_CLIENT_SECRET"] ?: "",
-        googleOAuthRedirectUri  = server.system.environment["TAO_GOOGLE_OAUTH_REDIRECT_URI"] ?: "https://app.theactorsoffice.com/oauth/oauth_callback.cfm",
-        paykickstartAuthToken   = server.system.environment["TAO_PAYKICKSTART_AUTH_TOKEN"] ?: "",
-        iconHorseApiKey         = server.system.environment["TAO_ICONHORSE_API_KEY"] ?: ""
+        googleOAuthClientId     = structKeyExists(env, "TAO_GOOGLE_OAUTH_CLIENT_ID")     ? env["TAO_GOOGLE_OAUTH_CLIENT_ID"]     : "",
+        googleOAuthClientSecret = structKeyExists(env, "TAO_GOOGLE_OAUTH_CLIENT_SECRET") ? env["TAO_GOOGLE_OAUTH_CLIENT_SECRET"] : "",
+        googleOAuthRedirectUri  = structKeyExists(env, "TAO_GOOGLE_OAUTH_REDIRECT_URI")  ? env["TAO_GOOGLE_OAUTH_REDIRECT_URI"]  : "https://app.theactorsoffice.com/oauth/oauth_callback.cfm",
+        paykickstartAuthToken   = structKeyExists(env, "TAO_PAYKICKSTART_AUTH_TOKEN")    ? env["TAO_PAYKICKSTART_AUTH_TOKEN"]    : "",
+        iconHorseApiKey         = structKeyExists(env, "TAO_ICONHORSE_API_KEY")          ? env["TAO_ICONHORSE_API_KEY"]          : ""
       };
 
       // Initialize feature flags with DB-driven values (cached)
