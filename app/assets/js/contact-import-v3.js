@@ -1366,7 +1366,17 @@
                 $btn.prop('disabled', false).html('<i class="fe-check"></i> Save Changes');
                 if (cfGet(response, 'success')) {
                     bsModal('#edit-modal', 'hide');
-                    showAlert('success', 'Row updated and revalidated');
+                    // Check if row status changed after revalidation
+                    var rRow = cfGet(rData, 'row') || {};
+                    var newStatus = cfGet(rRow, 'status') || '';
+                    if (newStatus && newStatus !== state.currentFilter && state.currentFilter !== 'all') {
+                        showAlert('success', 'Row revalidated - status changed to: ' + newStatus);
+                        state.currentFilter = 'all';
+                        $j('.filter-btn').removeClass('active');
+                        $j('.filter-btn[data-filter="all"]').addClass('active');
+                    } else {
+                        showAlert('success', 'Row updated and revalidated');
+                    }
                     loadRows();
                 } else {
                     console.error('[V3] Fact update failed with code:', cfGet(response, 'code'));
