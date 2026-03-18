@@ -1,275 +1,286 @@
 <!---
-    PURPOSE: Left navigation sidebar for the application
+    PURPOSE: Left navigation sidebar for The Actors Office
     AUTHOR: Kevin King
     DATE: 2025-08-06
-    DEPENDENCIES: Bootstrap 5, Feather Icons, session variables
+    REVISED: 2026-03-18 -- Full redesign: externalized CSS, Lucide icons,
+             active state detection, accessibility, responsive support,
+             migration-prep annotations
+
+    DEPENDENCIES:
+        - Bootstrap 5 (collapse component for admin sections)
+        - Lucide Icons (CDN, loaded at bottom of this template)
+        - /app/assets/css/sidebar.css (externalized sidebar styles)
+        - Session variables: session.userAvatarUrl
+        - Variables scope (leaked from cfinclude chain -- see TECH-DEBT notes):
+            variables.avatarname       -- user display name (from fetchUsers.cfm)
+            variables.userrole         -- "Administrator" or role string (from fetchUsers.cfm)
+            variables.userIsBetaTester -- "1" or "0"
+        - Query objects (from qry/ includes in core.cfm):
+            menuItemsU   -- user menu items (compDir, compicon, compName)
+            menuItemsA   -- admin Relationships sub-items
+            menuItemsAud -- admin Auditions sub-items
+
+    ACTIVE STATE:
+        Detects current page by parsing cgi.SCRIPT_NAME for the compDir segment.
+        URL pattern: /app/{compDir}/
+        Applies .tao-sidebar__item--active CSS class and aria-current="page".
+        Admin sections auto-expand if a child item is active.
+
+    MIGRATE: Menu items should come from a MenuRepository.listByRole(userId, role) call
+    MIGRATE: Active state detection will be handled by Flutter's router, not server-side
+    MIGRATE: Icon mapping should be a shared constant, not DB-stored strings
+    TECH-DEBT: avatarname is unscoped -- traces back to fetchUsers.cfm variable leak
+    TECH-DEBT: userrole is unscoped -- traces back to fetchUsers.cfm variable leak
+    TECH-DEBT: Three separate query includes for menu sections -- should be one query
+               with a section/category column
 --->
 
-<cfparam name="mock_yn" default="N" />
-<cfparam name="BROWSER_USER_AVATAR_FILENAME" default="N" />
+<!--- Sidebar stylesheet (externalized from inline <style> block) --->
+<link rel="stylesheet" href="/app/assets/css/sidebar.css" />
 
-<!--- Mock date handling for testing --->
-<cfif mock_yn IS "Y" AND len(trim(mocktoday))>
-    <cfset cookie.mocktoday = mocktoday />
-<cfelse>
-    <cfcookie name="mocktoday" expires="#now()#" />
+<!--- =====================================================================
+     CF Logic: defaults, icon mapping, active state detection
+     ===================================================================== --->
+
+<!--- Defensive defaults for upstream variables that may be unscoped --->
+<cfparam name="variables.avatarname" default="User" />
+<cfparam name="variables.userrole" default="" />
+<cfparam name="variables.userIsBetaTester" default="0" />
+
+<!---
+    MIGRATE: Icon mapping should be a shared constant, not DB-stored strings.
+    This CF-side mapping translates compDir values to Lucide icon names,
+    avoiding a DB migration while providing semantically correct icons.
+    Keyed by lowercase compDir for case-insensitive matching.
+    Fallback: if compDir is not in the map, the DB compicon value is used
+    (most Feather names work in Lucide since Lucide is a Feather fork).
+--->
+<cfset variables.lucideIconMap = {
+    "dashboard":       "layout-dashboard",
+    "relationships":   "users",
+    "calendar-new":    "calendar-days",
+    "calendar":        "calendar-days",
+    "reminders":       "bell-ring",
+    "auditions":       "clapperboard",
+    "events":          "clapperboard",
+    "reports":         "bar-chart-3",
+    "myaccount":       "circle-user-round",
+    "my-account":      "circle-user-round",
+    "image-upload":    "image",
+    "contacts":        "contact",
+    "notifications":   "bell",
+    "settings":        "settings",
+    "testings":        "clipboard-check"
+} />
+
+<!---
+    Active state detection: extract compDir segment from the current URL.
+    URL pattern: /app/{compDir}/index.cfm or /app/{compDir}/
+    MIGRATE: Active state detection will be handled by Flutter's router.
+--->
+<cfset variables.currentSection = "" />
+<cfset variables.pathSegments = listToArray(cgi.SCRIPT_NAME, "/") />
+<cfif arrayLen(variables.pathSegments) GTE 2 AND lCase(variables.pathSegments[1]) EQ "app">
+    <cfset variables.currentSection = lCase(variables.pathSegments[2]) />
 </cfif>
 
+<!--- Pre-compute whether any admin sub-item is active (for auto-expand) --->
+<cfset variables.adminRelActive = false />
+<cfloop query="menuItemsA">
+    <cfif lCase(menuItemsA.compDir) EQ variables.currentSection>
+        <cfset variables.adminRelActive = true />
+    </cfif>
+</cfloop>
+
+<cfset variables.adminAudActive = false />
+<cfloop query="menuItemsAud">
+    <cfif lCase(menuItemsAud.compDir) EQ variables.currentSection>
+        <cfset variables.adminAudActive = true />
+    </cfif>
+</cfloop>
+
+
+<!--- =====================================================================
+     Sidebar HTML
+     ===================================================================== --->
+
 <div class="left-side-menu left-side-menu-light">
-    <div class="h-100" data-simplebar>
-        <!--- Sidemenu --->
-        <div id="sidebar-menu">
-            <ul id="side-menu">
-                <!--- User Profile Section --->
-                <li>
-                    <div class="user-lg text-center" >
-                        <a href="/app/image-upload/?ref_pgid=7" class="text-center">
-                            <cfoutput>
-                                <img src="#session.userAvatarUrl#?ver=#rand()#" 
-                                     alt="user-image" 
-                                     class="rounded-circle avatar-md" />
-                                <br />
-                                <span class="pro-user-name mt-2 d-block">#avatarname#</span>
-                            </cfoutput>
-                        </a>
-                    </div>
-                </li>
-                
-                <!--- Main Menu Items --->
-                <cfoutput query="menuItemsU">
-                    <li>
-                        <a href="/app/#menuItemsU.compDir#/">
-                            <i data-feather="#menuItemsU.compicon#"></i>
-                            <span>#menuItemsU.compName#</span>
-                        </a>
-                    </li>
-                </cfoutput>
+    <nav class="tao-sidebar__scroll" role="navigation" aria-label="Main navigation">
 
-                
-                <!--- Administrator Menu Sections --->
-                <cfif userrole IS "Administrator">
-                    <!--- Relationships Admin Section --->
-                    <li>
-                        <a href="#sidebara" data-bs-toggle="collapse" aria-expanded="false">
-                            <i data-feather="users"></i>
-                            <span>Relationships - Admin</span>
-                            <span class="menu-arrow"></span>
-                        </a>
-                        <div class="collapse" id="sidebara">
-                            <ul class="nav-second-level">
-                                <cfoutput query="menuItemsa">    
-                                    <li>
-                                        <a href="/app/#menuItemsA.compDir#/">
-                                            <span>#menuItemsA.compName#</span>
-                                        </a>
-                                    </li>
-                                </cfoutput>
-                            </ul>
-                        </div>
-                    </li>
-
-                    <!--- Audition Admin Section --->
-                    <li>
-                        <a href="#sidebarAudition" data-bs-toggle="collapse" aria-expanded="false">
-                            <i data-feather="film"></i>
-                            <span>Audition - Admin</span>
-                            <span class="menu-arrow"></span>
-                        </a>
-                        <div class="collapse" id="sidebarAudition">
-                            <ul class="nav-second-level">
-                                <cfoutput query="menuItemsaud">    
-                                    <li>
-                                        <a href="/app/#menuItemsAud.compDir#/">
-                                            <span>#menuItemsAud.compName#</span>
-                                        </a>
-                                    </li>
-                                </cfoutput>
-                            </ul>
-                        </div>
-                    </li>
-                </cfif>
-
-                <!--- Beta Tester Menu Item --->
-                <cfparam name="userIsBetaTester" default="0" />
-                <cfif userIsBetaTester IS "1">
-                    <li>
-                        <a href="/app/Testings/">
-                            <i data-feather="clipboard"></i>
-                            <span>Testing Log</span>
-                        </a>
-                    </li>
-                </cfif>
-            </ul>
+        <!--- User Profile Section --->
+        <div class="tao-sidebar__profile">
+            <cfoutput>
+                <a href="/app/image-upload/?ref_pgid=7"
+                   class="tao-sidebar__avatar-link"
+                   title="Change profile photo">
+                    <img src="#session.userAvatarUrl#?v=#dateFormat(now(),'yyyymmdd')##timeFormat(now(),'HHmmss')#"
+                         alt="Profile photo for #xmlFormat(variables.avatarname)#"
+                         class="tao-sidebar__avatar" />
+                    <span class="tao-sidebar__username">#xmlFormat(variables.avatarname)#</span>
+                </a>
+            </cfoutput>
         </div>
-        
-        <div class="clearfix"></div>
-    </div>
-    <!--- End Sidebar --->
+
+        <!--- Primary Navigation Items --->
+        <!--- MIGRATE: Menu items should come from a MenuRepository.listByRole(userId, role) call --->
+        <ul class="tao-sidebar__menu">
+            <cfoutput query="menuItemsU">
+                <cfset variables.itemDir = lCase(menuItemsU.compDir) />
+                <cfset variables.isActive = (variables.itemDir EQ variables.currentSection) />
+                <cfset variables.iconName = menuItemsU.compicon />
+                <cfif structKeyExists(variables.lucideIconMap, variables.itemDir)>
+                    <cfset variables.iconName = variables.lucideIconMap[variables.itemDir] />
+                </cfif>
+
+                <li class="tao-sidebar__item<cfif variables.isActive> tao-sidebar__item--active</cfif>">
+                    <a href="/app/#menuItemsU.compDir#/"
+                       class="tao-sidebar__link"
+                       <cfif variables.isActive>aria-current="page"</cfif>>
+                        <i data-lucide="#variables.iconName#" class="tao-sidebar__icon"></i>
+                        <span class="tao-sidebar__label">#xmlFormat(menuItemsU.compName)#</span>
+                    </a>
+                </li>
+            </cfoutput>
+        </ul>
+
+        <!--- Administrator Menu Sections --->
+        <cfif variables.userrole IS "Administrator">
+
+            <div class="tao-sidebar__admin-divider" role="separator"></div>
+
+            <!--- Relationships Admin Section --->
+            <div class="tao-sidebar__section<cfif variables.adminRelActive> tao-sidebar__section--active</cfif>">
+                <a href="#sidebar-admin-relationships"
+                   class="tao-sidebar__section-toggle"
+                   data-bs-toggle="collapse"
+                   role="button"
+                   aria-expanded="<cfif variables.adminRelActive>true<cfelse>false</cfif>"
+                   aria-controls="sidebar-admin-relationships">
+                    <i data-lucide="users" class="tao-sidebar__icon"></i>
+                    <span class="tao-sidebar__label">Relationships - Admin</span>
+                    <i data-lucide="chevron-down" class="tao-sidebar__arrow"></i>
+                </a>
+                <div class="collapse<cfif variables.adminRelActive> show</cfif>"
+                     id="sidebar-admin-relationships">
+                    <ul class="tao-sidebar__submenu">
+                        <cfoutput query="menuItemsA">
+                            <cfset variables.subDir = lCase(menuItemsA.compDir) />
+                            <cfset variables.subActive = (variables.subDir EQ variables.currentSection) />
+
+                            <li class="tao-sidebar__subitem<cfif variables.subActive> tao-sidebar__subitem--active</cfif>">
+                                <a href="/app/#menuItemsA.compDir#/"
+                                   class="tao-sidebar__sublink"
+                                   <cfif variables.subActive>aria-current="page"</cfif>>
+                                    #xmlFormat(menuItemsA.compName)#
+                                </a>
+                            </li>
+                        </cfoutput>
+                    </ul>
+                </div>
+            </div>
+
+            <!--- Audition Admin Section --->
+            <div class="tao-sidebar__section<cfif variables.adminAudActive> tao-sidebar__section--active</cfif>">
+                <a href="#sidebar-admin-auditions"
+                   class="tao-sidebar__section-toggle"
+                   data-bs-toggle="collapse"
+                   role="button"
+                   aria-expanded="<cfif variables.adminAudActive>true<cfelse>false</cfif>"
+                   aria-controls="sidebar-admin-auditions">
+                    <i data-lucide="clapperboard" class="tao-sidebar__icon"></i>
+                    <span class="tao-sidebar__label">Audition - Admin</span>
+                    <i data-lucide="chevron-down" class="tao-sidebar__arrow"></i>
+                </a>
+                <div class="collapse<cfif variables.adminAudActive> show</cfif>"
+                     id="sidebar-admin-auditions">
+                    <ul class="tao-sidebar__submenu">
+                        <cfoutput query="menuItemsAud">
+                            <cfset variables.subDir = lCase(menuItemsAud.compDir) />
+                            <cfset variables.subActive = (variables.subDir EQ variables.currentSection) />
+
+                            <li class="tao-sidebar__subitem<cfif variables.subActive> tao-sidebar__subitem--active</cfif>">
+                                <a href="/app/#menuItemsAud.compDir#/"
+                                   class="tao-sidebar__sublink"
+                                   <cfif variables.subActive>aria-current="page"</cfif>>
+                                    #xmlFormat(menuItemsAud.compName)#
+                                </a>
+                            </li>
+                        </cfoutput>
+                    </ul>
+                </div>
+            </div>
+
+        </cfif><!--- end Administrator --->
+
+        <!--- Beta Tester Menu Item --->
+        <cfif variables.userIsBetaTester IS "1">
+            <div class="tao-sidebar__admin-divider" role="separator"></div>
+            <ul class="tao-sidebar__menu">
+                <cfset variables.testActive = (variables.currentSection EQ "testings") />
+                <li class="tao-sidebar__item<cfif variables.testActive> tao-sidebar__item--active</cfif>">
+                    <a href="/app/Testings/"
+                       class="tao-sidebar__link"
+                       <cfif variables.testActive>aria-current="page"</cfif>>
+                        <i data-lucide="clipboard-check" class="tao-sidebar__icon"></i>
+                        <span class="tao-sidebar__label">Testing Log</span>
+                    </a>
+                </li>
+            </ul>
+        </cfif>
+
+    </nav>
 </div>
 
-<!--- Sidebar Styles --->
-<style>
-    /* Left Sidebar Scrolling */
-    .left-side-menu {
-        height: 100vh;
-        position: fixed;
-        overflow: hidden;
-        width: 280px; /* Increased from 260px for better text visibility */
-    }
-    
-    .left-side-menu .h-100 {
-        height: 100vh !important;
-        overflow-y: auto;
-        overflow-x: hidden;
-        scrollbar-width: thin;
-        scrollbar-color: rgba(0,0,0,0.2) transparent;
-    }
-    
-    /* Hide scrollbar for webkit browsers when not needed */
-    .left-side-menu .h-100::-webkit-scrollbar {
-        width: 6px;
-    }
-    
-    .left-side-menu .h-100::-webkit-scrollbar-track {
-        background: transparent;
-    }
-    
-    .left-side-menu .h-100::-webkit-scrollbar-thumb {
-        background-color: rgba(0,0,0,0.2);
-        border-radius: 3px;
-        transition: background-color 0.2s ease;
-    }
-    
-    .left-side-menu .h-100::-webkit-scrollbar-thumb:hover {
-        background-color: rgba(0,0,0,0.4);
-    }
-    
-    /* For light theme, adjust scrollbar colors */
-    .left-side-menu-light .h-100::-webkit-scrollbar-thumb {
-        background-color: rgba(0,0,0,0.15);
-    }
-    
-    .left-side-menu-light .h-100::-webkit-scrollbar-thumb:hover {
-        background-color: rgba(0,0,0,0.3);
-    }
-    
-    #sidebar-menu {
-        padding-bottom: 20px;
+<!--- Mobile backdrop overlay (shown when sidebar is open on small screens) --->
+<div class="tao-sidebar-backdrop" id="taoSidebarBackdrop"></div>
+
+<!--- =====================================================================
+     Lucide Icons CDN + Sidebar Initialization
+     =====================================================================
+     Lucide is the maintained fork of Feather Icons with 2x the icon set.
+     Only the sidebar uses Lucide; the rest of the app continues to use
+     Feather Icons via the .fe-* font classes and feather.replace() in
+     app.min.js. No conflict: data-lucide and data-feather are separate.
+
+     MIGRATE: When the full app migrates to Lucide, move this CDN link to
+     the <head> in core.cfm and remove the per-page initialization below.
+     Pin a specific version for production stability.
+     ===================================================================== --->
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>
+(function() {
+    // Initialize Lucide icons within the sidebar only
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
     }
 
-    /* Alternative Light Theme for Left Sidebar */
-    .left-side-menu-light {
-        background-color: #E9EAEC !important;
-    }
-    
-    .left-side-menu-light .pro-user-name {
-        color: #2c3e50 !important;
-    }
-    
-    .left-side-menu-light #side-menu > li > a {
-        color: #2c3e50 !important;
-        border-bottom: 1px solid #d0d1d3 !important;
-    }
-    
-    .left-side-menu-light #side-menu > li > a:hover,
-    .left-side-menu-light #side-menu > li > a:focus,
-    .left-side-menu-light #side-menu > li > a.active {
-        color: #1a252f !important;
-        background-color: #dce0e3 !important;
-    }
-    
-    .left-side-menu-light #side-menu > li > a i {
-        color: #495057 !important;
-    }
-    
-    .left-side-menu-light #side-menu > li > a:hover i,
-    .left-side-menu-light #side-menu > li > a:focus i,
-    .left-side-menu-light #side-menu > li > a.active i {
-        color: #1a252f !important;
-    }
-    
-    .left-side-menu-light .menu-arrow {
-        color: #495057 !important;
-    }
-    
-    .left-side-menu-light .nav-second-level a {
-        color: #495057 !important;
-        border-bottom: 1px solid #d0d1d3 !important;
-    }
-    
-    .left-side-menu-light .nav-second-level a:hover,
-    .left-side-menu-light .nav-second-level a:active {
-        color: #1a252f !important;
-        background-color: #dce0e3 !important;
-        text-decoration: none;
+    // Mobile sidebar: close when backdrop is clicked
+    var backdrop = document.getElementById('taoSidebarBackdrop');
+    if (backdrop) {
+        backdrop.addEventListener('click', function() {
+            document.body.classList.remove('sidebar-enable');
+        });
     }
 
-    /* Original Dark Theme Styles (default) */
-    .nav-second-level {
-        list-style-type: none !important;
-        padding-left: 0;
-        margin-left: 20px;
+    // Sync Bootstrap collapse aria-expanded with arrow rotation
+    // Bootstrap 5 updates aria-expanded automatically, but we listen
+    // for the event to ensure our CSS arrow rotation stays in sync.
+    var toggles = document.querySelectorAll('.tao-sidebar__section-toggle');
+    for (var i = 0; i < toggles.length; i++) {
+        var collapseId = toggles[i].getAttribute('aria-controls');
+        if (collapseId) {
+            var collapseEl = document.getElementById(collapseId);
+            if (collapseEl) {
+                collapseEl.addEventListener('shown.bs.collapse', function() {
+                    var toggle = document.querySelector('[aria-controls="' + this.id + '"]');
+                    if (toggle) toggle.setAttribute('aria-expanded', 'true');
+                });
+                collapseEl.addEventListener('hidden.bs.collapse', function() {
+                    var toggle = document.querySelector('[aria-controls="' + this.id + '"]');
+                    if (toggle) toggle.setAttribute('aria-expanded', 'false');
+                });
+            }
+        }
     }
-
-    .nav-second-level li {
-        margin: 5px 0;
-    }
-
-    .nav-second-level a {
-        color: #f8f8ff;
-        font-size: 0.9em;
-        padding: 5px 10px;
-        border-radius: 4px;
-        transition: all 0.2s ease-in-out;
-        text-decoration: none;
-    }
-
-    .nav-second-level a:hover,
-    .nav-second-level a:active {
-        color: #dece8e !important;
-        background-color: rgba(222, 206, 142, 0.1);
-        text-decoration: none;
-    }
-
-    .pro-user-name {
-        font-size: 0.9em;
-        font-weight: 500;
-    }
-
-    .user-lg .avatar-md {
-        width: 60px;
-        height: 60px;
-        margin-bottom: 15px;
-    }
-
-    /* Add space between user profile and menu */
-    .user-lg {
-        margin-bottom: 20px;
-        padding-bottom: 15px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    }
-    
-    .left-side-menu-light .user-lg {
-        border-bottom: 0px solid #d0d1d3;
-    }
-
-    #side-menu .menu-arrow {
-        float: right;
-        margin-top: 2px;
-        margin-right: 10px;
-        margin-left: 10px;
-    }
-    
-    /* Ensure menu text doesn't overlap with arrow */
-    #side-menu > li > a {
-        padding-right: 45px !important;
-        position: relative;
-    }
-    
-    #side-menu > li > a .menu-arrow {
-        position: absolute;
-        right: 15px;
-        top: 50%;
-        transform: translateY(-50%);
-    }
-</style>
+})();
+</script>
