@@ -113,13 +113,31 @@ columnnames="projDate,projName,audRoleName,audcatsubname,audsource,cdfirstname,c
 
 <!--- loop through the query starting with the first row containing data (row 2) --->
 <cfloop query="importdata" startrow="2">
-    <!--- check row contains valid data (all fields must contain a value and price must be numeric) 
+    <!--- check row contains valid data (all fields must contain a value and price must be numeric)
     --->
-    <cfif LEN(importdata.projName) gt 0>
+    <!--- Null-safe field extraction: cfspreadsheet can return Java nulls for empty cells --->
+    <cfset safe_projName = len(importdata.projName) ? trim(importdata.projName) : "">
+    <cfset safe_audRoleName = len(importdata.audRoleName) ? trim(importdata.audRoleName) : "">
+    <cfset safe_audcatsubname = len(importdata.audcatsubname) ? trim(importdata.audcatsubname) : "">
+    <cfset safe_audsource = len(importdata.audsource) ? trim(importdata.audsource) : "">
+    <cfset safe_cdfirstname = len(importdata.cdfirstname) ? trim(importdata.cdfirstname) : "">
+    <cfset safe_cdlastname = len(importdata.cdlastname) ? trim(importdata.cdlastname) : "">
+    <cfset safe_callback_yn = len(importdata.callback_yn) ? left(importdata.callback_yn, 1) : "">
+    <cfset safe_redirect_yn = len(importdata.redirect_yn) ? left(importdata.redirect_yn, 1) : "">
+    <cfset safe_pin_yn = len(importdata.pin_yn) ? left(importdata.pin_yn, 1) : "">
+    <cfset safe_booked_yn = len(importdata.booked_yn) ? left(importdata.booked_yn, 1) : "">
+    <cfset safe_projDescription = len(importdata.projDescription) ? trim(importdata.projDescription) : "">
+    <cfset safe_charDescription = len(importdata.charDescription) ? trim(importdata.charDescription) : "">
+    <cfset safe_note = len(importdata.note) ? trim(importdata.note) : "">
+    <cfset safe_projDate = len(importdata.projDate) ? trim(importdata.projDate) : "">
+
+    <cfif LEN(safe_projName) gt 0>
+
+    <cftry>
 
 <!--- Check if the hyphen exists in the string --->
-<cfif find('-', audcatsubname)>
-  <cfset parts = listToArray(audcatsubname, '-')>
+<cfif find('-', safe_audcatsubname)>
+  <cfset parts = listToArray(safe_audcatsubname, '-')>
   <cfset audcatname = parts[1]>
   <cfset audsubcatname = parts[2]>
 
@@ -129,7 +147,7 @@ columnnames="projDate,projName,audRoleName,audcatsubname,audsource,cdfirstname,c
         INNER JOIN audsubcategories s ON s.audcatid = c.audcatid
         WHERE c.audcatname = <cfqueryparam value="#audcatname#" cfsqltype="CF_SQL_VARCHAR">
           AND s.audsubcatname = <cfqueryparam value="#audsubcatname#" cfsqltype="CF_SQL_VARCHAR">
-   
+
     </cfquery>
 
 
@@ -146,56 +164,63 @@ columnnames="projDate,projName,audRoleName,audcatsubname,audsource,cdfirstname,c
    <cfset new_audsubcatid = "0">
 </cfif>
 
-    
+
         <cfquery  name="find">
             INSERT INTO `auditionsimport` (`audsubcatid`,`uploadid`
-            <cfif #importdata.projDate# is not "">
-                , `projDate` 
+            <cfif safe_projDate is not "">
+                , `projDate`
             </cfif>
             , `projName`, `audRoleName`, `audCatName`,`audsubcatname`,  `audsource`,
             `cdfirstname`,`cdlastname`, `callback_yn`, `redirect_yn`, `pin_yn`, `booked_yn`,
             `projDescription`, `charDescription`, `note`)
             VALUES
             (<cfqueryparam cfsqltype="cf_sql_integer" value="#new_audsubcatid#"/>, <cfqueryparam cfsqltype="cf_sql_integer" value="#new_uploadid#"/>
-        
-            <cfif #importdata.projDate# is not "">
-            
+
+            <cfif safe_projDate is not "">
+
                 ,
-                <cfqueryparam cfsqltype="cf_sql_varchar" 
-                              value="#dateformat(importdata.projDate,"yyyy-mm-dd")#"/>
+                <cfqueryparam cfsqltype="cf_sql_varchar"
+                              value="#dateformat(safe_projDate,"yyyy-mm-dd")#"/>
             </cfif>
-        
-        ,<cfqueryparam cfsqltype="cf_sql_varchar" maxlength="500" 
-                      value="#TRIM(importdata.projName)#"/>
-            ,<cfqueryparam cfsqltype="cf_sql_varchar" maxlength="500" 
-                      value="#TRIM(importdata.audRoleName)#"/>
-            ,<cfqueryparam cfsqltype="cf_sql_varchar" maxlength="100" 
+
+        ,<cfqueryparam cfsqltype="cf_sql_varchar" maxlength="500"
+                      value="#safe_projName#"/>
+            ,<cfqueryparam cfsqltype="cf_sql_varchar" maxlength="500"
+                      value="#safe_audRoleName#"/>
+            ,<cfqueryparam cfsqltype="cf_sql_varchar" maxlength="100"
                       value="#TRIM(audCatName)#"/>
 
-              ,<cfqueryparam cfsqltype="cf_sql_varchar" maxlength="100" 
+              ,<cfqueryparam cfsqltype="cf_sql_varchar" maxlength="100"
                       value="#TRIM(audSubCatName)#"/>
-            
-            ,<cfqueryparam cfsqltype="cf_sql_varchar" maxlength="100" 
-                      value="#TRIM(importdata.audsource)#"/>
-            ,<cfqueryparam cfsqltype="cf_sql_varchar" maxlength="100" 
-                      value="#TRIM(importdata.cdfirstname)#"/>
-            ,<cfqueryparam cfsqltype="cf_sql_varchar" maxlength="100" 
-                      value="#TRIM(importdata.cdlastname)#"/>
-            ,<cfqueryparam cfsqltype="cf_sql_char" maxlength="1" 
-                      value="#LEFT(importdata.callback_yn,1)#"/>
-            ,<cfqueryparam cfsqltype="cf_sql_char" maxlength="1" 
-                      value="#left(importdata.redirect_yn,1)#"/>
-            ,<cfqueryparam cfsqltype="cf_sql_char" maxlength="1" value="#left(importdata.pin_yn,1)#"/>
-            ,<cfqueryparam cfsqltype="cf_sql_char" maxlength="1" 
-                      value="#left(importdata.booked_yn,1)#"/>
+
+            ,<cfqueryparam cfsqltype="cf_sql_varchar" maxlength="100"
+                      value="#safe_audsource#"/>
+            ,<cfqueryparam cfsqltype="cf_sql_varchar" maxlength="100"
+                      value="#safe_cdfirstname#"/>
+            ,<cfqueryparam cfsqltype="cf_sql_varchar" maxlength="100"
+                      value="#safe_cdlastname#"/>
+            ,<cfqueryparam cfsqltype="cf_sql_char" maxlength="1"
+                      value="#safe_callback_yn#"/>
+            ,<cfqueryparam cfsqltype="cf_sql_char" maxlength="1"
+                      value="#safe_redirect_yn#"/>
+            ,<cfqueryparam cfsqltype="cf_sql_char" maxlength="1" value="#safe_pin_yn#"/>
+            ,<cfqueryparam cfsqltype="cf_sql_char" maxlength="1"
+                      value="#safe_booked_yn#"/>
             ,<cfqueryparam cfsqltype="cf_sql_longvarchar"
-                      value="#TRIM(importdata.projDescription)#"/>
+                      value="#safe_projDescription#"/>
             ,<cfqueryparam cfsqltype="cf_sql_longvarchar"
-                      value="#TRIM(importdata.charDescription)#"/>
+                      value="#safe_charDescription#"/>
             ,<cfqueryparam cfsqltype="cf_sql_longvarchar"
-                      value="#TRIM(importdata.note)#"/>
+                      value="#safe_note#"/>
             )
         </cfquery>
+
+    <cfcatch type="any">
+        <cfset failedimports = listAppend(failedimports, importdata.currentrow)>
+        <cflog file="audition_import" type="error" text="Row #importdata.currentrow# insert failed: #cfcatch.message# | #cfcatch.detail#">
+    </cfcatch>
+    </cftry>
+
     </cfif>
 </cfloop>
 

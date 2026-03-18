@@ -207,13 +207,19 @@
 
 <!--- PROCESSING LOOP --->
 <cfloop query="x">
-<cfset new_projdate = this.formatDate(x.projdate) />
-
-<cfif IsDate(new_projdate)>
-    <cfset new_projdate = x.projdate>
-<cfelse>
+<!--- Parse projdate safely - handle various date formats from spreadsheet --->
+<cftry>
+    <cfif isDate(x.projdate)>
+        <cfset new_projdate = x.projdate>
+    <cfelseif len(trim(x.projdate))>
+        <cfset new_projdate = parseDateTime(x.projdate)>
+    <cfelse>
+        <cfset new_projdate = Now()>
+    </cfif>
+<cfcatch type="any">
     <cfset new_projdate = Now()>
-</cfif>
+</cfcatch>
+</cftry>
 
 <cfset cdfullname = x.cdfirstname & " " & x.cdlastname />
 
@@ -446,7 +452,7 @@
             VALUES (
             <cfqueryparam cfsqltype="cf_sql_integer" value="#userid#" />
             ,
-            <cfqueryparam cfsqltype="cf_sql_varchar" value="#LEFT(trim(x.note),2000)#" />
+            <cfqueryparam cfsqltype="cf_sql_longvarchar" value="#trim(x.note)#" />
             ,
             <cfqueryparam cfsqltype="cf_sql_bit" value="1" />
             ,
