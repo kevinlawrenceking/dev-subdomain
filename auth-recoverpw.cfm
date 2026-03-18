@@ -45,6 +45,14 @@
 <cfset recoverLink = "" />
 <cfset mailError = "" />
 
+<!--- Merge form-submitted values (cfparam only sets Variables scope, which shadows Form scope) --->
+<cfif structKeyExists(form, "pgaction")>
+    <cfset pgaction = form.pgaction>
+</cfif>
+<cfif structKeyExists(form, "email")>
+    <cfset email = form.email>
+</cfif>
+
 <cfif pgaction is "recover">
 
     <cfif NOT len(trim(email))>

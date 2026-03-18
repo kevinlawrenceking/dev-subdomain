@@ -19,12 +19,13 @@
         <cfheader statuscode="403">
         <cfcontent type="text/html" reset="true">
         <cfoutput>
-          <!DOCTYPE html><html><head><title>Access Denied</title>
-          <style>body{font-family:Arial,sans-serif;text-align:center;padding:60px 20px;color:##333}
-          h2{font-size:22px}p{font-size:15px;color:##666}a{color:##2563eb}</style></head>
-          <body><h2>Security token missing or invalid</h2>
-          <p>Your form submission could not be verified. Please go back and try again.</p>
-          <p><a href="javascript:history.back()">Go Back</a></p>
+          <!DOCTYPE html><html><head><title>Access Denied</title></head>
+          <body>
+          <div style="font-family:Arial,sans-serif;text-align:center;padding:60px 20px;color:##333">
+          <h2 style="font-size:22px">Security token missing or invalid</h2>
+          <p style="font-size:15px;color:##666">Your form submission could not be verified. Please go back and try again.</p>
+          <p><a href="javascript:history.back()" style="color:##2563eb">Go Back</a></p>
+          </div>
           </body></html>
         </cfoutput>
         <cfabort>
