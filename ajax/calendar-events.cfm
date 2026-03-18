@@ -123,7 +123,13 @@
     <cfset evt["id"] = events.eventID>
     <cfset evt["title"] = events.eventTitle>
     <cfset evt["className"] = "colorkey-#events.eventtypeId#">
+    <cfset evt["backgroundColor"] = events.eventtypecolor>
+    <cfset evt["borderColor"] = events.eventtypecolor>
     <cfset evt["allDay"] = false>
+    <cfset evt["extendedProps"] = {
+        "eventType": events.eventTypeName,
+        "description": len(trim(events.eventDescription)) ? left(events.eventDescription, 200) : ""
+    }>
 
     <!--- URL: appointment vs audition --->
     <cfif len(events.audprojectid) AND events.audprojectid NEQ "">

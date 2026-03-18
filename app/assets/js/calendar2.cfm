@@ -76,7 +76,7 @@
         },
         buttonIcons: false,
 
-        // UX features [Sub-phase C]
+        // UX features
         nowIndicator: true,
         navLinks: true,
         dayMaxEvents: true,
@@ -86,6 +86,12 @@
         eventStartEditable: true,
         eventDurationEditable: true,
         lazyFetching: true,
+        stickyHeaderDates: true,
+        eventOverlap: false,
+        eventConstraint: 'businessHours',
+        selectConstraint: 'businessHours',
+        longPressDelay: 500,
+        selectLongPressDelay: 500,
 
         // Business hours (visual shading only)
         businessHours: {
@@ -121,24 +127,20 @@
             }
         },
 
-        // --- Tooltips on hover [Sub-phase F] ---
-        eventMouseEnter: function(info) {
-            if (info.event.title) {
-                var tooltip = new bootstrap.Tooltip(info.el, {
-                    title: info.event.title,
-                    placement: 'top',
-                    trigger: 'manual',
-                    container: 'body'
-                });
-                tooltip.show();
-                info.el._tooltip = tooltip;
-            }
-        },
-        eventMouseLeave: function(info) {
-            if (info.el._tooltip) {
-                info.el._tooltip.dispose();
-                delete info.el._tooltip;
-            }
+        // --- Tooltips via eventDidMount (reliable, auto-disposed on DOM removal) ---
+        eventDidMount: function(info) {
+            if (!info.event.title) return;
+            var props = info.event.extendedProps || {};
+            var tip = info.event.title;
+            if (props.eventType) tip += ' (' + props.eventType + ')';
+            if (props.description) tip += '\n' + props.description;
+            new bootstrap.Tooltip(info.el, {
+                title: tip,
+                placement: 'top',
+                trigger: 'hover',
+                container: 'body',
+                html: false
+            });
         },
 
         // --- Click-to-create [Sub-phase F] ---

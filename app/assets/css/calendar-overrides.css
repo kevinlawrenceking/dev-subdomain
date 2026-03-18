@@ -261,3 +261,14 @@ body[data-layout-color="dark"] .fc .fc-daygrid-day:hover {
         min-height: 600px;
     }
 }
+
+/* === Print stylesheet for clean calendar output === */
+@media print {
+    .fc .fc-toolbar button { display: none !important; }
+    .fc .fc-toolbar-title { font-size: 1.5rem; text-align: center; width: 100%; }
+    #calendar-loading, #calendar-empty { display: none !important; }
+    .event-type-filter-wrap, .collapse, #collapseExample { display: none !important; }
+    .d-flex.justify-content-between { display: none !important; }
+    .fc-event { box-shadow: none; border: 1px solid #ccc; }
+    #calendar { min-height: auto !important; }
+}
