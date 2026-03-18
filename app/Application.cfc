@@ -40,7 +40,9 @@
     // Session cookie hardening
     this.sessioncookie.httponly = true;
     this.sessioncookie.secure = true;
-    this.sessioncookie.samesite = "Strict";
+    // Lax is required for OAuth callbacks (Google redirects back cross-site).
+    // Safe because all POST requests already validate CSRF tokens.
+    this.sessioncookie.samesite = "Lax";
 
     // Make CF act looser on variable resolution and avoid null pitfalls
     this.searchImplicitScopes = true;

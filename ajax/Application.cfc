@@ -10,7 +10,7 @@
     // Session cookie hardening
     this.sessioncookie.httponly = true;
     this.sessioncookie.secure = true;
-    this.sessioncookie.samesite = "Strict";
+    this.sessioncookie.samesite = "Lax";
 
     // Preserve struct key case in serializeJSON so JS receives
     // lowercase keys like "column_id" instead of "COLUMN_ID"

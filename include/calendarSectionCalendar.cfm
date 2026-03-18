@@ -50,7 +50,7 @@ Last Updated: 2025
 
 <!--- Default parameter values --->
 <cfparam name="legendstatus" default="" />
-<cfparam name="access_token" default="" />
+<cfparam name="accessToken" default="" />
 
 <!--- ============================================================================ --->
 <!--- SECTION 2: JAVASCRIPT INITIALIZATION --->
@@ -117,29 +117,39 @@ Last Updated: 2025
     
     <!--- Right side: Google Calendar integration and utility buttons --->
     <div>
-        <!--- Google Calendar integration (if not already linked) --->
-        <cfif access_token is not "223">
-            <cfoutput>
-                <!--- Google OAuth configuration with minimal scope --->
-                <cfset clientId = "764716537559-ncfiag8dl4p05v7c9kcoltss0ou3heki.apps.googleusercontent.com" />
-                <cfset redirectUri = URLEncodedFormat("https://app.theactorsoffice.com/oauth/oauth_callback.cfm") />
-                <cfset scope = URLEncodedFormat("https://www.googleapis.com/auth/calendar.events") />
-                <cfset authUrl = "https://accounts.google.com/o/oauth2/v2/auth?response_type=code" &
-                                "&client_id=#clientId#" &
-                                "&redirect_uri=#redirectUri#" &
-                                "&scope=#scope#" &
-                                "&access_type=offline" &
-                                "&include_granted_scopes=true" &
-                                "&prompt=consent" /> <!--- prompt=consent forces refresh_token on repeat --->
-                
-                <!--- Button to link Google account for calendar access --->
-                <a href="#authUrl#">
+        <!--- Google Calendar integration --->
+        <cfoutput>
+        <cfif NOT len(trim(accessToken))>
+            <!--- Not linked: show Link Google button --->
+            <cfset googleClientId = len(application.secrets.googleOAuthClientId)
+                ? application.secrets.googleOAuthClientId : "" />
+            <cfif len(googleClientId)>
+                <!--- Generate CSRF state token and store in session --->
+                <cfset session.googleOAuthState = hash(createUUID() & now(), "SHA-256") />
+                <cfset googleRedirectUri = URLEncodedFormat(application.secrets.googleOAuthRedirectUri) />
+                <cfset googleScope = URLEncodedFormat("https://www.googleapis.com/auth/calendar.events") />
+                <cfset googleAuthUrl = "https://accounts.google.com/o/oauth2/v2/auth?response_type=code" &
+                    "&client_id=#googleClientId#" &
+                    "&redirect_uri=#googleRedirectUri#" &
+                    "&scope=#googleScope#" &
+                    "&access_type=offline" &
+                    "&include_granted_scopes=true" &
+                    "&prompt=consent" &
+                    "&state=#session.googleOAuthState#" />
+                <a href="#googleAuthUrl#">
                     <button class="btn btn-xs btn-primary" type="button">
                         <i class="mdi mdi-link"></i> Link Google
                     </button>
                 </a>
-            </cfoutput>
+            </cfif>
+        <cfelse>
+            <!--- Already linked: show Unlink button --->
+            <button class="btn btn-xs btn-outline-primary" type="button"
+                    onclick="if(confirm('Unlink your Google Calendar?')) window.location.href='/ajax/google-unlink.cfm';">
+                <i class="mdi mdi-link-off"></i> Unlink Google
+            </button>
         </cfif>
+        </cfoutput>
 
         <!--- Button to subscribe to events --->
         <button class="btn btn-xs btn-primary" type="button" data-bs-remote="true" data-bs-toggle="modal" 

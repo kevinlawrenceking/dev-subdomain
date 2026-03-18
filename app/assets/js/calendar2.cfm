@@ -100,23 +100,26 @@
             endTime: slotEnd
         },
 
-        // --- JSON feed event source [Sub-phase D] ---
-        events: {
-            url: '/ajax/calendar-events.cfm',
-            failure: function() {
-                document.getElementById('calendar').innerHTML =
-                    '<div class="alert alert-danger m-3">Error loading calendar events. Please refresh the page.</div>';
-            }
-        },
+        // --- Event sources: TAO local + Google Calendar (if linked) ---
+        eventSources: [
+            {
+                url: '/ajax/calendar-events.cfm',
+                failure: function() {
+                    document.getElementById('calendar').innerHTML =
+                        '<div class="alert alert-danger m-3">Error loading calendar events. Please refresh the page.</div>';
+                }
+            }<cfoutput><cfif len(trim(accessToken))>,
+            {
+                url: '/ajax/google-calendar-events.cfm',
+                failure: function() {
+                    console.warn('[TAO Calendar] Google Calendar event fetch failed.');
+                }
+            }</cfif></cfoutput>
+        ],
 
         loading: function(isLoading) {
             var spinner = document.getElementById('calendar-loading');
             if (spinner) spinner.style.display = isLoading ? 'flex' : 'none';
-        },
-
-        eventSourceSuccess: function(events) {
-            var emptyMsg = document.getElementById('calendar-empty');
-            if (emptyMsg) emptyMsg.style.display = events.length === 0 ? 'block' : 'none';
         },
 
         // --- Event click — navigate to appointment/audition [Sub-phase C fix] ---

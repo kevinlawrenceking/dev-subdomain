@@ -225,6 +225,12 @@ body[data-layout-color="dark"] #calendar-loading {
     border-radius: 50%;
 }
 
+/* === Google Calendar events: distinct styling === */
+.fc-event.gcal-event {
+    opacity: 0.85;
+    border-left: 3px solid #3367D6;
+}
+
 /* === Popover for dayMaxEvents "+N more" === */
 .fc .fc-popover {
     z-index: 1060;
