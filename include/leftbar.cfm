@@ -26,6 +26,24 @@
         Applies .tao-sidebar__item--active CSS class and aria-current="page".
         Admin sections auto-expand if a child item is active.
 
+    HTML STRUCTURE:
+        <nav.tao-sidebar.left-side-menu>               -- outer nav (framework JS compat)
+          <div.tao-sidebar__scroll>                     -- native scrollable area
+            <div#sidebar-menu.tao-sidebar__menu-wrap>   -- framework condensed CSS compat
+              <div.tao-sidebar__profile>                -- user avatar + name
+              <ul.tao-sidebar__menu>                    -- single list for ALL items
+                <li.tao-sidebar__item>                  -- primary nav links
+                <li.tao-sidebar__divider-wrap>          -- section dividers
+                <li.tao-sidebar__section>               -- collapsible admin sections
+                  <ul.tao-sidebar__submenu>             -- admin sub-items
+
+    FRAMEWORK COMPAT:
+        - .left-side-menu on <nav> keeps the Hyper framework JS working
+          (body.sidebar-enable toggle, condensed mode via data-leftbar-size)
+        - #sidebar-menu on the wrapper div keeps the framework's condensed-mode
+          CSS selectors working (#sidebar-menu > ul > li > a span { display:none })
+        - No SimpleBar: native CSS overflow-y replaces the JS scrollbar library
+
     MIGRATE: Menu items should come from a MenuRepository.listByRole(userId, role) call
     MIGRATE: Active state detection will be handled by Flutter's router, not server-side
     MIGRATE: Icon mapping should be a shared constant, not DB-stored strings
@@ -89,6 +107,7 @@
 <cfloop query="menuItemsA">
     <cfif lCase(menuItemsA.compDir) EQ variables.currentSection>
         <cfset variables.adminRelActive = true />
+        <cfbreak />
     </cfif>
 </cfloop>
 
@@ -96,6 +115,7 @@
 <cfloop query="menuItemsAud">
     <cfif lCase(menuItemsAud.compDir) EQ variables.currentSection>
         <cfset variables.adminAudActive = true />
+        <cfbreak />
     </cfif>
 </cfloop>
 
@@ -105,7 +125,8 @@
      ===================================================================== --->
 
 <nav class="tao-sidebar left-side-menu" role="navigation" aria-label="Main navigation">
-    <div class="tao-sidebar__scroll" id="sidebar-menu">
+    <div class="tao-sidebar__scroll">
+        <div id="sidebar-menu" class="tao-sidebar__menu-wrap">
 
         <!--- User Profile Section --->
         <div class="tao-sidebar__profile">
@@ -141,94 +162,97 @@
                     </a>
                 </li>
             </cfoutput>
-        </ul>
 
-        <!--- Administrator Menu Sections --->
-        <cfif variables.userrole IS "Administrator">
+                <!--- Administrator Menu Sections --->
+                <cfif variables.userrole IS "Administrator">
 
-            <div class="tao-sidebar__admin-divider" role="separator"></div>
+                    <!--- Section Divider --->
+                    <li class="tao-sidebar__divider-wrap" role="separator" aria-hidden="true">
+                        <div class="tao-sidebar__admin-divider"></div>
+                    </li>
 
-            <!--- Relationships Admin Section --->
-            <div class="tao-sidebar__section<cfif variables.adminRelActive> tao-sidebar__section--active</cfif>">
-                <a href="#sidebar-admin-relationships"
-                   class="tao-sidebar__section-toggle"
-                   data-bs-toggle="collapse"
-                   role="button"
-                   aria-expanded="<cfif variables.adminRelActive>true<cfelse>false</cfif>"
-                   aria-controls="sidebar-admin-relationships">
-                    <i data-lucide="users" class="tao-sidebar__icon"></i>
-                    <span class="tao-sidebar__label">Relationships - Admin</span>
-                    <i data-lucide="chevron-down" class="tao-sidebar__arrow"></i>
-                </a>
-                <div class="collapse<cfif variables.adminRelActive> show</cfif>"
-                     id="sidebar-admin-relationships">
-                    <ul class="tao-sidebar__submenu">
-                        <cfoutput query="menuItemsA">
-                            <cfset variables.subDir = lCase(menuItemsA.compDir) />
-                            <cfset variables.subActive = (variables.subDir EQ variables.currentSection) />
+                    <!--- Relationships Admin Section --->
+                    <li class="tao-sidebar__section<cfif variables.adminRelActive> tao-sidebar__section--active</cfif>">
+                        <a href="#sidebar-admin-relationships"
+                           class="tao-sidebar__section-toggle"
+                           data-bs-toggle="collapse"
+                           role="button"
+                           aria-expanded="<cfif variables.adminRelActive>true<cfelse>false</cfif>"
+                           aria-controls="sidebar-admin-relationships">
+                            <i data-lucide="users" class="tao-sidebar__icon"></i>
+                            <span class="tao-sidebar__label">Relationships - Admin</span>
+                            <i data-lucide="chevron-down" class="tao-sidebar__arrow"></i>
+                        </a>
+                        <div class="collapse<cfif variables.adminRelActive> show</cfif>"
+                             id="sidebar-admin-relationships">
+                            <ul class="tao-sidebar__submenu">
+                                <cfoutput query="menuItemsA">
+                                    <cfset variables.subDir = lCase(menuItemsA.compDir) />
+                                    <cfset variables.subActive = (variables.subDir EQ variables.currentSection) />
+                                    <li class="tao-sidebar__subitem<cfif variables.subActive> tao-sidebar__subitem--active</cfif>">
+                                        <a href="/app/#menuItemsA.compDir#/"
+                                           class="tao-sidebar__sublink"
+                                           <cfif variables.subActive>aria-current="page"</cfif>>
+                                            #xmlFormat(menuItemsA.compName)#
+                                        </a>
+                                    </li>
+                                </cfoutput>
+                            </ul>
+                        </div>
+                    </li>
 
-                            <li class="tao-sidebar__subitem<cfif variables.subActive> tao-sidebar__subitem--active</cfif>">
-                                <a href="/app/#menuItemsA.compDir#/"
-                                   class="tao-sidebar__sublink"
-                                   <cfif variables.subActive>aria-current="page"</cfif>>
-                                    #xmlFormat(menuItemsA.compName)#
-                                </a>
-                            </li>
-                        </cfoutput>
-                    </ul>
-                </div>
-            </div>
+                    <!--- Audition Admin Section --->
+                    <li class="tao-sidebar__section<cfif variables.adminAudActive> tao-sidebar__section--active</cfif>">
+                        <a href="#sidebar-admin-auditions"
+                           class="tao-sidebar__section-toggle"
+                           data-bs-toggle="collapse"
+                           role="button"
+                           aria-expanded="<cfif variables.adminAudActive>true<cfelse>false</cfif>"
+                           aria-controls="sidebar-admin-auditions">
+                            <i data-lucide="clapperboard" class="tao-sidebar__icon"></i>
+                            <span class="tao-sidebar__label">Audition - Admin</span>
+                            <i data-lucide="chevron-down" class="tao-sidebar__arrow"></i>
+                        </a>
+                        <div class="collapse<cfif variables.adminAudActive> show</cfif>"
+                             id="sidebar-admin-auditions">
+                            <ul class="tao-sidebar__submenu">
+                                <cfoutput query="menuItemsAud">
+                                    <cfset variables.subDir = lCase(menuItemsAud.compDir) />
+                                    <cfset variables.subActive = (variables.subDir EQ variables.currentSection) />
+                                    <li class="tao-sidebar__subitem<cfif variables.subActive> tao-sidebar__subitem--active</cfif>">
+                                        <a href="/app/#menuItemsAud.compDir#/"
+                                           class="tao-sidebar__sublink"
+                                           <cfif variables.subActive>aria-current="page"</cfif>>
+                                            #xmlFormat(menuItemsAud.compName)#
+                                        </a>
+                                    </li>
+                                </cfoutput>
+                            </ul>
+                        </div>
+                    </li>
 
-            <!--- Audition Admin Section --->
-            <div class="tao-sidebar__section<cfif variables.adminAudActive> tao-sidebar__section--active</cfif>">
-                <a href="#sidebar-admin-auditions"
-                   class="tao-sidebar__section-toggle"
-                   data-bs-toggle="collapse"
-                   role="button"
-                   aria-expanded="<cfif variables.adminAudActive>true<cfelse>false</cfif>"
-                   aria-controls="sidebar-admin-auditions">
-                    <i data-lucide="clapperboard" class="tao-sidebar__icon"></i>
-                    <span class="tao-sidebar__label">Audition - Admin</span>
-                    <i data-lucide="chevron-down" class="tao-sidebar__arrow"></i>
-                </a>
-                <div class="collapse<cfif variables.adminAudActive> show</cfif>"
-                     id="sidebar-admin-auditions">
-                    <ul class="tao-sidebar__submenu">
-                        <cfoutput query="menuItemsAud">
-                            <cfset variables.subDir = lCase(menuItemsAud.compDir) />
-                            <cfset variables.subActive = (variables.subDir EQ variables.currentSection) />
+                </cfif><!--- end Administrator --->
 
-                            <li class="tao-sidebar__subitem<cfif variables.subActive> tao-sidebar__subitem--active</cfif>">
-                                <a href="/app/#menuItemsAud.compDir#/"
-                                   class="tao-sidebar__sublink"
-                                   <cfif variables.subActive>aria-current="page"</cfif>>
-                                    #xmlFormat(menuItemsAud.compName)#
-                                </a>
-                            </li>
-                        </cfoutput>
-                    </ul>
-                </div>
-            </div>
+                <!--- Beta Tester Menu Item --->
+                <cfif variables.userIsBetaTester IS "1">
+                    <li class="tao-sidebar__divider-wrap" role="separator" aria-hidden="true">
+                        <div class="tao-sidebar__admin-divider"></div>
+                    </li>
+                    <cfset variables.testActive = (variables.currentSection EQ "testings") />
+                    <li class="tao-sidebar__item<cfif variables.testActive> tao-sidebar__item--active</cfif>">
+                        <a href="/app/Testings/"
+                           class="tao-sidebar__link"
+                           <cfif variables.testActive>aria-current="page"</cfif>>
+                            <i data-lucide="clipboard-check" class="tao-sidebar__icon"></i>
+                            <span class="tao-sidebar__label">Testing Log</span>
+                        </a>
+                    </li>
+                </cfif>
 
-        </cfif><!--- end Administrator --->
-
-        <!--- Beta Tester Menu Item --->
-        <cfif variables.userIsBetaTester IS "1">
-            <div class="tao-sidebar__admin-divider" role="separator"></div>
-            <ul class="tao-sidebar__menu">
-                <cfset variables.testActive = (variables.currentSection EQ "testings") />
-                <li class="tao-sidebar__item<cfif variables.testActive> tao-sidebar__item--active</cfif>">
-                    <a href="/app/Testings/"
-                       class="tao-sidebar__link"
-                       <cfif variables.testActive>aria-current="page"</cfif>>
-                        <i data-lucide="clipboard-check" class="tao-sidebar__icon"></i>
-                        <span class="tao-sidebar__label">Testing Log</span>
-                    </a>
-                </li>
             </ul>
-        </cfif>
 
-    </div>
+        </div><!--- /#sidebar-menu --->
+    </div><!--- /.tao-sidebar__scroll --->
 </nav>
 
 <!--- Mobile backdrop overlay (shown when sidebar is open on small screens) --->
@@ -244,9 +268,9 @@
 
      MIGRATE: When the full app migrates to Lucide, move this CDN link to
      the <head> in core.cfm and remove the per-page initialization below.
-     Pin a specific version for production stability.
+     For production, download lucide.min.js locally to /app/assets/libs/lucide/.
      ===================================================================== --->
-<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
 <script>
 (function() {
     // Initialize Lucide icons within the sidebar only
