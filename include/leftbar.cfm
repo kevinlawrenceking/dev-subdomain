@@ -17,8 +17,8 @@
             variables.userIsBetaTester -- "1" or "0"
         - Query objects (from qry/ includes in core.cfm):
             menuItemsU   -- user menu items (compDir, compicon, compName)
-            menuItemsA   -- admin Relationships sub-items
-            menuItemsAud -- admin Auditions sub-items
+            menuItemsA   -- Setup sub-items (general admin/enum CRUD)
+            menuItemsAud -- Audition Setup sub-items
 
     ACTIVE STATE:
         Detects current page by parsing cgi.SCRIPT_NAME for the compDir segment.
@@ -171,7 +171,7 @@
                         <div class="tao-sidebar__admin-divider"></div>
                     </li>
 
-                    <!--- Relationships Admin Section --->
+                    <!--- Setup Section (general admin/enum CRUD screens) --->
                     <li class="tao-sidebar__section<cfif variables.adminRelActive> tao-sidebar__section--active</cfif>">
                         <a href="#sidebar-admin-relationships"
                            class="tao-sidebar__section-toggle"
@@ -180,7 +180,7 @@
                            aria-expanded="<cfif variables.adminRelActive>true<cfelse>false</cfif>"
                            aria-controls="sidebar-admin-relationships">
                             <i data-lucide="users" class="tao-sidebar__icon"></i>
-                            <span class="tao-sidebar__label">Relationships - Admin</span>
+                            <span class="tao-sidebar__label">Setup</span>
                             <i data-lucide="chevron-down" class="tao-sidebar__arrow"></i>
                         </a>
                         <div class="collapse<cfif variables.adminRelActive> show</cfif>"
@@ -201,7 +201,7 @@
                         </div>
                     </li>
 
-                    <!--- Audition Admin Section --->
+                    <!--- Audition Setup Section --->
                     <li class="tao-sidebar__section<cfif variables.adminAudActive> tao-sidebar__section--active</cfif>">
                         <a href="#sidebar-admin-auditions"
                            class="tao-sidebar__section-toggle"
@@ -210,7 +210,7 @@
                            aria-expanded="<cfif variables.adminAudActive>true<cfelse>false</cfif>"
                            aria-controls="sidebar-admin-auditions">
                             <i data-lucide="clapperboard" class="tao-sidebar__icon"></i>
-                            <span class="tao-sidebar__label">Audition - Admin</span>
+                            <span class="tao-sidebar__label">Audition Setup</span>
                             <i data-lucide="chevron-down" class="tao-sidebar__arrow"></i>
                         </a>
                         <div class="collapse<cfif variables.adminAudActive> show</cfif>"
