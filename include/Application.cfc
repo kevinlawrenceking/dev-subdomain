@@ -8,10 +8,13 @@
     </cfscript>
 
     <!--- CSRF validation for POST requests from authenticated users --->
+    <!--- Accept token from form field (regular forms) OR X-CSRF-Token header (AJAX) --->
     <cfif cgi.REQUEST_METHOD EQ "POST" AND structKeyExists(session, "csrfToken")>
       <cfset var submittedToken = "">
       <cfif structKeyExists(form, "csrfToken")>
         <cfset submittedToken = form.csrfToken>
+      <cfelseif len(trim(cgi.HTTP_X_CSRF_TOKEN))>
+        <cfset submittedToken = cgi.HTTP_X_CSRF_TOKEN>
       </cfif>
       <cfif NOT len(trim(submittedToken)) OR NOT CSRFVerifyToken(submittedToken)>
         <cflog file="tao_csrf" type="warning"
