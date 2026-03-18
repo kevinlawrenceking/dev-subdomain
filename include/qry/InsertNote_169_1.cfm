@@ -2,7 +2,7 @@
 <cfset noteService.INSnoteslog_23966(
     userid = Val(userid),
     contactid = Val(rcontactid),
-    noteDetails = LEFT(trim(noteDetails), 2000),
+    noteDetails = trim(noteDetails),
     isPublic = isPublic,
     audprojectid = Val(audprojectid),
     notedetailshtml = new_notetext

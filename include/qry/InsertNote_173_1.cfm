@@ -2,7 +2,7 @@
 <cfset objNoteService.INSnoteslog_23972(
     userid = userid,
     contactid = rcontactid,
-    noteDetails = LEFT(trim(noteDetails), 2000),
+    noteDetails = trim(noteDetails),
     isPublic = isPublic,
     eventid = eventid
 )>

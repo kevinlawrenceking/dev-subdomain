@@ -2251,6 +2251,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                     "user_action": isNull(row.user_action) ? "" : row.user_action,
                     "created_contactid": isNull(row.created_contactid) ? 0 : row.created_contactid,
                     "best_match_score": isNull(row.best_match_score) ? 0 : row.best_match_score,
+                    "import_error": isNull(row.import_error) ? "" : row.import_error,
                     "data": structKeyExists(factsMap, row.row_id) ? factsMap[row.row_id].data : {},
                     "validation": structKeyExists(factsMap, row.row_id) ? factsMap[row.row_id].validation : {},
                     "errors": structKeyExists(factsMap, row.row_id) ? factsMap[row.row_id].errors : []

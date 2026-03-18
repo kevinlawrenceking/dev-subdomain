@@ -802,6 +802,7 @@
             var createdContactId = row.created_contactid || row.CREATED_CONTACTID;
             var errors = row.errors || row.ERRORS || [];
             var duplicates = row.duplicates || row.DUPLICATES || [];
+            var importError = row.import_error || row.IMPORT_ERROR || '';
 
             var firstName = getVal(data, 'first_name') || getVal(data, 'firstName');
             var lastName = getVal(data, 'last_name') || getVal(data, 'lastName');
@@ -864,6 +865,13 @@
                     html += ' (Score: ' + bestMatchScore + ')';
                 }
                 html += '</small></td></tr>';
+            }
+
+            // Show import failure reason
+            if (status === 'failed' && importError) {
+                html += '<tr class="bg-light"><td colspan="7">';
+                html += '<small class="text-danger"><i class="fe-alert-circle"></i> <strong>Import failed:</strong> ' + escapeHtml(importError) + '</small>';
+                html += '</td></tr>';
             }
         });
 

@@ -9,7 +9,7 @@
             VALUES (
                 <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.userid#" />, 
                 <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.newcontactid#" />, 
-                <cfqueryparam cfsqltype="cf_sql_longvarchar" value="#LEFT(trim(arguments.newnoteDetails), 2000)#" />
+                <cfqueryparam cfsqltype="cf_sql_longvarchar" value="#trim(arguments.newnoteDetails)#" />
             )
         </cfquery>
 <cfreturn result.generatedKey>
@@ -83,7 +83,7 @@
             VALUES (
                 <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.userid#" />,
                 <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.contactid#" />,
-                <cfqueryparam cfsqltype="cf_sql_longvarchar" value="#LEFT(trim(arguments.noteDetails),2000)#" />,
+                <cfqueryparam cfsqltype="cf_sql_longvarchar" value="#trim(arguments.noteDetails)#" />,
                 <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.isPublic#" />,
                 <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.audprojectid#" />,
                 <cfqueryparam cfsqltype="cf_sql_longvarchar" value="#arguments.notedetailshtml#" />
@@ -116,7 +116,7 @@
             VALUES (
                 <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.userid#" />,
                 <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.contactid#" />,
-                <cfqueryparam cfsqltype="cf_sql_longvarchar" value="#LEFT(trim(arguments.noteDetails),2000)#" />,
+                <cfqueryparam cfsqltype="cf_sql_longvarchar" value="#trim(arguments.noteDetails)#" />,
                 <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.isPublic#" />,
                 <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.eventid#" />,
                 <cfqueryparam cfsqltype="cf_sql_longvarchar" value="#arguments.notedetailshtml#" />
@@ -136,7 +136,7 @@
             VALUES (
                 <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.userid#" />,
                 <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.contactid#" />,
-                <cfqueryparam cfsqltype="cf_sql_longvarchar" value="#LEFT(trim(arguments.noteDetails),2000)#" />,
+                <cfqueryparam cfsqltype="cf_sql_longvarchar" value="#trim(arguments.noteDetails)#" />,
                 <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.isPublic#" />,
                 <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.eventid#" />
             )
@@ -152,7 +152,7 @@
 <cfquery result="result" >
             UPDATE noteslog 
             SET 
-                noteDetails = <cfqueryparam cfsqltype="cf_sql_longvarchar" value="#LEFT(trim(arguments.noteDetails),2000)#">,
+                noteDetails = <cfqueryparam cfsqltype="cf_sql_longvarchar" value="#trim(arguments.noteDetails)#">,
                 notedetailshtml = <cfqueryparam cfsqltype="cf_sql_longvarchar" value="#trim(arguments.new_noteText)#">,
                 isPublic = <cfqueryparam cfsqltype="cf_sql_bit" value="#arguments.isPublic#">
             WHERE 
@@ -168,9 +168,9 @@
 <cfquery result="result" >
             UPDATE noteslog 
             SET 
-                noteDetails = <cfqueryparam cfsqltype="cf_sql_longvarchar" value="#LEFT(trim(arguments.noteDetails),2000)#">,
+                noteDetails = <cfqueryparam cfsqltype="cf_sql_longvarchar" value="#trim(arguments.noteDetails)#">,
                 isPublic = <cfqueryparam cfsqltype="cf_sql_bit" value="#arguments.isPublic#">
-            WHERE 
+            WHERE
                 noteid = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.noteid#">
         </cfquery>
 
@@ -257,7 +257,7 @@
             INSERT INTO noteslog (userid, noteDetails, isPublic, audprojectid, contactid) 
             VALUES (
                 <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.userid#" />,
-                <cfqueryparam cfsqltype="cf_sql_varchar" value="#LEFT(trim(arguments.noteDetails), 2000)#" />,
+                <cfqueryparam cfsqltype="cf_sql_longvarchar" value="#trim(arguments.noteDetails)#" />,
                 <cfqueryparam cfsqltype="cf_sql_bit" value="1" />,
                 <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.new_audprojectid#" />,
                 0
