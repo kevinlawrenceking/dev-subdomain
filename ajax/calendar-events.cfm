@@ -6,6 +6,12 @@
       Auth: session.userid enforced by ajax/Application.cfc onRequestStart
 --->
 
+<!--- Defensive session check: return empty array if session expired between Application.cfc gate and here --->
+<cfif NOT structKeyExists(session, "userid") OR NOT len(trim(session.userid))>
+    <cfcontent type="application/json; charset=utf-8" reset="true">[]
+    <cfabort>
+</cfif>
+
 <!--- Date range from FullCalendar (ISO 8601 strings like "2026-03-01T00:00:00-08:00") --->
 <cfparam name="url.start" default="" />
 <cfparam name="url.end" default="" />

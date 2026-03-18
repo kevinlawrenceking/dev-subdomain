@@ -8,22 +8,24 @@
 
 <cfset secret = "">
 
-<cftry>
-    <cfset apiUrl = "https://app.paykickstart.com/api/billing-customer?auth_token=#authToken#&email=#urlEncodedFormat(userEmail)#">
+<cfif len(trim(authToken))>
+    <cftry>
+        <cfhttp url="https://app.paykickstart.com/api/billing-customer" method="post" result="apiResponse" timeout="10">
+            <cfhttpparam type="formfield" name="auth_token" value="#authToken#">
+            <cfhttpparam type="formfield" name="email" value="#userEmail#">
+        </cfhttp>
 
-    <cfhttp url="#apiUrl#" method="post" result="apiResponse" timeout="10">
-    </cfhttp>
+        <cfset responseData = DeserializeJSON(apiResponse.fileContent)>
 
-    <cfset responseData = DeserializeJSON(apiResponse.fileContent)>
+        <cfif structKeyExists(responseData, "status") AND responseData.status EQ true>
+            <cfset secret = responseData.secret>
+        </cfif>
 
-    <cfif structKeyExists(responseData, "status") AND responseData.status EQ true>
-        <cfset secret = responseData.secret>
-    </cfif>
-
-<cfcatch type="any">
-    <cflog file="tao_errors" type="error" text="mybilling_pane: PayKickstart API error: #cfcatch.message#">
-</cfcatch>
-</cftry>
+    <cfcatch type="any">
+        <cflog file="tao_errors" type="error" text="mybilling_pane: PayKickstart API error: #cfcatch.message#">
+    </cfcatch>
+    </cftry>
+</cfif>
 
 <cfoutput>
 <iframe width="100%" scrolling="no" frameborder="0" src="https://app.paykickstart.com/billing?portal=uGz4JGGnPi9VaXn73gSYxd3SqQRtMPY648otrWR5eGKKNquowi&secret=#secret#"></iframe>

@@ -121,7 +121,9 @@ Last Updated: 2025
         <cfoutput>
         <cfif NOT len(trim(accessToken))>
             <!--- Not linked: show Link Google button --->
-            <cfset googleClientId = len(application.secrets.googleOAuthClientId)
+            <cfset googleClientId = (structKeyExists(application, "secrets")
+                AND structKeyExists(application.secrets, "googleOAuthClientId")
+                AND len(application.secrets.googleOAuthClientId))
                 ? application.secrets.googleOAuthClientId : "" />
             <cfif len(googleClientId)>
                 <!--- Generate CSRF state token and store in session --->
