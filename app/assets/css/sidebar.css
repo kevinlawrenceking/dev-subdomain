@@ -246,6 +246,8 @@
     color: var(--tao-sidebar-text);
     text-decoration: none;
     border-radius: 6px;
+    border: none;
+    background: none;
     border-left: 3px solid transparent;
     transition: background-color var(--tao-sidebar-transition),
                 color var(--tao-sidebar-transition),
@@ -255,8 +257,6 @@
     line-height: 1.4;
     cursor: pointer;
     width: 100%;
-    border: none;
-    background: none;
 }
 
 .tao-sidebar__section-toggle:hover,
