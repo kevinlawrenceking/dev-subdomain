@@ -18,42 +18,31 @@
     <cfset application.suffix = "_1.5" />
 </cfif>
 
-<!--- Use datasource configured in Application.cfc --->
 <cfset dsn = application.dsn />
-<cfset suffix = application.suffix />
-<cfset information_schema = application.information_schema />
 
+<!--- Clear session on login page view (acts as logout mechanism) --->
 <cfif structKeyExists(cookie, "userid")>
     <cfset structDelete(cookie, "userid")>
 </cfif>
-
-
-
 <cfif structKeyExists(session, "userid")>
     <cfset structDelete(session, "userid")>
 </cfif>
 
-
-
-<cfquery result="result" name="fix" datasource="#dsn#"> 
-    SELECT u.userID  
-    FROM taousers u
-    INNER JOIN thrivecart t ON t.id = u.customerid
-    INNER JOIN userstatuses us ON us.userstatus = u.userstatus
-    WHERE t.status = 'Completed' AND u.userstatus <> 'active'
-</cfquery> 
-
-<cfloop query="fix">
-    <cfquery result="result" name="fix2" datasource="#dsn#"> 
-        UPDATE taousers SET userstatus = 'active' WHERE userid = <cfqueryparam value="#fix.userid#" cfsqltype="CF_SQL_INTEGER">
-    </cfquery> 
-</cfloop>
-
-<!--- Default parameters for the page --->
+<!--- Default parameters (from URL redirect after login attempt) --->
 <cfparam name="pgrecover" default="N" />
 <cfparam name="pwrong" default="N" />
 <cfparam name="u" default="" />
-<cfparam name="p" default="" />
+
+<!--- Merge URL values explicitly (scope shadowing fix) --->
+<cfif structKeyExists(url, "pgrecover")>
+    <cfset pgrecover = url.pgrecover />
+</cfif>
+<cfif structKeyExists(url, "pwrong")>
+    <cfset pwrong = url.pwrong />
+</cfif>
+<cfif structKeyExists(url, "u")>
+    <cfset u = url.u />
+</cfif>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -61,13 +50,12 @@
     <meta charset="utf-8" />
     <title>Log In | The Actor's Office</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta content="The Actor's Office Application - The Actors Office" name="description" />
+    <meta content="The Actor's Office Application" name="description" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="robots" content="noindex">
     <link rel="shortcut icon" href="/media/shared/images/favicon.ico">
     <link href="/app/assets/css/app.min.css" rel="stylesheet" type="text/css" id="app-style" />
     <link href="/app/assets/css/icons.min.css" rel="stylesheet" type="text/css" />
-    <script src="/app/assets/js/jquery-3.6.0.min.js"></script>
 </head>
 
 <body class="loading" style="background-color: #406E8E; font-family: 'Source Sans Pro', sans-serif;">
@@ -76,76 +64,64 @@
         <div class="container">
             <div class="row justify-content-center">
                 <div class="col-md-8 col-lg-6 col-xl-5">
-                    <div class="card mb-3" style="background-color:white;bgcolor:white;">
+                    <div class="card mb-3" style="background-color: white;">
                         <div class="card-body p-4">
+
                             <div class="text-center w-85 m-auto">
                                 <div class="auth-logo">
-                                    <a href="index.html" class="logo no-hover-effect logo-dark text-center">
+                                    <a href="/loginform.cfm" class="logo no-hover-effect logo-dark text-center">
                                         <span class="logo no-hover-effect-lg">
-                                            <img src="<cfoutput>/media-#application.dsn#/images/taowhite.png</cfoutput>" alt="" height="60" />
-                                        </span>
-                                    </a>
-                                    <a href="index.html" class="logo no-hover-effect logo-light text-center">
-                                        <span class="logo no-hover-effect-lg">
-                                            <img src="<cfoutput>/media-#application.dsn#/images/logo-dark.png</cfoutput>" alt="" height="22" />
+                                            <cfoutput><img src="/media-#application.dsn#/images/taowhite.png" alt="The Actor's Office" height="60" /></cfoutput>
                                         </span>
                                     </a>
                                 </div>
-                                <p class="text-muted mb-4 mt-3" style="font-size:14px;">Enter your email address and password.</p>
+                                <p class="text-muted mb-4 mt-3" style="font-size: 14px;">Enter your email address and password.</p>
                             </div>
 
-                            <!--- Display success or error messages --->
-                            <cfoutput>
-                                <cfif pgrecover eq "Y">
-                                    <center><p style="color:green;">Password Changed!</p></center>
-                                    <cfset pgrecover = "N" />
-                                </cfif>
+                            <!--- Success notification: password was changed --->
+                            <cfif pgrecover EQ "Y">
+                                <div class="alert alert-success alert-dismissible fade show" role="alert" id="successAlert">
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span>&times;</span></button>
+                                    Password changed successfully. Please log in.
+                                </div>
+                            </cfif>
 
-                                <cfif pwrong eq "Y">
-                                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                            <span >
-&times;</span>
-                                        </button>
-                                        Incorrect Email Address and Password!
-                                    </div>
-                                    <cfset pwrong = "N" />
-                                </cfif>
-                            </cfoutput>
+                            <!--- Error notification: wrong credentials --->
+                            <cfif pwrong EQ "Y">
+                                <div class="alert alert-danger alert-dismissible fade show" role="alert" id="errorAlert">
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span>&times;</span></button>
+                                    Incorrect email address or password. Please try again.
+                                </div>
+                            </cfif>
 
                             <!--- Login form --->
-                            <form id="demo-form" action="/login/login2.cfm" method="post">
+                            <form id="login-form" action="/login/login2.cfm" method="post">
                                 <input type="hidden" name="pwrong" value="N" />
                                 <input type="hidden" name="pwpass" value="Y" />
-                                
                                 <cfif structKeyExists(url, "xu")>
-                                    <input type="hidden" name="xu" value="#encodeForHTMLAttribute(url.xu)#" />
+                                    <cfoutput><input type="hidden" name="xu" value="#encodeForHTMLAttribute(url.xu)#" /></cfoutput>
                                 </cfif>
-<Cfoutput>
+
                                 <div class="form-group mb-3">
                                     <label for="j_username">Email Address</label>
-                                    <input class="form-control" type="email" id="j_username" name="j_username" value="#htmlEditFormat(u)#" required placeholder="Enter your email" />
+                                    <cfoutput>
+                                    <input class="form-control" type="email" id="j_username" name="j_username"
+                                           value="#encodeForHTMLAttribute(u)#" required
+                                           placeholder="Enter your email" autocomplete="email" />
+                                    </cfoutput>
                                 </div>
 
-                       <div class="form-group mb-3">
-    <label for="j_password">Password</label>
-    <div class="input-group input-group-merge">
-        <input type="password" id="j_password" name="j_password" class="form-control" value="#htmlEditFormat(p)#" placeholder="Enter your password" />
-        <div class="input-group-append">
-            <div class="input-group-text">
-                <span class="password-eye" onclick="togglePassword()" style="cursor: pointer;">
-                   
-                </span>
-            </div>
-        </div>
-    </div>
-</div>
-
-</cfoutput>
                                 <div class="form-group mb-3">
-                                    <div class="custom-control custom-checkbox">
-                                        <input type="checkbox" class="custom-control-input" id="checkbox-signin" checked />
-                                        <label class="custom-control-label" for="checkbox-signin">Remember me</label>
+                                    <label for="j_password">Password</label>
+                                    <div class="input-group input-group-merge">
+                                        <input type="password" id="j_password" name="j_password" class="form-control"
+                                               placeholder="Enter your password" required
+                                               autocomplete="current-password" />
+                                        <div class="input-group-append" style="cursor: pointer;" onclick="togglePassword()">
+                                            <div class="input-group-text">
+                                                <i class="fa fa-eye" id="eyeIcon"></i>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -155,40 +131,49 @@
                             </form>
 
                             <div class="text-center mt-3">
-                                <a href="auth-recoverpw.cfm"   >Forgot your password?</a>
+                                <a href="/auth-recoverpw.cfm">Forgot your password?</a>
                             </div>
-                        </div> <!--- end card-body --->
-                    </div> <!--- end card --->
-                </div> <!--- end col --->
-            </div> <!--- end row --->
-        </div> <!--- end container --->
-    </div> <!--- end page --->
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <footer class="footer footer-alt text-white-50">
-        &reg; 2024 The Actor's Office &trade; - All Right Reserved.
+        <cfoutput>&copy; #year(now())# The Actor's Office &trade; - All Rights Reserved.</cfoutput>
     </footer>
 
     <script src="/app/assets/js/vendor.min.js"></script>
     <script src="/app/assets/js/app.min.js"></script>
-<script>
+    <script>
     function togglePassword() {
-        const passwordField = document.getElementById('j_password');
-        const eyeIcon = document.getElementById('eyeIcon');
-
-        // Toggle password field type
-        if (passwordField.type === 'password') {
-            passwordField.type = 'text';
-            eyeIcon.classList.remove('fa-eye');
-            eyeIcon.classList.add('fa-eye-slash');
+        var field = document.getElementById('j_password');
+        var icon = document.getElementById('eyeIcon');
+        if (field.type === 'password') {
+            field.type = 'text';
+            icon.className = 'fa fa-eye-slash';
         } else {
-            passwordField.type = 'password';
-            eyeIcon.classList.remove('fa-eye-slash');
-            eyeIcon.classList.add('fa-eye');
+            field.type = 'password';
+            icon.className = 'fa fa-eye';
         }
     }
-</script>
 
-
+    // Auto-dismiss alerts after 6 seconds
+    (function() {
+        setTimeout(function() {
+            var alerts = document.querySelectorAll('.alert-dismissible');
+            for (var i = 0; i < alerts.length; i++) {
+                (function(alert) {
+                    alert.style.transition = 'opacity 0.5s ease';
+                    alert.style.opacity = '0';
+                    setTimeout(function() { alert.remove(); }, 500);
+                })(alerts[i]);
+            }
+        }, 6000);
+    })();
+    </script>
 
 </body>
 </html>

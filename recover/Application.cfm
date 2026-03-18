@@ -1,6 +1,6 @@
+<cfapplication name="TAO" sessionmanagement="true">
 <cfscript>
-    // Env routing - set dsn as a Variables-scope variable
-    // available to index.cfm and setup2.cfm in the same request
+    // Env routing - set dsn for recover pages
     host = ListFirst(cgi.server_name, ".");
     if (host EQ "app") {
         dsn = "abo";

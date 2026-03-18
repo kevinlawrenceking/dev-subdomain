@@ -1,6 +1,6 @@
 <cfapplication name="TAO" sessionmanagement="true">
 
-<!--- Ensure required application variables exist (matches loginform.cfm pattern) --->
+<!--- Ensure required application variables exist --->
 <cfif NOT structKeyExists(application, "dsn")>
     <cfset host = ListFirst(cgi.server_name, ".") />
     <cfif host EQ "app">
@@ -10,208 +10,208 @@
     </cfif>
 </cfif>
 
-<cfif NOT structKeyExists(application, "information_schema")>
-    <cfset application.information_schema = "actorsbusinessoffice" />
-</cfif>
-
-<cfif NOT structKeyExists(application, "suffix")>
-    <cfset application.suffix = "_1.5" />
-</cfif>
-
 <cfif NOT structKeyExists(application, "baseMediaUrl")>
     <cfset application.baseMediaUrl = "/media-" & application.dsn />
 </cfif>
-<cfif NOT structKeyExists(application, "imagesUrl")>
-    <cfset application.imagesUrl = application.baseMediaUrl & "/images" />
-</cfif>
 
 <cfset dsn = application.dsn />
-<cfset suffix = application.suffix />
-<cfset information_schema = application.information_schema />
 
-<cfparam name="pwrong" default="" />
-<cfparam name="u" default="" />
-<cfparam name="p" default="" />
-<cfparam name="pgaction" default="view">
-<cfparam name="header" default="Password Recovery" />
-<cfparam name="instruct" default="We'll send you an email with instructions to reset your password." />
-
+<!--- Clear any lingering auth cookies --->
 <cfif structKeyExists(cookie, "userid")>
-    <cfcookie name="userid" value="#Now()#" Expires="now" domain=".theactorsoffice.com">
+    <cfcookie name="userid" value="" expires="now">
     <cfset structDelete(cookie, "userid")>
 </cfif>
 
-<cfparam name="email" default="" />
+<!--- Defaults --->
+<cfparam name="pgaction" default="view">
+<cfparam name="email" default="">
 <cfset recoverLink = "" />
-<cfset mailError = "" />
 
 <!--- Merge form-submitted values (cfparam only sets Variables scope, which shadows Form scope) --->
 <cfif structKeyExists(form, "pgaction")>
     <cfset pgaction = form.pgaction>
 </cfif>
 <cfif structKeyExists(form, "email")>
-    <cfset email = form.email>
+    <cfset email = trim(form.email)>
 </cfif>
 
-<cfif pgaction is "recover">
+<!--- Process recovery request --->
+<cfif pgaction IS "recover">
 
-    <cfif NOT len(trim(email))>
-        <cfset pgaction = "fail">
+    <cfif NOT len(email)>
+        <cfset pgaction = "view">
+
+    <!--- Rate limit: 1 request per 60 seconds per session --->
+    <cfelseif structKeyExists(session, "recoveryLastRequest")
+             AND dateDiff("s", session.recoveryLastRequest, now()) LT 60>
+        <cfset pgaction = "ratelimit">
+
     <cfelse>
-        <cfset instruct = "An email has been sent to you with instructions on how to reset your password." />
-        <cfset header = "Email Sent" />
+        <cfset session.recoveryLastRequest = now() />
 
-        <cfquery result="result" name="find" datasource="#dsn#">
-            SELECT userid, useremail, userfirstname, contactid
+        <!--- Look up user (result is never revealed to the client) --->
+        <cfquery name="find" datasource="#dsn#">
+            SELECT userid, useremail, userfirstname
             FROM taousers
-            WHERE useremail = <cfqueryparam value="#trim(email)#" cfsqltype="cf_sql_varchar">
+            WHERE useremail = <cfqueryparam value="#email#" cfsqltype="cf_sql_varchar">
             LIMIT 1
         </cfquery>
 
-        <cfif find.recordcount is "1">
-
+        <cfif find.recordcount IS 1>
             <cfset recover = CreateUUID() />
 
-            <cfquery result="result" name="update" datasource="#dsn#">
-                UPDATE taousers
-                SET recover = <cfqueryparam value="#recover#" cfsqltype="cf_sql_varchar" />
-                WHERE useremail = <cfqueryparam value="#trim(email)#" cfsqltype="cf_sql_varchar">
+            <cfquery datasource="#dsn#">
+                UPDATE taousers_tbl
+                SET recover = <cfqueryparam value="#recover#" cfsqltype="cf_sql_varchar">,
+                    recover_requested_at = NOW()
+                WHERE userid = <cfqueryparam value="#find.userid#" cfsqltype="cf_sql_integer">
             </cfquery>
 
-            <cfset recoverLink = "https://#cgi.server_name#/recover/?cid=#find.contactid#&email=#encodeForURL(find.useremail)#&recover=#recover#" />
+            <cfset recoverLink = "https://#cgi.server_name#/recover/?recover=#recover#" />
 
             <cftry>
-                <cfmail from="support@theactorsoffice.com" to="#find.useremail#" subject="The Actor's Office - Password Recovery" type="HTML">
-                <HTML>
-                <head><title>The Actor's Office</title></head>
-                <body style="background-color: white; font-family: 'Source Sans Pro', sans-serif; font-size: 14px;">
-
-                    <p>Hi #find.userfirstname#,</p>
-
-                    <p>We've received a request for your password to be reset.</p>
-
-                    <p>To get started, click the link below where you'll create your password.</p>
-
-                    <p><a href="#recoverLink#" style="display:inline-block;padding:10px 24px;background-color:##406E8E;color:white;text-decoration:none;border-radius:4px;">RESET MY PASSWORD</a></p>
-
-                    <p>If you have any questions, simply respond to this email.</p>
-
-                    <p>The Actor's Office Support Team</p>
-
-                </body>
-                </HTML>
+                <cfmail from="support@theactorsoffice.com"
+                        to="#find.useremail#"
+                        subject="The Actor's Office - Password Recovery"
+                        type="HTML">
+<html>
+<head><title>The Actor's Office</title></head>
+<body style="background-color: white; font-family: 'Source Sans Pro', sans-serif; font-size: 14px; color: ##333;">
+    <p>Hi #find.userfirstname#,</p>
+    <p>We received a request to reset your password.</p>
+    <p>Click the button below to create a new password. This link expires in 1 hour.</p>
+    <p style="margin: 24px 0;">
+        <a href="#recoverLink#"
+           style="display:inline-block;padding:12px 28px;background-color:##406E8E;color:white;text-decoration:none;border-radius:4px;font-weight:600;">
+            Reset My Password
+        </a>
+    </p>
+    <p style="font-size:13px;color:##666;">If you did not request this, you can safely ignore this email.</p>
+    <p>The Actor's Office Support Team</p>
+</body>
+</html>
                 </cfmail>
             <cfcatch type="any">
                 <cflog file="tao_errors" type="error"
                        text="Password recovery email failed for #find.useremail#: #cfcatch.message# #cfcatch.detail#">
-                <cfset mailError = "We could not send the recovery email. Please contact support." />
             </cfcatch>
             </cftry>
-
-        <cfelse>
-            <cfset pgaction = "fail">
         </cfif>
+
+        <!--- Always show "sent" regardless of whether email was found (anti-enumeration) --->
+        <cfset pgaction = "sent">
     </cfif>
 
 </cfif>
 
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="utf-8" />
-        <title>Password Recovery | The Actor's Office</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta content="The Actor's Office Application" name="description" />
-        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-        <link rel="shortcut icon" href="/media/shared/images/favicon.ico">
-        <link href="/app/assets/css/app.min.css" rel="stylesheet" type="text/css" id="app-style" />
-        <link href="/app/assets/css/icons.min.css" rel="stylesheet" type="text/css" />
-    </head>
+<head>
+    <meta charset="utf-8" />
+    <title>Password Recovery | The Actor's Office</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta content="The Actor's Office Application" name="description" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="robots" content="noindex">
+    <link rel="shortcut icon" href="/media/shared/images/favicon.ico">
+    <link href="/app/assets/css/app.min.css" rel="stylesheet" type="text/css" id="app-style" />
+    <link href="/app/assets/css/icons.min.css" rel="stylesheet" type="text/css" />
+</head>
 
-    <body class="loading" style="background-color: #406E8E; font-family: 'Source Sans Pro', sans-serif;">
+<body class="loading" style="background-color: #406E8E; font-family: 'Source Sans Pro', sans-serif;">
 
-        <div class="account-pages mt-5 mb-5">
-            <div class="container">
-                <div class="row justify-content-center">
-                    <div class="col-md-8 col-lg-6 col-xl-5">
-                        <div class="card mb-3" style="background-color:white;">
+    <div class="account-pages mt-5 mb-5">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-8 col-lg-6 col-xl-5">
+                    <div class="card mb-3" style="background-color: white;">
+                        <div class="card-body p-4">
 
-                            <div class="card-body p-4">
-
-                                <div class="text-center w-85 m-auto">
-                                    <div class="auth-logo">
-                                        <a href="index.html" class="logo no-hover-effect logo-dark text-center">
-                                            <span class="logo no-hover-effect-lg">
-                                                <cfoutput><img src="/media-#application.dsn#/images/taowhite.png" alt="" class="w-100"></cfoutput>
-                                            </span>
-                                        </a>
-
-                                        <a href="index.html" class="logo no-hover-effect logo-light text-center">
-                                            <span class="logo no-hover-effect-lg">
-                                                <cfoutput><img src="/media-#application.dsn#/images/logo-dark.png" alt="" class="w-100" /></cfoutput>
-                                            </span>
-                                        </a>
-                                    </div>
-                                    <h5><cfoutput>#header#</cfoutput></h5>
-                                    <p class="text-muted mb-4 mt-3" style="font-size:14px;"><cfoutput>#instruct#</cfoutput></p>
+                            <div class="text-center w-85 m-auto">
+                                <div class="auth-logo">
+                                    <a href="/loginform.cfm" class="logo no-hover-effect logo-dark text-center">
+                                        <span class="logo no-hover-effect-lg">
+                                            <cfoutput><img src="/media-#application.dsn#/images/taowhite.png" alt="The Actor's Office" class="w-100"></cfoutput>
+                                        </span>
+                                    </a>
                                 </div>
 
-                                <cfif pgaction is "fail">
-                                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                        Email not found!
-                                    </div>
-                                    <p class="text-center">
-                                        <a href="/auth-recoverpw.cfm"><button class="btn btn-primary" type="button">Try Again</button></a>
+                                <cfif pgaction IS "sent">
+                                    <h5>Check Your Email</h5>
+                                    <p class="text-muted mb-4 mt-3" style="font-size: 14px;">
+                                        If an account exists with that email address, we've sent instructions to reset your password.
+                                    </p>
+                                <cfelseif pgaction IS "ratelimit">
+                                    <h5>Please Wait</h5>
+                                    <p class="text-muted mb-4 mt-3" style="font-size: 14px;">
+                                        You recently requested a recovery email. Please wait a minute before trying again.
+                                    </p>
+                                <cfelse>
+                                    <h5>Password Recovery</h5>
+                                    <p class="text-muted mb-4 mt-3" style="font-size: 14px;">
+                                        Enter your email address and we'll send you instructions to reset your password.
                                     </p>
                                 </cfif>
+                            </div>
 
-                                <cfif pgaction is "view">
-                                    <form id="demo-form" action="/auth-recoverpw.cfm" method="post">
-                                        <input type="hidden" name="pwrong" value="N" />
-                                        <input type="hidden" name="pgaction" value="recover" />
-                                        <div class="form-group mb-3">
-                                            <label for="email">Email address</label>
-                                            <input class="form-control" type="email" id="email" name="email" required placeholder="Enter your email" />
-                                        </div>
+                            <!--- Form state: show the email input --->
+                            <cfif pgaction IS "view">
+                                <form id="recovery-form" action="/auth-recoverpw.cfm" method="post">
+                                    <input type="hidden" name="pgaction" value="recover" />
+                                    <div class="form-group mb-3">
+                                        <label for="email">Email Address</label>
+                                        <input class="form-control" type="email" id="email" name="email"
+                                               required placeholder="Enter your email" autocomplete="email" />
+                                    </div>
+                                    <div class="form-group mb-0 text-center">
+                                        <button class="btn btn-primary btn-block" type="submit" id="submitBtn">
+                                            Reset Password
+                                        </button>
+                                    </div>
+                                </form>
+                            </cfif>
 
-                                        <div class="form-group mb-0 text-center">
-                                            <button class="btn btn-primary" type="submit">Reset Password</button>
-                                        </div>
-                                    </form>
-                                </cfif>
-
-                                <cfif pgaction is "recover">
-                                    <cfif len(mailError)>
-                                        <div class="alert alert-warning mt-3">
-                                            <cfoutput>#mailError#</cfoutput>
-                                        </div>
-                                    </cfif>
-                                    <cfoutput>
-                                    <cfif listFirst(cgi.server_name, ".") EQ "dev" AND len(recoverLink)>
-                                        <div class="alert alert-info mt-3" style="font-size:13px;word-break:break-all;">
-                                            <strong>Dev mode:</strong> <a href="#recoverLink#">#recoverLink#</a>
-                                        </div>
-                                    </cfif>
-                                    </cfoutput>
-                                    <div class="text-center mt-3">
-                                        <a href="/loginform.cfm">Back to Login</a>
+                            <!--- Sent state: dev-mode link for testing --->
+                            <cfif pgaction IS "sent">
+                                <cfoutput>
+                                <cfif listFirst(cgi.server_name, ".") EQ "dev" AND len(recoverLink)>
+                                    <div class="alert alert-info mt-3" style="font-size: 13px; word-break: break-all;">
+                                        <strong>Dev mode:</strong> <a href="#recoverLink#">#recoverLink#</a>
                                     </div>
                                 </cfif>
+                                </cfoutput>
+                            </cfif>
 
+                            <!--- Back to Login link on all states --->
+                            <div class="text-center mt-3">
+                                <a href="/loginform.cfm">Back to Login</a>
                             </div>
-                        </div>
 
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <footer class="footer footer-alt text-white-50">
-            &copy; 2021 The Actor's Office &trade; - All Right Reserved.
-        </footer>
+    <footer class="footer footer-alt text-white-50">
+        <cfoutput>&copy; #year(now())# The Actor's Office &trade; - All Rights Reserved.</cfoutput>
+    </footer>
 
-        <script src="/app/assets/js/vendor.min.js"></script>
-        <script src="/app/assets/js/app.min.js"></script>
+    <script src="/app/assets/js/vendor.min.js"></script>
+    <script src="/app/assets/js/app.min.js"></script>
+    <script>
+    (function() {
+        var form = document.getElementById('recovery-form');
+        if (form) {
+            form.addEventListener('submit', function() {
+                var btn = document.getElementById('submitBtn');
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm mr-1" role="status" aria-hidden="true"></span> Sending...';
+            });
+        }
+    })();
+    </script>
 
-    </body>
+</body>
 </html>
