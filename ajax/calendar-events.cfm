@@ -39,10 +39,10 @@
     FROM events e
     INNER JOIN eventtypes_user t
         ON t.eventtypename = e.eventtypename
-        AND t.userid = <cfqueryparam value="#userid#" cfsqltype="CF_SQL_INTEGER">
+        AND t.userid = <cfqueryparam value="#session.userid#" cfsqltype="CF_SQL_INTEGER">
     LEFT JOIN audroles r
         ON r.audroleid = e.audroleid
-    WHERE e.userid = <cfqueryparam value="#userid#" cfsqltype="CF_SQL_INTEGER">
+    WHERE e.userid = <cfqueryparam value="#session.userid#" cfsqltype="CF_SQL_INTEGER">
         AND e.isdeleted = 0
         <!--- Dedup: keep only lowest eventid per unique event --->
         AND e.eventid = (
@@ -59,17 +59,18 @@
         <!--- Date range filter: include if event or recurrence overlaps view window --->
         <cfif isDate(rangeStart) AND isDate(rangeEnd)>
             AND (
-                <!--- Non-recurring events: start date within range --->
-                (e.dow IS NULL OR e.dow = '')
-                AND e.eventStart >= <cfqueryparam value="#rangeStart#" cfsqltype="CF_SQL_DATE">
-                AND e.eventStart < <cfqueryparam value="#rangeEnd#" cfsqltype="CF_SQL_DATE">
-            ) OR (
-                <!--- Recurring events: recurrence period overlaps range --->
-                (e.dow IS NOT NULL AND e.dow != '')
-                AND e.eventStart <= <cfqueryparam value="#rangeEnd#" cfsqltype="CF_SQL_DATE">
-                AND (e.endRecur IS NULL
-                     OR e.endRecur = ''
-                     OR e.endRecur >= <cfqueryparam value="#rangeStart#" cfsqltype="CF_SQL_DATE">)
+                (
+                    <!--- Non-recurring events: start date within range --->
+                    (e.dow IS NULL OR e.dow = '')
+                    AND e.eventStart >= <cfqueryparam value="#rangeStart#" cfsqltype="CF_SQL_DATE">
+                    AND e.eventStart < <cfqueryparam value="#rangeEnd#" cfsqltype="CF_SQL_DATE">
+                ) OR (
+                    <!--- Recurring events: recurrence period overlaps range --->
+                    (e.dow IS NOT NULL AND e.dow != '')
+                    AND e.eventStart <= <cfqueryparam value="#rangeEnd#" cfsqltype="CF_SQL_DATE">
+                    AND (e.endRecur IS NULL
+                         OR e.endRecur >= <cfqueryparam value="#rangeStart#" cfsqltype="CF_SQL_DATE">)
+                )
             )
         </cfif>
     ORDER BY e.eventStart, e.eventStartTime
