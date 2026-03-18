@@ -39,23 +39,24 @@ body[data-layout-color="dark"] {
 
 /* === Toolbar === */
 .fc .fc-toolbar {
-    margin: 10px 0 5px 0;
+    margin: 12px 0 8px 0;
 }
 
 .fc .fc-toolbar-title {
-    font-size: 1.25rem;
+    font-size: 1.35rem;
     line-height: 1.875rem;
-    text-transform: uppercase;
+    font-weight: 600;
+    text-transform: none;
 }
 
 /* === Column Header (v6: .fc-col-header, replaces .fc-widget-header) === */
 .fc .fc-col-header-cell {
-    padding: .3rem 0;
+    padding: .4rem 0;
     background: var(--fc-neutral-bg-color);
     font-size: 13px;
     line-height: 20px;
-    text-transform: uppercase;
-    font-weight: 500;
+    text-transform: capitalize;
+    font-weight: 600;
 }
 
 body[data-layout-color="dark"] .fc .fc-col-header-cell {
@@ -66,7 +67,14 @@ body[data-layout-color="dark"] .fc .fc-col-header-cell {
 .fc .fc-button {
     text-transform: capitalize;
     box-shadow: none;
-    font-size: .7875rem;
+    font-size: .8rem;
+    padding: .35rem .65rem;
+}
+
+/* Prev/Next button spacing */
+.fc .fc-prev-button,
+.fc .fc-next-button {
+    min-width: 50px;
 }
 
 .fc .fc-button-primary {
@@ -98,12 +106,14 @@ body[data-layout-color="dark"] .fc .fc-button-primary:hover {
 
 /* === Events === */
 .fc-event {
-    border-radius: 2px;
+    border-radius: 3px;
     border: none;
-    cursor: pointer; /* [S4 fix] was cursor:move which is misleading */
+    cursor: pointer;
     font-size: .8125rem;
     margin: 1px 2px;
-    padding: 2px 4px;
+    padding: 3px 5px;
+    font-weight: 500;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .fc .fc-event-time,
@@ -117,8 +127,19 @@ body[data-layout-color="dark"] .fc .fc-button-primary:hover {
 }
 
 .fc .fc-daygrid-day-number {
-    padding: 4px 8px;
-    font-size: 11px;
+    padding: 5px 8px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #495057;
+}
+
+body[data-layout-color="dark"] .fc .fc-daygrid-day-number {
+    color: #ced4da;
+}
+
+/* Generous row height in month view to match old calendar density */
+.fc .fc-daygrid-body-natural .fc-daygrid-day-events {
+    margin-bottom: 0.5em;
 }
 
 /* === Time Grid (v6: .fc-timegrid, replaces .fc-time-grid) === */
@@ -214,7 +235,29 @@ body[data-layout-color="dark"] .fc .fc-popover {
     background: #3b444e;
 }
 
+/* === Click affordance for empty day cells === */
+.fc .fc-daygrid-day:hover {
+    background-color: rgba(114, 124, 245, 0.04);
+    cursor: pointer;
+}
+
+body[data-layout-color="dark"] .fc .fc-daygrid-day:hover {
+    background-color: rgba(114, 124, 245, 0.08);
+}
+
+/* === Timegrid slot click affordance === */
+.fc .fc-timegrid-slot:hover {
+    background-color: rgba(114, 124, 245, 0.04);
+    cursor: pointer;
+}
+
 /* === Calendar container position context for loading overlay === */
 #calendar {
     position: relative;
+}
+
+@media (min-width: 768px) {
+    #calendar {
+        min-height: 600px;
+    }
 }

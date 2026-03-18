@@ -2,6 +2,42 @@
 
 <cfparam name="rcontactid" default="0" />
 
+<!--- Parse date/time from URL params (calendar click-to-create) --->
+<cfparam name="url.date" default="" />
+<cfparam name="url.time" default="" />
+<cfparam name="url.returnurl" default="calendar-appoint" />
+
+<cfset defaultDate = "" />
+<cfset defaultTime = "" />
+
+<!--- Parse date from URL --->
+<cfif len(trim(url.date))>
+    <cftry>
+        <cfif isDate(url.date)>
+            <cfset defaultDate = dateFormat(url.date, "yyyy-mm-dd") />
+        </cfif>
+        <cfcatch><cfset defaultDate = "" /></cfcatch>
+    </cftry>
+</cfif>
+
+<!--- Parse time from URL — round to nearest 15-min to match dropdown --->
+<cfif len(trim(url.time))>
+    <cftry>
+        <cfset tmpTimeStr = "2000-01-01 " & url.time />
+        <cfif isDate(tmpTimeStr)>
+            <cfset tmpTime = parseDateTime(tmpTimeStr) />
+            <cfset roundedMin = int(minute(tmpTime) / 15) * 15 />
+            <cfset defaultTime = timeFormat(createTime(hour(tmpTime), roundedMin, 0), "HH:mm:ss") />
+        </cfif>
+        <cfcatch><cfset defaultTime = "" /></cfcatch>
+    </cftry>
+</cfif>
+
+<!--- Server-side diagnostic log for calendar click-to-create debugging --->
+<cfif len(trim(url.date)) OR len(trim(url.time))>
+    <cflog file="tao_calendar" text="appoint-add: url.date=#url.date# url.time=#url.time# -> defaultDate=#defaultDate# defaultTime=#defaultTime#" />
+</cfif>
+
 <!--- Include necessary queries --->
 <cfinclude template="/include/qry/relationships_13_1.cfm" />
 <cfinclude template="/include/qry/durations.cfm" />
@@ -12,12 +48,10 @@
 <script>
     $(document).ready(function() {
         $("#select-relationship").selectize({
-            persist: !1,
-            createOnBlur: !0,
-            create: !0,
+            persist: false,
+            createOnBlur: true,
             plugins: ["remove-button"],
             delimiter: ",",
-            persist: false,
             create: function(input) {
                 return {
                     value: input,
@@ -136,15 +170,18 @@
             <label for="eventStart">
               Start Date <span class="text-danger">*</span>
             </label>
+            <cfoutput>
             <input
               id="eventStart"
               class="form-control"
               autocomplete="off"
               name="eventStart"
               type="date"
+              value="#defaultDate#"
               data-parsley-required="data-parsley-required"
               data-parsley-error-message="Start Date is required"
             />
+            </cfoutput>
           </div>
 
           <!--- Event Type Input --->
@@ -206,7 +243,7 @@
                 <cfset timeString = timeFormat(startTime, "HH:mm:ss") />
                 <cfset displayTime = timeFormat(startTime, "h:mm tt") />
                 <cfoutput>
-                  <option value="#timeString#" <cfif timeString EQ new_calstarttime>selected</cfif>>
+                  <option value="#timeString#" <cfif (len(defaultTime) AND timeString EQ defaultTime) OR (NOT len(defaultTime) AND timeString EQ new_calstarttime)>selected</cfif>>
                     #displayTime#
                   </option>
                 </cfoutput>
@@ -265,7 +302,7 @@
           </div>
 
           <!--- Recurring Until Input --->
-          <div class="form-group col-md-6 col-sm-12" id="hidden_div">
+          <div class="form-group col-md-6 col-sm-12" id="hidden_div" style="display:none;">
             <label for="endRecur">Recurring Until:</label>
             <input class="form-control" id="endRecur" name="endRecur" type="date" />
           </div>

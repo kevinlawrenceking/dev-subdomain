@@ -31,6 +31,24 @@
 
     var initialView = isMobile ? 'listWeek' : (savedView || 'dayGridMonth');
 
+    // --- Shared helper for event drag/resize persistence ---
+    function saveEventMove(info) {
+        fetch('/ajax/calendar-event-update.cfm', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': csrfToken
+            },
+            body: JSON.stringify({
+                eventid: info.event.id,
+                start: info.event.start.toISOString(),
+                end: info.event.end ? info.event.end.toISOString() : null
+            })
+        }).then(function(r) {
+            if (!r.ok) { alert('Failed to save. Reverting.'); info.revert(); }
+        }).catch(function() { alert('Network error. Reverting.'); info.revert(); });
+    }
+
     // --- Calendar init (FullCalendar v6 — no plugins array, global builds self-register) ---
     var calendar = new FullCalendar.Calendar(calendarEl, {
 
@@ -42,17 +60,21 @@
         slotDuration: '00:30:00',
         slotMinTime: slotStart,
         slotMaxTime: slotEnd,
-        contentHeight: 'auto',
+        contentHeight: isMobile ? 400 : 650,
+        expandRows: true,
         handleWindowResize: true,
 
-        // Button labels
+        // Button labels (prev/next text restores old calendar look)
         buttonText: {
             today: 'Today',
             month: 'Month',
             week: 'Week',
             day: 'Day',
-            list: 'List'
+            list: 'List',
+            prev: 'Prev',
+            next: 'Next'
         },
+        buttonIcons: false,
 
         // UX features [Sub-phase C]
         nowIndicator: true,
@@ -121,33 +143,34 @@
 
         // --- Click-to-create [Sub-phase F] ---
         dateClick: function(info) {
-            window.location.href = '/app/appoint-add/?returnurl=calendar-appoint&rcontactid=0&date=' + info.dateStr;
+            var params = 'returnurl=calendar-appoint&rcontactid=0';
+            var parts = info.dateStr.split('T');
+            params += '&date=' + encodeURIComponent(parts[0]);
+            if (parts.length > 1) {
+                params += '&time=' + encodeURIComponent(parts[1].substring(0, 5));
+            }
+            console.log('[TAO Calendar] dateClick:', info.dateStr, '-> /app/appoint-add/?' + params);
+            window.location.href = '/app/appoint-add/?' + params;
         },
 
         select: function(info) {
-            window.location.href = '/app/appoint-add/?returnurl=calendar-appoint&rcontactid=0&start=' + info.startStr + '&end=' + info.endStr;
+            var params = 'returnurl=calendar-appoint&rcontactid=0';
+            var parts = info.startStr.split('T');
+            params += '&date=' + encodeURIComponent(parts[0]);
+            if (parts.length > 1) {
+                params += '&time=' + encodeURIComponent(parts[1].substring(0, 5));
+            }
+            console.log('[TAO Calendar] select:', info.startStr, '->', info.endStr, '-> /app/appoint-add/?' + params);
+            window.location.href = '/app/appoint-add/?' + params;
         },
 
-        // --- Drag-and-drop rescheduling [Sub-phase F] ---
+        // --- Drag-and-drop rescheduling ---
         eventDrop: function(info) {
             if (!confirm('Move "' + info.event.title + '" to ' + info.event.start.toLocaleString() + '?')) {
                 info.revert();
                 return;
             }
-            fetch('/ajax/calendar-event-update.cfm', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-Token': csrfToken
-                },
-                body: JSON.stringify({
-                    eventid: info.event.id,
-                    start: info.event.start.toISOString(),
-                    end: info.event.end ? info.event.end.toISOString() : null
-                })
-            }).then(function(r) {
-                if (!r.ok) { alert('Failed to save. Reverting.'); info.revert(); }
-            }).catch(function() { alert('Network error. Reverting.'); info.revert(); });
+            saveEventMove(info);
         },
 
         eventResize: function(info) {
@@ -155,20 +178,7 @@
                 info.revert();
                 return;
             }
-            fetch('/ajax/calendar-event-update.cfm', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-Token': csrfToken
-                },
-                body: JSON.stringify({
-                    eventid: info.event.id,
-                    start: info.event.start.toISOString(),
-                    end: info.event.end ? info.event.end.toISOString() : null
-                })
-            }).then(function(r) {
-                if (!r.ok) { alert('Failed to save. Reverting.'); info.revert(); }
-            }).catch(function() { alert('Network error. Reverting.'); info.revert(); });
+            saveEventMove(info);
         },
 
         // --- View persistence [Sub-phase F] ---
