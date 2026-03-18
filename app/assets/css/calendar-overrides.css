@@ -1,0 +1,220 @@
+/* calendar-overrides.css — FullCalendar v6 TAO theme overrides
+   Loads AFTER app.min.css to override default and legacy styles.
+   Uses v6 CSS custom properties and v6 class names.
+   Do NOT edit app.min.css — all calendar CSS changes go here.
+*/
+
+/* === v6 CSS Custom Properties — Light Mode === */
+:root {
+    --fc-border-color: #dee2e6;
+    --fc-button-bg-color: #727cf5;
+    --fc-button-border-color: #727cf5;
+    --fc-button-hover-bg-color: #6169d0;
+    --fc-button-hover-border-color: #6169d0;
+    --fc-button-active-bg-color: #515cbc;
+    --fc-button-active-border-color: #515cbc;
+    --fc-button-text-color: #fff;
+    --fc-today-bg-color: rgba(114, 124, 245, 0.1);
+    --fc-event-border-color: transparent;
+    --fc-event-bg-color: #406E8E;
+    --fc-event-text-color: #fff;
+    --fc-now-indicator-color: #fa5c7c;
+    --fc-page-bg-color: #fff;
+    --fc-neutral-bg-color: #f8f9fa;
+    --fc-list-event-hover-bg-color: #f1f3fa;
+    --fc-highlight-color: rgba(114, 124, 245, 0.15);
+    --fc-non-business-color: rgba(215, 218, 224, 0.3);
+}
+
+/* === v6 CSS Custom Properties — Dark Mode === */
+body[data-layout-color="dark"] {
+    --fc-border-color: #464f5b;
+    --fc-page-bg-color: #313a46;
+    --fc-neutral-bg-color: #3b444e;
+    --fc-today-bg-color: rgba(114, 124, 245, 0.15);
+    --fc-list-event-hover-bg-color: #3b444e;
+    --fc-highlight-color: rgba(114, 124, 245, 0.2);
+    --fc-non-business-color: rgba(59, 68, 78, 0.5);
+}
+
+/* === Toolbar === */
+.fc .fc-toolbar {
+    margin: 10px 0 5px 0;
+}
+
+.fc .fc-toolbar-title {
+    font-size: 1.25rem;
+    line-height: 1.875rem;
+    text-transform: uppercase;
+}
+
+/* === Column Header (v6: .fc-col-header, replaces .fc-widget-header) === */
+.fc .fc-col-header-cell {
+    padding: .3rem 0;
+    background: var(--fc-neutral-bg-color);
+    font-size: 13px;
+    line-height: 20px;
+    text-transform: uppercase;
+    font-weight: 500;
+}
+
+body[data-layout-color="dark"] .fc .fc-col-header-cell {
+    background: #424e5a;
+}
+
+/* === Buttons (v6 with bootstrap5 theme) === */
+.fc .fc-button {
+    text-transform: capitalize;
+    box-shadow: none;
+    font-size: .7875rem;
+}
+
+.fc .fc-button-primary {
+    background-color: var(--fc-button-bg-color);
+    border-color: var(--fc-button-border-color);
+}
+
+.fc .fc-button-primary:hover {
+    background-color: var(--fc-button-hover-bg-color);
+    border-color: var(--fc-button-hover-border-color);
+}
+
+.fc .fc-button-primary:not(:disabled).fc-button-active,
+.fc .fc-button-primary:not(:disabled):active {
+    background-color: var(--fc-button-active-bg-color);
+    border-color: var(--fc-button-active-border-color);
+}
+
+body[data-layout-color="dark"] .fc .fc-button-primary {
+    background-color: #424e5a;
+    border-color: #424e5a;
+    color: #dee2e6;
+}
+
+body[data-layout-color="dark"] .fc .fc-button-primary:hover {
+    background-color: #4e5b69;
+    border-color: #4e5b69;
+}
+
+/* === Events === */
+.fc-event {
+    border-radius: 2px;
+    border: none;
+    cursor: pointer; /* [S4 fix] was cursor:move which is misleading */
+    font-size: .8125rem;
+    margin: 1px 2px;
+    padding: 2px 4px;
+}
+
+.fc .fc-event-time,
+.fc .fc-event-title {
+    color: #fff;
+}
+
+/* === Day Grid (v6: .fc-daygrid, replaces .fc-basic-view) === */
+.fc .fc-daygrid-event .fc-event-title {
+    color: #fff;
+}
+
+.fc .fc-daygrid-day-number {
+    padding: 4px 8px;
+    font-size: 11px;
+}
+
+/* === Time Grid (v6: .fc-timegrid, replaces .fc-time-grid) === */
+.fc .fc-timegrid-event .fc-event-title,
+.fc .fc-timegrid-event .fc-event-time {
+    color: #fff;
+}
+
+/* === List View === */
+.fc .fc-list-event-time,
+.fc .fc-list-event-title {
+    color: inherit; /* [S5 fix] was color:#fff which is invisible on light backgrounds */
+}
+
+.fc .fc-list-event-dot {
+    border-color: var(--fc-event-bg-color);
+}
+
+/* === Today highlight === */
+.fc .fc-day-today {
+    background: var(--fc-today-bg-color) !important;
+}
+
+/* === Now indicator === */
+.fc .fc-timegrid-now-indicator-line {
+    border-color: var(--fc-now-indicator-color);
+}
+
+.fc .fc-timegrid-now-indicator-arrow {
+    border-top-color: var(--fc-now-indicator-color);
+}
+
+/* === Mobile responsive toolbar [S3 fix] === */
+@media (max-width: 767.98px) {
+    .fc .fc-toolbar {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .fc .fc-toolbar-chunk {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+    }
+
+    /* Keep Today button visible but compact on mobile (was display:none) */
+    .fc .fc-today-button {
+        font-size: .7rem;
+        padding: .2rem .5rem;
+    }
+}
+
+/* === Loading overlay === */
+#calendar-loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.7);
+    z-index: 10;
+    align-items: center;
+    justify-content: center;
+}
+
+body[data-layout-color="dark"] #calendar-loading {
+    background: rgba(49, 58, 70, 0.7);
+}
+
+/* === Event type filter legend === */
+.event-type-filter-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-right: 12px;
+    margin-bottom: 4px;
+}
+
+.event-type-filter-wrap .fc-event-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+/* === Popover for dayMaxEvents "+N more" === */
+.fc .fc-popover {
+    z-index: 1060;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+}
+
+body[data-layout-color="dark"] .fc .fc-popover {
+    background: #3b444e;
+}
+
+/* === Calendar container position context for loading overlay === */
+#calendar {
+    position: relative;
+}

@@ -1,5 +1,8 @@
 <!--- This ColdFusion page includes various templates related to calendar functionality and event management. --->
 
+<!--- Calendar-specific CSS overrides (v6 theme, loads after app.min.css) --->
+<link rel="stylesheet" href="/app/assets/css/calendar-overrides.css" />
+
 <!--- Include event types for user --->
 <cfinclude template="/include/qry/eventtypes_user.cfm" />
 

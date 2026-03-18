@@ -166,20 +166,26 @@ Last Updated: 2025
         <div class="card-body">
             <p><strong>Legend</strong></p>
             
-            <!--- Event types display with color coding --->
+            <!--- Event types display with color coding and filter checkboxes --->
             <div style="margin-left:20px;">
                 <!--- Loop through event types for display in the legend --->
                 <cfloop query="eventtypes_user">
                     <cfoutput>
-                        <span class="fc-event-dot" style="background-color:#eventtypes_user.eventtypecolor#;font-size:14px;"></span> 
-                        #eventtypes_user.eventtypename#
-                        <span style="font-size:10px;padding-right:25px;min-width:200px;">
-                            <!--- Link to update the event type --->
-                            <a href="" data-bs-remote="true" data-bs-toggle="modal" 
-                               data-bs-target="##updateeventtype_#eventtypes_user.id#" toggle="tooltip" 
-                               data-bs-placement="top" title="Update Type" data-bs-original-title="Update Type">
-                                <i class="mdi mdi-square-edit-outline"></i>
-                            </a>
+                        <span class="event-type-filter-wrap">
+                            <input class="form-check-input event-type-filter" type="checkbox" checked
+                                   value="colorkey-#eventtypes_user.id#" id="filter-#eventtypes_user.id#" />
+                            <label class="form-check-label" for="filter-#eventtypes_user.id#" style="cursor:pointer;">
+                                <span class="fc-event-dot" style="background-color:#eventtypes_user.eventtypecolor#;display:inline-block;width:10px;height:10px;border-radius:50%;"></span>
+                                #eventtypes_user.eventtypename#
+                            </label>
+                            <span style="font-size:10px;padding-right:15px;">
+                                <!--- Link to update the event type --->
+                                <a href="" data-bs-remote="true" data-bs-toggle="modal"
+                                   data-bs-target="##updateeventtype_#eventtypes_user.id#" toggle="tooltip"
+                                   data-bs-placement="top" title="Update Type" data-bs-original-title="Update Type">
+                                    <i class="mdi mdi-square-edit-outline"></i>
+                                </a>
+                            </span>
                         </span>
                     </cfoutput>
                 </cfloop>
@@ -206,5 +212,18 @@ Last Updated: 2025
 <!--- ============================================================================ --->
 
 <!--- Spacing and calendar container --->
-<div class="mt-3"></div> 
-<div id="calendar"></div>
+<div class="mt-3"></div>
+<div id="calendar" style="position:relative;">
+    <!--- Loading overlay (shown/hidden by FullCalendar loading callback) --->
+    <div id="calendar-loading" style="display:none; position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(255,255,255,0.7); z-index:10; align-items:center; justify-content:center;">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading events...</span>
+        </div>
+    </div>
+</div>
+
+<!--- Empty state (shown when no events returned for current view) --->
+<div id="calendar-empty" class="text-center text-muted py-5" style="display:none;">
+    <i class="mdi mdi-calendar-blank-outline" style="font-size:3rem;"></i>
+    <p class="mt-2">No appointments scheduled for this period.</p>
+</div>

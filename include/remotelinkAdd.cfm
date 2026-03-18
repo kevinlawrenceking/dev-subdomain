@@ -8,7 +8,8 @@
       data-parsley-validate id="profile-form">
 
     <!--- Output hidden fields for form submission --->
-    <cfoutput>  
+    <cfoutput>
+        <input type="hidden" name="csrfToken" value="#CSRFGenerateToken()#" />
         <input type="hidden" name="new_sitetypeid" value="#encodeForHTMLAttribute(url.New_sitetypeid)#" />
         <input type="hidden" name="userid" value="#userid#" />
         <input type="hidden" name="target_id" value="#encodeForHTMLAttribute(url.new_sitetypeid)#" />
