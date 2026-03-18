@@ -124,7 +124,7 @@
                         <cfif #emailcheck.recordcount# is "1">
                             <cfoutput>
                                 <Cfset email="#emailcheck.email#" />
-                                <a href="##" onclick="window.location.href='mailto:#email#'; return false;" class="text-reset font-18 py-1 px-2 d-inline-block" title="#email#">
+                                <a href="javascript:;" class="text-reset font-18 py-1 px-2 d-inline-block" data-email="#email#" data-bs-toggle="modal" data-bs-target="##taoEmailModal" title="#email#">
                                     <i class="fe-mail"></i>
                                 </a>
                             </cfoutput>
@@ -261,3 +261,5 @@
         </div>
     </div>
 </div>
+
+<cfinclude template="/include/email_options_modal.cfm" />

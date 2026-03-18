@@ -1210,3 +1210,5 @@ document.addEventListener("DOMContentLoaded", function () {
 </div>
 </cfoutput>
 </cfif>
+
+<cfinclude template="/include/email_options_modal.cfm" />

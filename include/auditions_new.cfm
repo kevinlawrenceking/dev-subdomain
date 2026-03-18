@@ -496,4 +496,4 @@
         <!--- end col --->
     </div>
 
-
+<cfinclude template="/include/email_options_modal.cfm" />

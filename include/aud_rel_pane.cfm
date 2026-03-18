@@ -53,7 +53,7 @@
                     <!--- Loop through the audcontacts query to populate the select list --->
                     <cfloop query="audcontacts_sel">
                         <cfoutput>
-                            <option value="#contactname#">#contactname#</option>
+                            <option value="#contactid#">#contactname#</option>
                         </cfoutput>
                     </cfloop>
                 </select>
@@ -206,3 +206,5 @@ function confirmRemove(contactId, audProjectId) {
     }
 }
 </script>
+
+<cfinclude template="/include/email_options_modal.cfm" />

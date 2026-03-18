@@ -1,13 +1,16 @@
 <cfset auditionService = createObject("component", "services.ContactAuditionService")>
 
-<!--- Input values for the fetch --->
+<!--- Input values --->
 <cfparam name="audprojectid" type="numeric" default="0">
-<cfparam name="autocomplete_aud" type="string" default="">
-<cfparam name="userid" type="numeric" default="0">
+<cfparam name="autocomplete_aud" type="string" default="0">
 
-<!--- Call the function to insert into audcontacts_auditions_xref --->
-<cfset new_contactid = auditionService.INSaudcontacts_auditions_xref_2(
-    audprojectid=audprojectid,
-    autocomplete_aud=autocomplete_aud,
-    userid=userid
-)>
+<!--- autocomplete_aud now contains the contactid directly from the dropdown --->
+<cfif isNumeric(autocomplete_aud) AND autocomplete_aud GT 0>
+    <cfset new_contactid = int(autocomplete_aud)>
+    <cfset auditionService.INSaudcontacts_auditions_xref_23780(
+        audprojectid=audprojectid,
+        new_contactid=new_contactid
+    )>
+<cfelse>
+    <cfset new_contactid = 0>
+</cfif>

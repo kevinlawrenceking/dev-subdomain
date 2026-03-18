@@ -1003,3 +1003,4 @@ Key Features:
     });
 </script>
 
+<cfinclude template="/include/email_options_modal.cfm" />

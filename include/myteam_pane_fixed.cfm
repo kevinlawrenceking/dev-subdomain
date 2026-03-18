@@ -218,3 +218,5 @@ function copyToClipboard(text) {
     });
 }
 </script>
+
+<cfinclude template="/include/email_options_modal.cfm" />

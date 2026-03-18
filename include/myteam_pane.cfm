@@ -279,3 +279,5 @@ function showCopyError(btn) {
     alert('Unable to copy automatically. Please manually copy the link:\n\n' + btn.closest('.share-link-container').querySelector('.team-share-link').textContent);
 }
 </script>
+
+<cfinclude template="/include/email_options_modal.cfm" />
