@@ -13,7 +13,6 @@
    CSS Custom Properties
    -------------------------------------------------------------------------- */
 :root {
-    --tao-sidebar-width: 280px;
     --tao-sidebar-bg: #F1F2F4;
     --tao-sidebar-border: #E0E2E5;
 
@@ -47,13 +46,16 @@
 /* --------------------------------------------------------------------------
    Sidebar Container
    --------------------------------------------------------------------------
-   .left-side-menu positioning (fixed, width, top) is handled by the
+   .left-side-menu positioning (fixed, width:240px, top:70px) comes from the
    framework CSS (app.min.css). We override only visual properties.
+   The .tao-sidebar class is our style hook; .left-side-menu provides
+   framework JS compatibility (sidebar-enable toggle, condensed mode).
    -------------------------------------------------------------------------- */
-.left-side-menu.left-side-menu-light {
-    background-color: var(--tao-sidebar-bg) !important;
+.tao-sidebar.left-side-menu {
+    background-color: var(--tao-sidebar-bg);
     border-right: 1px solid var(--tao-sidebar-border);
-    padding: 0 !important;
+    padding: 0;
+    box-shadow: none;
 }
 
 /* --------------------------------------------------------------------------
@@ -63,7 +65,6 @@
     height: 100%;
     overflow-y: auto;
     overflow-x: hidden;
-    padding-bottom: 24px;
 
     /* Native thin scrollbar (Firefox) */
     scrollbar-width: thin;
@@ -212,8 +213,22 @@
 }
 
 /* --------------------------------------------------------------------------
-   Admin Sections (Collapsible)
+   Menu Wrap (bottom padding for scroll space)
    -------------------------------------------------------------------------- */
+.tao-sidebar__menu-wrap {
+    padding-bottom: 24px;
+}
+
+
+/* --------------------------------------------------------------------------
+   Admin Divider (wrapper <li> must be unstyled)
+   -------------------------------------------------------------------------- */
+.tao-sidebar__divider-wrap {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
 .tao-sidebar__admin-divider {
     height: 1px;
     background-color: var(--tao-sidebar-divider);
@@ -333,21 +348,25 @@
    a backdrop overlay.
    -------------------------------------------------------------------------- */
 @media (max-width: 991.98px) {
-    .left-side-menu.left-side-menu-light {
+    .tao-sidebar.left-side-menu {
         display: block !important;
         position: fixed !important;
         left: 0;
         top: 0;
         height: 100vh !important;
-        z-index: 1050;
+        z-index: 1050 !important;
         transform: translateX(-100%);
         transition: transform 0.3s ease;
         box-shadow: none;
     }
 
-    body.sidebar-enable .left-side-menu.left-side-menu-light {
+    body.sidebar-enable .tao-sidebar.left-side-menu {
         transform: translateX(0);
         box-shadow: 4px 0 24px rgba(0, 0, 0, 0.12);
+    }
+
+    .tao-sidebar__scroll {
+        height: 100vh;
     }
 
     /* Backdrop overlay */
@@ -374,13 +393,62 @@
 }
 
 /* --------------------------------------------------------------------------
+   Condensed Mode (Desktop Icon-Only Sidebar)
+   --------------------------------------------------------------------------
+   The framework sets body[data-leftbar-size="condensed"] and targets
+   #sidebar-menu > ul > li > a span { display:none } to hide text labels.
+   We add rules for elements the framework doesn't cover: profile section,
+   admin dividers/sections, scroll overflow for flyout menus.
+   -------------------------------------------------------------------------- */
+body[data-leftbar-size="condensed"] .tao-sidebar .tao-sidebar__scroll {
+    overflow: visible;
+}
+
+body[data-leftbar-size="condensed"] .tao-sidebar__profile {
+    padding: 12px 4px;
+}
+
+body[data-leftbar-size="condensed"] .tao-sidebar__avatar {
+    width: 32px;
+    height: 32px;
+}
+
+body[data-leftbar-size="condensed"] .tao-sidebar__username {
+    display: none;
+}
+
+body[data-leftbar-size="condensed"] .tao-sidebar__admin-divider,
+body[data-leftbar-size="condensed"] .tao-sidebar__section {
+    display: none;
+}
+
+body[data-leftbar-size="condensed"] .tao-sidebar__item {
+    margin: 1px 4px;
+}
+
+body[data-leftbar-size="condensed"] .tao-sidebar__link {
+    padding: 10px 8px;
+    justify-content: center;
+    border-left: none;
+    border-radius: 4px;
+}
+
+body[data-leftbar-size="condensed"] .tao-sidebar__icon {
+    margin-right: 0;
+}
+
+body[data-leftbar-size="condensed"] .tao-sidebar__label {
+    display: none;
+}
+
+
+/* --------------------------------------------------------------------------
    Framework Override Resets
    --------------------------------------------------------------------------
    Prevent framework styles from bleeding into BEM-scoped sidebar elements.
-   The framework targets #side-menu which we no longer use.
    -------------------------------------------------------------------------- */
-.left-side-menu-light .tao-sidebar__link,
-.left-side-menu-light .tao-sidebar__sublink,
-.left-side-menu-light .tao-sidebar__section-toggle {
-    border-bottom: none !important;
+.tao-sidebar .tao-sidebar__link,
+.tao-sidebar .tao-sidebar__sublink,
+.tao-sidebar .tao-sidebar__section-toggle {
+    border-bottom: none;
 }

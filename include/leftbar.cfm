@@ -105,7 +105,7 @@
      ===================================================================== --->
 
 <div class="left-side-menu left-side-menu-light">
-    <nav class="tao-sidebar__scroll" role="navigation" aria-label="Main navigation">
+    <nav class="tao-sidebar__scroll" id="sidebar-menu" role="navigation" aria-label="Main navigation">
 
         <!--- User Profile Section --->
         <div class="tao-sidebar__profile">
