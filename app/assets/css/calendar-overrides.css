@@ -151,7 +151,7 @@ body[data-layout-color="dark"] .fc .fc-daygrid-day-number {
 /* === List View === */
 .fc .fc-list-event-time,
 .fc .fc-list-event-title {
-    color: inherit; /* [S5 fix] was color:#fff which is invisible on light backgrounds */
+    color: #fff; /* white text on colored event backgrounds in list view */
 }
 
 .fc .fc-list-event-dot {

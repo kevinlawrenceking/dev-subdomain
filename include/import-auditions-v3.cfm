@@ -17,8 +17,8 @@
 <cfif isNumeric(url.job_id) and url.job_id gt 0>
     <cfset auditionService = new services.AuditionImportService()>
     <cfset jobResult = auditionService.getJobForUser(url.job_id, session.userid)>
-    <cfif structKeyExists(jobResult, "found") and jobResult.found and structKeyExists(jobResult, "job")>
-        <cfset activeJob = jobResult.job>
+    <cfif structKeyExists(jobResult, "success") and jobResult.success and structKeyExists(jobResult, "data") and structKeyExists(jobResult.data, "job")>
+        <cfset activeJob = jobResult.data.job>
         <cfset hasActiveJob = true>
     </cfif>
 </cfif>

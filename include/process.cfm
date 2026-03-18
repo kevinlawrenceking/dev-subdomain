@@ -1,35 +1,28 @@
 <!--- This ColdFusion page handles redirection based on the selected category. --->
 
-<cfset dbug = 'N'>
-<cfoutput>category: #category#</cfoutput><cfoutput>
-    <h1>Form Variables</h1>
-    <table border="1" cellpadding="5" cellspacing="0">
-        <thead>
-            <tr>
-                <th>Variable Name</th>
-                <th>Value</th>
-            </tr>
-        </thead>
-        <tbody>
-            <!--- Loop through the FORM scope to display all submitted variables --->
-            <cfloop collection="#FORM#" item="key">
-                <tr>
-                    <td>#key#</td>
-                    <td>#FORM[key]#</td>
-                </tr>
-            </cfloop>
-        </tbody>
-    </table>
-</cfoutput>
+<cfparam name="form.category" default="" />
+<cfparam name="form.selectedId" default="" />
+<cfparam name="form.topsearch" default="" />
 
- 
-<!--- Check the category and redirect accordingly --->
+<cfset category = trim(form.category) />
+<cfset selectedid = trim(form.selectedId) />
+<cfset topsearch = trim(form.topsearch) />
+
+<!--- If no autocomplete selection was made, redirect to contacts list --->
+<cfif not len(category) or not len(selectedid)>
+    <cflocation url="/app/contacts/" addtoken="false" />
+</cfif>
+
+<!--- Redirect based on category --->
 <cfif category eq "Contacts">
-    <cflocation url = "/app/contact/?contactid=#selectedid#"/>
-    
+    <cflocation url="/app/contact/?contactid=#selectedid#" addtoken="false" />
+
 <cfelseif category eq "Tags">
-    <cflocation url = "/app/contacts/?bytag=#selectedid#"/>
-    
+    <cflocation url="/app/contacts/?bytag=#selectedid#" addtoken="false" />
+
+<cfelseif category eq "Events" or category eq "Appointments">
+    <cflocation url="/app/appoint-update/?eventid=#selectedid#&returnurl=calendar-appoint&rcontactid=0" addtoken="false" />
+
 <cfelse>
-    <cflocation url = "/app/appoint-update/?eventid=#selectedid#&returnurl=calendar-appoint&rcontactid=0"/>
+    <cflocation url="/app/contacts/" addtoken="false" />
 </cfif>

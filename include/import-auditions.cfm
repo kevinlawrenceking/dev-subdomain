@@ -116,11 +116,11 @@
     <div class="row">
         <div class="col-12">
             <div class="card mb-4 shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="card-title mb-0">
+                <div class="card-header bg-primary text-white py-3">
+                    <h4 class="mb-0" style="color: #fff;">
                         <i class="fe-upload me-2"></i>Import Auditions
                     </h4>
-                    <p class="mb-0 mt-1 opacity-75">Follow these simple steps to import your audition data</p>
+                    <p class="mb-0 mt-1" style="color: rgba(255,255,255,0.85);">Follow these simple steps to import your audition data</p>
                 </div>
                 <div class="card-body p-4">
                 <!--- Step 1: Download Template --->
