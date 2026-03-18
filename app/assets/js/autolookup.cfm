@@ -1,5 +1,24 @@
 <script>
+/**
+ * Navigate directly to the selected search result.
+ * Replaces the old form-POST-to-process.cfm pattern which broke
+ * when CSRF validation was added to all POST requests.
+ */
+function taoSearchNavigate(id, category) {
+    var eid = encodeURIComponent(id);
+    if (category === "Contacts") {
+        window.location.href = "/app/contact/?contactid=" + eid;
+    } else if (category === "Tags") {
+        window.location.href = "/app/contacts/?bytag=" + eid;
+    } else if (category === "Events" || category === "Appointments") {
+        window.location.href = "/app/appoint-update/?eventid=" + eid + "&returnurl=calendar-appoint&rcontactid=0";
+    } else {
+        window.location.href = "/app/contacts/";
+    }
+}
+
 $(function() {
+    // Desktop search autocomplete
     $("#autocomplete").autocomplete({
         source: function(request, response) {
             $.ajax({
@@ -23,30 +42,34 @@ $(function() {
         },
         minLength: 2,
         select: function(event, ui) {
-
-            $("#selectedId").val(ui.item.id);
-            $("#category").val(ui.item.category);
-
-            $("#submitform").submit();
+            taoSearchNavigate(ui.item.id, ui.item.category);
+            return false;
         },
         open: function() {
             var inputWidth = $("#autocomplete").outerWidth();
             $(".ui-autocomplete").css({
                 "width": (inputWidth * 1.5) + "px",
-                "white-space": "nowrap" 
+                "white-space": "nowrap"
             });
         }
     });
-});
 
-</script>
+    // Intercept form submit (Enter key without selecting) - go to contacts list
+    $("#submitform").on("submit", function(e) {
+        e.preventDefault();
+        var term = $.trim($("#autocomplete").val());
+        if (term.length) {
+            window.location.href = "/app/contacts/?search=" + encodeURIComponent(term);
+        } else {
+            window.location.href = "/app/contacts/";
+        }
+    });
 
-<script>
-$(function() {
-    $("#autocomplete2").autocomplete({
+    // Mobile search autocomplete
+    $("#autocomplete_mobile").autocomplete({
         source: function(request, response) {
             $.ajax({
-                url: '/app/autolookup2.cfm',
+                url: '/app/autolookup.cfm',
                 dataType: 'json',
                 data: {
                     userid: '<cfoutput>#userid#</cfoutput>',
@@ -66,21 +89,28 @@ $(function() {
         },
         minLength: 2,
         select: function(event, ui) {
-
-            $("#selectedId").val(ui.item.id);
-            $("#category").val(ui.item.category);
-
-           // $("#submitform").submit();
+            taoSearchNavigate(ui.item.id, ui.item.category);
+            return false;
         },
         open: function() {
-            var inputWidth = $("#autocomplete").outerWidth();
+            var inputWidth = $("#autocomplete_mobile").outerWidth();
             $(".ui-autocomplete").css({
                 "width": (inputWidth * 1.5) + "px",
-                "white-space": "nowrap" 
+                "white-space": "nowrap"
             });
         }
     });
-});
+
+    // Mobile form submit intercept
+    $("#submitform_mobile").on("submit", function(e) {
+        e.preventDefault();
+        var term = $.trim($("#autocomplete_mobile").val());
+        if (term.length) {
+            window.location.href = "/app/contacts/?search=" + encodeURIComponent(term);
+        } else {
+            window.location.href = "/app/contacts/";
+        }
+    });
 
 </script>
 
