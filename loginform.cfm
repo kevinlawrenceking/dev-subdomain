@@ -408,7 +408,7 @@
         <!--- ── Logo Header (black bg to match logo image) ── --->
         <div class="login-header">
             <cfoutput>
-                <img src="/media-#application.dsn#/images/taowhite.png"
+                <img src="/media-#application.dsn#/images/logo-light.png"
                      alt="The Actor's Office"
                      onerror="this.style.display='none';this.nextElementSibling.style.display='block';" />
                 <!--- Text fallback styled to match Trajan logo: gold caps T/A/O, white small-caps rest --->
