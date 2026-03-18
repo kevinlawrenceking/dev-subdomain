@@ -104,8 +104,8 @@
      Sidebar HTML
      ===================================================================== --->
 
-<div class="left-side-menu left-side-menu-light">
-    <nav class="tao-sidebar__scroll" id="sidebar-menu" role="navigation" aria-label="Main navigation">
+<nav class="tao-sidebar left-side-menu" role="navigation" aria-label="Main navigation">
+    <div class="tao-sidebar__scroll" id="sidebar-menu">
 
         <!--- User Profile Section --->
         <div class="tao-sidebar__profile">
@@ -228,8 +228,8 @@
             </ul>
         </cfif>
 
-    </nav>
-</div>
+    </div>
+</nav>
 
 <!--- Mobile backdrop overlay (shown when sidebar is open on small screens) --->
 <div class="tao-sidebar-backdrop" id="taoSidebarBackdrop"></div>
