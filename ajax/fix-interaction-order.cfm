@@ -15,7 +15,7 @@
     <table border="1" cellpadding="4">
         <tr><th>linkid</th><th>linkurl</th><th>linktype</th><th>loc (t=head, b=body)</th><th>link_no</th><th>pluginname</th></tr>
         <cfoutput query="qAll">
-            <tr style="<cfif linkurl CONTAINS 'interaction'>background:#fdd;<cfelseif linkloc_tb EQ 't'>background:#ffc;</cfif>">
+            <tr style="<cfif linkurl CONTAINS 'interaction'>background:##fdd;<cfelseif linkloc_tb EQ 't'>background:##ffc;</cfif>">
                 <td>#linkid#</td><td>#linkurl#</td><td>#linktype#</td><td>#linkloc_tb#</td><td>#link_no#</td><td>#pluginname#</td>
             </tr>
         </cfoutput>
