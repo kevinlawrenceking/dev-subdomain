@@ -12,7 +12,9 @@ TAO is a ColdFusion + MySQL web app that helps actors run the admin side of thei
 - Database: **MySQL** (NOT SQL Server - verified January 2026)
   - Production schema: `actorsbusinessoffice`
   - Development schema: `new_development`
-- ColdFusion datasource name: `reach`
+- ColdFusion datasource names: `abo` (production), `abod` (development)
+  - Determined at runtime by hostname: `app` = prod, anything else = dev
+  - Application name is host-specific (`TAO_app`, `TAO_dev`) to isolate scopes
 - Frontend: HTML, JS, CSS with heavy AJAX patterns
 - AJAX endpoints typically under `/ajax/...`
 - Mobile extension may exist later (Flutter), but do not assume it is part of the current task unless you see it in the repo.

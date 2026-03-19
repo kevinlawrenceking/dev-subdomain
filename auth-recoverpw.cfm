@@ -1,19 +1,15 @@
-<cfapplication name="TAO" sessionmanagement="true">
-
-<!--- Ensure required application variables exist --->
-<cfif NOT structKeyExists(application, "dsn")>
-    <cfset host = ListFirst(cgi.server_name, ".") />
-    <cfif host EQ "app">
-        <cfset application.dsn = "abo" />
-    <cfelse>
-        <cfset application.dsn = "abod" />
-    </cfif>
+<!--- ALWAYS compute host and dsn -- never rely on stale application scope --->
+<cfset host = ListFirst(cgi.server_name, ".") />
+<cfif host EQ "app">
+    <cfset application.dsn = "abo" />
+<cfelse>
+    <cfset application.dsn = "abod" />
 </cfif>
 
-<cfif NOT structKeyExists(application, "baseMediaUrl")>
-    <cfset application.baseMediaUrl = "/media-" & application.dsn />
-</cfif>
+<!--- Host-specific app name prevents dev/prod cross-contamination --->
+<cfapplication name="TAO_#host#" sessionmanagement="true">
 
+<cfset application.baseMediaUrl = "/media-" & application.dsn />
 <cfset dsn = application.dsn />
 
 <!--- Clear any lingering auth cookies --->

@@ -1,6 +1,14 @@
 <cfcomponent output="false">
   <cfscript>
-    this.name = "TAO"; // must match main app to share sessions
+    // Env routing MUST run before this.name to isolate host scopes
+    host = ListFirst(cgi.server_name, ".");
+    if (host EQ "app") {
+      application.dsn = "abo";
+    } else {
+      application.dsn = "abod";
+    }
+
+    this.name = "TAO_" & host; // host-specific to prevent dev/prod cross-contamination
     this.sessionManagement = true;
     this.applicationTimeout = createTimeSpan(11, 1, 0, 0);
     this.sessionTimeout = createTimeSpan(0, 9, 20, 0);
@@ -16,13 +24,6 @@
     // lowercase keys like "column_id" instead of "COLUMN_ID"
     this.serialization.preserveCaseForStructKey = true;
 
-    // Inherit datasource settings from main app
-    host = ListFirst(cgi.server_name, ".");
-    if (host EQ "app") {
-      application.dsn = "abo";
-    } else {
-      application.dsn = "abod";
-    }
     this.datasource = application.dsn;
     application.datasource = this.datasource;
   </cfscript>
@@ -45,6 +46,9 @@
       <cfoutput>{"success":false,"message":"Authentication required"}</cfoutput>
       <cfabort>
     </cfif>
+
+    <!--- Per-request datasource: immune to application-scope race conditions --->
+    <cfset request.dsn = application.datasource>
 
     <cfset userid = session.userid>
     <cfset request.userid = session.userid>

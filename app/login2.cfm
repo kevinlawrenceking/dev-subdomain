@@ -1,8 +1,8 @@
 <cfparam name="j_password" default="" />
 <cfparam name="j_username" default="" />
 
-<cfquery result="result" name="insert">
-    INSERT INTO loggins (u, p, REMOTE_ADDR, HTTP_USER_AGENT) 
+<cfquery result="result" name="insert" datasource="#application.dsn#">
+    INSERT INTO loggins (u, p, REMOTE_ADDR, HTTP_USER_AGENT)
     VALUES (
         <cfqueryparam value="#j_username#" cfsqltype="cf_sql_varchar" />, 
         <cfqueryparam value="[REDACTED]" cfsqltype="cf_sql_varchar" />,
@@ -12,8 +12,8 @@
 </cfquery>
 
 <!--- Query to authenticate the user --->
-<cfquery result="result" name="loginQuery" maxrows="1">
-    SELECT 
+<cfquery result="result" name="loginQuery" maxrows="1" datasource="#application.dsn#">
+    SELECT
         u.userid,
         u.passwordHash,
         u.passwordSalt,

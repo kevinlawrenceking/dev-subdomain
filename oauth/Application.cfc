@@ -15,8 +15,8 @@
   </cfif>
 
   <cfscript>
-    // Must match /app/Application.cfc to share session/application scope
-    this.name = "TAO";
+    // Host-specific name to prevent dev/prod cross-contamination
+    this.name = "TAO_" & host;
     this.datasource = application.dsn;
     this.sessionManagement = true;
     this.applicationTimeout = createTimeSpan(11,1,0,0);

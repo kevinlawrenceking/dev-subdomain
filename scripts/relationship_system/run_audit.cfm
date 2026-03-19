@@ -5,7 +5,9 @@ Access via: /scripts/relationship_system/run_audit.cfm
 
 Security: This should be restricted to admin users only in production
 --->
-<cfparam name="dsn" default="reach" />
+<!--- Derive dsn from host, never hardcode --->
+<cfset host = ListFirst(cgi.server_name, ".") />
+<cfparam name="dsn" default="#(host EQ 'app') ? 'abo' : 'abod'#" />
 <cfparam name="showDetails" default="N" />
 
 <!DOCTYPE html>

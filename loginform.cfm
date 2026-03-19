@@ -1,22 +1,17 @@
-<cfapplication name="TAO" sessionmanagement="true">
-
-<!--- Ensure required application variables exist --->
-<cfif NOT structKeyExists(application, "dsn")>
-    <cfset host = ListFirst(cgi.server_name, ".") />
-    <cfif host EQ "app">
-        <cfset application.dsn = "abo" />
-    <cfelse>
-        <cfset application.dsn = "abod" />
-    </cfif>
-</cfif>
-
-<cfif NOT structKeyExists(application, "information_schema")>
+<!--- ALWAYS compute host and dsn -- never rely on stale application scope --->
+<cfset host = ListFirst(cgi.server_name, ".") />
+<cfif host EQ "app">
+    <cfset application.dsn = "abo" />
     <cfset application.information_schema = "actorsbusinessoffice" />
+    <cfset application.suffix = "_1.5" />
+<cfelse>
+    <cfset application.dsn = "abod" />
+    <cfset application.information_schema = "new_development" />
+    <cfset application.suffix = "" />
 </cfif>
 
-<cfif NOT structKeyExists(application, "suffix")>
-    <cfset application.suffix = "_1.5" />
-</cfif>
+<!--- Host-specific app name prevents dev/prod cross-contamination --->
+<cfapplication name="TAO_#host#" sessionmanagement="true">
 
 <cfset dsn = application.dsn />
 

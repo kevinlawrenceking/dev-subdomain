@@ -1,8 +1,11 @@
 <cfcomponent output="false">
 
 <cfscript>
+    // Get hostname first so app name is host-specific
+    host = ListFirst(cgi.server_name, ".");
+
     // === Application Settings ===
-    this.name = "Setup";
+    this.name = "Setup_" & host;
     this.sessionManagement = true;
     this.applicationTimeout = createTimeSpan(1,0,0,0);
     this.sessionTimeout     = createTimeSpan(0,0,30,0);
@@ -10,14 +13,11 @@
     // Session cookie hardening
     this.sessioncookie.httponly = true;
     this.sessioncookie.secure = true;
-    this.sessioncookie.samesite = "Strict"; 
+    this.sessioncookie.samesite = "Strict";
 
     // Compiler settings
-    this.searchImplicitScopes = true;   
-    this.strictVariables = false;       
-
-    // Get hostname (e.g., "app")
-    host = ListFirst(cgi.server_name, ".");
+    this.searchImplicitScopes = true;
+    this.strictVariables = false;
 
     // Declare local dsn before assigning to this.datasource
     dsn = "";

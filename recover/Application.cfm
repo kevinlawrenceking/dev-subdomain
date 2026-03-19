@@ -1,10 +1,11 @@
-<cfapplication name="TAO" sessionmanagement="true">
-<cfscript>
-    // Env routing - set dsn for recover pages
-    host = ListFirst(cgi.server_name, ".");
-    if (host EQ "app") {
-        dsn = "abo";
-    } else {
-        dsn = "abod";
-    }
-</cfscript>
+<!--- ALWAYS compute host before cfapplication to get host-specific scope --->
+<cfset host = ListFirst(cgi.server_name, ".") />
+<cfif host EQ "app">
+    <cfset dsn = "abo" />
+<cfelse>
+    <cfset dsn = "abod" />
+</cfif>
+
+<cfapplication name="TAO_#host#" sessionmanagement="true">
+
+<cfset application.dsn = dsn />

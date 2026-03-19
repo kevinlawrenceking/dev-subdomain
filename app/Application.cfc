@@ -27,8 +27,9 @@
   <cfset application.rev = findit.verid />
 
   <cfscript>
-    // Core application settings
-    this.name = "TAO";
+    // Core application settings — name MUST be host-specific to prevent
+    // dev/prod cross-contamination when sharing a CF instance
+    this.name = "TAO_" & host;
     this.datasource = application.dsn;
     this.sessionManagement = true;
     this.applicationTimeout = createTimeSpan(11,1,0,0);
@@ -223,6 +224,9 @@
 
   <cffunction name="onRequestStart" returntype="boolean" output="false">
     <cfargument name="targetPage" type="string" required="true" />
+
+    <!--- Per-request datasource: immune to application-scope race conditions --->
+    <cfset request.dsn = application.dsn />
 
     <!--- Refresh feature flags if cache expired (DB-driven rollout control) --->
     <cfscript>

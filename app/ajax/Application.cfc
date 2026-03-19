@@ -1,6 +1,7 @@
 <cfcomponent output="false">
   <cfscript>
-    this.name = "TAO"; // must exactly match the main app
+    host = ListFirst(cgi.server_name, ".");
+    this.name = "TAO_" & host; // host-specific to prevent dev/prod cross-contamination
     this.sessionManagement = true;
     this.applicationTimeout = createTimeSpan(11, 1, 0, 0);
     this.sessionTimeout = createTimeSpan(0, 9, 20, 0);

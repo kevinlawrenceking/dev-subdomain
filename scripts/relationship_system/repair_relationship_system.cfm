@@ -16,7 +16,9 @@ Parameters:
 
 Security: Restrict to admin users in production
 --->
-<cfparam name="dsn" default="reach" />
+<!--- Derive dsn from host, never hardcode --->
+<cfset host = ListFirst(cgi.server_name, ".") />
+<cfparam name="dsn" default="#(host EQ 'app') ? 'abo' : 'abod'#" />
 <cfparam name="dryRun" default="Y" />
 <cfparam name="fixA" default="N" />
 <cfparam name="fixB" default="N" />

@@ -6,7 +6,7 @@
 --->
 
 <!--- Revoke the token at Google (best-effort) --->
-<cfquery name="userTokens">
+<cfquery name="userTokens" datasource="#application.datasource#">
     SELECT access_token FROM taousers
     WHERE userid = <cfqueryparam value="#session.userid#" cfsqltype="CF_SQL_INTEGER" />
 </cfquery>
@@ -27,7 +27,7 @@
 </cfif>
 
 <!--- Clear tokens in database --->
-<cfquery>
+<cfquery datasource="#application.datasource#">
     UPDATE taousers
     SET access_token = '', refresh_token = ''
     WHERE userid = <cfqueryparam value="#session.userid#" cfsqltype="CF_SQL_INTEGER" />

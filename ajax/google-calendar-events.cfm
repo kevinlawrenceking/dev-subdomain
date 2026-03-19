@@ -10,7 +10,7 @@
 <cfset response = [] />
 
 <!--- Get user's Google tokens --->
-<cfquery name="userTokens">
+<cfquery name="userTokens" datasource="#application.datasource#">
     SELECT access_token, refresh_token
     FROM taousers
     WHERE userid = <cfqueryparam value="#session.userid#" cfsqltype="CF_SQL_INTEGER" />
@@ -113,7 +113,7 @@
                     <cfset currentToken = refreshData.access_token />
 
                     <!--- Store the new access token --->
-                    <cfquery>
+                    <cfquery datasource="#application.datasource#">
                         UPDATE taousers
                         SET access_token = <cfqueryparam value="#currentToken#" cfsqltype="CF_SQL_VARCHAR" />
                         WHERE userid = <cfqueryparam value="#session.userid#" cfsqltype="CF_SQL_INTEGER" />
@@ -132,7 +132,7 @@
                 <cflog file="tao_google_oauth" type="error"
                        text="[gcal-events] Refresh failed. status=#refreshResult.statusCode# userid=#session.userid#. Clearing tokens." />
                 <!--- Clear tokens so user sees Link Google button again --->
-                <cfquery>
+                <cfquery datasource="#application.datasource#">
                     UPDATE taousers
                     SET access_token = '', refresh_token = ''
                     WHERE userid = <cfqueryparam value="#session.userid#" cfsqltype="CF_SQL_INTEGER" />
