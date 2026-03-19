@@ -611,7 +611,7 @@ x</button>
 <figure>
 <cfoutput>
 
-<centeR>
+<div class="text-center">
 
 <cfset contact_avatar = session.userContactsUrl & "/" & currentid & "/avatar.jpg">
 <cfset default_avatar = application.defaultAvatarUrl>
@@ -620,21 +620,19 @@ x</button>
 <cfif NOT fileExists(avatar_path)>
     <!--- Fallback to default avatar if the contact's avatar doesn't exist --->
     <img src="#default_avatar#"
-         class="me-3 tao-avatar img-fluid img-thumbnail w-100"
-         style="max-width:180px;"
-         alt="profile-image"
-         id="item-img-output" />
-    
+         class="tao-avatar tao-avatar--lg"
+         alt="profile-image" />
+
     <!--- Copy the default avatar to the user's contact folder --->
     <cftry>
         <!--- Ensure the directory exists --->
         <cfif NOT directoryExists(session.userContactsPath & "/" & currentid)>
             <cfdirectory action="create" directory="#session.userContactsPath & "/" & currentid#">
         </cfif>
-        
+
         <!--- Copy the default avatar to the user's contact directory --->
-        <cffile action="copy" 
-                source="#application.defaultAvatarUrl#" 
+        <cffile action="copy"
+                source="#application.defaultAvatarUrl#"
                 destination="#avatar_path#" >
 
     <cfcatch type="any">
@@ -645,13 +643,11 @@ x</button>
 <cfelse>
     <!--- Display the contact's avatar if it exists --->
     <img src="#contact_avatar#?v=#dateformat(now(), 'yyyymmdd')#"
-         class="me-3 tao-avatar img-fluid img-thumbnail w-100"
-         style="max-width:180px;"
-         alt="profile-image"
-         id="item-img-output" />
+         class="tao-avatar tao-avatar--lg"
+         alt="profile-image" />
 </cfif>
 
-</centeR>
+</div>
 
 </cfoutput>
 
@@ -659,7 +655,7 @@ x</button>
 
                         </A>
 <cfloop query="findcompany">
-<cfoutput><center>#valueCompany#</center></cfoutput>
+<cfoutput><div class="text-center">#valueCompany#</div></cfoutput>
 </cfloop>
 
 </div>
