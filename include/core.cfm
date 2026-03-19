@@ -34,7 +34,7 @@
           <cfoutput>
 
             <cfif "#findlinkst.linktype#" is "script">
-              <script src="#findlinkst.linkurl#?ver=#rev#.4.#rand()#"></script>
+              <script src="#findlinkst.linkurl#?v=#rev#"></script>
             <cfelseif "#findlinkst.linktype#" is "script_include">
               <!--- Guard against path traversal in database-sourced include path --->
               <cfif find("..", findlinkst.linkurl) EQ 0>
@@ -42,12 +42,13 @@
               </cfif>
 
             <cfelse>
-              <link href="#findlinkst.linkurl#?ver=#rev#.3.1.2#rand()#" <cfif #findlinkst.rel# is not "">rel="#rel#" </cfif> type="text/css" <cfif #findlinkst.hrefid# is not "">id="#findlinkst.hrefid#"</cfif>/>
+              <link href="#findlinkst.linkurl#?v=#rev#" <cfif #findlinkst.rel# is not "">rel="#rel#" </cfif> type="text/css" <cfif #findlinkst.hrefid# is not "">id="#findlinkst.hrefid#"</cfif>/>
             </cfif>
 
           </cfoutput>
         </cfloop>
 
+        <link rel="stylesheet" href="/app/assets/css/tao-components.css" />
         <style>
           body.authentication-bg {
             background-color: <cfoutput>#hostcolor#</cfoutput>;
@@ -63,7 +64,7 @@
         </cfif>
       </head>
 
-      <body style="overflow-y: scroll!important;">
+      <body>
         <div id="wrapper">
           <cfinclude template="/include/topbar.cfm"/>
           <cfinclude template="/include/leftbar.cfm"/>
@@ -95,11 +96,11 @@
         <cfparam name="pgid" default="0"/>
 
         <!--- Modal for Support Center --->
-        <div id="z" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="standard-modalLabel">
+        <div id="z" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="supportCenterLabel">
           <div class="modal-dialog">
             <div class="modal-content">
               <div class="modal-header" >
-                <h4 class="modal-title" id="standard-modalLabel">Support Center</h4>
+                <h4 class="modal-title" id="supportCenterLabel">Support Center</h4>
                 <button type="button" class="close" data-bs-dismiss="modal"></button>
               </div>
               <div class="modal-body">
@@ -121,11 +122,11 @@
         </script>
 
 
-        <div id="remoteSupportForm" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="standard-modalLabel">
+        <div id="remoteSupportForm" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="remoteSupportLabel">
           <div class="modal-dialog">
             <div class="modal-content">
               <div class="modal-header" >
-                <h4 class="modal-title" id="standard-modalLabel">Support Center</h4>
+                <h4 class="modal-title" id="remoteSupportLabel">Support Center</h4>
                 <button type="button" class="close" data-bs-dismiss="modal"></button>
               </div>
               <div class="modal-body"></div>
@@ -191,16 +192,16 @@
         <cfloop query="FindLinksB">
           <cfoutput>
             <cfif "#findlinksb.linktype#" is "script">
-              <script src="#findlinksb.linkurl#?ver=#rev#"></script>
+              <script src="#findlinksb.linkurl#?v=#rev#"></script>
             <cfelseif "#findlinksb.linktype#" is "script_include">
               <cfinclude template="#findlinksb.linkurl#">
             <cfelse>
-              <link href="#findlinksb.linkurl#?rev=#rev#.7" <cfif #findlinksb.rel# is not ""> rel="#findlinksb.rel#"</cfif> type="text/css" <cfif #findlinksb.hrefid# is not ""> id="#findlinksb.hrefid#"</cfif>/>
+              <link href="#findlinksb.linkurl#?v=#rev#" <cfif #findlinksb.rel# is not ""> rel="#findlinksb.rel#"</cfif> type="text/css" <cfif #findlinksb.hrefid# is not ""> id="#findlinksb.hrefid#"</cfif>/>
             </cfif>
           </cfoutput>
         </cfloop>
 
-        <script src="/app/assets/js/libs/devbridge-autocomplete/jquery.autocomplete.min.js?ver=0.00127548226092"></script>
+        <script src="/app/assets/js/libs/devbridge-autocomplete/jquery.autocomplete.min.js?v=<cfoutput>#rev#</cfoutput>"></script>
         <cfinclude template="/include/autocomplete.cfm"/>
 
         <script>

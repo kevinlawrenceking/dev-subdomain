@@ -1,18 +1,4 @@
-<!--- This ColdFusion page manages    var table = $('#<cfoutput>#contacts_table#</cfoutput>').DataTable({
-        "pageLength": <cfoutput>#defaultRowsValue#</cfoutput>,
-        "lengthMenu": [[10, 25, 50, 100, 500, 9999999], [10, 25, 50, 100, 500, "All"]],
-        "searching": true,
-        order: [[1, 'asc']],
-        stateSave: false,
-        dom: '<"row"<"col-sm-6"l><"col-sm-6"f>> <"row"<"col-sm-12"B>> <"row"rtip>',
-        responsive: false,
-        scrollX: true,
-        autoWidth: true,
-        serverSide: true,
-        ajax: {
-            url: '/include/contacts_ss.cfm?contacts_table=<cfoutput>#contacts_table#</cfoutput>&userid=<cfoutput>#userid#</cfoutput>&bytag=<cfoutput>#bytag#</cfoutput>&byimport=<cfoutput>#byimport#</cfoutput>',
-            type: 'post'
-        },isplay and interactions, including importing, exporting, and managing tags and systems. --->
+<!--- Contacts DataTable: display and interactions, including importing, exporting, and managing tags and systems. --->
 
 
 
@@ -73,7 +59,7 @@ $(document).ready(function() {
         text: 'Search Tag',
         className: 'searchtag',
         action: function() {
-            $('#exampleModal2').modal('show');
+            $('#searchTagModal').modal('show');
         }
     },
     {
@@ -81,7 +67,7 @@ $(document).ready(function() {
         className: 'updatetag',
         action: function() {
             updateIdList('#myformtag');  // Ensure idlist is set
-            $('#exampleModal4').modal('show');
+            $('#updateTagModal').modal('show');
         },
         enabled: false
     },
@@ -90,7 +76,7 @@ $(document).ready(function() {
         className: 'updatesystem',
         action: function() {
             updateIdList('#myformsystem');  // Ensure idlist is set
-            $('#exampleModal3').modal('show');
+            $('#addSystemModal').modal('show');
         },
         enabled: false
     },
@@ -99,7 +85,7 @@ $(document).ready(function() {
         className: 'deletesystem',
         action: function() {
             updateIdList('#myformsystemdelete');  // Ensure idlist is set
-            $('#exampleModal99').modal('show');
+            $('#deleteSystemModal').modal('show');
         },
         enabled: false
     },
@@ -115,7 +101,7 @@ $(document).ready(function() {
             text: 'Import History',
             className: 'importhistory',
             action: function() {
-                $('#exampleModal22').modal('show');
+                $('#importHistoryModal').modal('show');
             }
         },
     </cfif>
@@ -124,7 +110,7 @@ $(document).ready(function() {
         className: 'exportcontacts',
         action: function() {
             updateIdList('#myformexport');  // Ensure idlist is set
-            $('#exampleModal5').modal('show');
+            $('#exportContactsModal').modal('show');
         },
         enabled: false
     },
@@ -133,7 +119,7 @@ $(document).ready(function() {
         className: 'batchdelete',
         action: function() {
             updateIdList('#myformdelete');  // Ensure idlist is set
-            $('#exampleModaldelete').modal('show');
+            $('#batchDeleteModal').modal('show');
         },
         enabled: false
     }
@@ -231,7 +217,7 @@ function updateIdList(formSelector) {
     var countChecked = function() {
         var n = $("input:checked").length;
         console.log("Checked count: ", n); // Debugging: log checkbox count
-        $("#count").text(n + (n === 1 ? " is" : " zijn") + " aangevinkt!");
+        $("#count").text(n + (n === 1 ? " item" : " items") + " selected");
         if (n == 0) {
             $("#batchbutton_<cfoutput>#contacts_table#</cfoutput>:visible").fadeOut();
         } else {
@@ -244,20 +230,5 @@ function updateIdList(formSelector) {
 
 </script>
 
-<script>
-    // Count checked checkboxes and update UI
-    var countChecked = function() {
-        var n = $("input:checked").length; // n now contains the number of checked elements.
-        $("#count").text(n + (n === 1 ? " is" : " zijn") + " aangevinkt!"); // show some text
-        if (n == 0) {
-            $("#batchbutton_<cfoutput>#contacts_table#</cfoutput>:visible").fadeOut(); // if there are none checked, hide only visible elements
-        } else {
-            $("#batchbutton_<cfoutput>#contacts_table#</cfoutput>:hidden").fadeIn(); // otherwise (some are selected) fadeIn - if the div is hidden.
-        }
-    };
-    countChecked();
-
-    $("input[type=checkbox]").on("click", countChecked);
-</script>
 
 <cfset script_name_include="/include/#ListLast(GetCurrentTemplatePath(), "\")#" />

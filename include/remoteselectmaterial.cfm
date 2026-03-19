@@ -11,7 +11,7 @@
                 <center>
                     <a href="/include/remoteselectedmaterial2.cfm?selected_eventid=#selected_eventid#&mediaid=#headshots_sel.mediaid#&eventid=#eventid#&audprojectid=#audprojectid#"> 
                         <img src="#application.application.application.filetypesUrl#/#headshots_sel.mediaext#.png?ver=#rand()#" 
-                             class="mr-2 rounded-square gambar img-thumbnail img-fluid p-0 m-0" 
+                             class="me-2 rounded img-thumbnail img-fluid p-0 m-0" 
                              style="width:120px;" 
                              title="User ID: 30" 
                              alt="profile-image" 

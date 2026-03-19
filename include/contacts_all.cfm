@@ -166,12 +166,12 @@
 
 <cfinclude template="/include/qry/tags_76_1.cfm" />
 
-<div class="modal fade" id="exampleModal2" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel2" >
+<div class="modal fade" id="searchTagModal" tabindex="-1" role="dialog" aria-labelledby="searchTagModalLabel" >
 
     <div class="modal-dialog modal-dialog-slideout modal-sm" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalLabel">Tag Selector</h5>
+                <h5 class="modal-title" id="searchTagModalLabel">Tag Selector</h5>
                 <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
                     <span >
 X</span>
@@ -195,7 +195,7 @@ X</span>
     </div>
 </div>
 
-<div id="exampleModal3" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="standard-modalLabel" >
+<div id="addSystemModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="standard-modalLabel" >
 
     <div class="modal-dialog">
         <div class="modal-content">
@@ -259,7 +259,7 @@ X</span>
     </div>
 </div>
 
-<div id="exampleModal4" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="standard-modalLabel" >
+<div id="updateTagModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="standard-modalLabel" >
 
     <div class="modal-dialog">
         <div class="modal-content">

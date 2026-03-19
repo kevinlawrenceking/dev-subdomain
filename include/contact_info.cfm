@@ -619,10 +619,10 @@ x</button>
 
 <cfif NOT fileExists(avatar_path)>
     <!--- Fallback to default avatar if the contact's avatar doesn't exist --->
-    <img src="#default_avatar#" 
-         class="mr-3 rounded-circle gambar img-responsive img-thumbnail w-100" 
-    style="max-width:180px;
-         alt="profile-image" 
+    <img src="#default_avatar#"
+         class="me-3 tao-avatar img-fluid img-thumbnail w-100"
+         style="max-width:180px;"
+         alt="profile-image"
          id="item-img-output" />
     
     <!--- Copy the default avatar to the user's contact folder --->
@@ -644,10 +644,10 @@ x</button>
     </cftry>
 <cfelse>
     <!--- Display the contact's avatar if it exists --->
-    <img src="#contact_avatar#?rev=#rand()#" 
-         class="mr-3 rounded-circle gambar img-responsive img-thumbnail w-100" 
-         style="max-width:180px;" 
-         alt="profile-image" 
+    <img src="#contact_avatar#?v=#dateformat(now(), 'yyyymmdd')#"
+         class="me-3 tao-avatar img-fluid img-thumbnail w-100"
+         style="max-width:180px;"
+         alt="profile-image"
          id="item-img-output" />
 </cfif>
 

@@ -1,0 +1,69 @@
+/* ==========================================================================
+   TAO Shared Component Styles
+   ==========================================================================
+   Reusable UI primitives for The Actors Office.
+   Loaded globally via core.cfm.
+
+   Dependencies: Bootstrap 5
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Body — always show scrollbar to prevent layout shift
+   -------------------------------------------------------------------------- */
+body {
+    overflow-y: scroll !important;
+}
+
+/* --------------------------------------------------------------------------
+   Avatars
+   --------------------------------------------------------------------------
+   Usage:  <img class="tao-avatar tao-avatar--lg" src="..." alt="..." />
+   Sizes:  --xs (32px)  --sm (40px)  --md (56px)  --lg (120px)
+   -------------------------------------------------------------------------- */
+.tao-avatar {
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(0, 0, 0, 0.08);
+    vertical-align: middle;
+}
+
+.tao-avatar--xs {
+    width: 32px;
+    height: 32px;
+}
+
+.tao-avatar--sm {
+    width: 40px;
+    height: 40px;
+}
+
+.tao-avatar--md {
+    width: 56px;
+    height: 56px;
+}
+
+.tao-avatar--lg {
+    width: 120px;
+    height: 120px;
+}
+
+/* --------------------------------------------------------------------------
+   Icons — size utilities for any icon system (Lucide, MDI, Feather, FA)
+   --------------------------------------------------------------------------
+   Usage:  <i data-lucide="mail" class="tao-icon"></i>
+   -------------------------------------------------------------------------- */
+.tao-icon {
+    width: 16px;
+    height: 16px;
+    vertical-align: middle;
+}
+
+.tao-icon--sm {
+    width: 14px;
+    height: 14px;
+}
+
+.tao-icon--lg {
+    width: 20px;
+    height: 20px;
+}

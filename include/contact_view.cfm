@@ -15,9 +15,9 @@
             <figure>
                 <!--- Check if the browser contact avatar filename is an image file --->
                 <cfif isimagefile(browser_contact_avatar_filename)>
-                    <img src="<cfoutput>#browser_contact_avatar_filename#</cfoutput>?ver=<Cfoutput>#rand()#</cfoutput>" class="mr-3 rounded-circle gambar img-responsive img-thumbnail" style="height:120px;" alt="profile-image" id="item-img-output" />
+                    <img src="<cfoutput>#browser_contact_avatar_filename#</cfoutput>?ver=<Cfoutput>#rand()#</cfoutput>" class="me-3 tao-avatar tao-avatar--lg img-fluid" alt="profile-image" id="item-img-output" />
                 <CFELSE>
-                    <img src="<cfoutput>#application.defaultAvatarUrl#</cfoutput>" class="mr-3 rounded-circle gambar img-responsive img-thumbnail" style="height:120px;" alt="profile-image" id="item-img-output" />
+                    <img src="<cfoutput>#application.defaultAvatarUrl#</cfoutput>" class="me-3 tao-avatar tao-avatar--lg img-fluid" alt="profile-image" id="item-img-output" />
                 </cfif>
             </figure>
         </A>
@@ -209,7 +209,7 @@
         </cfif>
 
         <div class="card-body">
-            <ul class="nnav nav-pills nav-fill navtab-bg>
+            <ul class="nav nav-pills nav-fill navtab-bg">
                 <li class="nav-item">
                     <a href="#contact" data-bs-toggle="tab" aria-expanded="<cfoutput>#contact_expand#</cfoutput>" class="nav-link<cfif #contact_expand# is 'true'> active</cfif>">Relationship Info</a>
                 </li>

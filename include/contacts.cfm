@@ -282,11 +282,11 @@ Tables: contactdetails, contactitems, contactsimport, tags_user, fusystemusers
 </cfquery>
 
 <!--- Tag Selector Modal --->
-<div class="modal fade" id="exampleModal2" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel2">
+<div class="modal fade" id="searchTagModal" tabindex="-1" role="dialog" aria-labelledby="searchTagModalLabel">
     <div class="modal-dialog modal-dialog-slideout modal-sm" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalLabel">Tag Selector</h5>
+                <h5 class="modal-title" id="searchTagModalLabel">Tag Selector</h5>
                 <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
                     <span>X</span>
                 </button>
@@ -313,11 +313,11 @@ Tables: contactdetails, contactitems, contactsimport, tags_user, fusystemusers
 <cfinclude template="/include/qry/imports.cfm" />
 
 <!--- Import History Modal --->
-<div class="modal fade" id="exampleModal22" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel2">
+<div class="modal fade" id="importHistoryModal" tabindex="-1" role="dialog" aria-labelledby="importHistoryModalLabel">
     <div class="modal-dialog modal-dialog-slideout modal-sm" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalLabel">Import History</h5>
+                <h5 class="modal-title" id="importHistoryModalLabel">Import History</h5>
                 <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
                     <span>X</span>
                 </button>
@@ -345,11 +345,11 @@ Tables: contactdetails, contactitems, contactsimport, tags_user, fusystemusers
 </div>
 
 <!--- Export Contacts Modal --->
-<div id="exampleModal5" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="standard-modalLabel">
+<div id="exportContactsModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="exportContactsModalLabel">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title" id="standard-modalLabel">Export Contacts</h4>
+                <h4 class="modal-title" id="exportContactsModalLabel">Export Contacts</h4>
                 <button type="button" class="close" data-bs-dismiss="modal">
                     <i class="mdi mdi-close-thick"></i>
                 </button>
@@ -376,11 +376,11 @@ Tables: contactdetails, contactitems, contactsimport, tags_user, fusystemusers
 </div>
 
 <!--- Delete Contacts Modal --->
-<div id="exampleModaldelete" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="standard-modalLabel">
+<div id="batchDeleteModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="batchDeleteModalLabel">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header" style="background-color: red">
-                <h4 class="modal-title" id="standard-modalLabel">Delete Contacts</h4>
+                <h4 class="modal-title" id="batchDeleteModalLabel">Delete Contacts</h4>
                 <button type="button" class="close" data-bs-dismiss="modal">
                     <i class="mdi mdi-close-thick"></i>
                 </button>
@@ -407,11 +407,11 @@ Tables: contactdetails, contactitems, contactsimport, tags_user, fusystemusers
 </div>
 
 <!--- System Delete Modal --->
-<div id="exampleModal99" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="standard-modalLabel">
+<div id="deleteSystemModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="deleteSystemModalLabel">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title" id="standard-modalLabel">System Delete</h4>
+                <h4 class="modal-title" id="deleteSystemModalLabel">System Delete</h4>
                 <button type="button" class="close" data-bs-dismiss="modal">
                     <i class="mdi mdi-close-thick"></i>
                 </button>
@@ -447,11 +447,11 @@ Tables: contactdetails, contactitems, contactsimport, tags_user, fusystemusers
 </div>
 
 <!--- System Add Modal --->
-<div id="exampleModal3" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="standard-modalLabel">
+<div id="addSystemModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="addSystemModalLabel">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title" id="standard-modalLabel">System Selected Update</h4>
+                <h4 class="modal-title" id="addSystemModalLabel">System Selected Update</h4>
                 <button type="button" class="close" data-bs-dismiss="modal">
                     <i class="mdi mdi-close-thick"></i>
                 </button>
@@ -515,11 +515,11 @@ Tables: contactdetails, contactitems, contactsimport, tags_user, fusystemusers
 </div>
 
 <!--- Tag Management Modal --->
-<div id="exampleModal4" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="standard-modalLabel">
+<div id="updateTagModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="updateTagModalLabel">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title" id="standard-modalLabel">Tag Selected Update</h4>
+                <h4 class="modal-title" id="updateTagModalLabel">Tag Selected Update</h4>
                 <button type="button" class="close" data-bs-dismiss="modal">
                     <i class="mdi mdi-close-thick"></i>
                 </button>
@@ -584,7 +584,7 @@ Tables: contactdetails, contactitems, contactsimport, tags_user, fusystemusers
             // Don't prevent default - allow normal form submission for file download
             // Just close the modal after a short delay
             setTimeout(function() {
-                $('#exampleModal5').modal('hide');
+                $('#exportContactsModal').modal('hide');
             }, 500);
         });
     });

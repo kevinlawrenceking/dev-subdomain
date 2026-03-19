@@ -6,7 +6,6 @@
 
 
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
   /* Override DataTables Select extension checkbox styling */
   #remindersTable th.select-checkbox::before,
@@ -21,16 +20,18 @@
 </style>
 <cfset showInactive = url.showInactive>
 
+<div id="modalContainer"></div>
+
 <div class="card mt-3">
   <div class="card-header d-flex justify-content-between align-items-center">
     <h5 class="mb-0">Reminders</h5>
     <div class="d-flex gap-2 align-items-center">
       <div id="batchActions" style="display: none;">
         <button id="batchComplete" class="btn btn-success btn-sm">
-          <i class="fas fa-check"></i> Complete Selected
+          <i class="fe-check"></i> Complete Selected
         </button>
         <button id="batchSkip" class="btn btn-secondary btn-sm">
-          <i class="fas fa-circle-minus"></i> Skip Selected
+          <i class="fe-minus-circle"></i> Skip Selected
         </button>
         <span id="selectedCount" class="badge bg-primary ms-2">0 selected</span>
       </div>
@@ -73,6 +74,14 @@
 
 <script>
   let selectedReminder = {};
+  let pendingConfirmAction = null;
+
+  function showConfirmModal(text, onConfirm) {
+    $("#confirmReminderText").text(text);
+    pendingConfirmAction = onConfirm;
+    const confirmModal = new bootstrap.Modal(document.getElementById('confirmReminderModal'));
+    confirmModal.show();
+  }
 
   function loadReminders() {
     const showInactive = $("#showInactive").is(":checked") ? 1 : 0;
@@ -124,10 +133,10 @@
             if (row.status === "Pending") {
               return `
                 <button class="btn btn-success btn-sm mark-complete" data-id="${data}" data-status="Completed" data-text="${row.reminder_text}" title="Mark Complete">
-                  <i class="fas fa-check"></i>
+                  <i class="fe-check"></i>
                 </button>
                 <button class="btn btn-secondary btn-sm mark-skip" data-id="${data}" data-status="Skipped" data-text="${row.reminder_text}" title="Skip">
-                  <i class="fas fa-circle-minus"></i>
+                  <i class="fe-minus-circle"></i>
                 </button>
               `;
             } else {
@@ -164,7 +173,7 @@
               return `
                 ${data}
                 <a href="#" title="Click for details" data-bs-toggle="modal" data-bs-target="#${modalId}">
-                  <i class="fas fa-info-circle ms-2 text-info"></i>
+                  <i class="fe-info ms-2 text-info"></i>
                 </a>
               `;
             }
@@ -179,7 +188,7 @@
               return `
                 ${data}
                 <a href="#" title="Click for system details" data-bs-toggle="modal" data-bs-target="#${systemModalId}">
-                  <i class="fas fa-info-circle ms-2 text-muted"></i>
+                  <i class="fe-info ms-2 text-muted"></i>
                 </a>
               `;
             }
@@ -318,56 +327,49 @@
         text: $(this).data('text')
       };
 
-      $("#confirmReminderText").text(
-        `Are you sure you want to mark "${selectedReminder.text} reminder" as ${selectedReminder.status}?`
-      );
+      showConfirmModal(
+        `Are you sure you want to mark "${selectedReminder.text} reminder" as ${selectedReminder.status}?`,
+        function() {
+          console.log('Submitting reminder completion:', selectedReminder);
 
-      const confirmModal = new bootstrap.Modal(document.getElementById('confirmReminderModal'));
-      confirmModal.show();
+          $.ajax({
+            url: "/include/complete_not_ajax.cfm?bypass=1",
+            type: "POST",
+            data: {
+              notid: selectedReminder.id,
+              notstatus: selectedReminder.status
+            },
+            success: function(response) {
+              console.log('Response from complete_not_ajax.cfm:', response);
+
+              if ($.fn.DataTable.isDataTable('#remindersTable')) {
+                const table = $('#remindersTable').DataTable();
+                table.ajax.reload(function(json) {
+                  injectReminderModals(json);
+                }, false);
+              } else {
+                setTimeout(function() { loadReminders(); }, 100);
+              }
+            },
+            error: function(xhr, status, error) {
+              console.error('Error completing reminder:', error);
+              alert('Error completing reminder: ' + error);
+            }
+          });
+        }
+      );
     });
 
     $('#confirmReminderButton').click(function () {
-      console.log('Submitting reminder completion:', selectedReminder);
-      console.log('Posting data:', { notid: selectedReminder.id, notstatus: selectedReminder.status });
-
-      $.ajax({
-        url: "/include/complete_not_ajax.cfm?bypass=1",
-        type: "POST",
-        data: {
-          notid: selectedReminder.id,
-          notstatus: selectedReminder.status
-        },
-        success: function(response) {
-          console.log('Response from complete_not_ajax.cfm:', response);
-
-          // Hide the modal first
-          const confirmModal = bootstrap.Modal.getInstance(document.getElementById('confirmReminderModal'));
-          if (confirmModal) {
-            confirmModal.hide();
-          }
-
-          // Use a more targeted reload that preserves filter state
-          if ($.fn.DataTable.isDataTable('#remindersTable')) {
-            const table = $('#remindersTable').DataTable();
-            // Just reload the data without destroying the table structure
-            table.ajax.reload(function(json) {
-              console.log('Table data reloaded, updating modals...');
-              injectReminderModals(json);
-            }, false); // false = don't reset paging
-          } else {
-            // Fallback to full reload if table doesn't exist
-            setTimeout(function() {
-              loadReminders();
-            }, 100);
-          }
-        },
-        error: function(xhr, status, error) {
-          console.error('Error completing reminder:', error);
-          console.error('Status:', status);
-          console.error('Response:', xhr.responseText);
-          alert('Error completing reminder: ' + error + '\nStatus: ' + status + '\nResponse: ' + xhr.responseText);
-        }
-      });
+      // Hide modal first, then execute the pending action
+      const confirmModal = bootstrap.Modal.getInstance(document.getElementById('confirmReminderModal'));
+      if (confirmModal) {
+        confirmModal.hide();
+      }
+      if (pendingConfirmAction) {
+        pendingConfirmAction();
+        pendingConfirmAction = null;
+      }
     });
 
     // Batch operations
@@ -407,18 +409,15 @@
         selectedTexts.push($(this).data('text'));
       });
 
-      if (selectedIds.length === 0) {
-        alert('No reminders selected');
-        return;
-      }
+      if (selectedIds.length === 0) return;
 
       const confirmText = selectedIds.length === 1
         ? `Are you sure you want to mark "${selectedTexts[0]}" as Completed?`
         : `Are you sure you want to mark ${selectedIds.length} reminders as Completed?`;
 
-      if (confirm(confirmText)) {
+      showConfirmModal(confirmText, function() {
         processBatchReminders(selectedIds, 'Completed');
-      }
+      });
     });
 
     // Batch skip
@@ -431,18 +430,15 @@
         selectedTexts.push($(this).data('text'));
       });
 
-      if (selectedIds.length === 0) {
-        alert('No reminders selected');
-        return;
-      }
+      if (selectedIds.length === 0) return;
 
       const confirmText = selectedIds.length === 1
         ? `Are you sure you want to skip "${selectedTexts[0]}"?`
         : `Are you sure you want to skip ${selectedIds.length} reminders?`;
 
-      if (confirm(confirmText)) {
+      showConfirmModal(confirmText, function() {
         processBatchReminders(selectedIds, 'Skipped');
-      }
+      });
     });
 
     function processBatchReminders(notIds, status) {
@@ -485,8 +481,6 @@
 
 
 
-
-<div id="modalContainer"></div>
 
 <div class="modal fade" id="confirmReminderModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
