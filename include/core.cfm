@@ -203,6 +203,7 @@
 
         <script src="/app/assets/js/libs/devbridge-autocomplete/jquery.autocomplete.min.js?v=<cfoutput>#rev#</cfoutput>"></script>
         <cfinclude template="/include/autocomplete.cfm"/>
+        <script src="/app/assets/js/tao-toast.js?v=<cfoutput>#rev#</cfoutput>"></script>
 
         <script>
           (function(){

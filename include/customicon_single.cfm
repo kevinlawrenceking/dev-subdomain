@@ -1,7 +1,30 @@
 <!--- This ColdFusion page retrieves link details, processes an icon from a specified domain, and updates the site icon in the database. --->
 <cfparam name="dbug" default="N" />
+
+<!--- Guard: valid link id --->
+<cfif NOT isDefined("id") OR NOT val(id) GT 0>
+    <cflog file="tao-linkicon" text="customicon_single: skipped — missing or invalid id" />
+    <cfexit />
+</cfif>
+
+<!--- Guard: required application paths and keys --->
+<cfif NOT isDefined("application.retinaIcons14Path") OR NOT len(application.retinaIcons14Path)>
+    <cflog file="tao-linkicon" text="customicon_single: skipped — application.retinaIcons14Path not set" />
+    <cfexit />
+</cfif>
+<cfif NOT isDefined("application.secrets.iconHorseApiKey") OR NOT len(application.secrets.iconHorseApiKey)>
+    <cflog file="tao-linkicon" text="customicon_single: skipped — iconHorseApiKey not set" />
+    <cfexit />
+</cfif>
+
 <cfset siteLinksService = createObject("component", "services.SiteLinksService")>
-<cfset linkDetails = siteLinksService.getLinkDetailsById(id)> 
+<cfset linkDetails = siteLinksService.getLinkDetailsById(id)>
+
+<!--- Guard: query returned a row --->
+<cfif linkDetails.recordCount EQ 0>
+    <cflog file="tao-linkicon" text="customicon_single: skipped — no link found for id=#id#" />
+    <cfexit />
+</cfif>
 
 <cfset siteurl = linkDetails.siteurl />
 
@@ -51,9 +74,10 @@
 </cfif>
 
 <!--- Make the CFHTTP request to retrieve the icon --->
-<cfhttp url="https://icon.horse/icon/#domain#?apikey=#application.secrets.iconHorseApiKey#&fallback_bg=406e8e&size=small&ignore_other_sizes=false" 
-        method="get" 
-        getAsBinary="yes" 
+<cfhttp url="https://icon.horse/icon/#domain#?apikey=#application.secrets.iconHorseApiKey#&fallback_bg=406e8e&size=small&ignore_other_sizes=false"
+        method="get"
+        getAsBinary="yes"
+        timeout="15"
         result="icoResult">
 </cfhttp>
 

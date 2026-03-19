@@ -30,7 +30,12 @@
 <cfinclude template="/include/qry/add_242_2.cfm" />
 
 <!--- Now, lastInsertedId contains the ID of the newly inserted record --->
-<cfinclude template="/include/customicon_single.cfm" />
+<cftry>
+    <cfinclude template="/include/customicon_single.cfm" />
+    <cfcatch type="any">
+        <cflog file="tao-linkicon" text="Icon fetch failed for link id=#id#: #cfcatch.message# #cfcatch.detail#" />
+    </cfcatch>
+</cftry>
 
-<!--- Redirect to the target account page with the appropriate parameters --->
+<!--- Redirect must execute unconditionally — link creation already succeeded --->
 <cflocation url="/app/#target#/?t1=1&target_id=#target_id###item#id#" addtoken="false" />

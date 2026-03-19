@@ -43,9 +43,9 @@ body[data-layout-color="dark"] {
 }
 
 .fc .fc-toolbar-title {
-    font-size: 1.35rem;
+    font-size: 1.4rem;
     line-height: 1.875rem;
-    font-weight: 600;
+    font-weight: 700;
     text-transform: none;
 }
 
@@ -104,16 +104,29 @@ body[data-layout-color="dark"] .fc .fc-button-primary:hover {
     border-color: #4e5b69;
 }
 
+/* === Button keyboard focus === */
+.fc .fc-button:focus-visible {
+    outline: 2px solid var(--fc-button-bg-color);
+    outline-offset: 2px;
+    box-shadow: none;
+}
+
 /* === Events === */
 .fc-event {
-    border-radius: 3px;
+    border-radius: 4px;
     border: none;
+    border-left: 3px solid rgba(0, 0, 0, 0.15);
     cursor: pointer;
     font-size: .8125rem;
     margin: 1px 2px;
     padding: 3px 5px;
     font-weight: 500;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.15s ease;
+}
+
+.fc-event:hover {
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.18);
 }
 
 .fc .fc-event-time,
@@ -161,6 +174,7 @@ body[data-layout-color="dark"] .fc .fc-daygrid-day-number {
 /* === Today highlight === */
 .fc .fc-day-today {
     background: var(--fc-today-bg-color) !important;
+    border-left: 3px solid var(--fc-button-bg-color);
 }
 
 /* === Now indicator === */
@@ -241,20 +255,31 @@ body[data-layout-color="dark"] .fc .fc-popover {
     background: #3b444e;
 }
 
+/* === Selected day / highlight === */
+.fc .fc-highlight {
+    background: var(--fc-highlight-color);
+    border: 1px solid var(--fc-button-bg-color);
+}
+
 /* === Click affordance for empty day cells === */
 .fc .fc-daygrid-day:hover {
-    background-color: rgba(114, 124, 245, 0.04);
+    background-color: rgba(114, 124, 245, 0.06);
     cursor: pointer;
 }
 
 body[data-layout-color="dark"] .fc .fc-daygrid-day:hover {
-    background-color: rgba(114, 124, 245, 0.08);
+    background-color: rgba(114, 124, 245, 0.1);
 }
 
 /* === Timegrid slot click affordance === */
 .fc .fc-timegrid-slot:hover {
-    background-color: rgba(114, 124, 245, 0.04);
+    background-color: rgba(114, 124, 245, 0.06);
     cursor: pointer;
+}
+
+/* === Timegrid slot spacing === */
+.fc .fc-timegrid-slot {
+    height: 2.5em;
 }
 
 /* === Calendar container position context for loading overlay === */

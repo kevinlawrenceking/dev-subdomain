@@ -1,61 +1,108 @@
-console.log("Before Packery");
+/* ==========================================================================
+   packeryInit.js  --  Single source of truth for dashboard Packery layout
+   ==========================================================================
+   Depends on: jQuery, Packery, Draggabilly (desktop only), tao-toast.js
+   ========================================================================== */
 
-function initializePackery() {
-    var isMobile = window.matchMedia("(max-width: 768px)").matches;
-    var packeryOptions = isMobile ? {
-        itemSelector: '.grid-item',
-        gutter: 10,
-        percentPosition: true
-    } : {
-        itemSelector: '.grid-item',
-        gutter: 10,
-        fitWidth: true,
-        resizable: true,
-        columnWidth: '.grid-item',
-        percentPosition: true
-    };
+(function () {
+    'use strict';
 
-    var $grid = $('.packery-grid').packery(packeryOptions);
+    /* ------------------------------------------------------------------
+       Config constants — define once
+       ------------------------------------------------------------------ */
+    var GUTTER        = 10;
+    var BREAKPOINT    = 768;
+    var SAVE_DELAY    = 800;   // debounce ms before persisting order
+    var SAVE_ENDPOINT = '/include/update_order.cfm';
 
-    if (!isMobile) {
-        // Make all items draggable only if not mobile
-        $grid.find('.grid-item').each(function(i, gridItem) {
-            var draggie = new Draggabilly(gridItem);
-            $grid.packery('bindDraggabillyEvents', draggie);
-        });
+    /* ------------------------------------------------------------------
+       Save state — debounce + latest-write-wins
+       ------------------------------------------------------------------ */
+    var saveTimer   = null;
+    var saveInFlight = false;
+    var pendingOrder = null;
 
-        $grid.on('dragItemPositioned', function() {
-            // Create an array to store the new order
-            var newOrder = [];
+    function persistOrder(orderStr) {
+        if (saveInFlight) {
+            pendingOrder = orderStr;
+            return;
+        }
 
-            // Iterate over each item and push its data-id to the array
-            $grid.packery('getItemElements').forEach(function(itemElem) {
-                var id = $(itemElem).attr('data-id');
-                newOrder.push(id);
-            });
+        saveInFlight = true;
 
-            // Send the new order to the server via AJAX
-            $.ajax({
-                url: '/include/update_order.cfm', // your ColdFusion script
-                type: 'POST',
-                data: { order: newOrder.join(',') }, // send as comma-separated list
-                success: function(response) {
-                    console.log('Updated successfully:', response);
-                },
-                error: function() {
-                    console.log('Failed to update order');
+        $.ajax({
+            url: SAVE_ENDPOINT,
+            type: 'POST',
+            data: { order: orderStr },
+            success: function () {
+                saveInFlight = false;
+                if (pendingOrder !== null) {
+                    var next = pendingOrder;
+                    pendingOrder = null;
+                    persistOrder(next);
                 }
-            });
+            },
+            error: function () {
+                saveInFlight = false;
+                pendingOrder = null;
+                if (typeof window.taoToast === 'function') {
+                    taoToast('Failed to save layout', 'error');
+                }
+            }
         });
     }
-}
 
-// Initialize Packery on page load
-initializePackery();
+    function debouncedSave(orderStr) {
+        if (saveTimer) { clearTimeout(saveTimer); }
+        saveTimer = setTimeout(function () {
+            saveTimer = null;
+            persistOrder(orderStr);
+        }, SAVE_DELAY);
+    }
 
-// Re-initialize Packery on window resize
-$(window).resize(function() {
+    /* ------------------------------------------------------------------
+       Packery initialization
+       ------------------------------------------------------------------ */
+    function initializePackery() {
+        var isMobile = window.matchMedia('(max-width: ' + BREAKPOINT + 'px)').matches;
+
+        var packeryOptions = isMobile ? {
+            itemSelector: '.grid-item',
+            gutter: GUTTER,
+            percentPosition: true
+        } : {
+            itemSelector: '.grid-item',
+            gutter: GUTTER,
+            fitWidth: true,
+            resizable: true,
+            columnWidth: '.grid-item',
+            percentPosition: true
+        };
+
+        var $grid = $('.packery-grid').packery(packeryOptions);
+
+        if (!isMobile) {
+            $grid.find('.grid-item').each(function (i, gridItem) {
+                var draggie = new Draggabilly(gridItem);
+                $grid.packery('bindDraggabillyEvents', draggie);
+            });
+
+            $grid.on('dragItemPositioned', function () {
+                var newOrder = [];
+                $grid.packery('getItemElements').forEach(function (itemElem) {
+                    var id = $(itemElem).attr('data-id');
+                    newOrder.push(id);
+                });
+                debouncedSave(newOrder.join(','));
+            });
+        }
+    }
+
+    // Initialize on page load
     initializePackery();
-});
 
-console.log("After Packery");
+    // Re-initialize on window resize
+    $(window).resize(function () {
+        initializePackery();
+    });
+})();

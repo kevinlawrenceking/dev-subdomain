@@ -67,3 +67,14 @@ body {
     width: 20px;
     height: 20px;
 }
+
+/* --------------------------------------------------------------------------
+   Footer — align with sidebar width (280px)
+   --------------------------------------------------------------------------
+   Base rule in app.min.css sets left: 240px which is 40px short of the
+   actual .left-side-menu width.  This override wins by source order.
+   Media-query and condensed/compact overrides use !important and still win.
+   -------------------------------------------------------------------------- */
+.footer {
+    left: 280px;
+}

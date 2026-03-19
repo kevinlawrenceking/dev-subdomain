@@ -21,15 +21,18 @@ Then solve using that skill's discipline from the definitions below.
 
 ### ROUTING RULES
 
-| Signal | Primary Skill |
-|--------|--------------|
-| Runtime error, undefined variable, upload failure, broken form, hidden CF exception | ColdFusion Bug Hunter |
-| SQL query, joins, filters, missing records, duplicate rows, performance | ColdFusion MySQL Query Specialist |
-| Old legacy page, includes, mixed UI-server logic, partial modernization | ColdFusion Legacy Refactor Architect |
-| TAO relationships, reminders, follow-ups, notifications, action sequencing | TAO Relationship System Expert |
-| Excel, CSV, VCF, imports, parser failures, column mapping | TAO Import / Spreadsheet Debugger |
-| Admin screens, AJAX, modals, filters, save buttons | TAO Admin UI / AJAX Modernizer |
-| General CF syntax, scope handling, lifecycle, includes, redirects | ColdFusion Expert |
+| Signal | Primary Skill | Command |
+|--------|--------------|---------|
+| Runtime error, undefined variable, upload failure, broken form, hidden CF exception | ColdFusion Bug Hunter | /cf-debug |
+| SQL query, joins, filters, missing records, duplicate rows, query performance | ColdFusion MySQL Query Specialist | /cf-query |
+| Old legacy page, includes, mixed UI-server logic, partial modernization | ColdFusion Legacy Refactor Architect | /cf-refactor |
+| General CF syntax, scope handling, lifecycle, includes, redirects | ColdFusion Expert | /cf-expert |
+| CFC services, component architecture, dependency wiring, Application-scoped services | ColdFusion Service Architect | /cf-service |
+| JavaScript bugs, CSS styling, jQuery events, Bootstrap layout, form validation, DOM issues | TAO Frontend Specialist | /tao-frontend |
+| Schema design, migrations, indexes, views, stored procedures, data integrity, DB performance | TAO MySQL Database Admin | /db-admin |
+| TAO relationships, reminders, follow-ups, notifications, action sequencing | TAO Relationship System Expert | /tao-relationship |
+| Excel, CSV, VCF, imports, parser failures, column mapping | TAO Import / Spreadsheet Debugger | /tao-import |
+| Admin screens, AJAX endpoints, modals, filters, save flows | TAO Admin UI / AJAX Modernizer | /tao-admin |
 
 ## GLOBAL ENFORCEMENT RULES
 

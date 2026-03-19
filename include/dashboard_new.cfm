@@ -69,74 +69,13 @@ Services: NotificationService for handling notification operations and batch pro
 <div class="packery-grid" data-packery='{ "itemSelector": ".grid-item", "gutter": 10 }'>
     <!--- Dynamic Dashboard Panel Loading --->
     <cfloop query="dashboards">
-        <cfinclude template="/include/#dashboards.pnFilename#" />
+        <cfif len(dashboards.pnFilename) AND find("..", dashboards.pnFilename) EQ 0 AND find("/", dashboards.pnFilename) EQ 0 AND find("\", dashboards.pnFilename) EQ 0>
+            <cfinclude template="/include/#dashboards.pnFilename#" />
+        </cfif>
     </cfloop>
 </div>
 
-<!--- Packery Grid JavaScript for Dashboard Layout Management --->
-<script>
-    console.log("Before Packery");
-
-    function initializePackery() {
-        var isMobile = window.matchMedia("(max-width: 768px)").matches;
-        
-        <!--- Configure Packery options based on device type --->
-        var packeryOptions = isMobile ? {
-            itemSelector: '.grid-item',
-            gutter: 10,
-            percentPosition: true
-        } : {
-            itemSelector: '.grid-item',
-            gutter: 10,
-            fitWidth: true,
-            resizable: true,
-            columnWidth: '.grid-item',
-            percentPosition: true
-        };
-
-        var $grid = $('.packery-grid').packery(packeryOptions);
-
-        <!--- Enable drag-and-drop only for non-mobile devices --->
-        if (!isMobile) {
-            $grid.find('.grid-item').each(function(i, gridItem) {
-                var draggie = new Draggabilly(gridItem);
-                $grid.packery('bindDraggabillyEvents', draggie);
-            });
-
-            <!--- Save dashboard layout changes via AJAX --->
-            $grid.on('dragItemPositioned', function() {
-                var newOrder = [];
-                
-                $grid.packery('getItemElements').forEach(function(itemElem) {
-                    var id = $(itemElem).attr('data-id');
-                    newOrder.push(id);
-                });
-
-                $.ajax({
-                    url: '/include/update_order.cfm',
-                    type: 'POST',
-                    data: { order: newOrder.join(',') },
-                    success: function(response) {
-                        console.log('Updated successfully:', response);
-                    },
-                    error: function() {
-                        console.log('Failed to update order');
-                    }
-                });
-            });
-        }
-    }
-
-    <!--- Initialize Packery on page load --->
-    initializePackery();
-
-    <!--- Re-initialize Packery on window resize --->
-    $(window).resize(function() {
-        initializePackery();
-    });
-    
-    console.log("After Packery");
-</script>
+<!--- Packery Grid JS — single source of truth in /app/assets/js/dashboard/packeryInit.js --->
 
 <!--- Utility Function for Batch URL Opening --->
 <script>
