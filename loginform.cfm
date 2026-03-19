@@ -1,18 +1,29 @@
-<!--- ALWAYS compute host and dsn -- never rely on stale application scope --->
+<!--- 1) Compute env into LOCAL vars only --->
 <cfset host = ListFirst(cgi.server_name, ".") />
 <cfif host EQ "app">
-    <cfset application.dsn = "abo" />
-    <cfset application.information_schema = "actorsbusinessoffice" />
-    <cfset application.suffix = "_1.5" />
+    <cfset envLabel = "PROD" />
+    <cfset _dsn = "abo" />
+    <cfset _schema = "actorsbusinessoffice" />
+    <cfset _suffix = "_1.5" />
+<cfelseif host EQ "uat">
+    <cfset envLabel = "UAT" />
+    <cfset _dsn = "abod" />
+    <cfset _schema = "new_development" />
+    <cfset _suffix = "" />
 <cfelse>
-    <cfset application.dsn = "abod" />
-    <cfset application.information_schema = "new_development" />
-    <cfset application.suffix = "" />
+    <cfset envLabel = "DEV" />
+    <cfset _dsn = "abod" />
+    <cfset _schema = "new_development" />
+    <cfset _suffix = "" />
 </cfif>
 
-<!--- Host-specific app name prevents dev/prod cross-contamination --->
-<cfapplication name="TAO_#host#" sessionmanagement="true">
+<!--- 2) Establish the correct application scope FIRST --->
+<cfapplication name="TAO_#envLabel#" sessionmanagement="true">
 
+<!--- 3) NOW write to application scope (targeting the correct scope) --->
+<cfset application.dsn = _dsn />
+<cfset application.information_schema = _schema />
+<cfset application.suffix = _suffix />
 <cfset dsn = application.dsn />
 
 <!--- Clear session on login page view (acts as logout mechanism) --->

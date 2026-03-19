@@ -1,17 +1,20 @@
 <cfcomponent output="false">
-  <!--- Inherit settings from parent /app Application.cfc --->
-  <cfset host = ListFirst(cgi.server_name, ".") />
-
-  <cfif host EQ "app">
-    <cfset application.dsn = "abo" />
-    <cfset application.information_schema = "actorsbusinessoffice" />
-  <cfelse>
-    <cfset application.dsn = "abod" />
-    <cfset application.information_schema = "new_development" />
-  </cfif>
-
   <cfscript>
-    this.name = "TAO_" & host;
+    host = ListFirst(cgi.server_name, ".");
+    if (host == "app") {
+      envLabel = "PROD"; _dsn = "abo"; _schema = "actorsbusinessoffice";
+    } else if (host == "uat") {
+      envLabel = "UAT";  _dsn = "abod"; _schema = "new_development";
+    } else {
+      envLabel = "DEV";  _dsn = "abod"; _schema = "new_development";
+    }
+
+    // Set this.name FIRST so application scope writes target the correct scope
+    this.name = "TAO_" & envLabel;
+
+    application.dsn = _dsn;
+    application.information_schema = _schema;
+
     this.sessionManagement = true;
     this.sessionTimeout = createTimeSpan(0, 0, 30, 0);
     this.datasource = application.dsn;

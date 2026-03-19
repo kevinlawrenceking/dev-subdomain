@@ -1,14 +1,19 @@
 <cfcomponent output="false">
   <cfscript>
-    // Env routing MUST run before this.name to isolate host scopes
+    // Compute env into locals, then set this.name BEFORE any application.* writes
     host = ListFirst(cgi.server_name, ".");
-    if (host EQ "app") {
-      application.dsn = "abo";
+    if (host == "app") {
+      envLabel = "PROD"; _dsn = "abo";
+    } else if (host == "uat") {
+      envLabel = "UAT";  _dsn = "abod";
     } else {
-      application.dsn = "abod";
+      envLabel = "DEV";  _dsn = "abod";
     }
 
-    this.name = "TAO_" & host; // host-specific to prevent dev/prod cross-contamination
+    // this.name MUST be set first — determines which application scope is used
+    this.name = "TAO_" & envLabel;
+
+    application.dsn = _dsn;
     this.sessionManagement = true;
     this.applicationTimeout = createTimeSpan(11, 1, 0, 0);
     this.sessionTimeout = createTimeSpan(0, 9, 20, 0);

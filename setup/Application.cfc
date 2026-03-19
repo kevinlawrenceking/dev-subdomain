@@ -3,9 +3,12 @@
 <cfscript>
     // Get hostname first so app name is host-specific
     host = ListFirst(cgi.server_name, ".");
+    if (host == "app") { envLabel = "PROD"; }
+    else if (host == "uat") { envLabel = "UAT"; }
+    else { envLabel = "DEV"; }
 
     // === Application Settings ===
-    this.name = "Setup_" & host;
+    this.name = "Setup_" & envLabel;
     this.sessionManagement = true;
     this.applicationTimeout = createTimeSpan(1,0,0,0);
     this.sessionTimeout     = createTimeSpan(0,0,30,0);

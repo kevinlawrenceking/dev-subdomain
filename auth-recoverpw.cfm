@@ -1,14 +1,21 @@
 <!--- ALWAYS compute host and dsn -- never rely on stale application scope --->
 <cfset host = ListFirst(cgi.server_name, ".") />
 <cfif host EQ "app">
+    <cfset envLabel = "PROD" />
+<cfelseif host EQ "uat">
+    <cfset envLabel = "UAT" />
+<cfelse>
+    <cfset envLabel = "DEV" />
+</cfif>
+
+<!--- App name MUST be set before writing to application scope --->
+<cfapplication name="TAO_#envLabel#" sessionmanagement="true">
+
+<cfif host EQ "app">
     <cfset application.dsn = "abo" />
 <cfelse>
     <cfset application.dsn = "abod" />
 </cfif>
-
-<!--- Host-specific app name prevents dev/prod cross-contamination --->
-<cfapplication name="TAO_#host#" sessionmanagement="true">
-
 <cfset application.baseMediaUrl = "/media-" & application.dsn />
 <cfset dsn = application.dsn />
 

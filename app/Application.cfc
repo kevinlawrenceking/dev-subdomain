@@ -1,21 +1,26 @@
 <cfcomponent output="false">
 
-  <!--- host shortcut --->
+  <!--- 1) Compute host + env into LOCAL vars only (no application scope yet) --->
   <cfset host = ListFirst(cgi.server_name, ".") />
+  <cfscript>
+    if (host == "app") {
+      envLabel = "PROD"; _dsn = "abo"; _schema = "actorsbusinessoffice"; _suffix = "_1.5";
+    } else if (host == "uat") {
+      envLabel = "UAT";  _dsn = "abod"; _schema = "new_development";     _suffix = "";
+    } else {
+      envLabel = "DEV";  _dsn = "abod"; _schema = "new_development";     _suffix = "";
+    }
 
-  <!--- app flags --->
-  <cfset application.dbug = "Y" />
+    // 2) Set this.name FIRST — ColdFusion resolves the application scope by
+    //    this.name, so every application.* write below goes to the correct scope
+    this.name = "TAO_" & envLabel;
 
-  <!--- env routing --->
-  <cfif host EQ "app">
-    <cfset application.dsn = "abo" />
-    <cfset application.information_schema = "actorsbusinessoffice" />
-    <cfset application.suffix = "_1.5" />
-  <cfelse>
-    <cfset application.dsn = "abod" />
-    <cfset application.information_schema = "new_development" />
-    <cfset application.suffix = "" />
-  </cfif>
+    // 3) NOW populate the application scope (targeting the right scope)
+    application.dsn                = _dsn;
+    application.information_schema = _schema;
+    application.suffix             = _suffix;
+    application.dbug               = "Y";
+  </cfscript>
 
   <!--- version --->
   <cfquery result="result" name="findit" datasource="#application.dsn#">
@@ -27,9 +32,6 @@
   <cfset application.rev = findit.verid />
 
   <cfscript>
-    // Core application settings — name MUST be host-specific to prevent
-    // dev/prod cross-contamination when sharing a CF instance
-    this.name = "TAO_" & host;
     this.datasource = application.dsn;
     this.sessionManagement = true;
     this.applicationTimeout = createTimeSpan(11,1,0,0);

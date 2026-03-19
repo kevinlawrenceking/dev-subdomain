@@ -5,18 +5,21 @@
     are accessible during the OAuth callback from Google.
 --->
 
-  <cfset host = ListFirst(cgi.server_name, ".") />
-
-  <!--- env routing (must match /app/Application.cfc) --->
-  <cfif host EQ "app">
-    <cfset application.dsn = "abo" />
-  <cfelse>
-    <cfset application.dsn = "abod" />
-  </cfif>
-
   <cfscript>
-    // Host-specific name to prevent dev/prod cross-contamination
-    this.name = "TAO_" & host;
+    // Env routing (must match /app/Application.cfc)
+    host = ListFirst(cgi.server_name, ".");
+    if (host == "app") {
+      envLabel = "PROD"; _dsn = "abo";
+    } else if (host == "uat") {
+      envLabel = "UAT";  _dsn = "abod";
+    } else {
+      envLabel = "DEV";  _dsn = "abod";
+    }
+
+    // Set this.name FIRST so application scope writes target the correct scope
+    this.name = "TAO_" & envLabel;
+
+    application.dsn = _dsn;
     this.datasource = application.dsn;
     this.sessionManagement = true;
     this.applicationTimeout = createTimeSpan(11,1,0,0);
