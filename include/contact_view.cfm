@@ -15,9 +15,9 @@
             <figure>
                 <!--- Check if the browser contact avatar filename is an image file --->
                 <cfif isimagefile(browser_contact_avatar_filename)>
-                    <img src="<cfoutput>#browser_contact_avatar_filename#</cfoutput>?ver=<Cfoutput>#rand()#</cfoutput>" class="me-3 tao-avatar tao-avatar--lg img-fluid" alt="profile-image" id="item-img-output" />
+                    <img src="<cfoutput>#browser_contact_avatar_filename#</cfoutput>?ver=<Cfoutput>#rand()#</cfoutput>" class="me-3 tao-avatar tao-avatar--lg" alt="profile-image" id="item-img-output" />
                 <CFELSE>
-                    <img src="<cfoutput>#application.defaultAvatarUrl#</cfoutput>" class="me-3 tao-avatar tao-avatar--lg img-fluid" alt="profile-image" id="item-img-output" />
+                    <img src="<cfoutput>#application.defaultAvatarUrl#</cfoutput>" class="me-3 tao-avatar tao-avatar--lg" alt="profile-image" id="item-img-output" />
                 </cfif>
             </figure>
         </A>

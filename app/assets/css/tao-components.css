@@ -45,6 +45,9 @@ body {
 .tao-avatar--lg {
     width: 120px;
     height: 120px;
+    /* override Bootstrap img-fluid height:auto that breaks the circle */
+    min-height: 120px;
+    max-height: 120px;
 }
 
 /* --------------------------------------------------------------------------
