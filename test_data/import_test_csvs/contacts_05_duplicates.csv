@@ -1,0 +1,8 @@
+first_name,last_name,email,phone,company,title,tags
+Maria,Gonzalez,maria.gonzalez+test1@castingnetwork.com,310-555-1001,Gonzalez Casting,Casting Director,casting;duplicate-test
+Nathan,Brooks,nathan.brooks+test5@email.com,555-100-2000,Brooks Agency,Talent Agent,agent
+Olivia,Carter,olivia.carter+test5@email.com,555-100-3000,Carter Films,Director,director
+Nathan,Brooks,nathan.brooks+test5@email.com,555-999-8888,Different Company,Different Title,duplicate
+Patricia,Dunn,patricia.dunn+test5@email.com,555-100-4000,Dunn Casting,CD,casting
+Olivia,Carter,olivia.carter+test5@email.com,555-100-3000,Carter Films,Director,duplicate
+Quinn,Evans,quinn.evans+test5@email.com,555-100-5000,Evans Productions,Producer,producer

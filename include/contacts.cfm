@@ -24,6 +24,13 @@ Tables: contactdetails, contactitems, contactsimport, tags_user, fusystemusers
 <cfparam name="s" default="0" />
 <cfparam name="pgaction" default="view" />
 
+<!--- Gallery/Table view toggle --->
+<cfparam name="view" default="tbl" />
+<cfparam name="ctab" default="all" />
+<cfparam name="page" default="1" />
+<cfparam name="pageSize" default="12" />
+<cfparam name="gallerysearch" default="" />
+
 <!--- Session State Management --->
 <cfif NOT isDefined('session.pgaction')>
     <cfset session.pgaction = "view">
@@ -31,6 +38,58 @@ Tables: contactdetails, contactitems, contactsimport, tags_user, fusystemusers
 
 <!--- Include Required Queries --->
 <cfinclude template="/include/qry/lastupdates.cfm" />
+
+<!--- Gallery pagination CSS (matches auditions page styling) --->
+<cfif view eq "glry">
+<style>
+    .pagination-rounded .page-link {
+        border-radius: 6px;
+        margin: 0;
+        border: 1px solid #dee2e6;
+        color: #495057;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        padding: 8px 12px;
+        font-size: 14px;
+        min-width: 38px;
+        text-align: center;
+        background: #ffffff;
+    }
+    .pagination-rounded .page-item.active .page-link {
+        background-color: #495057;
+        border-color: #495057;
+        color: white;
+        font-weight: 600;
+    }
+    .pagination-rounded .page-link:hover:not(.disabled) {
+        background-color: #f8f9fa;
+        border-color: #adb5bd;
+        color: #212529;
+    }
+    .pagination-rounded .page-item.disabled .page-link {
+        color: #adb5bd;
+        background-color: #ffffff;
+        border-color: #dee2e6;
+    }
+    .gallery-info-compact {
+        border-bottom: 1px solid #f1f3f4;
+        padding-bottom: 8px;
+    }
+    .tao-card-row .col {
+        animation: fadeInUp 0.6s ease-out;
+    }
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .pagination-sm .page-link {
+        padding: 4px 8px;
+        font-size: 12px;
+        border-radius: 4px;
+        margin: 0 1px;
+    }
+</style>
+</cfif>
 
 <!--- JavaScript for Remote Modal Functionality --->
 <script>
@@ -156,119 +215,185 @@ Tables: contactdetails, contactitems, contactsimport, tags_user, fusystemusers
                     </cfoutput>
                 </cfif>
 
+                <!--- View Toggle Buttons --->
+                <div class="d-flex justify-content-end mb-2">
+                    <cfoutput>
+                        <cfset tbl_btn = (view eq "tbl") ? "btn-secondary" : "btn-outline-secondary" />
+                        <cfset glry_btn = (view eq "glry") ? "btn-secondary" : "btn-outline-secondary" />
+                        <a href="/app/contacts/?view=tbl<cfif bytag neq ''>&bytag=#urlEncodedFormat(bytag)#</cfif><cfif byimport neq ''>&byimport=#urlEncodedFormat(byimport)#</cfif>" class="btn btn-xs #tbl_btn# waves-effect waves-light" title="Table View">
+                            <i class="mdi mdi-menu fa-2x"></i>
+                        </a>
+                        &nbsp;
+                        <a href="/app/contacts/?view=glry<cfif bytag neq ''>&bytag=#urlEncodedFormat(bytag)#</cfif><cfif byimport neq ''>&byimport=#urlEncodedFormat(byimport)#</cfif>" class="btn btn-xs #glry_btn# waves-effect waves-light" title="Gallery View">
+                            <i class="mdi mdi-drag fa-2x"></i>
+                        </a>
+                    </cfoutput>
+                </div>
+
                 <!--- Tabbed Interface for Contact Lists --->
                 <div class="container responsive-tabs">
-                    <ul class="nav nav-pills navtab-bg nav-justified p-1" role="tablist">
-                        <li class="nav-item">
-                            <a id="tab-A" href="#contacts" class="nav-link <cfif contact_expand is 'true'> active</cfif>" data-bs-toggle="tab" role="tab">
-                                All Relationships
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a id="tab-B" href="#target" class="nav-link <cfif target_expand is 'true'> active</cfif>" data-bs-toggle="tab" role="tab">
-                                Targeted List
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a id="tab-C" href="#followup" class="nav-link <cfif followup_expand is 'true'> active</cfif>" data-bs-toggle="tab" role="tab">
-                                Follow-Up List
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a id="tab-D" href="#maintenance" class="nav-link <cfif maintenance_expand is 'true'> active</cfif>" data-bs-toggle="tab" role="tab">
-                                Maintenance List
-                            </a>
-                        </li>
-                    </ul>
-                    
-                    <!--- Script to handle DataTable column width issues when switching tabs --->
-                    <script>
-                        $(document).ready(function() {
-                            // Fix DataTable column widths when tabs are shown
-                            $('a[data-bs-toggle="tab"]').on('shown.bs.tab', function (e) {
-                                // Find all DataTables in the newly shown tab and adjust columns
-                                var targetPane = $(e.target.getAttribute('href'));
-                                targetPane.find('table.dataTable').each(function() {
-                                    var table = $(this).DataTable();
-                                    // Recalculate column widths
-                                    table.columns.adjust();
-                                    // Redraw the table
-                                    table.draw();
+                    <cfif view eq "tbl">
+                        <!--- TABLE VIEW: Bootstrap tabs with DataTables --->
+                        <ul class="nav nav-pills navtab-bg nav-justified p-1" role="tablist">
+                            <li class="nav-item">
+                                <a id="tab-A" href="#contacts" class="nav-link <cfif contact_expand is 'true'> active</cfif>" data-bs-toggle="tab" role="tab">
+                                    All Relationships
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a id="tab-B" href="#target" class="nav-link <cfif target_expand is 'true'> active</cfif>" data-bs-toggle="tab" role="tab">
+                                    Targeted List
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a id="tab-C" href="#followup" class="nav-link <cfif followup_expand is 'true'> active</cfif>" data-bs-toggle="tab" role="tab">
+                                    Follow-Up List
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a id="tab-D" href="#maintenance" class="nav-link <cfif maintenance_expand is 'true'> active</cfif>" data-bs-toggle="tab" role="tab">
+                                    Maintenance List
+                                </a>
+                            </li>
+                        </ul>
+
+                        <!--- Script to handle DataTable column width issues when switching tabs --->
+                        <script>
+                            $(document).ready(function() {
+                                $('a[data-bs-toggle="tab"]').on('shown.bs.tab', function (e) {
+                                    var targetPane = $(e.target.getAttribute('href'));
+                                    targetPane.find('table.dataTable').each(function() {
+                                        var table = $(this).DataTable();
+                                        table.columns.adjust();
+                                        table.draw();
+                                    });
                                 });
                             });
-                        });
-                    </script>
-                    <!--- Tab Content Panels --->
-                    <div id="content" class="tab-content" role="tablist">
-                        
-                        <!--- All Relationships Tab --->
-                        <div id="contacts" class="card tab-pane fade<cfif contact_expand is 'true'> show active</cfif>" role="tabpanel" aria-labelledby="tab-A">
-                            <div class="card-header" role="tab" id="heading-A">
-                                <h5 class="mb-0">
-                                    <a data-bs-toggle="collapse" href="#collapse-A" aria-expanded="<cfoutput>#contact_expand#</cfoutput>" aria-controls="collapse-A">
+                        </script>
+                        <!--- Tab Content Panels --->
+                        <div id="content" class="tab-content" role="tablist">
+
+                            <!--- All Relationships Tab --->
+                            <div id="contacts" class="card tab-pane fade<cfif contact_expand is 'true'> show active</cfif>" role="tabpanel" aria-labelledby="tab-A">
+                                <div class="card-header" role="tab" id="heading-A">
+                                    <h5 class="mb-0">
+                                        <a data-bs-toggle="collapse" href="#collapse-A" aria-expanded="<cfoutput>#contact_expand#</cfoutput>" aria-controls="collapse-A">
+                                            All Relationships
+                                        </a>
+                                    </h5>
+                                </div>
+                                <div id="collapse-A" class="collapse show" data-bs-parent="#content" role="tabpanel" aria-labelledby="heading-A">
+                                    <div class="card-body">
+                                        <cfset contacts_table = "contacts_ss" />
+                                        <cfinclude template="/include/contacts_table.cfm" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!--- Targeted List Tab --->
+                            <div id="target" class="card tab-pane fade<cfif target_expand is 'true'> show active</cfif>" role="tabpanel" aria-labelledby="tab-B">
+                                <div class="card-header" role="tab" id="heading-B">
+                                    <h5 class="mb-0">
+                                        <a class="collapsed" data-bs-toggle="collapse" href="#collapse-B" aria-expanded="<cfoutput>#target_expand#</cfoutput>" aria-controls="collapse-B">
+                                            Targeted List
+                                        </a>
+                                    </h5>
+                                </div>
+                                <div id="collapse-B" class="collapse" data-bs-parent="#content" role="tabpanel" aria-labelledby="heading-B">
+                                    <div class="card-body" id="targettest">
+                                        <cfset contacts_table = "contacts_ss_target" />
+                                        <cfinclude template="/include/contacts_table.cfm" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!--- Follow-Up List Tab --->
+                            <div id="followup" class="card tab-pane fade<cfif followup_expand is 'true'> show active</cfif>" role="tabpanel" aria-labelledby="tab-C">
+                                <div class="card-header" role="tab" id="heading-C">
+                                    <h5 class="mb-0">
+                                        <a data-bs-toggle="collapse" href="#collapse-C" aria-expanded="<cfoutput>#followup_expand#</cfoutput>" aria-controls="collapse-C">
+                                            Follow-Up List
+                                        </a>
+                                    </h5>
+                                </div>
+                                <div id="collapse-C" class="collapse" data-bs-parent="#content" role="tabpanel" aria-labelledby="heading-C">
+                                    <div class="card-body">
+                                        <cfset contacts_table = "contacts_ss_followup" />
+                                        <cfinclude template="/include/contacts_table.cfm" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!--- Maintenance List Tab --->
+                            <div id="maintenance" class="card tab-pane fade<cfif maintenance_expand is 'true'> show active</cfif>" role="tabpanel" aria-labelledby="tab-D">
+                                <div class="card-header" role="tab" id="heading-D">
+                                    <h5 class="mb-0">
+                                        <a data-bs-toggle="collapse" href="#collapse-D" aria-expanded="<cfoutput>#maintenance_expand#</cfoutput>" aria-controls="collapse-D">
+                                            Maintenance List
+                                        </a>
+                                    </h5>
+                                </div>
+                                <div id="collapse-D" class="collapse" data-bs-parent="#content" role="tabpanel" aria-labelledby="heading-D">
+                                    <div class="card-body">
+                                        <cfset contacts_table = "contacts_ss_maint" />
+                                        <cfinclude template="/include/contacts_table.cfm" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    <cfelse>
+                        <!--- GALLERY VIEW: URL-based tab navigation with card gallery --->
+                        <cfoutput>
+                            <cfset galleryFilterParams = "" />
+                            <cfif bytag neq ""><cfset galleryFilterParams = galleryFilterParams & "&bytag=" & urlEncodedFormat(bytag) /></cfif>
+                            <cfif byimport neq ""><cfset galleryFilterParams = galleryFilterParams & "&byimport=" & urlEncodedFormat(byimport) /></cfif>
+
+                            <ul class="nav nav-pills navtab-bg nav-justified p-1">
+                                <li class="nav-item">
+                                    <a href="/app/contacts/?view=glry&ctab=all#galleryFilterParams#" class="nav-link <cfif ctab eq 'all'> active</cfif>">
                                         All Relationships
                                     </a>
-                                </h5>
-                            </div>
-                            <div id="collapse-A" class="collapse show" data-bs-parent="#content" role="tabpanel" aria-labelledby="heading-A">
-                                <div class="card-body">
-                                    <cfset contacts_table = "contacts_ss" />
-                                    <cfinclude template="/include/contacts_table.cfm" />
-                                </div>
-                            </div>
-                        </div>
-
-                        <!--- Targeted List Tab --->
-                        <div id="target" class="card tab-pane fade<cfif target_expand is 'true'> show active</cfif>" role="tabpanel" aria-labelledby="tab-B">
-                            <div class="card-header" role="tab" id="heading-B">
-                                <h5 class="mb-0">
-                                    <a class="collapsed" data-bs-toggle="collapse" href="#collapse-B" aria-expanded="<cfoutput>#target_expand#</cfoutput>" aria-controls="collapse-B">
+                                </li>
+                                <li class="nav-item">
+                                    <a href="/app/contacts/?view=glry&ctab=target#galleryFilterParams#" class="nav-link <cfif ctab eq 'target'> active</cfif>">
                                         Targeted List
                                     </a>
-                                </h5>
-                            </div>
-                            <div id="collapse-B" class="collapse" data-bs-parent="#content" role="tabpanel" aria-labelledby="heading-B">
-                                <div class="card-body" id="targettest">
-                                    <cfset contacts_table = "contacts_ss_target" />
-                                    <cfinclude template="/include/contacts_table.cfm" />
-                                </div>
-                            </div>
-                        </div>
-
-                        <!--- Follow-Up List Tab --->
-                        <div id="followup" class="card tab-pane fade<cfif followup_expand is 'true'> show active</cfif>" role="tabpanel" aria-labelledby="tab-C">
-                            <div class="card-header" role="tab" id="heading-C">
-                                <h5 class="mb-0">
-                                    <a data-bs-toggle="collapse" href="#collapse-C" aria-expanded="<cfoutput>#followup_expand#</cfoutput>" aria-controls="collapse-C">
+                                </li>
+                                <li class="nav-item">
+                                    <a href="/app/contacts/?view=glry&ctab=followup#galleryFilterParams#" class="nav-link <cfif ctab eq 'followup'> active</cfif>">
                                         Follow-Up List
                                     </a>
-                                </h5>
-                            </div>
-                            <div id="collapse-C" class="collapse" data-bs-parent="#content" role="tabpanel" aria-labelledby="heading-C">
-                                <div class="card-body">
-                                    <cfset contacts_table = "contacts_ss_followup" />
-                                    <cfinclude template="/include/contacts_table.cfm" />
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!--- Maintenance List Tab --->
-                        <div id="maintenance" class="card tab-pane fade<cfif maintenance_expand is 'true'> show active</cfif>" role="tabpanel" aria-labelledby="tab-D">
-                            <div class="card-header" role="tab" id="heading-D">
-                                <h5 class="mb-0">
-                                    <a data-bs-toggle="collapse" href="#collapse-D" aria-expanded="<cfoutput>#maintenance_expand#</cfoutput>" aria-controls="collapse-D">
+                                </li>
+                                <li class="nav-item">
+                                    <a href="/app/contacts/?view=glry&ctab=maint#galleryFilterParams#" class="nav-link <cfif ctab eq 'maint'> active</cfif>">
                                         Maintenance List
                                     </a>
-                                </h5>
-                            </div>
-                            <div id="collapse-D" class="collapse" data-bs-parent="#content" role="tabpanel" aria-labelledby="heading-D">
-                                <div class="card-body">
-                                    <cfset contacts_table = "contacts_ss_maint" />
-                                    <cfinclude template="/include/contacts_table.cfm" />
-                                </div>
+                                </li>
+                            </ul>
+                        </cfoutput>
+
+                        <!--- Gallery content for the active tab --->
+                        <div class="card mt-2">
+                            <div class="card-body">
+                                <cfswitch expression="#ctab#">
+                                    <cfcase value="target">
+                                        <cfset contacts_table = "contacts_ss_target" />
+                                    </cfcase>
+                                    <cfcase value="followup">
+                                        <cfset contacts_table = "contacts_ss_followup" />
+                                    </cfcase>
+                                    <cfcase value="maint">
+                                        <cfset contacts_table = "contacts_ss_maint" />
+                                    </cfcase>
+                                    <cfdefaultcase>
+                                        <cfset contacts_table = "contacts_ss" />
+                                    </cfdefaultcase>
+                                </cfswitch>
+                                <cfinclude template="/include/contacts_gallery.cfm" />
                             </div>
                         </div>
-                    </div>
+                    </cfif>
                 </div>
             </div>
         </div>

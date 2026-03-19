@@ -2,6 +2,15 @@
 <cfinclude template="/include/qry/getMyTeam.cfm" />
 
 <link href="https://cdn.materialdesignicons.com/6.5.95/css/materialdesignicons.min.css" rel="stylesheet">
+<style>
+    .tao-card-row .col {
+        animation: fadeInUp 0.6s ease-out;
+    }
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
 
 <div class="team-management-container">
   <div class="team-header">
@@ -83,7 +92,7 @@
             <cfset aud_cat_icon           = "" />
             <cfset card_view_icon_yn      = "Y" />
             <cfset card_avatar            = "Yes" />
-            <cfset card_badge_yn          = "Y" />
+            <cfset card_badge_yn          = "N" />
             <cfset card_casting           = "" />
             <cfset card_company           = myteam.card_company />
             <cfset card_delete            = "" />
@@ -93,14 +102,14 @@
             <cfset card_remove_value      = "'" & myteam.contactid & "'" />
             <cfset card_details           = "/app/contact/?contactid=" & myteam.contactid />
             <cfset card_email             = myteam.card_email />
-            <cfset card_footer_text       = "Crd footer text" />
+            <cfset card_footer_text       = "" />
             <cfset card_footer_type       = "social" />
             <cfset card_footer_yn         = "Y" />
             <cfset card_header_text       = myteam.card_name  />
             <cfset card_name              = "" />
             <cfset card_header_yn         = "Y" />
             <cfset card_icon              = "" />
-            <cfset card_icon_yn           = "Y" />
+            <cfset card_icon_yn           = "N" />
             <cfset card_id                = myteam.contactid />
             <cfset card_image_type        = "avatar" />
             <cfset card_image_yn          = "Y" />
@@ -113,7 +122,7 @@
             <cfset card_social_yn         = "Y" />
             <cfset card_source            = "" />
             <cfset card_subtitle          = "" />
-            <cfset card_title             = "" />
+            <cfset card_title             = myteam.card_company />
             <cfset card_top_ribbon        = "" />
             <cfset namecolor              = "medium" />
             <cfset ribbon_icon            = "" />
@@ -169,8 +178,64 @@
   </div>
 </div> <!--- End .team-management-container --->
 
+<!--- Toast notification styles --->
+<style>
+.tao-toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    min-width: 280px;
+    max-width: 400px;
+    padding: 14px 20px;
+    border-radius: 6px;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    opacity: 0;
+    transform: translateX(100%);
+    transition: all 0.4s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.tao-toast.show {
+    opacity: 1;
+    transform: translateX(0);
+}
+.tao-toast.hiding {
+    opacity: 0;
+    transform: translateX(100%);
+}
+.tao-toast-success { background-color: #1abc9c; }
+.tao-toast-error { background-color: #f1556c; }
+.tao-toast-info { background-color: #4fc6e1; }
+.tao-toast i { font-size: 18px; }
+</style>
+
 <!--- JavaScript for deleting a team member via fetch() and copy functionality --->
 <script>
+// Toast notification utility
+function showTeamToast(message, type) {
+    type = type || 'success';
+    var iconClass = type === 'success' ? 'mdi-check-circle' : type === 'error' ? 'mdi-alert-circle' : 'mdi-information';
+    var toast = document.createElement('div');
+    toast.className = 'tao-toast tao-toast-' + type;
+    toast.innerHTML = '<i class="mdi ' + iconClass + '"></i><span>' + message + '</span>';
+    document.body.appendChild(toast);
+    // Trigger show animation
+    requestAnimationFrame(function() {
+        toast.classList.add('show');
+    });
+    // Auto-dismiss after 3 seconds
+    setTimeout(function() {
+        toast.classList.remove('show');
+        toast.classList.add('hiding');
+        setTimeout(function() { toast.remove(); }, 400);
+    }, 3000);
+}
+
 function confirmRemove(contactId) {
     if (confirm("Are you sure you want to remove this person from your team?")) {
         fetch('/include/delete_team.cfm', {
@@ -185,16 +250,20 @@ function confirmRemove(contactId) {
             if (data.success) {
                 let cardEl = document.getElementById('card-' + contactId);
                 if (cardEl) {
-                    cardEl.classList.add('removing'); // Start animation
+                    cardEl.classList.add('removing');
                     setTimeout(() => {
-                        cardEl.remove(); // Fully remove after animation
-                    }, 300); // Wait for CSS transition to finish
+                        cardEl.remove();
+                    }, 300);
                 }
+                showTeamToast('Team member removed successfully.', 'success');
             } else {
-                alert("Error: " + data.message);
+                showTeamToast('Error: ' + data.message, 'error');
             }
         })
-        .catch(error => console.error('Error:', error));
+        .catch(function(error) {
+            console.error('Error:', error);
+            showTeamToast('An error occurred. Please try again.', 'error');
+        });
     }
 }
 
@@ -279,5 +348,16 @@ function showCopyError(btn) {
     alert('Unable to copy automatically. Please manually copy the link:\n\n' + btn.closest('.share-link-container').querySelector('.team-share-link').textContent);
 }
 </script>
+
+<!--- Show toast on page load if a team action was just performed --->
+<cfif isDefined('teamToastMsg') and len(trim(teamToastMsg))>
+    <cfoutput>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                showTeamToast('#jsStringFormat(teamToastMsg)#', '#teamToastType#');
+            });
+        </script>
+    </cfoutput>
+</cfif>
 
 <cfinclude template="/include/email_options_modal.cfm" />

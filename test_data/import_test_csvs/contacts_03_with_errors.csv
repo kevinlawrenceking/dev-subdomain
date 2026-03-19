@@ -1,0 +1,9 @@
+first_name,last_name,email,phone,company,title,birthday,tags
+George,Harrison,george.h+test3@email.com,555-111-2222,Harrison Media,CEO,1979-05-10,media;executive
+,,bad-email-format,not-a-phone,,,not-a-date,
+Helen,Park,helen.park+test3@email.com,555-333-4444,Park Talent,Agent,1985-13-45,agent
+,Missing-First,missing.first+test3@email.com,555-555-6666,,,,incomplete
+Ivan,,ivan.only+test3@email.com,,,,,missing-last
+Jenna,Cruz,jenna.cruz+test3@email.com,abcdefg,Cruz Casting,Casting Director,02/30/2000,casting
+Karl,Weber,karl.weber+test3@email.com,555-777-8888,Weber Productions,Producer,1990-06-15,producer
+,,,,,,,

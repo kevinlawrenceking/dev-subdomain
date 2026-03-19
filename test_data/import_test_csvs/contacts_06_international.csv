@@ -1,0 +1,6 @@
+first_name,last_name,email,phone,company,title,city,state,country,tags
+Yuki,Tanaka,yuki.tanaka+test6@tokyotalent.jp,+81-3-5555-1001,Tokyo Talent,Agent,Tokyo,,Japan,international;japan
+Hans,Mueller,hans.mueller+test6@berlinfilm.de,+49-30-5555-2002,Berlin Film Collective,Director,Berlin,,Germany,international;europe
+Sofia,Rossi,sofia.rossi+test6@email.it,+39-06-5555-3003,Roma Productions,Producer,Rome,,Italy,international;europe
+Raj,Kapoor,raj.kapoor+test6@bollywood.in,+91-22-5555-4004,Kapoor Studios,Casting Director,Mumbai,,India,international;casting
+Chen,Wei,chen.wei+test6@shanghai.cn,+86-21-5555-5005,Shanghai Film,Executive,Shanghai,,China,international;asia

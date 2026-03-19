@@ -98,13 +98,17 @@ Last Updated: 2025
         <cfset ctaction = "view"/>
         <cfset teamaction = "view"/>
         <cfset t2 = 1/>
+        <cfset teamToastMsg = "Team member removed successfully." />
+        <cfset teamToastType = "success" />
     </cfcase>
-    
+
     <cfcase value="addmember">
         <cfinclude template="/include/qry/addTeam.cfm"/>
         <cfset ctaction = "view"/>
         <cfset teamaction = "view"/>
         <cfset t2 = 1/>
+        <cfset teamToastMsg = "Team member added successfully." />
+        <cfset teamToastType = "success" />
     </cfcase>
 </cfswitch>
 
