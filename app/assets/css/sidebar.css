@@ -2,7 +2,7 @@
    TAO Sidebar Styles
    ==========================================================================
    Externalized from include/leftbar.cfm inline styles.
-   Dark theme sidebar for The Actors Office.
+   Light theme sidebar for The Actors Office.
 
    Dependencies: Bootstrap 5 (collapse component for admin sections)
    Layout: Works with existing .left-side-menu framework positioning
@@ -10,37 +10,37 @@
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
-   CSS Custom Properties — Dark Theme
+   CSS Custom Properties
    -------------------------------------------------------------------------- */
 :root {
-    --tao-sidebar-bg: #1e293b;
-    --tao-sidebar-border: rgba(255, 255, 255, 0.08);
+    --tao-sidebar-bg: #F1F2F4;
+    --tao-sidebar-border: #E0E2E5;
 
     /* Text */
-    --tao-sidebar-text: #e2e8f0;
-    --tao-sidebar-text-secondary: #94a3b8;
-    --tao-sidebar-text-hover: #f8fafc;
+    --tao-sidebar-text: #374151;
+    --tao-sidebar-text-secondary: #6B7280;
+    --tao-sidebar-text-hover: #111827;
 
     /* Active state */
-    --tao-sidebar-active-bg: rgba(59, 130, 246, 0.15);
+    --tao-sidebar-active-bg: #DBEAFE;
     --tao-sidebar-active-border: #3B82F6;
-    --tao-sidebar-active-text: #93c5fd;
-    --tao-sidebar-active-icon: #60a5fa;
+    --tao-sidebar-active-text: #1E40AF;
+    --tao-sidebar-active-icon: #3B82F6;
 
     /* Hover state */
-    --tao-sidebar-hover-bg: rgba(255, 255, 255, 0.06);
+    --tao-sidebar-hover-bg: #E5E7EB;
 
     /* Icons */
-    --tao-sidebar-icon: #94a3b8;
+    --tao-sidebar-icon: #6B7280;
 
     /* Transitions */
     --tao-sidebar-transition: 0.2s ease;
 
     /* Dividers */
-    --tao-sidebar-divider: rgba(255, 255, 255, 0.08);
+    --tao-sidebar-divider: #D5D7DA;
 
-    /* Admin section arrow */
-    --tao-sidebar-section-text: #64748b;
+    /* Admin section */
+    --tao-sidebar-section-text: #9CA3AF;
 }
 
 /* --------------------------------------------------------------------------
@@ -54,8 +54,8 @@
 .tao-sidebar.left-side-menu {
     background-color: var(--tao-sidebar-bg);
     border-right: 1px solid var(--tao-sidebar-border);
-    box-shadow: 2px 0 12px rgba(0, 0, 0, 0.15);
     padding: 0;
+    box-shadow: none;
 }
 
 /* --------------------------------------------------------------------------
@@ -68,7 +68,7 @@
 
     /* Native thin scrollbar (Firefox) */
     scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+    scrollbar-color: rgba(0, 0, 0, 0.12) transparent;
 }
 
 .tao-sidebar__scroll::-webkit-scrollbar {
@@ -80,12 +80,12 @@
 }
 
 .tao-sidebar__scroll::-webkit-scrollbar-thumb {
-    background-color: rgba(255, 255, 255, 0.12);
+    background-color: rgba(0, 0, 0, 0.12);
     border-radius: 3px;
 }
 
 .tao-sidebar__scroll::-webkit-scrollbar-thumb:hover {
-    background-color: rgba(255, 255, 255, 0.25);
+    background-color: rgba(0, 0, 0, 0.25);
 }
 
 /* --------------------------------------------------------------------------
@@ -116,7 +116,7 @@
     height: 56px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid rgba(255, 255, 255, 0.15);
+    border: 2px solid rgba(0, 0, 0, 0.1);
     margin-bottom: 8px;
 }
 
