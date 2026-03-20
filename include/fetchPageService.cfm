@@ -44,7 +44,7 @@
 <!--- Determine host color based on the host name --->
 <cfset hostcolor = (host EQ "app") ? "##406E8E" :
                   (host EQ "dev") ? "##8b0000" :
-                  (host EQ "uat") ? "##8b0000" :
+                  (host EQ "uat") ? "purple" :
                   (host EQ "chris") ? "green" :
                   (host EQ "new") ? "##284559" :
                   (host EQ "kevin") ? "violet" : "" />

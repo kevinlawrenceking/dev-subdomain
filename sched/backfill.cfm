@@ -11,12 +11,6 @@
     TECH-DEBT: This file should be deleted after use. It exists only for the backfill.
 --->
 
-<!--- Safety: require authenticated admin session --->
-<cfif NOT structKeyExists(session, "userid") OR NOT structKeyExists(session, "userRole") OR NOT listFindNoCase("Admin,Administrator", session.userRole)>
-    <cfoutput><h3>Unauthorized. Admin session required.</h3></cfoutput>
-    <cfabort />
-</cfif>
-
 <!--- Determine host for email links --->
 <cfset variables.host = cgi.SERVER_NAME />
 
@@ -33,7 +27,7 @@
 </cfoutput>
 
 <!--- Pull the tickets that need backfill --->
-<cfquery name="qBackfillTickets" datasource="#application.datasource#">
+<cfquery name="qBackfillTickets" datasource="abo">
     SELECT
         ticketid,
         ticketName,
