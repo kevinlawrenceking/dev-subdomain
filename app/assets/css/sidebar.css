@@ -446,9 +446,57 @@ body[data-leftbar-size="condensed"] .tao-sidebar__label {
    Framework Override Resets
    --------------------------------------------------------------------------
    Prevent framework styles from bleeding into BEM-scoped sidebar elements.
+   The framework's #sidebar-menu > ul > li > a selectors (app.min.css ~5897)
+   set color:#f8f8ff (ghost white) which is invisible on a light background.
+   We must match or exceed that specificity with the #sidebar-menu ID.
    -------------------------------------------------------------------------- */
 .tao-sidebar .tao-sidebar__link,
 .tao-sidebar .tao-sidebar__sublink,
 .tao-sidebar .tao-sidebar__section-toggle {
     border-bottom: none;
+}
+
+/* Override framework link colors (specificity: #id + class chain) */
+#sidebar-menu > ul > li > a.tao-sidebar__link {
+    color: var(--tao-sidebar-text);
+    font-family: inherit;
+}
+
+#sidebar-menu > ul > li > a.tao-sidebar__link:hover,
+#sidebar-menu > ul > li > a.tao-sidebar__link:focus,
+#sidebar-menu > ul > li > a.tao-sidebar__link:active {
+    color: var(--tao-sidebar-text-hover);
+}
+
+#sidebar-menu > ul > li.tao-sidebar__item--active > a.tao-sidebar__link {
+    color: var(--tao-sidebar-active-text);
+}
+
+/* Override framework icon sizing/color */
+#sidebar-menu > ul > li > a i.tao-sidebar__icon,
+#sidebar-menu > ul > li > a svg.tao-sidebar__icon {
+    color: var(--tao-sidebar-icon);
+}
+
+#sidebar-menu > ul > li.tao-sidebar__item--active > a i.tao-sidebar__icon,
+#sidebar-menu > ul > li.tao-sidebar__item--active > a svg.tao-sidebar__icon {
+    color: var(--tao-sidebar-active-icon);
+}
+
+/* Override framework condensed mode colors */
+body[data-leftbar-size="condensed"] #sidebar-menu > ul > li > a.tao-sidebar__link {
+    color: var(--tao-sidebar-text);
+}
+
+body[data-leftbar-size="condensed"] #sidebar-menu > ul > li:hover > a.tao-sidebar__link {
+    color: var(--tao-sidebar-text-hover);
+    background-color: var(--tao-sidebar-hover-bg);
+    box-shadow: none;
+    width: auto;
+}
+
+body[data-leftbar-size="condensed"] #sidebar-menu > ul > li > a.tao-sidebar__link:hover,
+body[data-leftbar-size="condensed"] #sidebar-menu > ul > li > a.tao-sidebar__link:focus,
+body[data-leftbar-size="condensed"] #sidebar-menu > ul > li > a.tao-sidebar__link:active {
+    color: var(--tao-sidebar-text-hover);
 }
