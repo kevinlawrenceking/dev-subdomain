@@ -15,7 +15,7 @@
       If they do, skip the notification creation loop to prevent duplicates.
       This guards against double-enrollment from overlapping code paths
       (e.g., modalansweryes.cfm + add_system.cfm in the same audition flow). --->
-<cfset var _existingNots = queryExecute(
+<cfset _existingNots = queryExecute(
     "SELECT notid FROM funotifications
      WHERE suid = ? AND notstatus = 'Pending'
      LIMIT 1",

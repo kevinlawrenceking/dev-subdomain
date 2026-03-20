@@ -124,7 +124,7 @@
     <!--- FIX #1653: Skip Social Profile items that already have branded icons
           rendered in the profiles row (getSocialIcons). Without this, IMDB/LinkedIn
           links appear both as a branded icon and a duplicate text link. --->
-    <cfset var _skipBrandedIcon = false>
+    <cfset _skipBrandedIcon = false>
     <cfif isDefined("profiles") and isQuery(profiles) and ActiveCategories.valueCategory is "Social Profile">
         <cfloop query="profiles">
             <cfif profiles.valuetext eq result.itemsbycatActive.valuetext>

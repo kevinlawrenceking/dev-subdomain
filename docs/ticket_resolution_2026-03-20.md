@@ -300,10 +300,12 @@
 **Root Cause:** The form submit handler used `$("#snow-editor").html()` which captured the entire Quill container HTML including `.ql-clipboard` and wrapper divs. Each save wrapped the content in extra divs, causing progressive corruption. On reload, the corrupted HTML rendered differently, making edits appear to revert.
 
 **Fix Applied:**
-- **`include/note-update-event.cfm`** - Changed selector from `$("#snow-editor").html()` to `$("#snow-editor .ql-editor").html()` to capture only the Quill editor content. Also syncs plain-text field via `.text()`.
+- **`include/note-update-event.cfm`**, **`include/note-update-aud.cfm`**, **`include/note-add-event.cfm`** - Changed selector from `$("#snow-editor").html()` to `$("#snow-editor .ql-editor").html()` to capture only the Quill editor content. Removed erroneous `$('#noteDetails').val(...)` line that overwrote the independent "Note Title" field, which caused Parsley validation to block submission when the Quill editor was empty. Added `if ($editor.length)` guard.
 
 **Files Changed:**
 - `include/note-update-event.cfm`
+- `include/note-update-aud.cfm`
+- `include/note-add-event.cfm`
 
 **Testing Script:**
 1. Navigate to an audition or event with existing notes
@@ -319,10 +321,10 @@
 
 **Reported:** On the audition update form, clicking the "SAME" button to copy location details from the original audition does nothing.
 
-**Root Cause:** The JS `getElementById('eventLocation')` used a hardcoded ID, but the form uses dynamic IDs with the event ID appended (e.g., `eventLocation123`). Also, `region_id` was set before calling `filterRegions()`, so the region dropdown was empty when the value was assigned.
+**Root Cause:** The JS click handler referenced `document.getElementById('eventLocation')`, but the actual HTML element ID is `eventLocation` + the event ID (e.g., `eventLocation12345`). `getElementById('eventLocation')` returned `null`, and the subsequent `.value = ...` threw an uncaught `TypeError` that halted the entire handler. Secondary bug: the region dropdown was set BEFORE the country dropdown, and `filterRegions()` was never called.
 
 **Fix Applied:**
-- **`include/remoteaudupdateform.cfm`** - Changed `eventLocation` to use dynamic ID with `<cfoutput>#new_eventid#</cfoutput>`. Moved `filterRegions(countryid)` call before setting `region_id` value so the dropdown is populated first.
+- **`include/remoteaudupdateform.cfm`** - Changed `getElementById('eventLocation')` to `getElementById('eventLocation<cfoutput>#new_eventid#</cfoutput>')` to match the actual DOM element ID. Reordered so country is set first, then `filterRegions()` is called, then region is set.
 
 **Files Changed:**
 - `include/remoteaudupdateform.cfm`
@@ -343,12 +345,14 @@
 **Root Cause:** Safari does not always auto-correct EXIF Orientation tags on uploaded photos. Portrait images appear squished or rotated because the browser ignores the EXIF tag.
 
 **Fix Applied:**
-1. **`app/assets/css/tao-components.css`** - Added `image-orientation: from-image` to `.tao-avatar` and other avatar CSS classes (`.current-avatar`, `.birthday-avatar`, `.team-avatar`, `.tao-sidebar__avatar`, `.tao-card-avatar img`, `.tao-card-photo-body img`).
-2. **`include/image-upload.cfm`** - Added `image-orientation: from-image` to preview image style.
-3. **`include/image-upload-contact.cfm`** - Updated upload interface with EXIF-aware rendering.
+1. **`app/assets/css/tao-components.css`** - Added `image-orientation: from-image` to `.tao-avatar` and new rule block targeting `.current-avatar`, `.birthday-avatar`, `.team-avatar`, `.tao-sidebar__avatar`, `.tao-card-avatar img`, `.tao-card-photo-body img`.
+2. **`app/assets/css/app.min.css`** - Changed `.tao-card-avatar img` from `height: auto; object-fit: contain` to `height: 60px; object-fit: cover`. Added `image-orientation: from-image` to `.tao-card-avatar img` and `.tao-card-photo-body img`.
+3. **`include/image-upload.cfm`** - Added `image-orientation: from-image` to inline `.current-avatar` style.
+4. **`include/image-upload-contact.cfm`** - Added `image-orientation: from-image` to inline `.current-avatar` style.
 
 **Files Changed:**
 - `app/assets/css/tao-components.css`
+- `app/assets/css/app.min.css`
 - `include/image-upload.cfm`
 - `include/image-upload-contact.cfm`
 
@@ -368,7 +372,7 @@
 **Root Cause:** Quill.js preserves inline `color` and `background-color` styles from pasted HTML. Text copied from dark-themed websites retains white or light font colors, which become invisible against the white editor background.
 
 **Fix Applied:**
-- **`app/assets/js/form-quill.js`** and **`share/assets/form-quill.js`** - Added a Quill clipboard matcher that strips `color` and `background` attributes from all pasted content.
+- **`app/assets/js/form-quill.js`** and **`share/assets/form-quill.js`** - Added a Quill clipboard matcher (lines 38-49) that strips `color` and `background` attributes from all pasted Delta operations. Users can still set colors manually via the toolbar color picker.
 
 **Files Changed:**
 - `app/assets/js/form-quill.js`

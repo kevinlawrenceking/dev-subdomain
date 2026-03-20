@@ -29,7 +29,7 @@ cfinclude template= /include/qry/uu_33_1.cfm    --->
               added (e.g., by modalansweryes.cfm during the same audition creation flow).
               Without this guard, the user could enroll the contact twice, creating
               duplicate reminders. --->
-        <cfset var _checkSystem = queryExecute(
+        <cfset _checkSystem = queryExecute(
             "SELECT suid FROM fusystemusers_tbl
              WHERE contactid = ? AND userid = ? AND sustatus = 'Active' AND isdeleted = 0
              LIMIT 1",

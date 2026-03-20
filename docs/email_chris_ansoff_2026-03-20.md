@@ -41,7 +41,7 @@ Here is a summary of the tickets we resolved and documented today:
 
 - **#1633 - Self-tape duration required when not applicable** - Fixed conditional field visibility so the duration field only appears and is required when "Self Tape" is selected as the audition type.
 
-- **#1652 - Notes edits not saving** - Fixed Quill editor content capture. Changed from capturing the entire `#snow-editor` container HTML (which included Quill internal divs) to capturing only `.ql-editor` content, preventing progressive corruption.
+- **#1652 - Notes edits not saving** - Fixed two bugs: (1) Quill editor content capture was grabbing the entire container HTML including internal wrapper divs, causing progressive corruption on each save. (2) A partial fix had erroneously overwritten the Note Title field, causing Parsley validation to block submission. Fixed in 3 files.
 
 - **#1631 - Callback SAME button not working** - Fixed dynamic element ID mismatch in the "SAME" button handler and ensured `filterRegions()` is called before setting the region value.
 
