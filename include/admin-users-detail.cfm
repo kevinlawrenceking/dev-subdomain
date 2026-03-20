@@ -274,7 +274,20 @@
     var userData = null;
     var pendingEmailTemplate = '';
 
+    // CSRF token for AJAX POST requests
+    var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+    var csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+
     // ---- Helpers ----
+
+    function adminPost(url, data) {
+        return $.ajax({
+            url: url,
+            type: 'POST',
+            data: data,
+            headers: { 'X-CSRF-Token': csrfToken }
+        });
+    }
 
     function escapeHtml(text) {
         if (text === null || text === undefined) return '';
@@ -394,7 +407,7 @@
     function toggleStatus(newStatus) {
         if (!confirm('Change user status to "' + newStatus + '"?')) return;
 
-        $.post(AJAX_BASE + 'toggle-status.cfm', { userid: USER_ID, newStatus: newStatus })
+        adminPost(AJAX_BASE + 'toggle-status.cfm', { userid: USER_ID, newStatus: newStatus })
             .done(function(resp) {
                 if (resp.success || resp.SUCCESS) {
                     $('#statusActionResult').html('<span class="text-success">Status changed to ' + escapeHtml(newStatus) + '</span>');
@@ -439,7 +452,7 @@
         $('#btnConfirmSendEmail').prop('disabled', true).text('Sending...');
         console.log('[AdminEmail] Send request: template=' + pendingEmailTemplate + ' userid=' + USER_ID);
 
-        $.post(AJAX_BASE + 'send-email.cfm', { userid: USER_ID, template: pendingEmailTemplate })
+        adminPost(AJAX_BASE + 'send-email.cfm', { userid: USER_ID, template: pendingEmailTemplate })
             .done(function(resp) {
                 console.log('[AdminEmail] Send response:', resp);
                 var debugLog = resp.debug || resp.DEBUG;
@@ -506,7 +519,7 @@
 
         $('#btnSaveEdit').prop('disabled', true).text('Saving...');
 
-        $.post(AJAX_BASE + 'save.cfm', data)
+        adminPost(AJAX_BASE + 'save.cfm', data)
             .done(function(resp) {
                 if (resp.success || resp.SUCCESS) {
                     bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();

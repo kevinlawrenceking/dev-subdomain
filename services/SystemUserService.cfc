@@ -100,12 +100,13 @@
     </cfif>
 
     <cfquery result="result">
-        INSERT INTO fuSystemUsers (systemID, contactID, userID, suStartDate)
+        INSERT INTO fuSystemUsers (systemID, contactID, userID, suStartDate, sustatus)
         VALUES (
             <cfqueryparam value="#arguments.systemID#" cfsqltype="CF_SQL_INTEGER">,
             <cfqueryparam value="#arguments.contactID#" cfsqltype="CF_SQL_INTEGER">,
             <cfqueryparam value="#arguments.userID#" cfsqltype="CF_SQL_VARCHAR">,
-            <cfqueryparam value="#arguments.suStartDate#" cfsqltype="CF_SQL_DATE">
+            <cfqueryparam value="#arguments.suStartDate#" cfsqltype="CF_SQL_DATE">,
+            'Active'
         )
     </cfquery>
 </cftransaction>
@@ -121,13 +122,14 @@
     <cfargument name="new_suStartDate" type="date" required="true">
 
 <cfquery result="result">
-        INSERT INTO fuSystemUsers (systemID, contactID, userID, suStartDate, suNotes)
+        INSERT INTO fuSystemUsers (systemID, contactID, userID, suStartDate, suNotes, sustatus)
         VALUES (
             <cfqueryparam value="#arguments.new_systemid#" cfsqltype="CF_SQL_INTEGER">,
             <cfqueryparam value="#arguments.new_contactid#" cfsqltype="CF_SQL_INTEGER">,
             <cfqueryparam value="#userid#" cfsqltype="CF_SQL_INTEGER">,
             <cfqueryparam value="#arguments.new_suStartDate#" cfsqltype="CF_SQL_DATE">,
-            <cfqueryparam value="Added via user batch update" cfsqltype="CF_SQL_VARCHAR">
+            <cfqueryparam value="Added via user batch update" cfsqltype="CF_SQL_VARCHAR">,
+            'Active'
         )
     </cfquery>
     <cfreturn result.generatedKey>
@@ -202,13 +204,14 @@
     </cfif>
 
     <cfquery result="result">
-        INSERT INTO fuSystemUsers (systemID, contactID, userID, suStartDate, sunotes)
+        INSERT INTO fuSystemUsers (systemID, contactID, userID, suStartDate, sunotes, sustatus)
         VALUES (
             <cfqueryparam value="#arguments.new_systemid#" cfsqltype="CF_SQL_INTEGER">,
             <cfqueryparam value="#arguments.new_contactid#" cfsqltype="CF_SQL_INTEGER">,
             <cfqueryparam value="#arguments.new_userid#" cfsqltype="CF_SQL_INTEGER">,
             <cfqueryparam value="#arguments.suStartDate#" cfsqltype="CF_SQL_DATE">,
-            <cfqueryparam value="#arguments.sunotes#" cfsqltype="CF_SQL_VARCHAR">
+            <cfqueryparam value="#arguments.sunotes#" cfsqltype="CF_SQL_VARCHAR">,
+            'Active'
         )
     </cfquery>
 </cftransaction>
@@ -380,12 +383,13 @@
     </cfif>
 
     <cfquery result="result">
-        INSERT INTO fuSystemUsers (systemID, contactID, userID, suStartDate)
+        INSERT INTO fuSystemUsers (systemID, contactID, userID, suStartDate, sustatus)
         VALUES (
             <cfqueryparam value="#arguments.maint_systemID#" cfsqltype="CF_SQL_INTEGER">,
             <cfqueryparam value="#arguments.maint_contactID#" cfsqltype="CF_SQL_INTEGER">,
             <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_VARCHAR">,
-            <cfqueryparam value="#arguments.suStartDate#" cfsqltype="CF_SQL_DATE">
+            <cfqueryparam value="#arguments.suStartDate#" cfsqltype="CF_SQL_DATE">,
+            'Active'
         )
     </cfquery>
 </cftransaction>

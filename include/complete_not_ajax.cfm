@@ -57,7 +57,13 @@
 <cfinclude template="/include/qry/getNotificationByID.cfm" />
 <cfset debugCounters.selectedNotifications = NotificationDetails.recordcount />
 
-<cfif dbug EQ "Y"> 
+<!--- Guard: if notification not found, return error instead of silently failing --->
+<cfif NotificationDetails.recordcount EQ 0>
+  <cfoutput>{"success":false,"error":"Notification #val(notid)# not found or join failed","debugCounters":#serializeJSON(debugCounters)#}</cfoutput>
+  <cfabort>
+</cfif>
+
+<cfif dbug EQ "Y">
   <h3>Get Notification Details</h3>
   <cfoutput>
     <p>

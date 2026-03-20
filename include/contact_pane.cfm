@@ -170,4 +170,7 @@
 
 </div>
 
+<!--- Email options modal (guard prevents duplicate renders) --->
+<cfinclude template="/include/email_options_modal.cfm" />
+
 <cfset script_name_include="/include/#ListLast(GetCurrentTemplatePath(), "")#" />

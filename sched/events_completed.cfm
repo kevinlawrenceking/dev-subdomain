@@ -277,12 +277,13 @@
                                                 <cfset currentStartDate = DateFormat(new_eventstop, 'yyyy-mm-dd') />
 
                                                 <cfquery datasource="#dsn#" name="addSystem" result="result">
-                                                    INSERT INTO fuSystemUsers (systemID, contactID, userID, suStartDate)
+                                                    INSERT INTO fuSystemUsers (systemID, contactID, userID, suStartDate, sustatus)
                                                     VALUES (
                                                         <cfqueryparam cfsqltype="cf_sql_integer" value="#new_systemid#" />,
                                                         <cfqueryparam cfsqltype="cf_sql_integer" value="#new_contactid#" />,
                                                         <cfqueryparam cfsqltype="cf_sql_integer" value="#new_userid#" />,
-                                                        <cfqueryparam cfsqltype="cf_sql_date" value="#suStartDate#" />
+                                                        <cfqueryparam cfsqltype="cf_sql_date" value="#suStartDate#" />,
+                                                        'Active'
                                                     )
                                                 </cfquery>
 

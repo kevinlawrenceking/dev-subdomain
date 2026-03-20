@@ -28,54 +28,53 @@
     <cfargument name="suid" type="numeric" required="false" default="0">
 <cfargument name="maxrow" type="numeric" required="true" default="9999999999">
 <cfquery name="result" >
-        SELECT 
-            n.notID, 
-            n.actionID, 
-            n.userID, 
-            n.suID, 
-            n.notTimeStamp, 
-            n.notStartDate, 
-            n.notEndDate, 
-            n.notStatus, 
-            n.notNotes, 
-            f.systemID, 
-            f.contactID, 
-            f.suTimeStamp, 
-            f.suStartDate, 
-            f.suEndDate, 
-            f.suStatus, 
-            f.suNotes, 
-            a.actionID, 
-            a.actionNo, 
-            a.actionDetails, 
-            a.actionTitle, 
-            a.navToURL, 
-            au.actionDaysNo, 
-            au.actionDaysRecurring, 
-            a.actionNotes, 
-            a.actionInfo, 
-            n.ispastdue, 
-            ns.checktype, 
-            ns.delstart, 
-            ns.delend, 
-            ns.status_color 
-        FROM 
-            funotifications n 
-        INNER JOIN 
-            fusystemusers f ON f.suID = n.suID 
-        INNER JOIN 
-            fuactions a ON a.actionID = n.actionID 
-        INNER JOIN 
-            actionusers au ON a.actionID = au.actionID 
-        INNER JOIN 
-            notstatuses ns ON ns.notstatus = n.notStatus 
-        WHERE 
-            n.suID = <cfqueryparam value="#arguments.suid#" cfsqltype="CF_SQL_INTEGER"> 
-            AND au.userID = f.userID
+        SELECT
+            n.notID,
+            n.actionID,
+            n.userID,
+            n.suID,
+            n.notTimeStamp,
+            n.notStartDate,
+            n.notEndDate,
+            n.notStatus,
+            n.notNotes,
+            f.systemID,
+            f.contactID,
+            f.suTimeStamp,
+            f.suStartDate,
+            f.suEndDate,
+            f.suStatus,
+            f.suNotes,
+            a.actionID,
+            a.actionNo,
+            a.actionDetails,
+            a.actionTitle,
+            a.navToURL,
+            COALESCE(au.actionDaysNo, 0) AS actionDaysNo,
+            COALESCE(au.actionDaysRecurring, 0) AS actionDaysRecurring,
+            a.actionNotes,
+            a.actionInfo,
+            n.ispastdue,
+            ns.checktype,
+            ns.delstart,
+            ns.delend,
+            ns.status_color
+        FROM
+            funotifications n
+        INNER JOIN
+            fusystemusers f ON f.suID = n.suID
+        INNER JOIN
+            fuactions a ON a.actionID = n.actionID
+        LEFT JOIN
+            actionusers au ON a.actionID = au.actionID AND au.userID = f.userID
+        INNER JOIN
+            notstatuses ns ON ns.notstatus = n.notStatus
+        WHERE
+            n.suID = <cfqueryparam value="#arguments.suid#" cfsqltype="CF_SQL_INTEGER">
             AND n.notStatus = 'Pending'
             AND n.isdeleted = 0
-            AND n.notStartDate IS NULL 
-        ORDER BY 
+            AND n.notStartDate IS NULL
+        ORDER BY
             a.actionNo, a.actionID
         LIMIT <cfqueryparam value="#arguments.maxrow#" cfsqltype="cf_sql_integer">
     </cfquery>
@@ -259,35 +258,34 @@
     <cfargument name="notid" type="numeric" required="true">
 
 <cfquery name="result">
-        SELECT 
-            su.contactid, 
-            su.userid, 
-            n.notid, 
-            s.systemid, 
-            s.systemscope AS newsystemscope, 
-            n.actionid, 
-            su.suID AS newsuid, 
-            au.actionDaysRecurring, 
-            a.uniquename, 
-            a.IsUnique, 
+        SELECT
+            su.contactid,
+            su.userid,
+            n.notid,
+            s.systemid,
+            s.systemscope AS newsystemscope,
+            n.actionid,
+            su.suID AS newsuid,
+            COALESCE(au.actionDaysRecurring, 0) AS actionDaysRecurring,
+            a.uniquename,
+            a.IsUnique,
             u.recordname AS new_contactname
-        FROM 
+        FROM
             funotifications n
-        INNER JOIN 
+        INNER JOIN
             fusystemusers su ON su.suid = n.suid
-        INNER JOIN 
+        INNER JOIN
             contactdetails c ON c.contactID = su.contactid
-        INNER JOIN 
+        INNER JOIN
             fusystems s ON s.systemID = su.systemID
-        INNER JOIN 
-            actionusers au ON au.actionid = n.actionid
-        INNER JOIN 
-            fuactions a ON a.actionid = au.actionid
-        INNER JOIN 
+        INNER JOIN
+            fuactions a ON a.actionid = n.actionid
+        LEFT JOIN
+            actionusers au ON au.actionid = n.actionid AND au.userid = n.userid
+        INNER JOIN
             taousers u ON u.userid = n.userid
-        WHERE 
+        WHERE
             n.notID = <cfqueryparam value="#arguments.notid#" cfsqltype="CF_SQL_INTEGER">
-            AND au.userid = n.userid
             AND n.isdeleted = 0
     </cfquery>
 

@@ -75,6 +75,8 @@
 <script>
   let selectedReminder = {};
   let pendingConfirmAction = null;
+  const _csrfMeta = document.querySelector('meta[name="csrf-token"]');
+  const _csrfToken = _csrfMeta ? _csrfMeta.getAttribute('content') : '';
 
   function showConfirmModal(text, onConfirm) {
     $("#confirmReminderText").text(text);
@@ -335,6 +337,7 @@
           $.ajax({
             url: "/include/complete_not_ajax.cfm?bypass=1",
             type: "POST",
+            headers: { 'X-CSRF-Token': _csrfToken },
             data: {
               notid: selectedReminder.id,
               notstatus: selectedReminder.status
@@ -447,6 +450,7 @@
       $.ajax({
         url: "/include/complete_not_batch.cfm?bypass=1",
         type: "POST",
+        headers: { 'X-CSRF-Token': _csrfToken },
         data: {
           notids: notIds.join(','),
           notstatus: status

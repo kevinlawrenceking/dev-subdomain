@@ -344,21 +344,36 @@
       <cfelseif len(trim(cgi.HTTP_X_CSRF_TOKEN))>
         <cfset submittedCsrf = cgi.HTTP_X_CSRF_TOKEN>
       </cfif>
-      <cfif NOT len(trim(submittedCsrf)) OR NOT CSRFVerifyToken(submittedCsrf)>
+      <!--- Verify: try session comparison first (reliable), fall back to CF CSRF engine --->
+      <cfset var csrfValid = false>
+      <cfif len(trim(submittedCsrf))>
+        <cfif submittedCsrf EQ session.csrfToken>
+          <cfset csrfValid = true>
+        <cfelseif CSRFVerifyToken(submittedCsrf)>
+          <cfset csrfValid = true>
+        </cfif>
+      </cfif>
+      <cfif NOT csrfValid>
         <cflog file="tao_csrf" type="warning"
-               text="CSRF form POST rejected: #cgi.SCRIPT_NAME# | userid=#structKeyExists(session,'userid') ? session.userid : 'none'#">
+               text="CSRF POST rejected: #cgi.SCRIPT_NAME# | userid=#structKeyExists(session,'userid') ? session.userid : 'none'# | hasToken=#len(trim(submittedCsrf)) GT 0#">
         <cfheader statuscode="403">
-        <cfcontent type="text/html" reset="true">
-        <cfoutput>
-          <!DOCTYPE html><html><head><title>Access Denied</title></head>
-          <body>
-          <div style="font-family:Arial,sans-serif;text-align:center;padding:60px 20px;color:##333">
-          <h2 style="font-size:22px">Security token missing or invalid</h2>
-          <p style="font-size:15px;color:##666">Your form submission could not be verified. Please go back and try again.</p>
-          <p><a href="javascript:history.back()" style="color:##2563eb">Go Back</a></p>
-          </div>
-          </body></html>
-        </cfoutput>
+        <!--- Return JSON for AJAX requests so JS error handlers work properly --->
+        <cfif len(trim(cgi.HTTP_X_REQUESTED_WITH)) OR len(trim(cgi.HTTP_X_CSRF_TOKEN))>
+          <cfcontent type="application/json; charset=utf-8" reset="true">
+          <cfoutput>{"success":false,"message":"Security token missing or invalid. Please reload the page and try again.","code":"CSRF_FAILED"}</cfoutput>
+        <cfelse>
+          <cfcontent type="text/html" reset="true">
+          <cfoutput>
+            <!DOCTYPE html><html><head><title>Access Denied</title></head>
+            <body>
+            <div style="font-family:Arial,sans-serif;text-align:center;padding:60px 20px;color:##333">
+            <h2 style="font-size:22px">Security token missing or invalid</h2>
+            <p style="font-size:15px;color:##666">Your form submission could not be verified. Please reload the page and try again.</p>
+            <p><a href="javascript:history.back()" style="color:##2563eb">Go Back</a></p>
+            </div>
+            </body></html>
+          </cfoutput>
+        </cfif>
         <cfabort>
       </cfif>
     </cfif>

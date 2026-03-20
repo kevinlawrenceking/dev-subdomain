@@ -99,8 +99,8 @@
                                     </cfoutput>
 
                                     <cfquery  name="addSystem" result="result">
-                                        INSERT INTO fuSystemUsers (systemID,contactID,userID,suStartDate,sunotes)
-                                        VALUES (#new_systemid#,#new_contactid#,#new_userid#,'#suStartDate#','events_completed_wo_system')
+                                        INSERT INTO fuSystemUsers (systemID,contactID,userID,suStartDate,sunotes,sustatus)
+                                        VALUES (#new_systemid#,#new_contactid#,#new_userid#,'#suStartDate#','events_completed_wo_system','Active')
                                     </cfquery>
 
                                     <cfset NewSUID=result.generatedkey />
