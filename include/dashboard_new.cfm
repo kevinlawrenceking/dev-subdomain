@@ -75,7 +75,8 @@ Services: NotificationService for handling notification operations and batch pro
     </cfloop>
 </div>
 
-<!--- Packery Grid JS — single source of truth in /app/assets/js/dashboard/packeryInit.js --->
+<!--- Packery Grid JS — single source of truth --->
+<script src="/app/assets/js/dashboard/packeryInit.js?v=<cfoutput>#rev#</cfoutput>"></script>
 
 <!--- Utility Function for Batch URL Opening --->
 <script>
