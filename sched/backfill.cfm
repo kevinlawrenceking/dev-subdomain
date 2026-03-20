@@ -12,7 +12,7 @@
 --->
 
 <!--- Safety: require authenticated admin session --->
-<cfif NOT structKeyExists(session, "userid") OR NOT listFindNoCase("Admin,Administrator", session.userRole)>
+<cfif NOT structKeyExists(session, "userid") OR NOT structKeyExists(session, "userRole") OR NOT listFindNoCase("Admin,Administrator", session.userRole)>
     <cfoutput><h3>Unauthorized. Admin session required.</h3></cfoutput>
     <cfabort />
 </cfif>
