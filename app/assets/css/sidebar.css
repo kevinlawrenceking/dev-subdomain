@@ -457,14 +457,18 @@ body[data-leftbar-size="condensed"] .tao-sidebar__label {
 }
 
 /* Override framework link colors (specificity: #id + class chain) */
-#sidebar-menu > ul > li > a.tao-sidebar__link {
+#sidebar-menu > ul > li > a.tao-sidebar__link,
+#sidebar-menu > ul > li > a.tao-sidebar__section-toggle {
     color: var(--tao-sidebar-text);
     font-family: inherit;
 }
 
 #sidebar-menu > ul > li > a.tao-sidebar__link:hover,
 #sidebar-menu > ul > li > a.tao-sidebar__link:focus,
-#sidebar-menu > ul > li > a.tao-sidebar__link:active {
+#sidebar-menu > ul > li > a.tao-sidebar__link:active,
+#sidebar-menu > ul > li > a.tao-sidebar__section-toggle:hover,
+#sidebar-menu > ul > li > a.tao-sidebar__section-toggle:focus,
+#sidebar-menu > ul > li > a.tao-sidebar__section-toggle:active {
     color: var(--tao-sidebar-text-hover);
 }
 
@@ -484,11 +488,13 @@ body[data-leftbar-size="condensed"] .tao-sidebar__label {
 }
 
 /* Override framework condensed mode colors */
-body[data-leftbar-size="condensed"] #sidebar-menu > ul > li > a.tao-sidebar__link {
+body[data-leftbar-size="condensed"] #sidebar-menu > ul > li > a.tao-sidebar__link,
+body[data-leftbar-size="condensed"] #sidebar-menu > ul > li > a.tao-sidebar__section-toggle {
     color: var(--tao-sidebar-text);
 }
 
-body[data-leftbar-size="condensed"] #sidebar-menu > ul > li:hover > a.tao-sidebar__link {
+body[data-leftbar-size="condensed"] #sidebar-menu > ul > li:hover > a.tao-sidebar__link,
+body[data-leftbar-size="condensed"] #sidebar-menu > ul > li:hover > a.tao-sidebar__section-toggle {
     color: var(--tao-sidebar-text-hover);
     background-color: var(--tao-sidebar-hover-bg);
     box-shadow: none;
@@ -497,6 +503,9 @@ body[data-leftbar-size="condensed"] #sidebar-menu > ul > li:hover > a.tao-sideba
 
 body[data-leftbar-size="condensed"] #sidebar-menu > ul > li > a.tao-sidebar__link:hover,
 body[data-leftbar-size="condensed"] #sidebar-menu > ul > li > a.tao-sidebar__link:focus,
-body[data-leftbar-size="condensed"] #sidebar-menu > ul > li > a.tao-sidebar__link:active {
+body[data-leftbar-size="condensed"] #sidebar-menu > ul > li > a.tao-sidebar__link:active,
+body[data-leftbar-size="condensed"] #sidebar-menu > ul > li > a.tao-sidebar__section-toggle:hover,
+body[data-leftbar-size="condensed"] #sidebar-menu > ul > li > a.tao-sidebar__section-toggle:focus,
+body[data-leftbar-size="condensed"] #sidebar-menu > ul > li > a.tao-sidebar__section-toggle:active {
     color: var(--tao-sidebar-text-hover);
 }

@@ -184,7 +184,8 @@
                             <i data-lucide="chevron-down" class="tao-sidebar__arrow"></i>
                         </a>
                         <div class="collapse<cfif variables.adminRelActive> show</cfif>"
-                             id="sidebar-admin-relationships">
+                             id="sidebar-admin-relationships"
+                             data-bs-parent="#sidebar-menu">
                             <ul class="tao-sidebar__submenu">
                                 <cfoutput query="menuItemsA">
                                     <cfset variables.subDir = lCase(menuItemsA.compDir) />
@@ -214,7 +215,8 @@
                             <i data-lucide="chevron-down" class="tao-sidebar__arrow"></i>
                         </a>
                         <div class="collapse<cfif variables.adminAudActive> show</cfif>"
-                             id="sidebar-admin-auditions">
+                             id="sidebar-admin-auditions"
+                             data-bs-parent="#sidebar-menu">
                             <ul class="tao-sidebar__submenu">
                                 <cfoutput query="menuItemsAud">
                                     <cfset variables.subDir = lCase(menuItemsAud.compDir) />
