@@ -35,4 +35,15 @@ var quill = new Quill("#snow-editor", {
     }
 });
 
-
+// Strip color and background-color from pasted content to prevent
+// invisible text (e.g. white text pasted from dark-background websites).
+quill.clipboard.addMatcher(Node.ELEMENT_NODE, function(node, delta) {
+    delta.ops = delta.ops.map(function(op) {
+        if (op.attributes) {
+            delete op.attributes.color;
+            delete op.attributes.background;
+        }
+        return op;
+    });
+    return delta;
+});

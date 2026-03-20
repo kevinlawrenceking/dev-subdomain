@@ -121,25 +121,34 @@
                                         </h5>     <div class="text-uppercase font-13 text-left mb-1">#valuetype#</div>
                                     </cfif>
 <cfif ActiveCategories.valueCategory is "Social Profile" or ActiveCategories.valueCategory is "URL">
+    <!--- FIX #1653: Skip Social Profile items that already have branded icons
+          rendered in the profiles row (getSocialIcons). Without this, IMDB/LinkedIn
+          links appear both as a branded icon and a duplicate text link. --->
+    <cfset var _skipBrandedIcon = false>
+    <cfif isDefined("profiles") and isQuery(profiles) and ActiveCategories.valueCategory is "Social Profile">
+        <cfloop query="profiles">
+            <cfif profiles.valuetext eq result.itemsbycatActive.valuetext>
+                <cfset _skipBrandedIcon = true>
+                <cfbreak>
+            </cfif>
+        </cfloop>
+    </cfif>
+    <cfif NOT _skipBrandedIcon>
     <!--- Ensure the URL starts with http:// --->
     <cfif Left(valuetext, 4) neq "http">
         <cfset valuetext = "http://" & valuetext>
     </cfif>
 
-
-
     <h5 class="mb-2">
         <a href="#valuetext#" target="_blank" title="#valuetype#">
-            
-
                                                     #valuetext#
-
                                                 </a>
      <a href="javascript:;" class="ms-2" data-bs-toggle="modal" data-bs-target="##remoteUpdateC#itemid#" title="Update #ActiveCategories.valueCategory#">
                                                 <i class="mdi mdi-square-edit-outline"></i>
                                             </a>
     </h5>
        <div class="text-uppercase font-13 text-left mb-1">#valuetype#</div>
+    </cfif>
 </cfif>
 
 

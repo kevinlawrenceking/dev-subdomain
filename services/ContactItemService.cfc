@@ -251,17 +251,31 @@ FROM contactitems
     <cfargument name="new_contactid" type="numeric" required="true">
     <cfargument name="cdco" type="string" required="true">
 
-<cfquery result="result" >
-            INSERT INTO CONTACTITEMS (CONTACTID, VALUETYPE, VALUECATEGORY, ValueCompany, ITEMSTATUS)
-            VALUES (
-                <cfqueryparam value="#arguments.new_contactid#" cfsqltype="CF_SQL_INTEGER">,
-                <cfqueryparam value="Company" cfsqltype="CF_SQL_VARCHAR">,
-                <cfqueryparam value="Company" cfsqltype="CF_SQL_VARCHAR">,
-                <cfqueryparam value="#arguments.cdco#" cfsqltype="CF_SQL_VARCHAR">,
-                <cfqueryparam value="Active" cfsqltype="CF_SQL_VARCHAR">
-            )
-        </cfquery>
-<cfreturn result.generatedKey>
+    <!--- FIX #1617: Check for existing company link before inserting to prevent duplicates --->
+    <cfquery name="checkExisting">
+        SELECT itemid FROM contactitems_tbl
+        WHERE contactid = <cfqueryparam value="#arguments.new_contactid#" cfsqltype="CF_SQL_INTEGER">
+          AND valuecategory = 'Company'
+          AND valuecompany = <cfqueryparam value="#arguments.cdco#" cfsqltype="CF_SQL_VARCHAR">
+          AND itemstatus = 'Active'
+        LIMIT 1
+    </cfquery>
+
+    <cfif checkExisting.recordCount GT 0>
+        <cfreturn checkExisting.itemid>
+    </cfif>
+
+    <cfquery result="result">
+        INSERT INTO CONTACTITEMS (CONTACTID, VALUETYPE, VALUECATEGORY, ValueCompany, ITEMSTATUS)
+        VALUES (
+            <cfqueryparam value="#arguments.new_contactid#" cfsqltype="CF_SQL_INTEGER">,
+            <cfqueryparam value="Company" cfsqltype="CF_SQL_VARCHAR">,
+            <cfqueryparam value="Company" cfsqltype="CF_SQL_VARCHAR">,
+            <cfqueryparam value="#arguments.cdco#" cfsqltype="CF_SQL_VARCHAR">,
+            <cfqueryparam value="Active" cfsqltype="CF_SQL_VARCHAR">
+        )
+    </cfquery>
+    <cfreturn result.generatedKey>
 </cffunction>
 <cffunction output="false" name="SELcontactitems_23840" access="public" returntype="query">
     <cfargument name="currentid" type="numeric" required="true">
@@ -702,14 +716,15 @@ FROM contactitems
     <cfargument name="userid" type="numeric" required="true">
 
 <cfquery name="result" >
-            SELECT DISTINCT i.valueCompany AS new_valuecompany 
-            FROM contactitems i 
-            INNER JOIN contactdetails d ON d.contactid = i.contactid 
-            WHERE i.VALUEcategory = 'company' 
-            AND d.userid = <cfqueryparam value="#arguments.userid#" cfsqltype="cf_sql_integer"> 
-            AND i.valuecompany <> '' 
-            AND i.valueCompany IS NOT NULL 
-            <!--- AND i.valuecompany <> 'Custom' --->
+            SELECT i.valueCompany AS new_valuecompany,
+                   GROUP_CONCAT(DISTINCT i.valuetype ORDER BY i.valuetype SEPARATOR ',') AS company_types
+            FROM contactitems i
+            INNER JOIN contactdetails d ON d.contactid = i.contactid
+            WHERE i.VALUEcategory = 'company'
+            AND d.userid = <cfqueryparam value="#arguments.userid#" cfsqltype="cf_sql_integer">
+            AND i.valuecompany <> ''
+            AND i.valueCompany IS NOT NULL
+            GROUP BY i.valueCompany
             ORDER BY i.valuecompany
         </cfquery>
 

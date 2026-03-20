@@ -7,16 +7,20 @@
     else if (host == "uat") { envLabel = "UAT"; }
     else { envLabel = "DEV"; }
 
-    // === Application Settings ===
-    this.name = "Setup_" & envLabel;
+    // FIX (#1615/#1646): Use the SAME application name as /app/Application.cfc
+    // so that /setup/ shares the main TAO session scope. Previously this was
+    // "Setup_" & envLabel which created a separate session, causing authenticated
+    // users to appear unauthenticated when hitting /setup/ URLs.
+    this.name = "TAO_" & envLabel;
     this.sessionManagement = true;
     this.applicationTimeout = createTimeSpan(1,0,0,0);
     this.sessionTimeout     = createTimeSpan(0,0,30,0);
 
-    // Session cookie hardening
+    // Session cookie hardening — match main app settings
     this.sessioncookie.httponly = true;
     this.sessioncookie.secure = true;
-    this.sessioncookie.samesite = "Strict";
+    // Lax to match main app (Strict blocks cross-site email link clicks)
+    this.sessioncookie.samesite = "Lax";
 
     // Compiler settings
     this.searchImplicitScopes = true;
@@ -40,17 +44,22 @@
     // Assign to this.datasource before using application scope
     this.datasource = dsn;
 
-    // Now set application scope vars
-    application.dsn = dsn;
-    application.information_schema = information_schema;
-    application.suffix = suffix;
-
-    application.dbug = "N";
-    application.baseMediaPath = "C:\home\theactorsoffice.com\media-" & this.datasource;
-    application.baseMediaUrl = "/media-" & this.datasource;
-    application.auditionimporttemplate = application.baseMediaUrl & "/auditionimporttemplates.xlsx";
-    application.imagesPath = application.baseMediaPath & "\images";
-    application.imagesUrl = application.baseMediaUrl & "/images";
+    // Now set application scope vars (only if not already set by main app)
+    if (NOT structKeyExists(application, "dsn")) {
+        application.dsn = dsn;
+        application.information_schema = information_schema;
+        application.suffix = suffix;
+        application.dbug = "N";
+        if (dsn == "abo") {
+            application.baseMediaPath = "C:\\home\\theactorsoffice.com\\media-" & dsn;
+        } else {
+            application.baseMediaPath = expandPath("/media-" & dsn);
+        }
+        application.baseMediaUrl = "/media-" & dsn;
+        application.auditionimporttemplate = application.baseMediaUrl & "/auditionimporttemplates.xlsx";
+        application.imagesPath = application.baseMediaPath & "\\images";
+        application.imagesUrl = application.baseMediaUrl & "/images";
+    }
 </cfscript>
 
 
@@ -62,11 +71,15 @@
 
 <cffunction name="onRequestStart" returntype="boolean" output="false">
     <cfargument name="targetPage" type="string" required="true">
-    <!--- Require authenticated session for all setup pages --->
-    <cfif NOT structKeyExists(session, "userid")>
-        <cfheader statuscode="403">
-        <cfabort>
-    </cfif>
+    <!--- Setup pages are accessed two ways:
+          1. New users via UUID link from welcome email (no session)
+          2. Authenticated users who land here by accident (redirect to dashboard)
+          The old code returned 403 for unauthenticated users, which broke
+          BOTH cases when the session scope was separate. Now that we share
+          the TAO session, authenticated users pass through. Unauthenticated
+          users are allowed through to setup pages (UUID validation in index.cfm
+          handles access control and redirects invalid UUIDs to dashboard). --->
+    <cfset request.dsn = application.dsn />
     <cfreturn true>
 </cffunction>
 

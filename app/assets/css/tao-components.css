@@ -23,6 +23,7 @@ body {
 .tao-avatar {
     border-radius: 50%;
     object-fit: cover;
+    image-orientation: from-image;
     border: 2px solid rgba(0, 0, 0, 0.08);
     vertical-align: middle;
 }
@@ -48,6 +49,23 @@ body {
     /* override Bootstrap img-fluid height:auto that breaks the circle */
     min-height: 120px;
     max-height: 120px;
+}
+
+/* --------------------------------------------------------------------------
+   EXIF Orientation Fix (Safari / older browsers)
+   --------------------------------------------------------------------------
+   Safari does not always auto-correct EXIF Orientation tags on uploaded
+   photos, causing portrait images to appear squished or rotated.
+   image-orientation: from-image tells the browser to honour the EXIF tag.
+   This rule covers avatar classes not using .tao-avatar directly.
+   -------------------------------------------------------------------------- */
+.current-avatar,
+.birthday-avatar,
+.team-avatar,
+.tao-sidebar__avatar,
+.tao-card-avatar img,
+.tao-card-photo-body img {
+    image-orientation: from-image;
 }
 
 /* --------------------------------------------------------------------------

@@ -110,6 +110,19 @@
                         : 'block';
                     }
 
+                    // Show or hide the "Duration" field based on type
+                    var durationWrapper = document.getElementById("durationWrapper");
+                    var durationSelect = document.getElementById("new_durid");
+                    if (durationWrapper) {
+                      if (element.value == 2) {
+                        // Self Tape selected: hide duration and set default (15 min, durid=4)
+                        durationWrapper.style.display = "none";
+                        if (durationSelect) { durationSelect.value = "4"; }
+                      } else {
+                        durationWrapper.style.display = "";
+                      }
+                    }
+
                     console.log("Value: ", element.value, "Type: ", typeof element.value);
                   }
                 </script>
@@ -317,13 +330,15 @@
 
                            
 
-                                <div class="form-group col-md-6">
+                                <div class="form-group col-md-6" id="durationWrapper">
                                   <label for="new_eventStopTime">
                                     Duration</label>
                                   <select class="form-control" name="new_durid" autocomplete="off" id="new_durid">
                                     <cfoutput query="durations">
-                                      <option value="#durations.durid#" <cfif #durations.durid# is "4"> selected </cfif>>
+                                      <cfif durations.durname NEQ "Unknown">
+                                      <option value="#durations.durid#" <cfif durations.durid is "4"> selected </cfif>>
                                         #durations.durname#</option>
+                                      </cfif>
                                     </cfoutput>
                                   </select>
                                 </div>

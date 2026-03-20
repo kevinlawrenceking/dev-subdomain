@@ -37,14 +37,13 @@
     <cfinclude template="/include/qry/insert_201_4.cfm" /> 
 </cfif>
 
-<!--- Check if a company is provided and is not "Custom", then insert it --->
-<cfif #company# is not "" and #company# is not "Custom">
-    <cfinclude template="/include/qry/insert_202_5.cfm" /> 
-</cfif>
-
-<!--- Check if a new company name is provided and insert it --->
-<cfif #company_new# is not "">
-    <cfinclude template="/include/qry/insert_202_6.cfm" /> 
+<!--- FIX #1617: Only insert ONE company — either dropdown selection or custom name, never both --->
+<cfif company is "Custom" and len(trim(company_new))>
+    <!--- User selected ***ADD NEW*** and typed a custom company name --->
+    <cfinclude template="/include/qry/insert_202_6.cfm" />
+<cfelseif len(trim(company)) and company is not "Custom">
+    <!--- User selected an existing company from the dropdown --->
+    <cfinclude template="/include/qry/insert_202_5.cfm" />
 </cfif>
 
 <cfset select_contactid = contactid />

@@ -187,7 +187,7 @@
                         <option value="custom">***ADD NEW***</option>
                         <cfloop query="companies">
                         <cfoutput>
-                            <option value="#companies.new_valuecompany#" <cfif companies.new_valuecompany eq details.valueCompany>selected</cfif>>#companies.new_valuecompany#</option>
+                            <option value="#companies.new_valuecompany#" data-company-types="#encodeForHTMLAttribute(companies.company_types)#" <cfif companies.new_valuecompany eq details.valueCompany>selected</cfif>>#companies.new_valuecompany#</option>
                         </cfoutput>
                         </cfloop>
                     </select>
@@ -303,4 +303,50 @@ if (window.Parsley) {
         document.getElementById(divId).style.display = element.value == "Custom" ? 'block' : 'none';
     }
 </script>
+
+<cfif new_catid eq "9">
+<script>
+    // FIX #1655: Filter company name dropdown by selected company type
+    (function() {
+        var typeSelect = document.getElementById("valueType");
+        var companySelect = document.getElementById("valueCompany");
+        if (!typeSelect || !companySelect) return;
+
+        var allOptions = [];
+        for (var i = 0; i < companySelect.options.length; i++) {
+            allOptions.push(companySelect.options[i].cloneNode(true));
+        }
+
+        typeSelect.addEventListener("change", function() {
+            var selectedType = this.value;
+            var currentVal = companySelect.value;
+            companySelect.innerHTML = "";
+
+            for (var j = 0; j < allOptions.length; j++) {
+                var opt = allOptions[j];
+                if (opt.value === "" || opt.value === "custom") {
+                    companySelect.appendChild(opt.cloneNode(true));
+                    continue;
+                }
+                if (!selectedType || selectedType === "Custom") {
+                    companySelect.appendChild(opt.cloneNode(true));
+                    continue;
+                }
+                var companyTypes = (opt.getAttribute("data-company-types") || "").split(",");
+                for (var k = 0; k < companyTypes.length; k++) {
+                    if (companyTypes[k].trim() === selectedType) {
+                        companySelect.appendChild(opt.cloneNode(true));
+                        break;
+                    }
+                }
+            }
+            // Restore previous selection if still available
+            companySelect.value = currentVal;
+            if (companySelect.selectedIndex === -1) {
+                companySelect.value = "";
+            }
+        });
+    })();
+</script>
+</cfif>
 

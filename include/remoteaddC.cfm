@@ -203,7 +203,7 @@
                     <option value="" selected></option>
                     <option value="custom">***ADD NEW***</option>
                     <cfoutput query="companies">
-                        <option value="#companies.new_valuecompany#">#companies.new_valuecompany#</option>
+                        <option value="#companies.new_valuecompany#" data-company-types="#encodeForHTMLAttribute(companies.company_types)#">#companies.new_valuecompany#</option>
                     </cfoutput>
                 </select>
             </div>
@@ -304,6 +304,53 @@ if (window.Parsley) {
         }
     });
 </script>
+
+<cfif new_catid eq "9">
+<script>
+    // FIX #1655: Filter company name dropdown by selected company type
+    (function() {
+        var typeSelect = document.getElementById("valueType");
+        var companySelect = document.getElementById("valueCompany");
+        if (!typeSelect || !companySelect) return;
+
+        // Store all original options for reset
+        var allOptions = [];
+        for (var i = 0; i < companySelect.options.length; i++) {
+            allOptions.push(companySelect.options[i].cloneNode(true));
+        }
+
+        typeSelect.addEventListener("change", function() {
+            var selectedType = this.value;
+            // Clear current options
+            companySelect.innerHTML = "";
+
+            for (var j = 0; j < allOptions.length; j++) {
+                var opt = allOptions[j];
+                // Always keep empty option and custom/ADD NEW option
+                if (opt.value === "" || opt.value === "custom") {
+                    companySelect.appendChild(opt.cloneNode(true));
+                    continue;
+                }
+                // If no type selected or type is Custom, show all companies
+                if (!selectedType || selectedType === "Custom") {
+                    companySelect.appendChild(opt.cloneNode(true));
+                    continue;
+                }
+                // Filter by type: check if selected type is in the company_types
+                var companyTypes = (opt.getAttribute("data-company-types") || "").split(",");
+                for (var k = 0; k < companyTypes.length; k++) {
+                    if (companyTypes[k].trim() === selectedType) {
+                        companySelect.appendChild(opt.cloneNode(true));
+                        break;
+                    }
+                }
+            }
+            // Reset company selection
+            companySelect.value = "";
+        });
+    })();
+</script>
+</cfif>
 
 
 

@@ -7955,8 +7955,9 @@ body[data-leftbar-size=condensed] .user-box {
 
 .tao-card-avatar img {
     width: 60px;
-    height: auto;
-    object-fit: contain;
+    height: 60px;
+    object-fit: cover;
+    image-orientation: from-image;
     padding-top: 7px;
     border-radius: 50% !important
 }
@@ -8352,6 +8353,7 @@ contact-item i {
     width: 100%;
     height: auto;
     object-fit: cover;
+    image-orientation: from-image;
     display: block;
 }
 

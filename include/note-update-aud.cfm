@@ -107,8 +107,14 @@
 </script>
 
 <script>
+    // FIX #1652: Use .ql-editor selector to capture only the Quill content,
+    // not the full container HTML (which includes .ql-clipboard, .ql-tooltip
+    // and wrapper divs).  Do NOT overwrite #noteDetails -- it is independent.
     $("#form-aud").on("submit", function() {
-        $("#hiddenArea").val($("#snow-editor").html());
+        var $editor = $("#snow-editor .ql-editor");
+        if ($editor.length) {
+            $("#hiddenArea").val($editor.html());
+        }
     });
 </script>
 

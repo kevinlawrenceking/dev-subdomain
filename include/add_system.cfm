@@ -8,12 +8,24 @@
 <!--- Delete any orphaned notifications of user that don't belong to a system --->
 <cfinclude template="/include/qry/delSystemNotifications.cfm"/>
 
-<!--- Add a system user record --->
+<!--- Add a system user record (returns existing suid if already enrolled) --->
 <cfinclude template="/include/qry/addfuSystemUsers.cfm"/>
+
+<!--- FIX #1630: Check if notifications already exist for this enrollment.
+      If they do, skip the notification creation loop to prevent duplicates.
+      This guards against double-enrollment from overlapping code paths
+      (e.g., modalansweryes.cfm + add_system.cfm in the same audition flow). --->
+<cfset var _existingNots = queryExecute(
+    "SELECT notid FROM funotifications
+     WHERE suid = ? AND notstatus = 'Pending'
+     LIMIT 1",
+    [ { value=NewSUID, cfsqltype="cf_sql_integer" } ]
+)>
+<cfif _existingNots.recordCount EQ 0>
 
 <!--- Grab the list of action items for that particular system --->
 <cfinclude template="/include/qry/getFuSystemUsersBySystemID.cfm"/>
-<Cfdump var="#adddaysno#">
+
 <!--- Loop through all of the actions of a system. --->
 <cfloop query="addDaysNo">
   <cfset add_action="Y"/>
@@ -44,6 +56,8 @@
  
   </cfif>
 </cfloop>
+
+</cfif><!--- /FIX #1630: _existingNots guard --->
 
 <!--- Redirect based on the mode parameter --->
 <cfif mode is "0">

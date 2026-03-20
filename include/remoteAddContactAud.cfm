@@ -64,9 +64,9 @@
             </select>
         </div>
 
-        <!--- Input field for custom company name --->
+        <!--- Input field for custom company name (only shown when ***ADD NEW*** is selected) --->
         <div class="form-group col-sm-6 md-6">
-            <div id="hidden_div">
+            <div id="hidden_div" style="display:none">
                 <label for="company_new">Custom Company<span class="text-danger">*</span></label>
                 <input class="form-control" type="text" id="company_new" name="company_new" value="" placeholder="Enter Company" />
             </div>

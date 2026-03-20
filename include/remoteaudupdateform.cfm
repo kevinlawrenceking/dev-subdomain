@@ -576,27 +576,40 @@ function handleSelectChange(element, eventId) {
 </script>
 
 <!--- Populate "Same" location fields script --->
+<!--- FIX #1631: Escape CF values with jsStringFormat() to prevent JS syntax errors
+      when location data contains quotes, backslashes, or newlines. Without escaping,
+      the entire script block fails silently, making the SAME button appear broken. --->
 <script>
   document.getElementById('populateFieldsButton')?.addEventListener('click', function() {
-    // Pull in data from your CF query
-    var locationDetails = {
-      same_eventLocation : "<cfoutput>#locationDetails.same_eventLocation#</cfoutput>",
-      same_audlocadd1    : "<cfoutput>#locationDetails.same_audlocadd1#</cfoutput>",
-      same_audlocadd2    : "<cfoutput>#locationDetails.same_audlocadd2#</cfoutput>",
-      same_audcity       : "<cfoutput>#locationDetails.same_audcity#</cfoutput>",
-      same_region_id     : "<cfoutput>#locationDetails.same_region_id#</cfoutput>",
-      same_countryid     : "<cfoutput>#locationDetails.same_countryid#</cfoutput>",
-      same_audzip        : "<cfoutput>#locationDetails.same_audzip#</cfoutput>"
+    var locationData = {
+      same_eventLocation : "<cfoutput>#jsStringFormat(locationDetails.same_eventLocation)#</cfoutput>",
+      same_audlocadd1    : "<cfoutput>#jsStringFormat(locationDetails.same_audlocadd1)#</cfoutput>",
+      same_audlocadd2    : "<cfoutput>#jsStringFormat(locationDetails.same_audlocadd2)#</cfoutput>",
+      same_audcity       : "<cfoutput>#jsStringFormat(locationDetails.same_audcity)#</cfoutput>",
+      same_region_id     : "<cfoutput>#jsStringFormat(locationDetails.same_region_id)#</cfoutput>",
+      same_countryid     : "<cfoutput>#jsStringFormat(locationDetails.same_countryid)#</cfoutput>",
+      same_audzip        : "<cfoutput>#jsStringFormat(locationDetails.same_audzip)#</cfoutput>"
     };
 
     // Populate the form fields
-    document.getElementById('eventLocation').value = locationDetails.same_eventLocation;
-    document.getElementById('audlocadd1').value   = locationDetails.same_audlocadd1;
-    document.getElementById('audlocadd2').value   = locationDetails.same_audlocadd2;
-    document.getElementById('audcity').value      = locationDetails.same_audcity;
-    document.getElementById('region_id').value    = locationDetails.same_region_id;
-    document.getElementById('countryid').value    = locationDetails.same_countryid;
-    document.getElementById('audzip').value       = locationDetails.same_audzip;
+    var el = document.getElementById('eventLocation<cfoutput>#new_eventid#</cfoutput>');
+    if (el) el.value = locationData.same_eventLocation;
+    el = document.getElementById('audlocadd1');
+    if (el) el.value = locationData.same_audlocadd1;
+    el = document.getElementById('audlocadd2');
+    if (el) el.value = locationData.same_audlocadd2;
+    el = document.getElementById('audcity');
+    if (el) el.value = locationData.same_audcity;
+    el = document.getElementById('countryid');
+    if (el) el.value = locationData.same_countryid;
+    if (typeof filterRegions === 'function') filterRegions(locationData.same_countryid);
+    // Set region after filter refreshes the dropdown options
+    setTimeout(function() {
+      el = document.getElementById('region_id');
+      if (el) el.value = locationData.same_region_id;
+    }, 100);
+    el = document.getElementById('audzip');
+    if (el) el.value = locationData.same_audzip;
   });
 </script>
 

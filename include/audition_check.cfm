@@ -24,6 +24,22 @@ cfinclude template= /include/qry/uu_33_1.cfm    --->
     <!--- Check if there is exactly one follow-up record --->
     <cfif followup_contactid neq 0>
 
+        <!--- FIX #1630: Check if this contact already has an active system enrollment.
+              Prevents showing the "Add to Follow-Up" modal when the system was already
+              added (e.g., by modalansweryes.cfm during the same audition creation flow).
+              Without this guard, the user could enroll the contact twice, creating
+              duplicate reminders. --->
+        <cfset var _checkSystem = queryExecute(
+            "SELECT suid FROM fusystemusers_tbl
+             WHERE contactid = ? AND userid = ? AND sustatus = 'Active' AND isdeleted = 0
+             LIMIT 1",
+            [
+                { value=followup_contactid, cfsqltype="cf_sql_integer" },
+                { value=session.userid, cfsqltype="cf_sql_integer" }
+            ]
+        )>
+        <cfif _checkSystem.recordCount EQ 0>
+
 <cfoutput>
                 <script>
                     $(document).ready(function() {
@@ -53,6 +69,7 @@ cfinclude template= /include/qry/uu_33_1.cfm    --->
                 </div>
             </div>
         </div>
+        </cfif><!--- /FIX #1630: _checkSystem guard --->
     </cfif>
 </cfif>
 

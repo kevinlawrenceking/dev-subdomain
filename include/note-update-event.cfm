@@ -107,8 +107,17 @@
 </script>
 
 <script>
+    // FIX #1652: Use .ql-editor selector to capture only the Quill content,
+    // not the full container HTML (which includes .ql-clipboard, .ql-tooltip
+    // and wrapper divs).  Without this, each save wraps the content in extra
+    // markup, causing progressive corruption on subsequent edits.
+    // NOTE: Do NOT overwrite #noteDetails -- it is an independent field
+    // (the note title) and must keep the value the user typed.
     $("#form-event").on("submit", function() {
-        $("#hiddenArea").val($("#snow-editor").html());
+        var $editor = $("#snow-editor .ql-editor");
+        if ($editor.length) {
+            $("#hiddenArea").val($editor.html());
+        }
     });
 </script>
 

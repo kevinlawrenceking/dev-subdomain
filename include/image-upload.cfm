@@ -118,6 +118,7 @@ function checkCroppieAvailability() {
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         transition: all 0.3s ease;
         object-fit: cover;
+        image-orientation: from-image;
         overflow: hidden;
         display: block;
         margin: 0 auto !important;

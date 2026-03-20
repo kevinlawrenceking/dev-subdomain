@@ -38,8 +38,10 @@
         <cfdirectory directory="#dir_media_root_user_imports#" action="create">
     </cfif>
 
-    <cfif not fileExists(session.userAvatarPath)>
-        <cffile action="copy" source="#dir_missing_avatar_filename#" destination="#session.userMediaPath#\" />
+    <!--- FIX #1634: dir_missing_avatar_filename was undefined here, causing Whoops error
+          when creating a new CD during audition add. Use application.defaultAvatarPath instead. --->
+    <cfif not fileExists(session.userAvatarPath) AND fileExists(application.defaultAvatarPath)>
+        <cffile action="copy" source="#application.defaultAvatarPath#" destination="#session.userAvatarPath#" />
     </cfif>
 
     <cfinclude template="/include/qry/C_73_2.cfm" />
