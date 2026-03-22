@@ -1,657 +1,695 @@
-<!--- This ColdFusion page handles the import of audition templates, allowing users to upload files and view import results. --->
+<!---
+    Audition Import V2 - Main Import Page
+    Features:
+    - File upload (CSV, XLS, XLSX)
+    - Column mapping review with auto-detection
+    - Review grid with inline editing
+    - Duplicate detection and resolution
+    - Finalize import
+--->
 
-<cfparam name="step" default="1" />
+<cfparam name="url.job_id" default="0">
 
-<script>
-    <!--- Enhanced functions for better user experience --->
-    function unlock() {
-        const fileInput = document.getElementById('fileInput');
-        const submitButton = document.getElementById('buttonSubmit');
-        const file = fileInput.files[0];
-        
-        if (file) {
-            // Validate file type
-            const allowedTypes = ['.xlsx', '.xls'];
-            const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
-            
-            if (allowedTypes.includes(fileExtension)) {
-                // Validate file size (10MB limit)
-                const maxSize = 10 * 1024 * 1024; // 10MB in bytes
-                
-                if (file.size <= maxSize) {
-                    submitButton.removeAttribute("disabled");
-                    submitButton.innerHTML = '<i class="fe-upload me-2"></i>Import ' + file.name;
-                    fileInput.classList.remove('is-invalid');
-                    fileInput.classList.add('is-valid');
-                } else {
-                    submitButton.setAttribute("disabled", "disabled");
-                    fileInput.classList.remove('is-valid');
-                    fileInput.classList.add('is-invalid');
-                    alert('File size must be less than 10MB. Please choose a smaller file.');
-                }
-            } else {
-                submitButton.setAttribute("disabled", "disabled");
-                fileInput.classList.remove('is-valid');
-                fileInput.classList.add('is-invalid');
-                alert('Please select a valid Excel file (.xlsx or .xls)');
-            }
-        } else {
-            submitButton.setAttribute("disabled", "disabled");
-            submitButton.innerHTML = '<i class="fe-upload me-2"></i>Import Auditions';
-            fileInput.classList.remove('is-valid', 'is-invalid');
-        }
-    }
-    
-    function resetForm() {
-        const form = document.getElementById('upload');
-        const fileInput = document.getElementById('fileInput');
-        const submitButton = document.getElementById('buttonSubmit');
-        
-        form.reset();
-        submitButton.setAttribute("disabled", "disabled");
-        submitButton.innerHTML = '<i class="fe-upload me-2"></i>Import Auditions';
-        fileInput.classList.remove('is-valid', 'is-invalid');
-        document.getElementById('uploadProgress').style.display = 'none';
-    }
-    
-    // Show progress when form is submitted
-    document.addEventListener('DOMContentLoaded', function() {
-        const form = document.getElementById('upload');
-        form.addEventListener('submit', function() {
-            document.getElementById('uploadProgress').style.display = 'block';
-            document.getElementById('buttonSubmit').setAttribute('disabled', 'disabled');
-        });
-    });
-</script>
+<!--- Check for existing job --->
+<cfset hasActiveJob = false>
+<cfset activeJob = {}>
 
-<!--- Custom styles for improved appearance --->
+<cfif isNumeric(url.job_id) and url.job_id gt 0>
+    <cfset auditionService = new services.AuditionImportService()>
+    <cfset jobResult = auditionService.getJobForUser(url.job_id, session.userid)>
+    <cfif structKeyExists(jobResult, "success") and jobResult.success and structKeyExists(jobResult, "data") and structKeyExists(jobResult.data, "job")>
+        <cfset activeJob = jobResult.data.job>
+        <cfset hasActiveJob = true>
+    </cfif>
+</cfif>
+
+<!--- Get import history --->
+<cfif not hasActiveJob>
+    <cfset auditionService = new services.AuditionImportService()>
+    <cfset importHistory = auditionService.getUserJobHistory(session.userid, 20)>
+</cfif>
+
+<!--- Ensure CSRF token exists --->
+<cfif not structKeyExists(session, "csrf_token") or not len(session.csrf_token)>
+    <cfset session.csrf_token = createUUID()>
+</cfif>
+
 <style>
-    .import-section .card {
-        border: none;
-        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-        transition: box-shadow 0.15s ease-in-out;
-    }
-    
-    .import-section .card:hover {
-        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-    }
-    
-    .step-number {
-        width: 40px;
-        height: 40px;
-        font-weight: 600;
-        font-size: 1.1rem;
-    }
-    
-    .table th {
-        border-top: none;
-        font-weight: 600;
-        font-size: 0.875rem;
-        letter-spacing: 0.025em;
-        text-transform: uppercase;
-    }
-    
-    .badge.bg-primary {
-        padding: 0.5rem 0.75rem;
-        font-size: 0.875rem;
-    }
-    
-    @media (max-width: 768px) {
-        .card-body.p-4 {
-            padding: 1.5rem !important;
-        }
-        
-        .d-flex.align-items-start {
-            flex-direction: column !important;
-        }
-        
-        .step-number {
-            margin-bottom: 1rem;
-        }
-    }
+
+.import-step {
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    background: #fff;
+    border: 1px solid #e3e3e3;
+}
+.import-step.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+.import-step h5 {
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+.import-step .step-number {
+    display: inline-block;
+    width: 28px;
+    height: 28px;
+    background: #406e8e;
+    color: #fff;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 28px;
+    margin-right: 10px;
+    font-size: 14px;
+}
+.import-step.completed .step-number {
+    background: #28a745;
+}
+
+/* File upload area */
+.upload-area {
+    border: 2px dashed #406e8e;
+    border-radius: 8px;
+    padding: 40px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.upload-area:hover, .upload-area.dragover {
+    border-color: var(--ct-link-hover-color);
+    background: #f0f5f8;
+}
+.upload-area .upload-icon {
+    font-size: 48px;
+    color: #406e8e;
+    margin-bottom: 10px;
+}
+
+/* Review grid */
+.review-tabs {
+    margin-bottom: 20px;
+}
+.review-tabs .nav-link {
+    font-weight: 500;
+}
+.review-tabs .nav-link .badge {
+    margin-left: 5px;
+}
+
+.review-table {
+    font-size: 14px;
+}
+.review-table th {
+    white-space: nowrap;
+}
+.review-table td {
+    vertical-align: middle;
+}
+.review-table .field-error {
+    border-color: #dc3545 !important;
+}
+.review-table .field-warning {
+    border-color: #ffc107 !important;
+}
+
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+}
+.status-ready { background: #d4edda; color: #155724; }
+.status-problem { background: #f8d7da; color: #721c24; }
+.status-dupe { background: #fff3cd; color: #856404; }
+.status-ignored { background: #e2e3e5; color: #383d41; }
+.status-imported { background: #cce5ff; color: #004085; }
+.status-completed { background: #d4edda; color: #155724; }
+.status-failed { background: #f8d7da; color: #721c24; }
+.status-cancelled { background: #e2e3e5; color: #383d41; }
+.status-reviewing { background: #cce5ff; color: #004085; }
+.status-finalizing { background: #fff3cd; color: #856404; }
+.status-parsing { background: #fff3cd; color: #856404; }
+.status-uploaded { background: #e2e3e5; color: #383d41; }
+.status-parsed { background: #cce5ff; color: #004085; }
+.status-mapping { background: #cce5ff; color: #004085; }
+
+/* Duplicate panel */
+.dupe-panel {
+    background: #fffcf0;
+    border: 1px solid #ffc107;
+    border-radius: 4px;
+    padding: 10px;
+    margin-top: 10px;
+}
+.dupe-candidate {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px;
+    background: #fff;
+    border-radius: 4px;
+    margin-bottom: 8px;
+}
+.dupe-score {
+    font-weight: bold;
+    color: #856404;
+}
+
+/* Progress */
+.import-progress {
+    margin: 20px 0;
+}
+.import-progress .progress {
+    height: 10px;
+}
+
+/* Warning state for validation warnings */
+.is-warning {
+    border-color: #ffc107 !important;
+    background-color: #fffdf5 !important;
+}
+
+/* Edit modal field groups */
+.edit-field-group h6 {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.edit-field-group .form-label {
+    margin-bottom: 2px;
+    font-weight: 500;
+}
+
+/* Date input */
+input[type="date"].form-control-sm {
+    padding-top: 0.2rem;
+    padding-bottom: 0.2rem;
+}
+
+/* Breadcrumb stepper */
+.import-stepper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 24px;
+    padding: 16px 0;
+}
+.import-stepper .step-item {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    font-weight: 500;
+    color: #adb5bd;
+}
+.import-stepper .step-item .step-circle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #dee2e6;
+    color: #6c757d;
+    font-size: 14px;
+    font-weight: 600;
+    margin-right: 8px;
+    flex-shrink: 0;
+}
+.import-stepper .step-item.active .step-circle {
+    background: #406e8e;
+    color: #fff;
+}
+.import-stepper .step-item.active .step-label {
+    color: #406e8e;
+    font-weight: 600;
+}
+.import-stepper .step-item.completed .step-circle {
+    background: #28a745;
+    color: #fff;
+}
+.import-stepper .step-item.completed .step-label {
+    color: #28a745;
+}
+.import-stepper .step-arrow {
+    margin: 0 16px;
+    color: #dee2e6;
+    font-size: 16px;
+}
+.import-stepper .step-item.completed + .step-arrow,
+.import-stepper .step-item.active + .step-arrow {
+    color: #406e8e;
+}
 </style>
 
-<!--- Improved Import Interface --->
-<div class="container-fluid import-section">
-    <div class="row">
-        <div class="col-12">
-            <div class="card mb-4 shadow-sm">
-                <div class="card-header bg-primary text-white py-3">
-                    <h4 class="mb-0" style="color: #fff;">
-                        <i class="fe-upload me-2"></i>Import Auditions
-                    </h4>
-                    <p class="mb-0 mt-1" style="color: rgba(255,255,255,0.85);">Follow these simple steps to import your audition data</p>
-                </div>
-                <div class="card-body p-4">
-                <!--- Step 1: Download Template --->
-                <div class="d-flex align-items-start mb-4">
-                    <div class="flex-shrink-0 me-3">
-                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center step-number">
-                            <strong>1</strong>
-                        </div>
-                    </div>
-                    <div class="flex-grow-1">
-                        <h5 class="mb-2">Download Import Template</h5>
-                        <p class="text-muted mb-3">
-                            Get the Excel template with the correct format for importing your audition data.
-                        </p>
-                        <cfoutput>
-                            <a href="/include/download_audition_template.cfm" target="_blank" 
-                               class="btn btn-outline-primary btn-lg">
-                                <i class="fe-download me-2"></i>Download Template
-                            </a>
-                        </cfoutput>
-                        <div class="mt-2">
-                            <small class="text-warning">
-                                <i class="fe-alert-triangle me-1"></i>
-                                <strong>Important:</strong> Data must be in this exact format to import successfully.
-                            </small>
-                        </div>
-                    </div>
-                </div>
+<!--- ============================================================
+     MAIN CONTENT: Shows either upload/history OR active job view
+     ============================================================ --->
+<cfif not hasActiveJob>
+    <!--- CSRF token for history table actions --->
+    <cfoutput><input type="hidden" id="csrf-token" value="#encodeForHTMLAttribute(session.csrf_token)#"></cfoutput>
+    <!--- UPLOAD STEP --->
+    <div class="import-step" id="step-upload">
+        <h5><span class="step-number">1</span> Upload File</h5>
+        <p class="text-muted">Upload your auditions file (max 50MB)</p>
 
-                <hr class="my-4">
+        <div class="upload-area" id="upload-area">
+            <div class="upload-icon"><i class="fe-upload-cloud"></i></div>
+            <p><strong>Drag and drop your file here</strong></p>
+            <p class="text-muted">or click to browse</p>
+            <p class="text-muted small">Supported formats: CSV, XLS, XLSX</p>
+            <input type="file" id="file-input" accept=".csv,.xls,.xlsx" style="display:none">
+        </div>
 
-                <!--- Step 2: Upload File --->
-                <div class="d-flex align-items-start">
-                    <div class="flex-shrink-0 me-3">
-                        <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center step-number">
-                            <strong>2</strong>
-                        </div>
-                    </div>
-                    <div class="flex-grow-1">
-                        <h5 class="mb-2">Upload Your File</h5>
-                        <p class="text-muted mb-3">
-                            Once you've filled out the template and saved it as an Excel file (.xlsx), upload it here.
-                        </p>
-
-                        <form action="/include/upload_audition.cfm" method="post" enctype="multipart/form-data" id="upload" class="needs-validation" novalidate>
-                            <cfoutput>
-                                <input type="hidden" name="userid" value="#userid#" />
-                            </cfoutput>
-                            
-                            <div class="mb-3">
-                                <label for="fileInput" class="form-label fw-semibold">Select Excel File</label>
-                                <input type="file" 
-                                       class="form-control form-control-lg" 
-                                       name="file" 
-                                       id="fileInput"
-                                       accept=".xlsx,.xls"
-                                       onchange="unlock();" 
-                                       required>
-                                <div class="invalid-feedback">
-                                    Please select an Excel file to upload.
-                                </div>
-                                <small class="form-text text-muted mt-1">
-                                    <i class="fe-info me-1"></i>
-                                    Accepted formats: .xlsx, .xls (Max file size: 10MB)
-                                </small>
-                            </div>
-
-                            <div class="d-flex gap-2 flex-wrap">
-                                <button type="submit" 
-                                        class="btn btn-success btn-lg" 
-                                        id="buttonSubmit" 
-                                        disabled>
-                                    <i class="fe-upload me-2"></i>Import Auditions
-                                </button>
-                                <button type="button" 
-                                        class="btn btn-outline-secondary btn-lg" 
-                                        onclick="resetForm()">
-                                    <i class="fe-refresh-cw me-2"></i>Reset
-                                </button>
-                            </div>
-                        </form>
-
-                        <!--- Progress indicator (hidden by default) --->
-                        <div id="uploadProgress" class="mt-3" style="display: none;">
-                            <div class="d-flex align-items-center">
-                                <div class="spinner-border spinner-border-sm text-primary me-2" role="status">
-                                    <span class="visually-hidden">Loading...</span>
-                                </div>
-                                <span class="text-primary">Processing your import...</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+        <div class="import-progress" id="upload-progress" style="display:none">
+            <div class="progress">
+                <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
             </div>
+            <p class="mt-2 text-center" id="upload-status">Uploading...</p>
         </div>
     </div>
-</div>
 
-<cfif isDefined('uploadid')>
-    <!--- Include upload details and process the results --->
-    <cfinclude template="/include/qry/getAuditionUploadDetails.cfm" />
-    <cfset conlist = valuelist(upload_details.audprojectid) />
-    <cfinclude template="/include/qry/getAuditionImportResults.cfm" />
-
-    <div class="row">
-        <div class="col-12">
-            <div class="card mb-4 shadow-sm border-success">
-                <div class="card-header bg-success text-white">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h4 class="card-title mb-0">
-                                <i class="fe-check-circle me-2"></i>Import Results
-                            </h4>
-                            <cfoutput>
-                                <p class="mb-0 mt-1 opacity-75">
-                                    Successfully processed #results.recordcount# audition<cfif results.recordcount NEQ 1>s</cfif>
-                                </p>
-                            </cfoutput>
-                        </div>
-                        <div class="text-end">
-                            <cfoutput>
-                                <div class="badge bg-light text-success fs-6 px-3 py-2">
-                                    #results.recordcount# Records
-                                </div>
-                            </cfoutput>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div class="alert alert-info d-flex align-items-center mb-4" role="alert">
-                        <i class="fe-info me-2"></i>
-                        <div>
-                            Click on any project name to view its details.
-                        </div>
-                    </div>
-                    
-                    <div class="table-responsive">
-                        <table id="basic-datatable" class="table table-hover table-striped mb-0" role="grid">
-                            <thead class="table-dark">
-                                <cfoutput query="results" maxrows="1">
-                                    <tr>
-                                        <th><i class="fe-calendar me-1"></i>Date/Time</th>
-                                        <th><i class="fe-film me-1"></i>Project</th>
-                                        <th><i class="fe-user me-1"></i>Role</th>
-                                        <th><i class="fe-tag me-1"></i>Category</th>
-                                        <th><i class="fe-users me-1"></i>Source</th>
-                                        <th class="text-center"><i class="fe-check-circle me-1"></i>Import Status</th>
-                                    </tr>
-                                </cfoutput>
-                            </thead>
-                            <tbody>
-                                <cfloop query="results">
-                                    <!--- Include error details for each result --->
-                                    <cfinclude template="/include/qry/getAuditionImportErrors.cfm" />
-                                    <cfset err_list = valuelist(errs.error_msg)>
-                                    <cfoutput>
-                                        <tr id="row-#results.id#">
-                                            <td>
-                                                <cfif len(results.audprojectid)>
-                                                    <a href="/app/audition/?audprojectid=#results.audprojectid#" class="text-decoration-none">
-                                                        <cfset myDateTime = results.col1b>
-                                                        <cfset myFormattedDateTime = dateformat(myDateTime, "mm/dd/yyyy")>
-                                                        <i class="fe-calendar me-1 text-muted"></i>#myFormattedDateTime#
-                                                    </a>
-                                                <cfelse>
-                                                    <cfset myDateTime = results.col1b>
-                                                    <cfset myFormattedDateTime = dateformat(myDateTime, "mm/dd/yyyy")>
-                                                    <i class="fe-calendar me-1 text-muted"></i>#myFormattedDateTime#
-                                                </cfif>
-                                            </td>
-                                            <td>
-                                                <cfif len(results.audprojectid)>
-                                                    <a href="/app/audition/?audprojectid=#results.audprojectid#" class="fw-semibold text-decoration-none">
-                                                        #col2#
-                                                    </a>
-                                                <cfelse>
-                                                    <span class="text-muted">#col2#</span>
-                                                </cfif>
-                                            </td>
-                                            <td>#col3#</td>
-                                            <td>
-                                                <cfif col4 NEQ "">
-                                                    <span class="badge bg-light text-dark border">#col4#</span>
-                                                <cfelse>
-                                                    <span class="text-muted">—</span>
-                                                </cfif>
-                                            </td>
-                                            <td>#col5#</td>
-                                            <td class="text-center">
-                                                <cfif col6 EQ "invalid">
-                                                    <span class="badge bg-danger">
-                                                        <i class="fe-x-circle me-1"></i>Failed
-                                                    </span>
-                                                <cfelse>
-                                                    <span class="badge bg-success">
-                                                        <i class="fe-check me-1"></i>#col6#
-                                                    </span>
-                                                </cfif>
-                                            </td>
-                                        </tr>
-                                    </cfoutput>
-                                </cfloop>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+    <!--- IMPORT HISTORY --->
+    <cfif importHistory.recordCount gt 0>
+    <div class="card">
+        <div class="card-body">
+            <h5>Import History</h5>
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>File</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Rows</th>
+                        <th>Imported</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <cfoutput query="importHistory">
+                    <tr>
+                        <td>#importHistory.source_filename#</td>
+                        <td>#dateFormat(importHistory.created_at, "mm/dd/yyyy")# #timeFormat(importHistory.created_at, "h:mm tt")#</td>
+                        <td>
+                            <span class="status-badge status-#lcase(importHistory.status)#">#importHistory.status#</span>
+                        </td>
+                        <td>#importHistory.total_rows#</td>
+                        <td>#importHistory.imported_rows#</td>
+                        <td>
+                            <cfif importHistory.status neq "completed" and importHistory.status neq "cancelled" and importHistory.status neq "failed">
+                                <a href="?job_id=#importHistory.job_id#" class="btn btn-xs btn-primary">Continue</a>
+                            </cfif>
+                            <cfif importHistory.status eq "completed">
+                                <a href="?job_id=#importHistory.job_id#" class="btn btn-xs btn-outline-info" title="View import details"><i class="fe-eye"></i></a>
+                            </cfif>
+                            <cfif importHistory.status eq "failed" or importHistory.status eq "finalizing">
+                                <button class="btn btn-xs btn-outline-warning btn-history-reset" data-job-id="#importHistory.job_id#" title="Reset to review"><i class="fe-refresh-cw"></i></button>
+                            </cfif>
+                            <cfif importHistory.status neq "cancelled" and importHistory.status neq "completed">
+                                <button class="btn btn-xs btn-outline-danger btn-history-cancel" data-job-id="#importHistory.job_id#" title="Cancel import"><i class="fe-x"></i></button>
+                            </cfif>
+                        </td>
+                    </tr>
+                    </cfoutput>
+                </tbody>
+            </table>
         </div>
     </div>
-</cfif>
+    </cfif>
 
-<!--- Always show import history if record count is not zero --->
-<cfinclude template="/include/qry/auditions_import.cfm" />
+<cfelse>
+    <!--- ============================================================
+         ACTIVE JOB VIEW
+         Shows the multi-step import workflow for the selected job.
+         Hidden inputs provide state to the JS controller.
+         ============================================================ --->
+    <cfoutput>
+    <input type="hidden" id="job-id" value="#activeJob.job_id#">
+    <input type="hidden" id="job-status" value="#activeJob.status#">
+    <input type="hidden" id="csrf-token" value="#encodeForHTMLAttribute(session.csrf_token)#">
 
-<cfif imports.recordcount GT 0>
-    <div class="row">
-        <div class="col-12">
-            <div class="card mb-4 shadow-sm">
-                <div class="card-header bg-light border-bottom">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h5 class="card-title mb-0">
-                                <i class="fe-clock me-2 text-muted"></i>Import History 
-                            </h5>
-                            <cfoutput>
-                                <small class="text-muted">You have <strong>#imports.recordcount#</strong> previous import<cfif imports.recordcount NEQ 1>s</cfif></small>
-                            </cfoutput>
-                        </div>
-                        <div>
-                            <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="##importHistoryCollapse" aria-expanded="true">
-                                <i class="fe-chevron-up"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div class="collapse show" id="importHistoryCollapse">
-                    <div class="card-body p-0">
-                        <!--- Debug: Show record count --->
-                        <cfif imports.recordcount EQ 0>
-                            <div class="alert alert-info m-3">
-                                <i class="fe-info me-2"></i>No import history found.
-                            </div>
-                        <cfelse>
-                            <div class="table-responsive">
-                            <table class="table table-hover mb-0" id="basic-datatable-history">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th class="px-3 py-3">
-                                            <i class="fe-hash me-1 text-muted"></i>Batch ID
-                                        </th>
-                                        <th class="px-3 py-3">
-                                            <i class="fe-calendar me-1 text-muted"></i>Date
-                                        </th>
-                                        <th class="px-3 py-3">
-                                            <i class="fe-clock me-1 text-muted"></i>Time
-                                        </th>
-                                        <th class="px-3 py-3 text-center">
-                                            <i class="fe-eye me-1 text-muted"></i>Actions
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <cfloop query="imports">
-                                        <cfoutput>
-                                            <tr>
-                                                <td class="px-3 py-3">
-                                                    <span class="badge bg-primary fs-6">#imports.uploadid#</span>
-                                                </td>
-                                                <td class="px-3 py-3">
-                                                    <span class="text-body fw-medium">#dateformat(imports.timestamp, "mm/dd/yyyy")#</span>
-                                                </td>
-                                                <td class="px-3 py-3">
-                                                    <span class="text-muted">#timeformat(imports.timestamp, "h:mm tt")#</span>
-                                                </td>
-                                                <td class="px-3 py-3 text-center">
-                                                    <a href="/app/auditions/?byimport=#imports.uploadid#" 
-                                                       class="btn btn-sm btn-outline-primary" 
-                                                       title="View imported auditions">
-                                                        <i class="fe-eye"></i>
-                                                    </a>
-                                                </td>
-                                            </tr>
-                                        </cfoutput>
-                                    </cfloop>
-                                </tbody>
-                            </table>
-                            </div>
-                        </cfif>
-                    </div>
-                </div>
-            </div>
+    <!--- Job info bar --->
+    <div class="alert d-flex justify-content-between align-items-center" style="background: rgba(64,110,142,0.1); border: 1px solid ##406e8e;">
+        <div>
+            <strong>File:</strong> #encodeForHTML(activeJob.source_filename)#
+            <span class="mx-2">|</span>
+            <strong>Status:</strong> <span id="current-status" class="status-badge status-#lcase(activeJob.status)#">#activeJob.status#</span>
+            <cfif activeJob.status neq "cancelled" and activeJob.status neq "completed">
+                <button class="btn btn-sm btn-outline-danger ms-2 btn-change-status" data-new-status="cancelled" title="Cancel this import job">
+                    <i class="fe-x-circle"></i> Cancel
+                </button>
+            </cfif>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a href="/app/auditions-import/" class="btn btn-sm btn-outline-secondary">Start New Import</a>
         </div>
     </div>
-</cfif>
 
-<!--- Close main container --->
-</div>
-
-<!--- Toast Container for success messages --->
-<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
-    <div id="successToast" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
-        <div class="d-flex">
-            <div class="toast-body">
-                Record updated successfully!
-            </div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>
-    </div>
-</div>
-
-<!--- Modal for Fixing Invalid Records - COMMENTED OUT UNTIL WORKING CORRECTLY
-<div class="modal fade" id="fixModal" tabindex="-1" role="dialog" aria-labelledby="fixModalLabel" >
-
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="fixModalLabel">Fix Invalid Record</h5>
-                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                    <span >
-&times;</span>
+    <!--- Stale lock detection: warn if job is stuck in finalizing/parsing for over 10 minutes --->
+    <cfif listFindNoCase("finalizing,parsing", activeJob.status) and structKeyExists(activeJob, "updated_at") and isDate(activeJob.updated_at)>
+        <cfset variables.staleLockMinutes = dateDiff("n", activeJob.updated_at, now())>
+        <cfif variables.staleLockMinutes gt 10>
+            <div class="alert alert-warning d-flex align-items-center" id="stale-lock-warning">
+                <i class="fe-alert-triangle me-2" style="font-size:20px;"></i>
+                <div class="flex-grow-1">
+                    <strong>This job appears stuck.</strong>
+                    It has been in <strong>#activeJob.status#</strong> status for #variables.staleLockMinutes# minutes without completing.
+                    This usually means the previous operation was interrupted. You can safely reset it.
+                </div>
+                <button class="btn btn-warning btn-sm ms-3" id="btn-force-unlock" data-job-id="#activeJob.job_id#">
+                    <i class="fe-unlock"></i> Unlock &amp; Reset to Review
                 </button>
             </div>
-            <div class="modal-body">
-                <form id="fixForm" onsubmit="return submitFixForm();">
-                    <input type="hidden" name="recordId" id="recordId" />
-                    <div class="form-group">
-                        <label for="projName">Project</label>
-                        <input type="text" class="form-control" name="projName" id="projName" />
+        </cfif>
+    </cfif>
+
+    <!--- ============================================================
+         BREADCRUMB STEPPER - Shows progress through all 4 steps
+         ============================================================ --->
+    <cfset stepNum = 2>
+    <cfif activeJob.status eq "created" or activeJob.status eq "pending" or activeJob.status eq "uploaded" or activeJob.status eq "parsing">
+        <cfset stepNum = 2>
+    <cfelseif activeJob.status eq "parsed" or activeJob.status eq "mapping">
+        <cfset stepNum = 2>
+    <cfelseif activeJob.status eq "reviewing" or activeJob.status eq "importing">
+        <cfset stepNum = 3>
+    <cfelseif activeJob.status eq "finalizing">
+        <cfset stepNum = 4>
+    <cfelseif activeJob.status eq "completed">
+        <cfset stepNum = 5>
+    </cfif>
+
+    <div class="import-stepper" id="import-stepper">
+        <div class="step-item <cfif stepNum gt 1>completed<cfelseif stepNum eq 1>active</cfif>">
+            <span class="step-circle"><cfif stepNum gt 1><i class="fe-check"></i><cfelse>1</cfif></span>
+            <span class="step-label">Upload</span>
+        </div>
+        <span class="step-arrow"><i class="fe-chevron-right"></i></span>
+        <div class="step-item <cfif stepNum gt 2>completed<cfelseif stepNum eq 2>active</cfif>">
+            <span class="step-circle"><cfif stepNum gt 2><i class="fe-check"></i><cfelse>2</cfif></span>
+            <span class="step-label">Parse & Map</span>
+        </div>
+        <span class="step-arrow"><i class="fe-chevron-right"></i></span>
+        <div class="step-item <cfif stepNum gt 3>completed<cfelseif stepNum eq 3>active</cfif>">
+            <span class="step-circle"><cfif stepNum gt 3><i class="fe-check"></i><cfelse>3</cfif></span>
+            <span class="step-label">Review</span>
+        </div>
+        <span class="step-arrow"><i class="fe-chevron-right"></i></span>
+        <div class="step-item <cfif stepNum gt 4>completed<cfelseif stepNum eq 4>active</cfif>">
+            <span class="step-circle"><cfif stepNum gt 4><i class="fe-check"></i><cfelse>4</cfif></span>
+            <span class="step-label">Import</span>
+        </div>
+    </div>
+
+    <!--- ============================================================
+         WORKFLOW STEPS - Show appropriate step based on job status
+         ============================================================ --->
+    <cfif activeJob.status eq "created" or activeJob.status eq "pending" or activeJob.status eq "uploaded">
+        <!--- STEP 2: Auto-parse - triggers automatically via JS --->
+        <div class="import-step" id="step-parse">
+            <h5><span class="step-number">2</span> Parsing File</h5>
+            <div class="import-progress mt-3" id="parse-progress">
+                <div class="progress">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%; background: linear-gradient(135deg, var(--ct-link-color), var(--ct-link-hover-color));"></div>
+                </div>
+                <p class="mt-2 text-center">Parsing and analyzing your file...</p>
+            </div>
+        </div>
+
+    <cfelseif activeJob.status eq "parsed" or activeJob.status eq "mapping">
+        <!--- STEP 2b: Column Mapping --->
+        <div class="import-step" id="step-mapping">
+            <h5><span class="step-number">2</span> Map Columns</h5>
+            <p class="text-muted">Review how columns from your file map to audition fields.</p>
+            <div id="mapping-container">
+                <p class="text-center"><i class="fe-loader fe-spin"></i> Loading column mappings...</p>
+            </div>
+            <div class="mt-3">
+                <button class="btn btn-primary" id="btn-confirm-mapping" style="background: linear-gradient(135deg, var(--ct-link-color), var(--ct-link-hover-color)); border:none;">
+                    <i class="fe-check"></i> Confirm Mapping & Continue
+                </button>
+            </div>
+        </div>
+
+    <cfelseif listFindNoCase("reviewing,importing,finalizing,completed", activeJob.status)>
+        <!--- STEP 3: Review Grid --->
+        <div class="import-step" id="step-review">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><span class="step-number">3</span> Review &amp; Fix</h5>
+                <div>
+                    <button class="btn btn-sm btn-outline-danger" id="btn-export-problems" style="display:none;" title="Download CSV of rows with errors">
+                        <i class="fe-download"></i> Export Problems
+                    </button>
+                    <cfif activeJob.status neq "completed">
+                    <button class="btn btn-sm btn-outline-secondary ms-1" id="btn-refresh-validation" title="Re-run validation and duplicate detection on all rows">
+                        <i class="fe-refresh-cw"></i> Refresh Validation
+                    </button>
+                    </cfif>
+                </div>
+            </div>
+
+            <!--- Stats bar --->
+            <div class="row mb-3 mt-3" id="stats-bar">
+                <div class="col">
+                    <div class="card card-body p-2 text-center" style="background: linear-gradient(135deg, var(--ct-link-color), var(--ct-link-hover-color)); color:##fff;">
+                        <div class="h4 mb-0" id="stat-total" style="color:##d0e8f7;"><i class="fe-loader fe-spin" style="font-size:16px"></i></div>
+                        <small>Total</small>
                     </div>
-                    <div class="row">
-                        <div class="form-group col-md-6">
-                            <label for="audRoleName">Role</label>
-                            <input type="text" class="form-control" name="audRoleName" id="audRoleName" />
-                        </div>
-                        <div class="form-group col-md-6">
-                            <label for="projDate">Project Date</label>
-                            <input type="date" class="form-control" name="projDate" id="projDate" />
-                        </div>
+                </div>
+                <div class="col">
+                    <div class="card card-body p-2 text-center" style="background: linear-gradient(135deg, var(--ct-link-color), var(--ct-link-hover-color)); color:##fff;">
+                        <div class="h4 mb-0" id="stat-ready" style="color:##d0e8f7;"><i class="fe-loader fe-spin" style="font-size:16px"></i></div>
+                        <small>Ready</small>
                     </div>
-                    <div class="row">
-                        <div class="form-group col-md-6">
-                            <label for="audsubcatid">Category</label>
-                            <select class="form-control" name="audsubcatid" id="audsubcatid">
-                                <option value="">Select Category</option>
-                            </select>
-                        </div>
-                        <div class="form-group col-md-6">
-                            <label for="audsource">Source</label>
-                            <select class="form-control" name="audsource" id="audsource">
-                                <option value="">Select Source</option>
-                            </select>
-                        </div>
+                </div>
+                <div class="col">
+                    <div class="card card-body p-2 text-center" style="background: linear-gradient(135deg, var(--ct-link-color), var(--ct-link-hover-color)); color:##fff;">
+                        <div class="h4 mb-0" id="stat-problem" style="color:##d0e8f7;"><i class="fe-loader fe-spin" style="font-size:16px"></i></div>
+                        <small>Problems</small>
                     </div>
-                    <div class="row">
-                        <div class="form-group col-md-6">
-                            <label for="cdfirstname">CD First Name</label>
-                            <input type="text" class="form-control" name="cdfirstname" id="cdfirstname" />
-                        </div>
-                        <div class="form-group col-md-6">
-                            <label for="cdlastname">CD Last Name</label>
-                            <input type="text" class="form-control" name="cdlastname" id="cdlastname" />
-                        </div>
+                </div>
+                <div class="col">
+                    <div class="card card-body p-2 text-center" style="background: linear-gradient(135deg, var(--ct-link-color), var(--ct-link-hover-color)); color:##fff;">
+                        <div class="h4 mb-0" id="stat-dupe" style="color:##d0e8f7;"><i class="fe-loader fe-spin" style="font-size:16px"></i></div>
+                        <small>Duplicates</small>
                     </div>
-                    <div class="row">
-                        <div class="form-group col-md-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="callback_yn" id="callback_yn" value="Y" />
-                                <label class="form-check-label" for="callback_yn">Callback</label>
-                            </div>
-                        </div>
-                        <div class="form-group col-md-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="redirect_yn" id="redirect_yn" value="Y" />
-                                <label class="form-check-label" for="redirect_yn">Redirect</label>
-                            </div>
-                        </div>
-                        <div class="form-group col-md-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="pin_yn" id="pin_yn" value="Y" />
-                                <label class="form-check-label" for="pin_yn">Pin</label>
-                            </div>
-                        </div>
-                        <div class="form-group col-md-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="booked_yn" id="booked_yn" value="Y" />
-                                <label class="form-check-label" for="booked_yn">Booked</label>
-                            </div>
-                        </div>
+                </div>
+                <div class="col">
+                    <div class="card card-body p-2 text-center" style="background: linear-gradient(135deg, var(--ct-link-color), var(--ct-link-hover-color)); color:##fff;">
+                        <div class="h4 mb-0" id="stat-imported" style="color:##d0e8f7;"><i class="fe-loader fe-spin" style="font-size:16px"></i></div>
+                        <small>Imported</small>
                     </div>
-                    <div class="form-group">
-                        <label for="projDescription">Project Description</label>
-                        <textarea class="form-control" name="projDescription" id="projDescription" rows="2"></textarea>
+                </div>
+            </div>
+
+            <!--- Search bar --->
+            <div class="mb-2">
+                <div class="input-group input-group-sm" style="max-width:350px;">
+                    <input type="text" class="form-control" id="row-search" placeholder="Search by project, role, casting director...">
+                    <span class="input-group-text" style="display:flex;align-items:center;"><i class="fe-search" style="font-size:18px;"></i></span>
+                    <button class="btn btn-outline-secondary" type="button" id="row-search-clear" style="display:none;">
+                        <i class="fe-x"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!--- Filter tabs --->
+            <ul class="nav nav-tabs review-tabs" id="review-tabs">
+                <li class="nav-item">
+                    <a class="nav-link active" href="##" data-filter="">
+                        All <span class="badge badge-secondary" id="tab-all">...</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="##" data-filter="ready">
+                        Ready <span class="badge badge-success" id="tab-ready">...</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="##" data-filter="problem">
+                        Problems <span class="badge badge-danger" id="tab-problem">...</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="##" data-filter="dupe">
+                        Duplicates <span class="badge badge-warning" id="tab-dupe">...</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="##" data-filter="ignored">
+                        Ignored <span class="badge badge-secondary" id="tab-ignored">...</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="##" data-filter="imported">
+                        Imported <span class="badge" style="background:##406e8e;color:##fff;" id="tab-imported">...</span>
+                    </a>
+                </li>
+            </ul>
+
+            <!--- Review table --->
+            <div class="table-responsive">
+                <table class="table table-sm table-hover review-table" id="review-table">
+                    <thead>
+                        <tr>
+                            <th width="40">##</th>
+                            <th>Project</th>
+                            <th>Role</th>
+                            <th>Date</th>
+                            <th>Contact</th>
+                            <th width="80">Status</th>
+                            <th width="100">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="review-tbody">
+                        <tr><td colspan="7" class="text-center p-4"><i class="fe-loader fe-spin"></i> Loading rows...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!--- Pagination --->
+            <div class="d-flex justify-content-between align-items-center mt-3">
+                <div id="pagination-info">Showing 0-0 of 0</div>
+                <nav id="pagination-nav">
+                    <ul class="pagination pagination-sm mb-0">
+                    </ul>
+                </nav>
+            </div>
+
+            <!--- Continue to finalize button --->
+            <cfif activeJob.status neq "completed">
+            <div class="text-end mt-4">
+                <button class="btn btn-lg" id="btn-goto-finalize" style="background: linear-gradient(135deg, var(--ct-link-color), var(--ct-link-hover-color)); color:##fff; border:none;">
+                    Continue to Import <i class="fe-arrow-right"></i>
+                </button>
+            </div>
+            </cfif>
+        </div>
+
+        <!--- STEP 4: Finalize Import --->
+        <cfif activeJob.status neq "completed">
+        <div class="import-step" id="step-finalize" style="display:none;">
+            <div class="mb-3">
+                <button class="btn btn-sm btn-outline-secondary" id="btn-back-to-review">
+                    <i class="fe-arrow-left"></i> Back to Review
+                </button>
+            </div>
+            <h5><span class="step-number">4</span> Finalize Import</h5>
+            <p class="text-muted">Review what will be imported, then finalize to create auditions in your account.</p>
+            <div class="alert alert-warning" id="finalize-warning" style="display:none">
+                <i class="fe-alert-triangle"></i> <span id="finalize-warning-text"></span>
+            </div>
+            <div id="finalize-precheck" class="mb-3" style="display:none">
+                <div class="card" style="border-left:4px solid ##406e8e;">
+                    <div class="card-body py-2 px-3">
+                        <strong class="small text-uppercase text-muted">Import Summary</strong>
+                        <div class="row mt-1" id="precheck-details"></div>
                     </div>
-                    <div class="form-group">
-                        <label for="charDescription">Character Description</label>
-                        <textarea class="form-control" name="charDescription" id="charDescription" rows="2"></textarea>
+                </div>
+            </div>
+            <div class="btn-toolbar mb-3">
+                <button class="btn btn-lg" id="btn-finalize" style="background: linear-gradient(135deg, var(--ct-link-color), var(--ct-link-hover-color)); color:##fff; border:none;" <cfif activeJob.status eq "finalizing">disabled</cfif>>
+                    <i class="fe-check-circle"></i> Import <span id="import-count">...</span> Auditions
+                </button>
+            </div>
+            <div class="import-progress mt-3" id="finalize-progress" style="display:none">
+                <div class="progress">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%; background: linear-gradient(135deg, var(--ct-link-color), var(--ct-link-hover-color));"></div>
+                </div>
+                <p class="mt-2 text-center">Importing auditions...</p>
+            </div>
+        </div>
+        <cfelse>
+        <!--- COMPLETED STATE --->
+        <div class="import-step completed">
+            <h5><span class="step-number"><i class="fe-check"></i></span> Import Complete</h5>
+            <div class="row mb-3">
+                <div class="col-auto">
+                    <div class="card card-body p-2 text-center bg-success text-white" style="min-width:100px;">
+                        <div class="h4 mb-0">#val(activeJob.imported_rows)#</div>
+                        <small>Created</small>
                     </div>
-                    <div class="form-group">
-                        <label for="note">Notes</label>
-                        <textarea class="form-control" name="note" id="note" rows="2"></textarea>
+                </div>
+                <cfif val(activeJob.skipped_rows) gt 0>
+                <div class="col-auto">
+                    <div class="card card-body p-2 text-center" style="min-width:100px;background:##e2e3e5;color:##383d41;">
+                        <div class="h4 mb-0">#val(activeJob.skipped_rows)#</div>
+                        <small>Skipped</small>
                     </div>
-                    <div class="form-group">
-                        <input type="text" class="form-control" name="status" id="status" />
+                </div>
+                </cfif>
+                <cfif val(activeJob.problem_rows) gt 0>
+                <div class="col-auto">
+                    <div class="card card-body p-2 text-center bg-danger text-white" style="min-width:100px;">
+                        <div class="h4 mb-0">#val(activeJob.problem_rows)#</div>
+                        <small>Problems</small>
                     </div>
-                    <button type="submit" id="fixFormSubmitButton" class="btn btn-primary">Save changes</button>
-                </form>
+                </div>
+                </cfif>
+                <div class="col-auto">
+                    <div class="card card-body p-2 text-center" style="min-width:100px;background:##f8f9fa;color:##6c757d;">
+                        <div class="h4 mb-0">#val(activeJob.total_rows)#</div>
+                        <small>Total Rows</small>
+                    </div>
+                </div>
+            </div>
+            <cfif structKeyExists(activeJob, "finished_at") and isDate(activeJob.finished_at)>
+                <p class="text-muted small mb-3">
+                    Completed #dateFormat(activeJob.finished_at, "mm/dd/yyyy")# at #timeFormat(activeJob.finished_at, "h:mm tt")#
+                </p>
+            </cfif>
+            <a href="/app/auditions-import/" class="btn btn-primary" style="background: linear-gradient(135deg, var(--ct-link-color), var(--ct-link-hover-color)); border:none;">
+                <i class="fe-plus"></i> Start New Import
+            </a>
+        </div>
+        </cfif>
+
+    </cfif>
+    </cfoutput>
+</cfif>
+
+<!--- ============================================================
+     MODALS
+     ============================================================ --->
+
+<!--- Duplicate resolution modal --->
+<div class="modal fade" id="dupe-modal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background: rgba(64,110,142,0.1);">
+                <h5 class="modal-title">Resolve Duplicate</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="dupe-modal-body">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-outline-danger" id="dupe-skip">Skip This Row</button>
+                <button type="button" class="btn btn-primary" id="dupe-import-new" style="background: linear-gradient(135deg, var(--ct-link-color), var(--ct-link-hover-color)); border:none;">Import as New</button>
             </div>
         </div>
     </div>
 </div>
-END COMMENTED OUT MODAL --->
 
-<!--- Place this script block at the end of your body section, right before the closing </body> tag --->
-<script>
-    // Toggle chevron icon for import history collapse
-    document.getElementById('importHistoryCollapse').addEventListener('show.bs.collapse', function () {
-        document.querySelector('[data-bs-target="##importHistoryCollapse"] i').className = 'fe-chevron-up';
-    });
-    
-    document.getElementById('importHistoryCollapse').addEventListener('hide.bs.collapse', function () {
-        document.querySelector('[data-bs-target="##importHistoryCollapse"] i').className = 'fe-chevron-down';
-    });
+<!--- Edit row modal --->
+<div class="modal fade" id="edit-modal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background: rgba(64,110,142,0.1);">
+                <h5 class="modal-title"><i class="fe-edit"></i> Edit Row</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="edit-modal-body" style="max-height: 60vh; overflow-y: auto;">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="edit-save" style="background: linear-gradient(135deg, var(--ct-link-color), var(--ct-link-hover-color)); border:none;"><i class="fe-check"></i> Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
 
-    <!--- COMMENTED OUT UNTIL FIX MODAL IS WORKING CORRECTLY
-    Function to load record data into the modal form
-    function loadForm(recordId) {
-        $.ajax({
-            url: '/include/get_record_data.cfm',
-            type: 'GET',
-            data: { id: recordId },
-            success: function(data) {
-                console.log("Raw response data:", data); // Log raw data for debugging
-                try {
-                    if (data) {
-                        // Populate the select list for categories before setting the value
-                        const categorySelect = $('#audsubcatid');
-                        categorySelect.empty(); // Clear existing options
-                        categorySelect.append(new Option("Select Category", "")); // Add default option
-
-                        // Add new options from the categories
-                        data.categories.forEach(category => {
-                            categorySelect.append(new Option(category.NAME, category.ID)); 
-                        });
-
-                        // Set the selected value for categories by matching the ID
-                        categorySelect.val(data.audsubcatid);
-
-                        // Populate the select list for sources
-                        const sourceSelect = $('#audsource');
-                        sourceSelect.empty(); // Clear existing options
-                        sourceSelect.append(new Option("Select Source", "")); // Add default option
-
-                        // Add new options from the sources
-                        data.sources.forEach(source => {
-                            sourceSelect.append(new Option(source.NAME, source.NAME));
-                        });
-
-                        // Set the selected value for source
-                        sourceSelect.val(data.audSource);
-
-                        // Populate other fields
-                        $('#recordId').val(data.id);
-                        $('#projDate').val(data.projDate);
-                        $('#projName').val(data.projName);
-                        $('#audRoleName').val(data.audRoleName);
-                        $('#cdfirstname').val(data.cdFirstName);
-                        $('#cdlastname').val(data.cdLastName);
-                        $('#callback_yn').prop('checked', data.callbackYN === 'Y');
-                        $('#redirect_yn').prop('checked', data.redirectYN === 'Y');
-                        $('#pin_yn').prop('checked', data.pinYN === 'Y');
-                        $('#booked_yn').prop('checked', data.bookedYN === 'Y');
-                        $('#projDescription').val(data.projDescription);
-                        $('#charDescription').val(data.charDescription);
-                        $('#note').val(data.note);
-                        $('#status').val(data.status);
-
-                        // Open the modal after the data has been populated
-                        $('#fixModal').modal('show');
-                    } else {
-                        console.error("Record data is undefined or missing.");
-                        alert('Error fetching record data.');
-                    }
-                } catch (e) {
-                    console.error("Error parsing JSON:", e);
-                    console.error("Response data:", data);
-                    alert('Error fetching record data.');
-                }
-            },
-            error: function(jqXHR, textStatus, errorThrown) {
-                console.error("AJAX error:", textStatus, errorThrown);
-                alert('Error fetching record data.');
-            }
-        });
-    }
-
-    Function to submit the fix form
-    function submitFixForm() {
-        var formData = $('#fixForm').serialize(); // Serialize the form data
-
-        $.ajax({
-            url: '/include/update_import_auditions.cfm', // URL to the ColdFusion page that will process the form data
-            type: 'POST',
-            data: formData,
-            success: function(response) {
-                if (typeof response === 'string') {
-                    response = JSON.parse(response);
-                }
-
-                if (response.SUCCESS) {
-                    // Show the success toast with a 3-second delay
-                    var successToast = new bootstrap.Toast(document.getElementById('successToast'), {
-                        delay: 3000 // 3 seconds
-                    });
-                    successToast.show();
-
-                    $('#fixModal').modal('hide'); // Close the modal
-
-                    // Optionally, you can refresh part of the page to show the updated data
-                    location.reload(); // Reload the page to reflect the changes
-                } else {
-                    alert('Failed to update the record: ' + response.MESSAGE);
-                }
-            },
-            error: function(jqXHR, textStatus, errorThrown) {
-                console.error("AJAX error:", textStatus, errorThrown);
-                alert('Error updating the record.');
-            }
-        });
-
-        return false; // Prevent the default form submission
-    }
-    END COMMENTED OUT FUNCTIONS --->
-</script>
-
+<!--- ============================================================
+     JAVASCRIPT CONTROLLER
+     ============================================================ --->
+<script src="/app/assets/js/audition-import.js?v=<cfoutput>#DateFormat(Now(),'yyyymmdd')##TimeFormat(Now(),'HHmmss')#</cfoutput>"></script>
