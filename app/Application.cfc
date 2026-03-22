@@ -143,6 +143,9 @@
 
       // Initialize feature flags with DB-driven values (cached)
       loadFeatureFlags();
+
+      // PERF: Request-level timing instrumentation (kill switch: set false to disable)
+      application.perfLogging = true;
     </cfscript>
     <cfreturn true />
   </cffunction>
@@ -226,6 +229,12 @@
 
   <cffunction name="onRequestStart" returntype="boolean" output="false">
     <cfargument name="targetPage" type="string" required="true" />
+
+    <!--- PERF: Capture timing at the very start of the request lifecycle --->
+    <!--- MIGRATE: This logging pattern maps to structured logging in Go (zerolog/slog). --->
+    <cfset request.perfStart = getTickCount() />
+    <cfset request.perfPage = arguments.targetPage />
+    <cfset request.perfQueryCount = 0 />
 
     <!--- Per-request datasource: immune to application-scope race conditions --->
     <cfset request.dsn = application.dsn />
@@ -421,6 +430,40 @@
   <cffunction name="onRequest" returntype="void" output="true">
     <cfargument name="targetPage" type="string" required="true" />
     <cfinclude template="#arguments.targetPage#" />
+  </cffunction>
+
+  <!--- PERF: Log request timing to TSV file for performance analysis --->
+  <!--- MIGRATE: The perf-*.log TSV format maps to: { "timestamp", "user_id", "path", "elapsed_ms", "query_count", "query_string" } --->
+  <cffunction name="onRequestEnd" returntype="void" output="false">
+    <cfargument name="targetPage" type="string" required="true" />
+
+    <cfif structKeyExists(application, "perfLogging") AND application.perfLogging
+          AND structKeyExists(request, "perfStart")>
+
+      <cfset var elapsed = getTickCount() - request.perfStart />
+      <cfset var userid = structKeyExists(session, "userid") ? session.userid : 0 />
+      <cfset var qcount = structKeyExists(request, "perfQueryCount") ? request.perfQueryCount : -1 />
+      <cfset var logLine = dateTimeFormat(now(), "yyyy-MM-dd HH:nn:ss") & chr(9)
+          & userid & chr(9)
+          & request.perfPage & chr(9)
+          & elapsed & chr(9)
+          & qcount & chr(9)
+          & cgi.QUERY_STRING />
+
+      <cftry>
+        <cfset var logDir = expandPath("/logs") />
+        <cfif NOT directoryExists(logDir)>
+          <cfset directoryCreate(logDir) />
+        </cfif>
+        <cffile action="append"
+                file="#logDir#/perf-#dateFormat(now(), 'yyyy-MM-dd')#.log"
+                output="#logLine#"
+                addNewLine="true" />
+      <cfcatch>
+        <!--- Silently fail - logging must never break the request --->
+      </cfcatch>
+      </cftry>
+    </cfif>
   </cffunction>
 
   <!--- Error handler: log full details server-side, return safe response to client --->

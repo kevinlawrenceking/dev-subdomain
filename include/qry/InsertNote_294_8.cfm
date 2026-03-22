@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset noteService = createObject("component", "services.NoteService")>
 <cfset noteService.INSnoteslog_24319(
     userid = userid,

@@ -1,7 +1,8 @@
 
+<cfinclude template="/include/perfcount.cfm" />
 <cfset dbug = "N" />
 
-<!--- Query to select records from the database table ---> 
+<!--- Query to select records from the database table --->
 <cfinclude template="/include/qry/tname_sel_531_1.cfm" />
 
 <!--- Check if debugging is enabled to display the results ---> 

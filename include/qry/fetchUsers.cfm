@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset userService = createObject("component", "services.UserService")>
 <cfset userData = userService.getUserById(userID)>
 

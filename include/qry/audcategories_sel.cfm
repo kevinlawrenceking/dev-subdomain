@@ -1,4 +1,5 @@
 <!--- This ColdFusion page initializes parameters and includes a query template for retrieving audience categories. --->
+<cfinclude template="/include/perfcount.cfm" />
 <cfparam name="dbug" default="N" />
 
 <cfset tname = "audcategories" /> <!--- Set the table name for audience categories --->

@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfparam name="url.pgid" type="numeric" default="1">
 
 <cfset pageAppLinksService = createObject("component", "services.PageAppLinks")>
