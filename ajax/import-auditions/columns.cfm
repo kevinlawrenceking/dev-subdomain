@@ -111,8 +111,6 @@
                 c.source_column_index,
                 c.source_column_name,
                 c.mapped_field,
-                c.is_custom_field,
-                c.custom_field_id,
                 c.confidence,
                 c.user_confirmed,
                 c.sample_values,
@@ -141,7 +139,6 @@
                 "transform_json": isNull(variables.qColumns.transform_json) ? "" : variables.qColumns.transform_json,
                 "user_confirmed": variables.qColumns.user_confirmed,
                 "mapped_field": isNull(variables.qColumns.mapped_field) ? "" : variables.qColumns.mapped_field,
-                "is_custom_field": variables.qColumns.is_custom_field,
                 "confidence": isNull(variables.qColumns.confidence) ? "" : variables.qColumns.confidence,
                 "sample_values": []
             }>
@@ -322,9 +319,6 @@
             job_id: { value: variables.jobId, cfsqltype: "cf_sql_integer" }
         }>
 
-        <!--- Always update timestamp --->
-        <cfset arrayAppend(variables.updateParts, "updated_at = NOW()")>
-
         <!--- Intent --->
         <cfif len(form.intent) or structKeyExists(form, "intent")>
             <cfset arrayAppend(variables.updateParts, "intent = :intent")>
@@ -366,7 +360,7 @@
         </cfif>
 
         <!--- Execute update if we have fields to update --->
-        <cfif arrayLen(variables.updateParts) gt 1>
+        <cfif arrayLen(variables.updateParts) gt 0>
             <cfset variables.updateSQL = "UPDATE import_auditions_columns SET " & arrayToList(variables.updateParts, ", ") & " WHERE column_id = :column_id AND job_id = :job_id">
 
             <cfset variables.qUpdateResult = {}>
@@ -415,8 +409,6 @@
                 c.source_column_index,
                 c.source_column_name,
                 c.mapped_field,
-                c.is_custom_field,
-                c.custom_field_id,
                 c.confidence,
                 c.user_confirmed,
                 c.sample_values,
@@ -442,7 +434,6 @@
                 "transform_json": isNull(variables.qColumns.transform_json) ? "" : variables.qColumns.transform_json,
                 "user_confirmed": variables.qColumns.user_confirmed,
                 "mapped_field": isNull(variables.qColumns.mapped_field) ? "" : variables.qColumns.mapped_field,
-                "is_custom_field": variables.qColumns.is_custom_field,
                 "confidence": isNull(variables.qColumns.confidence) ? "" : variables.qColumns.confidence,
                 "sample_values": []
             }>
