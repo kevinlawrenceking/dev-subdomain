@@ -1052,12 +1052,12 @@
 
         // Only show fields that have data or errors
         var fieldsWithData = Object.keys(currentEditData).filter(function(k) {
-            return currentEditData[k] \!== '' && currentEditData[k] \!== null;
+            return currentEditData[k] !== '' && currentEditData[k] !== null;
         });
         var fieldsWithErrors = Object.keys(validation).filter(function(k) {
             var v = validation[k];
-            if (typeof v === 'boolean') return \!v;
-            return v && \!v.valid;
+            if (typeof v === 'boolean') return !v;
+            return v && !v.valid;
         });
         var relevantFields = new Set(fieldsWithData.concat(fieldsWithErrors));
 
@@ -1084,13 +1084,13 @@
                 var error = '';
                 var warning = '';
                 if (typeof v === 'boolean') {
-                    if (\!v) error = errorLookup[field] || 'Invalid value';
-                } else if (v && \!v.valid) {
+                    if (!v) error = errorLookup[field] || 'Invalid value';
+                } else if (v && !v.valid) {
                     error = v.error || '';
                     warning = v.warning || '';
                 }
                 // For date fields, suppress stale error if current value is a valid date
-                if (error && fieldDef.type === 'date' && val && \!isNaN(new Date(val).getTime())) {
+                if (error && fieldDef.type === 'date' && val && !isNaN(new Date(val).getTime())) {
                     error = '';
                 }
                 var inputClass = error ? 'is-invalid' : (warning ? 'is-warning' : '');
