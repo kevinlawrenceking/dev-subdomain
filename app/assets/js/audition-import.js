@@ -1115,7 +1115,7 @@
 
         html += '</form>';
 
-        \('#edit-modal-body').html(html);
+        $j('#edit-modal-body').html(html);
 
         bsModal('#edit-modal', 'show');
     }
@@ -1173,10 +1173,6 @@
         var month = ('0' + (date.getMonth() + 1)).slice(-2);
         var day = ('0' + date.getDate()).slice(-2);
         return date.getFullYear() + '-' + month + '-' + day;
-    }
-
-            $j(this).val(val);
-        });
     }
 
     function saveEdit() {
