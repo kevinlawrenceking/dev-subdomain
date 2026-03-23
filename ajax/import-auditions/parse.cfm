@@ -315,8 +315,8 @@
         <cfset variables.qColResult = {}>
         <cfset queryExecute(
             "INSERT IGNORE INTO import_auditions_columns
-             (job_id, source_column_index, source_column_name, sample_values, intent, target_key, confidence, user_confirmed, created_at, updated_at)
-             VALUES (:job_id, :col_index, :col_name, :sample_values, :intent, :target_key, :confidence, 0, NOW(), NOW())",
+             (job_id, source_column_index, source_column_name, sample_values, intent, target_key, confidence, user_confirmed)
+             VALUES (:job_id, :col_index, :col_name, :sample_values, :intent, :target_key, :confidence, 0)",
             {
                 job_id: { value: variables.jobId, cfsqltype: "cf_sql_integer" },
                 col_index: { value: colIdx - 1, cfsqltype: "cf_sql_integer" },
