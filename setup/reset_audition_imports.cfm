@@ -2,13 +2,13 @@
 <cfcontent type="text/html; charset=utf-8">
 <!--- Reset all audition import staging data (test data cleanup) --->
 
-<cfset dsn = application.dsn>
-
-<!--- Safety: only run on dev --->
-<cfif dsn NEQ "abod">
-  <h2>Blocked: this script only runs on dev (abod).</h2>
+<!--- Derive datasource from hostname (same logic as Application.cfc) --->
+<cfset host = ListFirst(cgi.server_name, ".")>
+<cfif host EQ "app">
+  <h2>Blocked: this script only runs on dev.</h2>
   <cfabort>
 </cfif>
+<cfset dsn = "abod">
 
 <h2>Audition Import Staging Data Reset</h2>
 
