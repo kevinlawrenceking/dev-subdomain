@@ -22,7 +22,7 @@
 
 <!--- Handle both specific contact and all-user reminders --->
 <cfif contactID GT 0>
-  <!--- Get the system user ID for this specific contact --->
+  <!--- Get all active system user IDs for this contact --->
   <cfquery name="getSu" datasource="#dsn#">
     SELECT suid
     FROM fusystemusers
@@ -31,15 +31,12 @@
       AND sustatus = 'Active'
   </cfquery>
 
-  <cfif getSu.recordCount>
-    <cfset sysActiveSuid = getSu.suid>
-  <cfelse>
+  <cfif NOT getSu.recordCount>
     <cfoutput>#serializeJSON([])#</cfoutput>
     <cfabort>
   </cfif>
 <cfelse>
   <!--- For all-user reminders, we don't need a specific suid --->
-  <cfset sysActiveSuid = 0>
 </cfif>
 
 <!--- Main reminders query --->
@@ -73,7 +70,7 @@
   LEFT JOIN contactdetails c ON c.contactid = f.contactid
   WHERE <cfif contactID GT 0>
     f.contactID = <cfqueryparam value="#contactID#" cfsqltype="cf_sql_integer">
-    AND f.suID = <cfqueryparam value="#sysActiveSuid#" cfsqltype="cf_sql_integer">
+    AND f.suID IN (<cfqueryparam value="#valueList(getSu.suid)#" cfsqltype="cf_sql_integer" list="true">)
   <cfelse>
     f.userID = <cfqueryparam value="#session.userID#" cfsqltype="cf_sql_integer">
   </cfif>

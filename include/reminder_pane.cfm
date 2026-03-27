@@ -81,8 +81,18 @@
   function showConfirmModal(text, onConfirm) {
     $("#confirmReminderText").text(text);
     pendingConfirmAction = onConfirm;
-    const confirmModal = new bootstrap.Modal(document.getElementById('confirmReminderModal'));
-    confirmModal.show();
+    const el = document.getElementById('confirmReminderModal');
+    const confirmModal = bootstrap.Modal.getOrCreateInstance(el);
+    // If the modal is still hiding from a previous action, wait for it to finish
+    if (el.classList.contains('show') || el.classList.contains('showing')) {
+      confirmModal.hide();
+      el.addEventListener('hidden.bs.modal', function onceHidden() {
+        el.removeEventListener('hidden.bs.modal', onceHidden);
+        confirmModal.show();
+      });
+    } else {
+      confirmModal.show();
+    }
   }
 
   function loadReminders() {
@@ -106,10 +116,11 @@
     $('#remindersTable').DataTable({
       ajax: {
         url: "/include/get_reminders.cfm?bypass=1",
-        data: {
-          showInactive: showInactive,
-          currentid: <cfoutput>#contactid#</cfoutput>,
-          userid: <cfoutput>#userid#</cfoutput>
+        cache: false,
+        data: function(d) {
+          d.showInactive = $("#showInactive").is(":checked") ? 1 : 0;
+          d.currentid = <cfoutput>#contactid#</cfoutput>;
+          d.userid = <cfoutput>#userid#</cfoutput>;
         },
         dataSrc: function (json) {
           injectReminderModals(json);
@@ -364,14 +375,19 @@
     });
 
     $('#confirmReminderButton').click(function () {
-      // Hide modal first, then execute the pending action
-      const confirmModal = bootstrap.Modal.getInstance(document.getElementById('confirmReminderModal'));
+      const el = document.getElementById('confirmReminderModal');
+      const confirmModal = bootstrap.Modal.getOrCreateInstance(el);
+      const action = pendingConfirmAction;
+      pendingConfirmAction = null;
+      // Hide modal, then execute the pending action after transition completes
       if (confirmModal) {
+        el.addEventListener('hidden.bs.modal', function onceHidden() {
+          el.removeEventListener('hidden.bs.modal', onceHidden);
+          if (action) action();
+        });
         confirmModal.hide();
-      }
-      if (pendingConfirmAction) {
-        pendingConfirmAction();
-        pendingConfirmAction = null;
+      } else if (action) {
+        action();
       }
     });
 
