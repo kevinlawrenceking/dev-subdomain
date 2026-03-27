@@ -12,6 +12,23 @@
 
 <h2>Audition Import Staging Data Reset</h2>
 
+<!--- Fix missing updated_at column on import_auditions_columns (other staging tables have it) --->
+<cfquery name="checkCol" datasource="#dsn#">
+  SELECT COUNT(*) AS has_col
+  FROM information_schema.COLUMNS
+  WHERE TABLE_SCHEMA = 'new_development'
+    AND TABLE_NAME = 'import_auditions_columns'
+    AND COLUMN_NAME = 'updated_at'
+</cfquery>
+<cfif checkCol.has_col EQ 0>
+  <cfquery datasource="#dsn#">
+    ALTER TABLE import_auditions_columns
+      ADD COLUMN created_at DATETIME DEFAULT NOW(),
+      ADD COLUMN updated_at DATETIME DEFAULT NOW() ON UPDATE NOW()
+  </cfquery>
+  <p><strong>Schema fix applied:</strong> added created_at and updated_at to import_auditions_columns.</p>
+</cfif>
+
 <!--- Show counts before --->
 <cfquery name="counts" datasource="#dsn#">
   SELECT
