@@ -1124,13 +1124,14 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                         break;
                 }
 
-                // Upsert the fact
+                // Upsert the fact (unique key: row_id + field_name)
                 queryExecute(
                     "INSERT INTO import_auditions_facts (row_id, column_id, field_name, raw_value, normalized_value, is_valid, validation_code, validation_message, updated_at)
                      SELECT :row_id, COALESCE(c.column_id, 0), :field_name, :raw_value, :normalized_value, :is_valid, :validation_code, :validation_message, NOW()
                      FROM (SELECT 1) AS dummy
                      LEFT JOIN import_auditions_columns c ON c.job_id = :job_id AND c.mapped_field = :field_name
                      ON DUPLICATE KEY UPDATE
+                         column_id = VALUES(column_id),
                          raw_value = :raw_value,
                          normalized_value = :normalized_value,
                          is_valid = :is_valid,
