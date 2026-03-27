@@ -597,19 +597,22 @@
         <cfreturn result>
     </cfif>
 
-    <!--- Mapping rules. Order matters: callback/booking before date. --->
+    <!--- Mapping rules. Order matters: specific compound-name fields (project_name,
+         role_name, casting_director) BEFORE contact_name so the "name" keyword
+         doesn't steal headers like "role_name" or "project_name".
+         Also: callback/booking before date. --->
     <cfset var rules = []>
 
-    <!--- contact_name --->
-    <cfset arrayAppend(rules, { keywords: ["actor", "talent", "name", "performer"], field: "contact_name" })>
-    <!--- contact_email --->
+    <!--- contact_email (no "name" keyword, safe to be early) --->
     <cfset arrayAppend(rules, { keywords: ["email"], field: "contact_email" })>
-    <!--- project_name --->
+    <!--- project_name (before contact_name: "name" is substring of "project_name") --->
     <cfset arrayAppend(rules, { keywords: ["project", "show", "film", "title"], field: "project_name" })>
-    <!--- role_name --->
+    <!--- role_name (before contact_name: "name" is substring of "role_name") --->
     <cfset arrayAppend(rules, { keywords: ["role", "character", "part"], field: "role_name" })>
-    <!--- casting_director --->
+    <!--- casting_director (before contact_name: "name" could appear in "casting_director_name") --->
     <cfset arrayAppend(rules, { keywords: ["casting", "cd", "director"], field: "casting_director" })>
+    <!--- contact_name (AFTER project/role/casting so their compound names match first) --->
+    <cfset arrayAppend(rules, { keywords: ["actor", "talent", "contact", "name", "performer"], field: "contact_name" })>
     <!--- agency --->
     <cfset arrayAppend(rules, { keywords: ["agency", "office"], field: "agency" })>
     <!--- callback_date (before audition_date) --->

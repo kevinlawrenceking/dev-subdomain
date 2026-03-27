@@ -31,21 +31,16 @@
         <cfset rev="14"/>
 
 <cfloop query="FindLinksT">
-          <cfoutput>
-
-            <cfif "#findlinkst.linktype#" is "script">
-              <script src="#findlinkst.linkurl#?v=#rev#"></script>
-            <cfelseif "#findlinkst.linktype#" is "script_include">
+            <cfif findlinkst.linktype IS "script">
+              <cfoutput><script src="#findlinkst.linkurl#?v=#rev#"></script></cfoutput>
+            <cfelseif findlinkst.linktype IS "script_include">
               <!--- Guard against path traversal in database-sourced include path --->
               <cfif find("..", findlinkst.linkurl) EQ 0>
                 <cfinclude template="#findlinkst.linkurl#">
               </cfif>
-
             <cfelse>
-              <link href="#findlinkst.linkurl#?v=#rev#" <cfif #findlinkst.rel# is not "">rel="#rel#" </cfif> type="text/css" <cfif #findlinkst.hrefid# is not "">id="#findlinkst.hrefid#"</cfif>/>
+              <cfoutput><link href="#findlinkst.linkurl#?v=#rev#" <cfif findlinkst.rel IS NOT "">rel="#findlinkst.rel#" </cfif> type="text/css" <cfif findlinkst.hrefid IS NOT "">id="#findlinkst.hrefid#"</cfif>/></cfoutput>
             </cfif>
-
-          </cfoutput>
         </cfloop>
 
         <link rel="stylesheet" href="/app/assets/css/tao-components.css" />
@@ -190,15 +185,15 @@
 
         <!--- Loop through FindLinksB query to include additional scripts and styles --->
         <cfloop query="FindLinksB">
-          <cfoutput>
-            <cfif "#findlinksb.linktype#" is "script">
-              <script src="#findlinksb.linkurl#?v=#rev#"></script>
-            <cfelseif "#findlinksb.linktype#" is "script_include">
-              <cfinclude template="#findlinksb.linkurl#">
+            <cfif findlinksb.linktype IS "script">
+              <cfoutput><script src="#findlinksb.linkurl#?v=#rev#"></script></cfoutput>
+            <cfelseif findlinksb.linktype IS "script_include">
+              <cfif find("..", findlinksb.linkurl) EQ 0>
+                <cfinclude template="#findlinksb.linkurl#">
+              </cfif>
             <cfelse>
-              <link href="#findlinksb.linkurl#?v=#rev#" <cfif #findlinksb.rel# is not ""> rel="#findlinksb.rel#"</cfif> type="text/css" <cfif #findlinksb.hrefid# is not ""> id="#findlinksb.hrefid#"</cfif>/>
+              <cfoutput><link href="#findlinksb.linkurl#?v=#rev#" <cfif findlinksb.rel IS NOT ""> rel="#findlinksb.rel#"</cfif> type="text/css" <cfif findlinksb.hrefid IS NOT ""> id="#findlinksb.hrefid#"</cfif>/></cfoutput>
             </cfif>
-          </cfoutput>
         </cfloop>
 
         <script src="/app/assets/js/libs/devbridge-autocomplete/jquery.autocomplete.min.js?v=<cfoutput>#rev#</cfoutput>"></script>

@@ -522,24 +522,32 @@
             var sourceName = cfGet(col, 'source_name') || '';
             var sourceIndex = cfGet(col, 'source_column_index');
             var mappedField = cfGet(col, 'mapped_field') || cfGet(col, 'target_key') || '';
+            var userConfirmed = cfGet(col, 'user_confirmed');
 
-            // If backend didn't map, try exact match on source column name
+            // For un-confirmed columns, try source-name matching first.
+            // This overrides potentially incorrect backend auto-mapping
+            // (e.g. "role_name" header wrongly auto-mapped to contact_name).
             var effectiveMapping = mappedField;
-            if (!effectiveMapping && sourceName) {
+            if (sourceName) {
                 var srcNorm = normalize(sourceName);
-                // 1) Check smart defaults first (e.g. "email" -> business email)
+                var sourceMatch = '';
+                // 1) Check smart defaults (e.g. "role" -> role_name)
                 if (smartDefaults[srcNorm]) {
-                    effectiveMapping = smartDefaults[srcNorm];
+                    sourceMatch = smartDefaults[srcNorm];
                 } else {
-                    // 2) Fall back to normalized match against field key or display name
+                    // 2) Normalized match against field key or display name
                     for (var i = 0; i < availableFields.length; i++) {
                         var fKey = cfGet(availableFields[i], 'field') || '';
                         var fName = cfGet(availableFields[i], 'display_name') || '';
                         if (srcNorm === normalize(fKey) || srcNorm === normalize(fName)) {
-                            effectiveMapping = fKey;
+                            sourceMatch = fKey;
                             break;
                         }
                     }
+                }
+                // Use source-name match if found and column not user-confirmed
+                if (sourceMatch && (!userConfirmed || !effectiveMapping)) {
+                    effectiveMapping = sourceMatch;
                 }
             }
 

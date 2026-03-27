@@ -515,6 +515,40 @@
     <cfset addDebug("column_mappings_keys: " & structKeyList(variables.columnMappings))>
     <cflog file="import_auditions" text="Audition recompute column_mappings job_id=#variables.jobId# keys=#structKeyList(variables.columnMappings)# count=#structCount(variables.columnMappings)# mappings=#arrayToList(variables.mappingSummary, ' | ')#">
 
+    <!--- D2) Auto-correct column mappings: if source_column_name exactly matches a known
+         audition field key but target_key points elsewhere, fix it. This corrects
+         mappings created by the old buggy auto-mapper (where "name" keyword in
+         contact_name rule would steal headers like "role_name" and "project_name"). --->
+    <cfset variables.knownFields = "contact_name,contact_email,project_name,role_name,casting_director,agency,audition_date,audition_time,location,medium,status,callback_date,booking_date,self_tape,notes">
+    <cfset variables.autoCorrections = 0>
+    <cfloop collection="#variables.columnMappings#" item="variables.cmKey">
+        <cfset variables.cm = variables.columnMappings[variables.cmKey]>
+        <cfset variables.srcName = lCase(trim(variables.cm.source_column_name))>
+        <!--- If source name exactly matches a known field and target_key differs, fix it --->
+        <cfif listFindNoCase(variables.knownFields, variables.srcName) and variables.cm.target_key neq variables.srcName>
+            <cfset addDebug("auto_correct col_id=" & variables.cm.column_id & " source=" & variables.srcName & " old_target=" & variables.cm.target_key & " new_target=" & variables.srcName)>
+            <cflog file="import_auditions" text="Audition recompute AUTO_CORRECT job_id=#variables.jobId# col_id=#variables.cm.column_id# source=#variables.srcName# old=#variables.cm.target_key# new=#variables.srcName#">
+            <cfset queryExecute(
+                "UPDATE import_auditions_columns
+                 SET target_key = :target_key, intent = 'audition_field', updated_at = NOW()
+                 WHERE column_id = :column_id AND job_id = :job_id",
+                {
+                    column_id: { value: variables.cm.column_id, cfsqltype: "cf_sql_integer" },
+                    job_id: { value: variables.jobId, cfsqltype: "cf_sql_integer" },
+                    target_key: { value: variables.srcName, cfsqltype: "cf_sql_varchar", maxlength: 100 }
+                },
+                { datasource: application.datasource }
+            )>
+            <!--- Update in-memory mapping --->
+            <cfset variables.columnMappings[variables.cmKey].target_key = variables.srcName>
+            <cfset variables.columnMappings[variables.cmKey].intent = "audition_field">
+            <cfset variables.autoCorrections++>
+        </cfif>
+    </cfloop>
+    <cfif variables.autoCorrections gt 0>
+        <cfset addDebug("auto_corrected " & variables.autoCorrections & " column mappings")>
+    </cfif>
+
     <cfset endPhase()>
 
     <!--- E) Load all rows for this job --->
@@ -802,15 +836,11 @@
                 <cflog file="import_auditions" text="Audition recompute row1_data_keys job_id=#variables.jobId# keys=#structKeyList(variables.rowData)#">
             </cfif>
 
-            <!--- Row-level validation: require contact_name, project_name, audition_date --->
-            <cfset variables.hasContactName = structKeyExists(variables.rowData, "contact_name") and len(trim(variables.rowData.contact_name))>
+            <!--- Row-level validation: require project_name and audition_date.
+                 contact_name is optional (casting_director often serves as the contact). --->
             <cfset variables.hasProjectName = structKeyExists(variables.rowData, "project_name") and len(trim(variables.rowData.project_name))>
             <cfset variables.hasAuditionDate = structKeyExists(variables.rowData, "audition_date") and len(trim(variables.rowData.audition_date))>
 
-            <cfif not variables.hasContactName>
-                <cfset variables.errorCount++>
-                <cfset arrayAppend(variables.rowErrors, { field: "contact_name", error: "Contact name is required" })>
-            </cfif>
             <cfif not variables.hasProjectName>
                 <cfset variables.errorCount++>
                 <cfset arrayAppend(variables.rowErrors, { field: "project_name", error: "Project name is required" })>
