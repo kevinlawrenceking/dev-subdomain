@@ -41,31 +41,23 @@
         suffix = "";
     }
 
-    // Assign to this.datasource before using application scope
+    // Assign to this.datasource so cfquery tags without datasource= work
     this.datasource = dsn;
 
-    // Now set application scope vars (only if not already set by main app)
-    if (NOT structKeyExists(application, "dsn")) {
-        application.dsn = dsn;
-        application.information_schema = information_schema;
-        application.suffix = suffix;
-        application.dbug = "N";
-        if (dsn == "abo") {
-            application.baseMediaPath = "C:\\home\\theactorsoffice.com\\media-" & dsn;
-        } else {
-            application.baseMediaPath = expandPath("/media-" & dsn);
-        }
-        application.baseMediaUrl = "/media-" & dsn;
-        application.auditionimporttemplate = application.baseMediaUrl & "/auditionimporttemplates.xlsx";
-        application.imagesPath = application.baseMediaPath & "\\images";
-        application.imagesUrl = application.baseMediaUrl & "/images";
-    }
+    // Store for onRequestStart to use (avoid pseudo-constructor application scope access)
+    variables._dsn = dsn;
+    variables._schema = information_schema;
+    variables._suffix = suffix;
 </cfscript>
 
 
 <!--- Application lifecycle events --->
 
 <cffunction name="onApplicationStart" returntype="boolean" output="false">
+    <cfscript>
+        // Initialize application scope (guaranteed available here)
+        ensureAppVars();
+    </cfscript>
     <cfreturn true>
 </cffunction>
 
@@ -74,13 +66,35 @@
     <!--- Setup pages are accessed two ways:
           1. New users via UUID link from welcome email (no session)
           2. Authenticated users who land here by accident (redirect to dashboard)
-          The old code returned 403 for unauthenticated users, which broke
-          BOTH cases when the session scope was separate. Now that we share
-          the TAO session, authenticated users pass through. Unauthenticated
-          users are allowed through to setup pages (UUID validation in index.cfm
-          handles access control and redirects invalid UUIDs to dashboard). --->
-    <cfset request.dsn = application.dsn />
+          UUID validation in index.cfm handles access control. --->
+    <cfscript>
+        // Ensure application scope vars exist (cold-start / race-condition safety)
+        if (NOT structKeyExists(application, "dsn")) {
+            ensureAppVars();
+        }
+        request.dsn = application.dsn;
+    </cfscript>
     <cfreturn true>
+</cffunction>
+
+<cffunction name="ensureAppVars" access="private" returntype="void" output="false"
+            hint="Populate application-scope vars needed by setup pages">
+    <cfscript>
+        application.dsn = variables._dsn;
+        application.datasource = variables._dsn;
+        application.information_schema = variables._schema;
+        application.suffix = variables._suffix;
+        application.dbug = "N";
+        if (variables._dsn == "abo") {
+            application.baseMediaPath = "C:\\home\\theactorsoffice.com\\media-" & variables._dsn;
+        } else {
+            application.baseMediaPath = expandPath("/media-" & variables._dsn);
+        }
+        application.baseMediaUrl = "/media-" & variables._dsn;
+        application.auditionimporttemplate = application.baseMediaUrl & "/auditionimporttemplates.xlsx";
+        application.imagesPath = application.baseMediaPath & "\\images";
+        application.imagesUrl = application.baseMediaUrl & "/images";
+    </cfscript>
 </cffunction>
 
 </cfcomponent>
