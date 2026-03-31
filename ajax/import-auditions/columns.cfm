@@ -201,6 +201,7 @@
             { "field": "callback_date", "display_name": "Callback Date" },
             { "field": "booking_date", "display_name": "Booking Date" },
             { "field": "self_tape", "display_name": "Self Tape?" },
+            { "field": "category", "display_name": "Category (e.g. Film - Feature)" },
             { "field": "notes", "display_name": "Notes" }
         ]>
 
@@ -222,6 +223,25 @@
 
     <!--- ======================= POST: Update column mapping ======================= --->
     <cfelseif variables.httpMethod eq "POST">
+
+        <!--- CSRF validation (POST only) --->
+        <cfset variables.csrfToken = "">
+        <cfif structKeyExists(form, "csrf_token") and len(trim(form.csrf_token))>
+            <cfset variables.csrfToken = trim(form.csrf_token)>
+        <cfelseif structKeyExists(cgi, "HTTP_X_CSRF_TOKEN") and len(trim(cgi.HTTP_X_CSRF_TOKEN))>
+            <cfset variables.csrfToken = trim(cgi.HTTP_X_CSRF_TOKEN)>
+        </cfif>
+        <cfif not structKeyExists(session, "csrf_token") or not len(session.csrf_token)>
+            <cfset session.csrf_token = createUUID()>
+        </cfif>
+        <cfif not len(variables.csrfToken) or variables.csrfToken neq session.csrf_token>
+            <cfset variables.response.code = "CSRF_INVALID">
+            <cfset variables.response.message = "Invalid or missing CSRF token">
+            <cfset variables.response.data.debug = variables.debug>
+            <cfheader statuscode="403">
+            <cfcontent type="application/json" reset="true"><cfoutput>#serializeJSON(variables.response)#</cfoutput><cfabort>
+        </cfif>
+        <cfset arrayAppend(variables.debug, "csrf_ok")>
 
         <!--- Validate column_id --->
         <cfparam name="form.column_id" default="">

@@ -35,6 +35,25 @@
     <cfset variables.userid = session.userid>
     <cfset arrayAppend(variables.debug, "auth_ok")>
 
+    <!--- CSRF validation --->
+    <cfset variables.csrfToken = "">
+    <cfif structKeyExists(form, "csrf_token") and len(trim(form.csrf_token))>
+        <cfset variables.csrfToken = trim(form.csrf_token)>
+    <cfelseif structKeyExists(cgi, "HTTP_X_CSRF_TOKEN") and len(trim(cgi.HTTP_X_CSRF_TOKEN))>
+        <cfset variables.csrfToken = trim(cgi.HTTP_X_CSRF_TOKEN)>
+    </cfif>
+    <cfif not structKeyExists(session, "csrf_token") or not len(session.csrf_token)>
+        <cfset session.csrf_token = createUUID()>
+    </cfif>
+    <cfif not len(variables.csrfToken) or variables.csrfToken neq session.csrf_token>
+        <cfset variables.response.code = "CSRF_INVALID">
+        <cfset variables.response.message = "Invalid or missing CSRF token">
+        <cfset variables.response.data.debug = variables.debug>
+        <cfheader statuscode="403">
+        <cfcontent type="application/json" reset="true"><cfoutput>#serializeJSON(variables.response)#</cfoutput><cfabort>
+    </cfif>
+    <cfset arrayAppend(variables.debug, "csrf_ok")>
+
     <!--- Validate file was uploaded --->
     <cfif not structKeyExists(form, "file") or not len(form.file)>
         <cfset variables.response.code = "UPLOAD_FAILED">

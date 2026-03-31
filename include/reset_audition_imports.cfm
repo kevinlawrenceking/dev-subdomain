@@ -10,6 +10,15 @@
 </cfif>
 <cfset dsn = "abod">
 
+<cfif NOT structKeyExists(session, "userid") OR NOT isNumeric(session.userid) OR session.userid LTE 0>
+    <h2>Authentication required.</h2>
+    <cfabort>
+</cfif>
+<cfif NOT isDefined("session.isAdmin") OR session.isAdmin NEQ true>
+    <h2>Admin access required.</h2>
+    <cfabort>
+</cfif>
+
 <h2>Audition Import Staging Data Reset</h2>
 
 <!--- Show counts before --->

@@ -176,6 +176,25 @@
     <cfif variables.loggerAvailable><cfset variables.audLogger.setUserId(variables.userid)></cfif>
     <cfset addDebug("step=auth_ok userid=" & variables.userid)>
 
+    <!--- CSRF validation --->
+    <cfset variables.csrfToken = "">
+    <cfif structKeyExists(form, "csrf_token") and len(trim(form.csrf_token))>
+        <cfset variables.csrfToken = trim(form.csrf_token)>
+    <cfelseif structKeyExists(cgi, "HTTP_X_CSRF_TOKEN") and len(trim(cgi.HTTP_X_CSRF_TOKEN))>
+        <cfset variables.csrfToken = trim(cgi.HTTP_X_CSRF_TOKEN)>
+    </cfif>
+    <cfif not structKeyExists(session, "csrf_token") or not len(session.csrf_token)>
+        <cfset session.csrf_token = createUUID()>
+    </cfif>
+    <cfif not len(variables.csrfToken) or variables.csrfToken neq session.csrf_token>
+        <cfset addDebug("FAIL: csrf_invalid")>
+        <cfset variables.response.code = "CSRF_INVALID">
+        <cfset variables.response.message = "Invalid or missing CSRF token">
+        <cfheader statuscode="403">
+        <cfcontent type="application/json; charset=utf-8" reset="true"><cfoutput>#serializeJSON(variables.response)#</cfoutput><cfabort>
+    </cfif>
+    <cfset addDebug("step=csrf_ok")>
+
     <!--- Runtime DSN + database diagnostics --->
     <cfset addDebug("step=dsn_diagnostics")>
     <cfset variables.runtimeDSN = structKeyExists(application, "datasource") ? application.datasource : "UNDEFINED">
@@ -213,11 +232,6 @@
                 <cfset variables.tableCols[variables.qTableCols.TABLE_NAME] = []>
             </cfif>
             <cfset arrayAppend(variables.tableCols[variables.qTableCols.TABLE_NAME], variables.qTableCols.COLUMN_NAME)>
-                "column": variables.qTableCols.COLUMN_NAME,
-                "type": variables.qTableCols.DATA_TYPE,
-                "nullable": variables.qTableCols.IS_NULLABLE,
-                "default": isNull(variables.qTableCols.COLUMN_DEFAULT) ? "NULL" : variables.qTableCols.COLUMN_DEFAULT
-            })>
         </cfloop>
         <cfloop collection="#variables.tableCols#" item="variables.tblName">
             <cfset addDebug("schema[" & variables.tblName & "]=" & arrayToList(variables.tableCols[variables.tblName]))>
@@ -633,7 +647,11 @@
 
                 <!--- First row: log every fact's column mapping resolution (validates mapping correctness) --->
                 <cfif variables.rowsProcessed eq 1>
-                    <cfset addDebug("row1_fact col_id=#variables.columnId# found=#variables.columnMappingFound# field=#variables.fieldName# intent=#variables.intent# target=#variables.targetKey# val=#left(variables.rawValue,30)#")>
+                    <cfset variables.debugVal = left(variables.rawValue, 30)>
+                    <cfif listFindNoCase("contact_name,contact_email,casting_director", variables.effectiveFieldName)>
+                        <cfset variables.debugVal = "[REDACTED]">
+                    </cfif>
+                    <cfset addDebug("row1_fact col_id=#variables.columnId# found=#variables.columnMappingFound# field=#variables.fieldName# intent=#variables.intent# target=#variables.targetKey# val=#variables.debugVal#")>
                     <cflog file="import_auditions" text="Audition recompute row1_fact job_id=#variables.jobId# col_id=#variables.columnId# found=#variables.columnMappingFound# field=#variables.fieldName# intent=#variables.intent# target=#variables.targetKey# effectiveName=#len(variables.targetKey) ? variables.targetKey : variables.fieldName#">
                     <cfif variables.loggerAvailable>
                     <cfset variables.audLogger.info("row1_mapping", "col_id=#variables.columnId# field=#variables.fieldName# target=#variables.targetKey# intent=#variables.intent#", {
@@ -642,7 +660,7 @@
                         "target_key": variables.targetKey,
                         "intent": variables.intent,
                         "mapping_found": variables.columnMappingFound,
-                        "sample_value": left(variables.rawValue, 30)
+                        "sample_value": variables.debugVal
                     })>
                     </cfif>
                 </cfif>

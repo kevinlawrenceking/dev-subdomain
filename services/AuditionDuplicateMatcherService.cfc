@@ -5,6 +5,14 @@
       Purpose: Find potential duplicate auditions
       in the database before import. Uses scoring
       algorithm based on date+project+actor+role.
+
+      KNOWN LIMITATION: buildUserDupeIndex() queries the flat
+      "auditions" table only. Auditions created through the
+      normal UI (audprojects -> audroles -> events_tbl) will
+      NOT be detected as duplicates unless they were also
+      written to the flat auditions table by the import process.
+      TODO: Extend to also query audprojects/audroles/events_tbl
+      for full coverage of manually-created auditions.
      ======================================== --->
 
 <!--- Matching thresholds --->

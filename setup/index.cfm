@@ -11,14 +11,14 @@ SELECT th.id
 ,th.CustomerLast
 ,th.CustomerEmail
 ,th.`status`
-,th.BaseProductLabel 
+,th.BaseProductLabel
 ,pp.planName
 ,th.uuid
 ,'' as 'newpassword'
-FROM thrivecart th 
+FROM thrivecart th
 LEFT JOIN paymentplans pp ON pp.BasePaymentPlanId = th.BasePaymentPlanId
 LEFT JOIN products pr ON pr.BaseProductId = th.BaseProductId
-WHERE th.STATUS = 'Emailed' and th.uuid = '#uuid#'
+WHERE th.STATUS = 'Emailed' and th.uuid = <cfqueryparam value="#uuid#" cfsqltype="cf_sql_varchar" />
 </cfquery>
 
 

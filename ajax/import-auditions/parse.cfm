@@ -49,6 +49,25 @@
     <cfset addDebug("Auth OK - userid=" & variables.userid)>
     <cflog file="import_auditions" text="[parse] START userid=#variables.userid#">
 
+    <!--- CSRF validation --->
+    <cfset variables.csrfToken = "">
+    <cfif structKeyExists(form, "csrf_token") and len(trim(form.csrf_token))>
+        <cfset variables.csrfToken = trim(form.csrf_token)>
+    <cfelseif structKeyExists(cgi, "HTTP_X_CSRF_TOKEN") and len(trim(cgi.HTTP_X_CSRF_TOKEN))>
+        <cfset variables.csrfToken = trim(cgi.HTTP_X_CSRF_TOKEN)>
+    </cfif>
+    <cfif not structKeyExists(session, "csrf_token") or not len(session.csrf_token)>
+        <cfset session.csrf_token = createUUID()>
+    </cfif>
+    <cfif not len(variables.csrfToken) or variables.csrfToken neq session.csrf_token>
+        <cfset addDebug("FAIL: csrf_invalid")>
+        <cfset variables.response.code = "CSRF_INVALID">
+        <cfset variables.response.message = "Invalid or missing CSRF token">
+        <cfheader statuscode="403">
+        <cfcontent type="application/json" reset="true"><cfoutput>#serializeJSON(variables.response)#</cfoutput><cfabort>
+    </cfif>
+    <cfset addDebug("csrf_ok")>
+
     <!--- Validate job_id parameter - check JSON body, form, and URL --->
     <cfset variables.requestBody = {}>
     <cfset variables.rawBodyStr = "">
@@ -631,6 +650,8 @@
     <cfset arrayAppend(rules, { keywords: ["status", "result", "outcome"], field: "status" })>
     <!--- self_tape --->
     <cfset arrayAppend(rules, { keywords: ["self tape", "self-tape", "self.tape", "selftape", "remote"], field: "self_tape" })>
+    <!--- category (Category - SubCategory combo) --->
+    <cfset arrayAppend(rules, { keywords: ["category", "subcategory", "sub-category", "genre"], field: "category" })>
     <!--- notes --->
     <cfset arrayAppend(rules, { keywords: ["note", "comment", "memo"], field: "notes" })>
 

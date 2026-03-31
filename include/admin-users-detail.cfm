@@ -248,7 +248,7 @@
                                     <div class="col-4">
                                         <div class="form-check">
                                             <input type="checkbox" id="editAuditionModule" class="form-check-input">
-                                            <label class="form-check-label small" for="editAuditionModule">Aud Module</label>
+                                            <label class="form-check-label small" for="editAuditionModule">Audition Module</label>
                                         </div>
                                     </div>
                                 </div>

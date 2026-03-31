@@ -140,7 +140,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
     // JOB HELPERS
     // =============================================================
 
-    public struct function getJob(required numeric job_id) {
+    private struct function getJob(required numeric job_id) {
         var result = {
             "found": false
         };
@@ -517,7 +517,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
             stats.total = total;
 
         } catch (any e) {
-            // Return zeros on error
+            writeLog(file="import_auditions", text="[getJobStats] ERROR job_id=" & arguments.job_id & " msg=" & e.message & " detail=" & e.detail, type="error");
         }
 
         return stats;
@@ -560,9 +560,14 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                 )";
             }
 
-            // Get total count
-            var countSql = "SELECT COUNT(*) as cnt FROM import_auditions_rows r WHERE r.job_id = :job_id #statusClause# #searchClause#";
-            var countParams = { job_id: { value: arguments.job_id, cfsqltype: "cf_sql_integer" } };
+            // Get total count (ownership enforced via JOIN to jobs table)
+            var countSql = "SELECT COUNT(*) as cnt FROM import_auditions_rows r
+                INNER JOIN import_auditions_jobs j ON j.job_id = r.job_id AND j.userid = :userid
+                WHERE r.job_id = :job_id #statusClause# #searchClause#";
+            var countParams = {
+                job_id: { value: arguments.job_id, cfsqltype: "cf_sql_integer" },
+                userid: { value: arguments.userid, cfsqltype: "cf_sql_integer" }
+            };
             if (len(statusClause) and arguments.statusFilter neq "imported") {
                 countParams.status = { value: arguments.statusFilter, cfsqltype: "cf_sql_varchar" };
             }
@@ -575,13 +580,14 @@ component displayname="AuditionImportService" accessors="true" output="false" {
             var totalRows = qCount.cnt;
             var totalPages = ceiling(totalRows / safePageSize);
 
-            // Fetch rows
+            // Fetch rows (ownership enforced via JOIN to jobs table)
             var rowsSql = "
                 SELECT r.row_id, r.row_num, r.status, r.error_count, r.warning_count,
                        r.matched_audition_id, r.best_match_score, r.user_action,
                        r.created_audition_id, r.import_error,
                        r.validation_summary, r.dupe_candidates_json
                 FROM import_auditions_rows r
+                INNER JOIN import_auditions_jobs j ON j.job_id = r.job_id AND j.userid = :userid
                 WHERE r.job_id = :job_id
                 #statusClause#
                 #searchClause#
@@ -591,6 +597,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
 
             var rowParams = {
                 job_id: { value: arguments.job_id, cfsqltype: "cf_sql_integer" },
+                userid: { value: arguments.userid, cfsqltype: "cf_sql_integer" },
                 limit: { value: safePageSize, cfsqltype: "cf_sql_integer" },
                 offset: { value: offset, cfsqltype: "cf_sql_integer" }
             };
@@ -1104,23 +1111,27 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                         }
                         break;
                     case "medium":
-                        if (len(normalizedVal) and not listFindNoCase("film,tv,commercial,theater,voiceover,other", normalizedVal)) {
+                        if (len(normalizedVal) and not listFindNoCase("film,television,theater,commercial,industrial,new media,voiceover,print,music video,web series,short film,student film,other", normalizedVal)) {
                             isValid = false;
                             errCode = "INVALID_MEDIUM";
-                            errMsg = "Must be one of: film, tv, commercial, theater, voiceover, other";
+                            errMsg = "Must be one of: film, television, theater, commercial, industrial, new media, voiceover, print, music video, web series, short film, student film, other";
                         }
                         break;
                     case "status":
-                        if (len(normalizedVal) and not listFindNoCase("scheduled,completed,callback,booked,pass", normalizedVal)) {
+                        if (len(normalizedVal) and not listFindNoCase("scheduled,completed,callback,booked,pass,confirmed,cancelled,pending", normalizedVal)) {
                             isValid = false;
                             errCode = "INVALID_STATUS";
-                            errMsg = "Must be one of: scheduled, completed, callback, booked, pass";
+                            errMsg = "Must be one of: scheduled, completed, callback, booked, pass, confirmed, cancelled, pending";
                         }
                         break;
                     case "self_tape":
                         if (len(normalizedVal)) {
                             normalizedVal = listFindNoCase("yes,true,1,y", normalizedVal) ? "1" : "0";
                         }
+                        break;
+                    case "category":
+                        // Category is always valid - resolved at finalize time
+                        // Accept any text: "Film", "Film - Feature", "TV-Episodic", etc.
                         break;
                 }
 
@@ -1242,6 +1253,24 @@ component displayname="AuditionImportService" accessors="true" output="false" {
 
             logEvent(job_id = arguments.job_id, userid = arguments.userid, event_type = "finalize_started", detail = { lock_token: lockToken });
 
+            // A2) Verify required lookup data exists before processing any rows
+            var qRoleTypeCheck = queryExecute(
+                "SELECT COUNT(*) as cnt FROM audroletypes WHERE audroletypeid = 1",
+                {}, { datasource: application.datasource }
+            );
+            var qStepCheck = queryExecute(
+                "SELECT COUNT(*) as cnt FROM audsteps WHERE audstepid = 1",
+                {}, { datasource: application.datasource }
+            );
+            if (qRoleTypeCheck.cnt eq 0 or qStepCheck.cnt eq 0) {
+                releaseJobLock(job_id = arguments.job_id, userid = arguments.userid, lock_token = lockToken);
+                return fail(
+                    code = "MISSING_LOOKUP_DATA",
+                    message = "Required lookup data missing: audRoleTypeID=1 or audStepID=1 not found. Contact support.",
+                    data = { job_id: arguments.job_id, roleTypeExists: qRoleTypeCheck.cnt gt 0, stepExists: qStepCheck.cnt gt 0 }
+                );
+            }
+
             // B) Reset rows that failed from a prior finalize attempt so they can be retried
             var qReset = {};
             queryExecute(
@@ -1349,6 +1378,19 @@ component displayname="AuditionImportService" accessors="true" output="false" {
     }
 
     // =============================================================
+    // EVENT STATUS MAPPING
+    // =============================================================
+
+    private string function mapStatusToEventStatus(required string importStatus) {
+        switch (lcase(arguments.importStatus)) {
+            case "completed": case "callback": case "booked": case "pass":
+                return "Completed";
+            default:
+                return "Active";
+        }
+    }
+
+    // =============================================================
     // PROCESS SINGLE ROW FOR IMPORT (per-row transaction)
     // =============================================================
 
@@ -1361,18 +1403,22 @@ component displayname="AuditionImportService" accessors="true" output="false" {
         any existing_audition_id = ""
     ) {
         try {
-            // A) Idempotency check: If already imported, skip
-            if (isNumeric(arguments.existing_audition_id) && arguments.existing_audition_id gt 0) {
-                var qExistingResult = queryExecute(
-                    "SELECT result_id, action_taken, audition_id
-                     FROM import_auditions_row_results WHERE row_id = :row_id",
-                    { row_id: { value: arguments.row_id, cfsqltype: "cf_sql_integer" } },
-                    { datasource: application.datasource }
-                );
-                if (qExistingResult.recordCount gt 0) {
-                    return { "success": true, "action": "skipped_already_imported", "audition_id": qExistingResult.audition_id };
-                }
+            // A) Idempotency check: Always check row_results table to prevent
+            //    duplicate creates on retry after partial transaction failure.
+            //    If a prior attempt created records but the transaction rolled back
+            //    before updating import_auditions_rows.created_audition_id, the row
+            //    would still have NULL existing_audition_id — so we check row_results
+            //    unconditionally instead of gating on existing_audition_id.
+            var qExistingResult = queryExecute(
+                "SELECT result_id, action_taken, audition_id
+                 FROM import_auditions_row_results WHERE row_id = :row_id",
+                { row_id: { value: arguments.row_id, cfsqltype: "cf_sql_integer" } },
+                { datasource: application.datasource }
+            );
+            if (qExistingResult.recordCount gt 0 && qExistingResult.action_taken eq "created") {
+                return { "success": true, "action": "skipped_already_imported", "audition_id": qExistingResult.audition_id };
             }
+            // If prior attempt was "failed", allow retry by continuing
 
             // B) Load valid facts for this row
             var qFacts = queryExecute(
@@ -1394,7 +1440,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                 "project_name": "", "role_name": "", "casting_director": "", "agency": "",
                 "audition_date": "", "audition_time": "", "location": "", "medium": "",
                 "status": "", "callback_date": "", "booking_date": "", "self_tape": "0",
-                "notes": "", "contact_name": "", "contact_email": ""
+                "notes": "", "contact_name": "", "contact_email": "", "category": ""
             };
 
             for (var fact in qFacts) {
@@ -1446,13 +1492,89 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                 }
             }
 
-            // E) Create audition in transaction
-            var newAuditionId = 0;
+            // D2) Resolve category (optional - 0 means no category, audition still imports)
+            var audSubCatId = resolveCategoryToSubCatId(audData.category);
+
+            // D3) Determine event date (default to today if no date provided)
+            var eventDate = len(trim(audData.audition_date)) ? audData.audition_date : dateFormat(now(), "yyyy-mm-dd");
+
+            // E) Create audition records in the real tables (audprojects -> audroles -> events_tbl)
+            var newProjectId = 0;
+            var newRoleId = 0;
+            var newEventId = 0;
             var fieldsWritten = 0;
 
             transaction {
-                // E1) INSERT into auditions table
-                var qInsertResult = {};
+                // E1) INSERT into audprojects (the real project table)
+                var qProjectResult = {};
+                queryExecute(
+                    "INSERT INTO audprojects (
+                        projName, projDescription, userid, audSubCatID,
+                        isDeleted, isDirect, contactid, projdate, audprojectdate
+                    ) VALUES (
+                        :projName, :projDescription, :userid, :audSubCatID,
+                        0, 0, :contactid, :projdate, :projdate
+                    )",
+                    {
+                        projName: { value: left(trim(audData.project_name), 500), cfsqltype: "cf_sql_varchar" },
+                        projDescription: { value: audData.notes, cfsqltype: "cf_sql_longvarchar", null: !len(audData.notes) },
+                        userid: { value: arguments.userid, cfsqltype: "cf_sql_integer" },
+                        audSubCatID: { value: audSubCatId, cfsqltype: "cf_sql_integer", null: audSubCatId eq 0 },
+                        contactid: { value: contactId, cfsqltype: "cf_sql_integer", null: contactId eq 0 },
+                        projdate: { value: eventDate, cfsqltype: "cf_sql_date" }
+                    },
+                    { datasource: application.datasource, result: "qProjectResult" }
+                );
+                newProjectId = qProjectResult.generatedKey;
+
+                // E2) INSERT into audroles (linked to project)
+                var roleName = len(trim(audData.role_name)) ? left(trim(audData.role_name), 500) : "Imported Role";
+                var qRoleResult = {};
+                queryExecute(
+                    "INSERT INTO audroles (
+                        audRoleName, audprojectID, audRoleTypeID,
+                        charDescription, userid, isDeleted, isBooked
+                    ) VALUES (
+                        :roleName, :projectId, 1,
+                        :charDescription, :userid, 0, 0
+                    )",
+                    {
+                        roleName: { value: roleName, cfsqltype: "cf_sql_varchar" },
+                        projectId: { value: newProjectId, cfsqltype: "cf_sql_integer" },
+                        charDescription: { value: audData.notes, cfsqltype: "cf_sql_longvarchar", null: !len(audData.notes) },
+                        userid: { value: arguments.userid, cfsqltype: "cf_sql_integer" }
+                    },
+                    { datasource: application.datasource, result: "qRoleResult" }
+                );
+                newRoleId = qRoleResult.generatedKey;
+
+                // E3) INSERT into events_tbl (linked to role - the actual audition event)
+                var qEventResult = {};
+                queryExecute(
+                    "INSERT INTO events_tbl (
+                        userid, audRoleID, eventtitle,
+                        eventStart, eventStartTime,
+                        audLocation, audStepID, eventstatus
+                    ) VALUES (
+                        :userid, :roleId, :eventtitle,
+                        :eventStart, :eventStartTime,
+                        :audLocation, :audStepID, :eventstatus
+                    )",
+                    {
+                        userid: { value: arguments.userid, cfsqltype: "cf_sql_integer" },
+                        roleId: { value: newRoleId, cfsqltype: "cf_sql_integer" },
+                        eventtitle: { value: left(trim(audData.project_name), 500), cfsqltype: "cf_sql_varchar" },
+                        eventStart: { value: eventDate, cfsqltype: "cf_sql_date" },
+                        eventStartTime: { value: audData.audition_time, cfsqltype: "cf_sql_time", null: !len(trim(audData.audition_time)) },
+                        audLocation: { value: audData.location, cfsqltype: "cf_sql_varchar", null: !len(trim(audData.location)) },
+                        audStepID: { value: 1, cfsqltype: "cf_sql_integer" },
+                        eventstatus: { value: mapStatusToEventStatus(len(audData.status) ? audData.status : "scheduled"), cfsqltype: "cf_sql_varchar" }
+                    },
+                    { datasource: application.datasource, result: "qEventResult" }
+                );
+                newEventId = qEventResult.generatedKey;
+
+                // E4) Also write to flat auditions table (backward-compat for dupe detection)
                 queryExecute(
                     "INSERT INTO auditions (
                         userid, contactid, project_name, role_name, casting_director,
@@ -1480,26 +1602,25 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                         self_tape: { value: audData.self_tape eq "1" ? 1 : 0, cfsqltype: "cf_sql_integer" },
                         notes: { value: audData.notes, cfsqltype: "cf_sql_longvarchar", null: !len(audData.notes) }
                     },
-                    { datasource: application.datasource, result: "qInsertResult" }
+                    { datasource: application.datasource }
                 );
 
-                newAuditionId = qInsertResult.generatedKey;
                 fieldsWritten = qFacts.recordCount;
 
-                // E2) Update import_auditions_rows
+                // E5) Update import_auditions_rows with the event ID as the primary reference
                 queryExecute(
                     "UPDATE import_auditions_rows
-                     SET status = 'imported', created_audition_id = :audition_id,
+                     SET status = 'imported', created_audition_id = :event_id,
                          imported_at = NOW(), updated_at = NOW()
                      WHERE row_id = :row_id",
                     {
                         row_id: { value: arguments.row_id, cfsqltype: "cf_sql_integer" },
-                        audition_id: { value: newAuditionId, cfsqltype: "cf_sql_integer" }
+                        event_id: { value: newEventId, cfsqltype: "cf_sql_integer" }
                     },
                     { datasource: application.datasource }
                 );
 
-                // E3) Record result (idempotency via UNIQUE(row_id))
+                // E6) Record result (idempotency via UNIQUE(row_id))
                 queryExecute(
                     "INSERT INTO import_auditions_row_results (
                         row_id, job_id, action_taken, audition_id, fields_written, created_at
@@ -1512,15 +1633,15 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                     {
                         row_id: { value: arguments.row_id, cfsqltype: "cf_sql_integer" },
                         job_id: { value: arguments.job_id, cfsqltype: "cf_sql_integer" },
-                        audition_id: { value: newAuditionId, cfsqltype: "cf_sql_integer" },
+                        audition_id: { value: newEventId, cfsqltype: "cf_sql_integer" },
                         fields_written: { value: fieldsWritten, cfsqltype: "cf_sql_integer" }
                     },
                     { datasource: application.datasource }
                 );
             }
 
-            logEvent(job_id = arguments.job_id, userid = arguments.userid, event_type = "row_imported", row_id = arguments.row_id, detail = { audition_id: newAuditionId, contactid: contactId, fields_written: fieldsWritten });
-            return { "success": true, "action": "created", "audition_id": newAuditionId };
+            logEvent(job_id = arguments.job_id, userid = arguments.userid, event_type = "row_imported", row_id = arguments.row_id, detail = { event_id: newEventId, project_id: newProjectId, role_id: newRoleId, contactid: contactId, audSubCatId: audSubCatId, fields_written: fieldsWritten });
+            return { "success": true, "action": "created", "audition_id": newEventId };
 
         } catch (any e) {
             writeLog(file="import_auditions", text="[processRowForImport] ERROR job_id=" & arguments.job_id & " row_id=" & arguments.row_id & " message=" & e.message);
@@ -1624,6 +1745,90 @@ component displayname="AuditionImportService" accessors="true" output="false" {
             },
             { datasource: application.datasource }
         );
+    }
+
+    // =============================================================
+    // RESOLVE CATEGORY STRING TO audsubcatid
+    // =============================================================
+    // Accepts formats: "Film - Feature", "Film-Feature", "Film",
+    // "Television", "TV", "Commercial", etc.
+    // Returns 0 if no match (category is optional).
+
+    private numeric function resolveCategoryToSubCatId(required string categoryText) {
+        var raw = trim(arguments.categoryText);
+        if (!len(raw)) return 0;
+
+        // Try exact "Category - SubCategory" match first
+        // Normalize separators: " - ", "-", "/"
+        var qExact = queryExecute(
+            "SELECT s.audsubcatid
+             FROM audcategories c
+             INNER JOIN audsubcategories s ON s.audcatid = c.audcatid
+             WHERE c.isdeleted = 0 AND s.isdeleted = 0
+               AND CONCAT(c.audcatname, ' - ', s.audsubcatname) = :raw
+             LIMIT 1",
+            { raw: { value: raw, cfsqltype: "cf_sql_varchar" } },
+            { datasource: application.datasource }
+        );
+        if (qExact.recordCount) return qExact.audsubcatid;
+
+        // Try with dash separator (no spaces): "Film-Feature"
+        var qDash = queryExecute(
+            "SELECT s.audsubcatid
+             FROM audcategories c
+             INNER JOIN audsubcategories s ON s.audcatid = c.audcatid
+             WHERE c.isdeleted = 0 AND s.isdeleted = 0
+               AND CONCAT(c.audcatname, '-', s.audsubcatname) = :raw
+             LIMIT 1",
+            { raw: { value: raw, cfsqltype: "cf_sql_varchar" } },
+            { datasource: application.datasource }
+        );
+        if (qDash.recordCount) return qDash.audsubcatid;
+
+        // Try category name only - pick the first subcategory
+        var qCatOnly = queryExecute(
+            "SELECT s.audsubcatid
+             FROM audcategories c
+             INNER JOIN audsubcategories s ON s.audcatid = c.audcatid
+             WHERE c.isdeleted = 0 AND s.isdeleted = 0
+               AND LOWER(c.audcatname) = LOWER(:raw)
+             ORDER BY s.audsubcatid
+             LIMIT 1",
+            { raw: { value: raw, cfsqltype: "cf_sql_varchar" } },
+            { datasource: application.datasource }
+        );
+        if (qCatOnly.recordCount) return qCatOnly.audsubcatid;
+
+        // Try subcategory name only (e.g. "Feature", "Episodic")
+        var qSubOnly = queryExecute(
+            "SELECT s.audsubcatid
+             FROM audcategories c
+             INNER JOIN audsubcategories s ON s.audcatid = c.audcatid
+             WHERE c.isdeleted = 0 AND s.isdeleted = 0
+               AND LOWER(s.audsubcatname) = LOWER(:raw)
+             LIMIT 1",
+            { raw: { value: raw, cfsqltype: "cf_sql_varchar" } },
+            { datasource: application.datasource }
+        );
+        if (qSubOnly.recordCount) return qSubOnly.audsubcatid;
+
+        // Try LIKE match on category or subcategory
+        var qFuzzy = queryExecute(
+            "SELECT s.audsubcatid
+             FROM audcategories c
+             INNER JOIN audsubcategories s ON s.audcatid = c.audcatid
+             WHERE c.isdeleted = 0 AND s.isdeleted = 0
+               AND (LOWER(c.audcatname) LIKE :pattern
+                    OR LOWER(s.audsubcatname) LIKE :pattern)
+             ORDER BY s.audsubcatid
+             LIMIT 1",
+            { pattern: { value: "%" & lcase(raw) & "%", cfsqltype: "cf_sql_varchar" } },
+            { datasource: application.datasource }
+        );
+        if (qFuzzy.recordCount) return qFuzzy.audsubcatid;
+
+        // No match - return 0 (category will be NULL, audition still imports)
+        return 0;
     }
 
 }

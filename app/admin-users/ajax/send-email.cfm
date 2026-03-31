@@ -75,42 +75,67 @@
         <cfset addDebug("welcome: customerid=#variables.customerId#")>
 
         <cfif not isNumeric(variables.customerId) or variables.customerId lte 0>
-            <cfset addDebug("FAIL: no customerid")>
-            <cfset variables.response.message = "This user has no customer/thrivecart record. Welcome email requires a customerid.">
-            <cfset variables.response.debug = variables.debugLog>
-            <cfcontent type="application/json; charset=utf-8" reset="true"><cfoutput>#serializeJSON(variables.response)#</cfoutput><cfabort>
-        </cfif>
-
-        <!--- Look up existing UUID --->
-        <cfset variables.qTC = queryExecute(
-            "SELECT id, uuid FROM thrivecart WHERE id = :cid",
-            { cid: { value: variables.customerId, cfsqltype: "cf_sql_integer" } },
-            { datasource: application.datasource }
-        )>
-
-        <cfif variables.qTC.recordCount eq 0>
-            <cfset addDebug("FAIL: no thrivecart record for customerid=#variables.customerId#")>
-            <cfset variables.response.message = "No thrivecart record found for customerid " & variables.customerId>
-            <cfset variables.response.debug = variables.debugLog>
-            <cfcontent type="application/json; charset=utf-8" reset="true"><cfoutput>#serializeJSON(variables.response)#</cfoutput><cfabort>
-        </cfif>
-
-        <cfset variables.setupUUID = variables.qTC.uuid>
-
-        <!--- Generate new UUID if empty --->
-        <cfif not len(trim(variables.setupUUID))>
+            <!--- No thrivecart record exists. Create one so the setup flow works. --->
+            <cfset addDebug("no customerid — creating thrivecart record for manual user")>
             <cfset variables.setupUUID = createUUID()>
-            <cfset addDebug("generated new setup UUID")>
             <cfset queryExecute(
-                "UPDATE thrivecart SET uuid = :uuid WHERE id = :cid",
+                "INSERT INTO thrivecart_tbl (CustomerFirst, CustomerLast, CustomerEmail, BaseProductLabel, BaseProductID, BasePaymentPlanID, status, uuid)
+                 VALUES (:first, :last, :email, 'Manual', '0', '0', 'Emailed', :uuid)",
                 {
-                    uuid: { value: variables.setupUUID, cfsqltype: "cf_sql_varchar" },
-                    cid: { value: variables.customerId, cfsqltype: "cf_sql_integer" }
+                    first: { value: variables.userFirst, cfsqltype: "cf_sql_varchar" },
+                    last:  { value: variables.userData.userLastName, cfsqltype: "cf_sql_varchar" },
+                    email: { value: variables.userEmail, cfsqltype: "cf_sql_varchar" },
+                    uuid:  { value: variables.setupUUID, cfsqltype: "cf_sql_varchar" }
                 },
                 { datasource: application.datasource }
             )>
+            <!--- Get the new thrivecart id and link it to the user --->
+            <cfset variables.newTcId = queryExecute(
+                "SELECT LAST_INSERT_ID() AS newid",
+                {},
+                { datasource: application.datasource }
+            ).newid>
+            <cfset queryExecute(
+                "UPDATE taousers_tbl SET customerid = :cid WHERE userid = :uid",
+                {
+                    cid: { value: variables.newTcId, cfsqltype: "cf_sql_integer" },
+                    uid: { value: variables.targetUserId, cfsqltype: "cf_sql_integer" }
+                },
+                { datasource: application.datasource }
+            )>
+            <cfset addDebug("created thrivecart record id=#variables.newTcId# and linked to user")>
         <cfelse>
-            <cfset addDebug("existing setup UUID found")>
+            <!--- Look up existing UUID --->
+            <cfset variables.qTC = queryExecute(
+                "SELECT id, uuid FROM thrivecart WHERE id = :cid",
+                { cid: { value: variables.customerId, cfsqltype: "cf_sql_integer" } },
+                { datasource: application.datasource }
+            )>
+
+            <cfif variables.qTC.recordCount eq 0>
+                <cfset addDebug("FAIL: no thrivecart record for customerid=#variables.customerId#")>
+                <cfset variables.response.message = "No thrivecart record found for customerid " & variables.customerId>
+                <cfset variables.response.debug = variables.debugLog>
+                <cfcontent type="application/json; charset=utf-8" reset="true"><cfoutput>#serializeJSON(variables.response)#</cfoutput><cfabort>
+            </cfif>
+
+            <cfset variables.setupUUID = variables.qTC.uuid>
+
+            <!--- Generate new UUID if empty --->
+            <cfif not len(trim(variables.setupUUID))>
+                <cfset variables.setupUUID = createUUID()>
+                <cfset addDebug("generated new setup UUID")>
+                <cfset queryExecute(
+                    "UPDATE thrivecart_tbl SET uuid = :uuid WHERE id = :cid",
+                    {
+                        uuid: { value: variables.setupUUID, cfsqltype: "cf_sql_varchar" },
+                        cid: { value: variables.customerId, cfsqltype: "cf_sql_integer" }
+                    },
+                    { datasource: application.datasource }
+                )>
+            <cfelse>
+                <cfset addDebug("existing setup UUID found")>
+            </cfif>
         </cfif>
 
         <!--- Send welcome email --->
@@ -166,7 +191,7 @@
         <cfset variables.recoverUUID = createUUID()>
         <cfset addDebug("password_reset: generated recover UUID")>
         <cfset queryExecute(
-            "UPDATE taousers SET recover = :recover WHERE userid = :uid",
+            "UPDATE taousers_tbl SET recover = :recover, recover_requested_at = NOW() WHERE userid = :uid",
             {
                 recover: { value: variables.recoverUUID, cfsqltype: "cf_sql_varchar" },
                 uid: { value: variables.targetUserId, cfsqltype: "cf_sql_integer" }
