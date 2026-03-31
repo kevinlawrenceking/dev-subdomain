@@ -222,12 +222,23 @@
         var formData = new FormData();
         formData.append('file', file);
 
+        // Include CSRF token (from hidden input on page and session token)
+        var csrfToken = $j('#csrf-token').val() || '';
+        if (csrfToken) {
+            formData.append('csrf_token', csrfToken);
+        }
+
+        // Also get the Application.cfc CSRF token from meta tag
+        var appCsrfMeta = document.querySelector('meta[name="csrf-token"]');
+        var appCsrfToken = appCsrfMeta ? appCsrfMeta.getAttribute('content') : '';
+
         $j.ajax({
             url: '/ajax/import-auditions/upload.cfm?bypass=1',
             type: 'POST',
             data: formData,
             processData: false,
             contentType: false,
+            headers: appCsrfToken ? { 'X-CSRF-Token': appCsrfToken } : {},
             xhr: function() {
                 var xhr = new XMLHttpRequest();
                 xhr.upload.addEventListener('progress', function(e) {

@@ -138,6 +138,19 @@
             </cfif>
         </cfif>
 
+        <!--- Ensure thrivecart status is 'Emailed' so /setup/ page finds the record --->
+        <cfif isNumeric(variables.customerId) and variables.customerId gt 0>
+            <cfset variables.tcId = variables.customerId>
+        <cfelse>
+            <cfset variables.tcId = variables.newTcId>
+        </cfif>
+        <cfset queryExecute(
+            "UPDATE thrivecart_tbl SET status = 'Emailed' WHERE id = :cid",
+            { cid: { value: variables.tcId, cfsqltype: "cf_sql_integer" } },
+            { datasource: application.datasource }
+        )>
+        <cfset addDebug("thrivecart status set to Emailed for id=#variables.tcId#")>
+
         <!--- Send welcome email --->
         <cfset addDebug("sending welcome email to=#variables.userEmail# from=support@theactorsoffice.com")>
         <cftry>
