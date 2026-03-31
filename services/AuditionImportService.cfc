@@ -1550,15 +1550,18 @@ component displayname="AuditionImportService" accessors="true" output="false" {
 
                 // E3) INSERT into events_tbl (linked to role - the actual audition event)
                 var qEventResult = {};
+                // Determine audition type: 2 = Self-Tape, 1 = In-Person (default)
+                var audTypeId = (audData.self_tape eq "1") ? 2 : 1;
+
                 queryExecute(
                     "INSERT INTO events_tbl (
                         userid, audRoleID, eventtitle,
                         eventStart, eventStartTime,
-                        audLocation, audStepID, eventstatus
+                        audLocation, audStepID, eventstatus, audTypeID
                     ) VALUES (
                         :userid, :roleId, :eventtitle,
                         :eventStart, :eventStartTime,
-                        :audLocation, :audStepID, :eventstatus
+                        :audLocation, :audStepID, :eventstatus, :audTypeID
                     )",
                     {
                         userid: { value: arguments.userid, cfsqltype: "cf_sql_integer" },
@@ -1568,7 +1571,8 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                         eventStartTime: { value: audData.audition_time, cfsqltype: "cf_sql_time", null: !len(trim(audData.audition_time)) },
                         audLocation: { value: audData.location, cfsqltype: "cf_sql_varchar", null: !len(trim(audData.location)) },
                         audStepID: { value: 1, cfsqltype: "cf_sql_integer" },
-                        eventstatus: { value: mapStatusToEventStatus(len(audData.status) ? audData.status : "scheduled"), cfsqltype: "cf_sql_varchar" }
+                        eventstatus: { value: mapStatusToEventStatus(len(audData.status) ? audData.status : "scheduled"), cfsqltype: "cf_sql_varchar" },
+                        audTypeID: { value: audTypeId, cfsqltype: "cf_sql_integer" }
                     },
                     { datasource: application.datasource, result: "qEventResult" }
                 );

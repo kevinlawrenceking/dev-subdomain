@@ -16,9 +16,13 @@
 <Cfset new_audroleid = audroleid />
 <cfinclude template="/include/qry/roleDetails_221_2.cfm" />
 <cfinclude template="/include/qry/locationDetails_492_1.cfm" />
-    <cfset NEW_AUDSUBCATID = projectDetails.audsubcatid />
-<cfinclude template="/include/qry/cat_221_3.cfm" />
-<cfinclude template="/include/qry/cat_221_4.cfm" />
+    <cfset NEW_AUDSUBCATID = len(trim(projectDetails.audsubcatid)) ? val(projectDetails.audsubcatid) : 0 />
+<cfif NEW_AUDSUBCATID gt 0>
+    <cfinclude template="/include/qry/cat_221_3.cfm" />
+    <cfinclude template="/include/qry/cat_221_4.cfm" />
+<cfelse>
+    <cfset cat = queryNew("audcatid,audcatname,audsubcatid,audsubcatname", "integer,varchar,integer,varchar")>
+</cfif>
 <cfinclude template="/include/qry/audroletypes_sel_27_2.cfm" />
 <cfinclude template="/include/qry/audtypes_sel_221_6.cfm" />
 <cfinclude template="/include/qry/casting_types_221_7.cfm" />
@@ -57,7 +61,7 @@
 
 <!--- Fetch audition details --->
 <cfinclude template="/include/qry/aud_det_221_9.cfm" />
-<cfset new_audcatid = aud_det.audcatid />
+<cfset new_audcatid = len(trim(aud_det.audcatid)) ? val(aud_det.audcatid) : 0 />
 <cfinclude template="/include/qry/audtypes_sel_221_11.cfm" />
 <cfinclude template="/include/qry/audsteps_sel_217_3.cfm" />
 <cfinclude template="/include/qry/audplatforms_sel.cfm" />

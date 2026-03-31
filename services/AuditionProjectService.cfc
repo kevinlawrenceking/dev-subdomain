@@ -493,8 +493,8 @@
                 truncate(hour(TIMEDIFF(ad.eventStopTime, ad.eventStartTime)), 2) + truncate(minute(TIMEDIFF(ad.eventStopTime, ad.eventStartTime)), 2) / 60 AS new_durhours
             FROM audprojects a
             LEFT OUTER JOIN audnetworks a1 ON (a.networkID = a1.networkid)
-            INNER JOIN audsubcategories a2 ON (a.audSubCatID = a2.audSubCatId)
-            INNER JOIN audcategories c ON c.audcatid = a2.audcatid
+            LEFT OUTER JOIN audsubcategories a2 ON (a.audSubCatID = a2.audSubCatId)
+            LEFT OUTER JOIN audcategories c ON c.audcatid = a2.audcatid
             LEFT OUTER JOIN audunions a3 ON (a.unionID = a3.unionID)
             INNER JOIN audroles a4 ON (a.audprojectID = a4.audprojectID)
             INNER JOIN events_tbl ad ON (ad.audroleid = a4.audroleid)

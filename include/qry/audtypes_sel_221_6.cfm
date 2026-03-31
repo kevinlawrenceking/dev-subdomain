@@ -10,7 +10,9 @@
         audtypes 
     WHERE 
         isdeleted = 0 
-        AND audcategories LIKE '%#cat.audcatid#%' 
+        <cfif isDefined("cat") and cat.recordCount gt 0 and val(cat.audcatid) gt 0>
+            AND audcategories LIKE <cfqueryparam value="%#val(cat.audcatid)#%" cfsqltype="cf_sql_varchar" />
+        </cfif>
     ORDER BY 
         audtype
 </cfquery>

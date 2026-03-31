@@ -11,8 +11,8 @@
     WHERE a.isDeleted IS FALSE
 
     <!--- Check if a new category ID is provided and filter results accordingly. --->
-    <cfif #new_audcatid# is not "0">
-        AND a.audcatid = <cfqueryparam value="#new_audcatid#" cfsqltype="cf_sql_integer" />
+    <cfif val(new_audcatid) gt 0>
+        AND a.audcatid = <cfqueryparam value="#val(new_audcatid)#" cfsqltype="cf_sql_integer" />
     </cfif>
     
     ORDER BY a.#fname#, 

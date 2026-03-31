@@ -13,6 +13,6 @@
         audsubcategories s 
     ON 
         s.audcatid = c.audcatid
-    WHERE 
-        s.audsubcatid = #new_audsubcatid#
+    WHERE
+        s.audsubcatid = <cfqueryparam value="#val(new_audsubcatid)#" cfsqltype="cf_sql_integer" />
 </cfquery>
