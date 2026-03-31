@@ -194,6 +194,20 @@
 (function() {
     var $ = jQuery;
     var AJAX_BASE = '/app/admin-users/ajax/';
+
+    // CSRF token for AJAX POST requests (required by Application.cfc middleware)
+    var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+    var csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+
+    function adminPost(url, data) {
+        return $.ajax({
+            url: url,
+            type: 'POST',
+            data: data,
+            headers: { 'X-CSRF-Token': csrfToken }
+        });
+    }
+
     var state = {
         page: 1,
         pageSize: 25,
@@ -274,8 +288,8 @@
 
             var flags = '';
             if (Number(isBeta)) flags += '<span class="flag-badge flag-on me-1">Beta</span>';
-            if (Number(isAud)) flags += '<span class="flag-badge flag-on me-1">Aud</span>';
-            if (Number(isAudMod)) flags += '<span class="flag-badge flag-on me-1">AudMod</span>';
+            if (Number(isAud)) flags += '<span class="flag-badge flag-on me-1">Audition</span>';
+            if (Number(isAudMod)) flags += '<span class="flag-badge flag-on me-1">Aud Module</span>';
             if (Number(isDeleted)) flags += '<span class="flag-badge flag-off me-1">Deleted</span>';
             if (!flags) flags = '<span class="text-muted">-</span>';
 
@@ -423,7 +437,7 @@
 
         $('#btnSaveUser').prop('disabled', true).text('Saving...');
 
-        $.post(AJAX_BASE + 'save.cfm', data)
+        adminPost(AJAX_BASE + 'save.cfm', data)
             .done(function(resp) {
                 if (resp.success || resp.SUCCESS) {
                     bootstrap.Modal.getInstance(document.getElementById('userModal')).hide();

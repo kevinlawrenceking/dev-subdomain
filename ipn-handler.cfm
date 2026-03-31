@@ -21,7 +21,8 @@
             CustomerEmail,
             BaseProductLabel,
             BaseProductID,
-            BasePaymentPlanID
+            BasePaymentPlanID,
+            status
         )
         VALUES (
             <cfqueryparam value="#paramStruct['buyer_first_name']#" cfsqltype="cf_sql_varchar">,
@@ -29,7 +30,8 @@
             <cfqueryparam value="#paramStruct['buyer_email']#" cfsqltype="cf_sql_varchar">,
             <cfqueryparam value="#paramStruct['campaign_name']#" cfsqltype="cf_sql_varchar">,
             <cfqueryparam value="#paramStruct['campaign_id']#" cfsqltype="cf_sql_varchar">,
-            <cfqueryparam value="#paramStruct['product_id']#" cfsqltype="cf_sql_varchar">
+            <cfqueryparam value="#paramStruct['product_id']#" cfsqltype="cf_sql_varchar">,
+            <cfqueryparam value="Pending" cfsqltype="cf_sql_varchar">
         )
     </cfquery>
 
