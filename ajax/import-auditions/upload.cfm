@@ -35,11 +35,21 @@
     <cfset variables.userid = session.userid>
     <cfset arrayAppend(variables.debug, "auth_ok")>
 
-    <!--- CSRF validation --->
+    <!--- CSRF validation — check form, headers, and JSON body --->
     <cfset variables.csrfToken = "">
     <cfif structKeyExists(form, "csrf_token") and len(trim(form.csrf_token))>
         <cfset variables.csrfToken = trim(form.csrf_token)>
-    <cfelseif structKeyExists(cgi, "HTTP_X_CSRF_TOKEN") and len(trim(cgi.HTTP_X_CSRF_TOKEN))>
+    </cfif>
+    <cfif not len(variables.csrfToken)>
+        <cftry>
+            <cfset variables.reqHeaders = getHTTPRequestData().headers>
+            <cfif structKeyExists(variables.reqHeaders, "X-CSRF-Token") and len(trim(variables.reqHeaders["X-CSRF-Token"]))>
+                <cfset variables.csrfToken = trim(variables.reqHeaders["X-CSRF-Token"])>
+            </cfif>
+        <cfcatch type="any"><!--- ignore header read errors ---></cfcatch>
+        </cftry>
+    </cfif>
+    <cfif not len(variables.csrfToken) and structKeyExists(cgi, "HTTP_X_CSRF_TOKEN") and len(trim(cgi.HTTP_X_CSRF_TOKEN))>
         <cfset variables.csrfToken = trim(cgi.HTTP_X_CSRF_TOKEN)>
     </cfif>
     <cfif not structKeyExists(session, "csrf_token") or not len(session.csrf_token)>

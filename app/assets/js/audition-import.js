@@ -368,11 +368,13 @@
             var $btn = $j(this);
             var originalHtml = $btn.html();
             $btn.prop('disabled', true).html('<i class="fe-loader fe-spin"></i> Refreshing...');
+            var csrfToken = $j('#csrf-token').val() || '';
             $j.ajax({
                 url: '/ajax/import-auditions/recompute.cfm?bypass=1',
                 type: 'POST',
                 contentType: 'application/json',
-                data: JSON.stringify({ job_id: state.jobId }),
+                headers: csrfToken ? { 'X-CSRF-Token': csrfToken } : {},
+                data: JSON.stringify({ job_id: state.jobId, csrf_token: csrfToken }),
                 timeout: 120000,
                 success: function(response) {
                     $btn.prop('disabled', false).html(originalHtml);
@@ -414,11 +416,13 @@
 
         $j('#parse-progress').show();
 
+        var csrfToken = $j('#csrf-token').val() || '';
         $j.ajax({
             url: '/ajax/import-auditions/parse.cfm?bypass=1',
             type: 'POST',
             contentType: 'application/json',
-            data: JSON.stringify({ job_id: state.jobId }),
+            headers: csrfToken ? { 'X-CSRF-Token': csrfToken } : {},
+            data: JSON.stringify({ job_id: state.jobId, csrf_token: csrfToken }),
             success: function(response) {
                 console.log('[AUD] ========== PARSE RESPONSE ==========');
                 console.log('[AUD] Full response:', JSON.stringify(response, null, 2));
@@ -462,12 +466,13 @@
     function triggerAutoRecompute() {
         console.log('[AUD] ========== AUTO RECOMPUTE ==========');
         $j('#parse-progress').show();
-
+        var csrfToken = $j('#csrf-token').val() || '';
         $j.ajax({
             url: '/ajax/import-auditions/recompute.cfm?bypass=1',
             type: 'POST',
             contentType: 'application/json',
-            data: JSON.stringify({ job_id: state.jobId }),
+            headers: csrfToken ? { 'X-CSRF-Token': csrfToken } : {},
+            data: JSON.stringify({ job_id: state.jobId, csrf_token: csrfToken }),
             timeout: 120000,
             success: function(response) {
                 console.log('[AUD] Auto-recompute response:', response);
@@ -618,7 +623,8 @@
         var originalHtml = $btn.html();
         $btn.prop('disabled', true).html('<i class="fe-loader fe-spin"></i> Processing...');
 
-        var requestData = { job_id: state.jobId, mappings: mappings };
+        var csrfToken = $j('#csrf-token').val() || '';
+        var requestData = { job_id: state.jobId, mappings: mappings, csrf_token: csrfToken };
         console.log('[AUD] Full request data:', JSON.stringify(requestData));
 
         // V3 uses recompute endpoint to apply mappings and validate
@@ -626,6 +632,7 @@
             url: '/ajax/import-auditions/recompute.cfm?bypass=1',
             type: 'POST',
             contentType: 'application/json',
+            headers: csrfToken ? { 'X-CSRF-Token': csrfToken } : {},
             data: JSON.stringify(requestData),
             timeout: 60000, // 60 second timeout
             success: function(response) {

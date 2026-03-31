@@ -176,12 +176,35 @@
     <cfif variables.loggerAvailable><cfset variables.audLogger.setUserId(variables.userid)></cfif>
     <cfset addDebug("step=auth_ok userid=" & variables.userid)>
 
-    <!--- CSRF validation --->
+    <!--- CSRF validation — check form, headers, and JSON body --->
     <cfset variables.csrfToken = "">
     <cfif structKeyExists(form, "csrf_token") and len(trim(form.csrf_token))>
         <cfset variables.csrfToken = trim(form.csrf_token)>
-    <cfelseif structKeyExists(cgi, "HTTP_X_CSRF_TOKEN") and len(trim(cgi.HTTP_X_CSRF_TOKEN))>
+    </cfif>
+    <cfif not len(variables.csrfToken)>
+        <cftry>
+            <cfset variables.reqHeaders = getHTTPRequestData().headers>
+            <cfif structKeyExists(variables.reqHeaders, "X-CSRF-Token") and len(trim(variables.reqHeaders["X-CSRF-Token"]))>
+                <cfset variables.csrfToken = trim(variables.reqHeaders["X-CSRF-Token"])>
+            </cfif>
+        <cfcatch type="any"><!--- ignore header read errors ---></cfcatch>
+        </cftry>
+    </cfif>
+    <cfif not len(variables.csrfToken) and structKeyExists(cgi, "HTTP_X_CSRF_TOKEN") and len(trim(cgi.HTTP_X_CSRF_TOKEN))>
         <cfset variables.csrfToken = trim(cgi.HTTP_X_CSRF_TOKEN)>
+    </cfif>
+    <cfif not len(variables.csrfToken)>
+        <cftry>
+            <cfset variables.csrfRawBody = getHTTPRequestData().content>
+            <cfif isBinary(variables.csrfRawBody)><cfset variables.csrfRawBody = toString(variables.csrfRawBody)></cfif>
+            <cfif isJSON(variables.csrfRawBody)>
+                <cfset variables.csrfBodyJson = deserializeJSON(variables.csrfRawBody)>
+                <cfif isStruct(variables.csrfBodyJson) and structKeyExists(variables.csrfBodyJson, "csrf_token") and len(trim(variables.csrfBodyJson.csrf_token))>
+                    <cfset variables.csrfToken = trim(variables.csrfBodyJson.csrf_token)>
+                </cfif>
+            </cfif>
+        <cfcatch type="any"><!--- ignore body parse errors ---></cfcatch>
+        </cftry>
     </cfif>
     <cfif not structKeyExists(session, "csrf_token") or not len(session.csrf_token)>
         <cfset session.csrf_token = createUUID()>
