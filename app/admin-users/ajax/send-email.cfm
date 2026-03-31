@@ -167,10 +167,19 @@
             </cfmail>
 
             <cfset addDebug("cfmail executed OK (spooled)")>
-            <cflog file="admin_users" text="[send-email] WELCOME sent to userid=#variables.targetUserId# email=#variables.userEmail# by admin=#session.userid#">
+
+            <!--- Set user status to Setup so admin knows they are awaiting setup --->
+            <cfset queryExecute(
+                "UPDATE taousers_tbl SET userstatus = 'Setup' WHERE userid = :uid",
+                { uid: { value: variables.targetUserId, cfsqltype: "cf_sql_integer" } },
+                { datasource: application.datasource }
+            )>
+            <cfset addDebug("user status changed to Setup")>
+
+            <cflog file="admin_users" text="[send-email] WELCOME sent to userid=#variables.targetUserId# email=#variables.userEmail# by admin=#session.userid# | status set to Setup">
 
             <cfset variables.response.success = true>
-            <cfset variables.response.message = "Welcome email sent to " & variables.userEmail>
+            <cfset variables.response.message = "Welcome email sent to " & variables.userEmail & ". User status set to Setup.">
 
             <cfcatch type="any">
                 <cfset addDebug("CFMAIL ERROR: " & cfcatch.message & " | " & cfcatch.detail)>

@@ -18,6 +18,7 @@
     .status-active { color: #198754; font-weight: 600; }
     .status-cancelled { color: #dc3545; font-weight: 600; }
     .status-pending { color: #fd7e14; font-weight: 600; }
+    .status-setup { color: #0dcaf0; font-weight: 600; }
     .status-other { color: #6c757d; font-weight: 600; }
     .flag-badge { font-size: 0.75rem; padding: 3px 8px; border-radius: 4px; margin-right: 4px; }
     .flag-on { background: #d4edda; color: #155724; }
@@ -223,6 +224,7 @@
                                             <option value="Active">Active</option>
                                             <option value="Cancelled">Cancelled</option>
                                             <option value="Pending">Pending</option>
+                                            <option value="Setup">Setup</option>
                                         </select>
                                     </div>
                                 </div>
@@ -306,6 +308,7 @@
         if (sl === 'active') return 'status-active';
         if (sl === 'cancelled') return 'status-cancelled';
         if (sl === 'pending') return 'status-pending';
+        if (sl === 'setup') return 'status-setup';
         return 'status-other';
     }
 
@@ -396,6 +399,9 @@
         } else if (sl === 'pending') {
             actions.append('<button class="btn btn-outline-success btn-sm w-100 mb-2 btn-toggle-status" data-status="Active">Activate User</button>');
             actions.append('<button class="btn btn-outline-danger btn-sm w-100 btn-toggle-status" data-status="Cancelled">Cancel User</button>');
+        } else if (sl === 'setup') {
+            actions.append('<button class="btn btn-outline-success btn-sm w-100 mb-2 btn-toggle-status" data-status="Active">Activate User</button>');
+            actions.append('<button class="btn btn-outline-danger btn-sm w-100 btn-toggle-status" data-status="Cancelled">Cancel User</button>');
         } else {
             actions.append('<button class="btn btn-outline-success btn-sm w-100 mb-2 btn-toggle-status" data-status="Active">Set Active</button>');
             actions.append('<button class="btn btn-outline-danger btn-sm w-100 btn-toggle-status" data-status="Cancelled">Set Cancelled</button>');
@@ -465,6 +471,7 @@
                 if (resp.success || resp.SUCCESS) {
                     console.log('[AdminEmail] Send OK:', resp.message || resp.MESSAGE);
                     $('#emailActionResult').html('<span class="text-success">' + escapeHtml(resp.message || resp.MESSAGE) + '</span>');
+                    loadUser(); // Reload to reflect status change
                 } else {
                     console.warn('[AdminEmail] Send failed:', resp.message || resp.MESSAGE);
                     $('#emailActionResult').html('<span class="text-danger">' + escapeHtml(resp.message || resp.MESSAGE) + '</span>');

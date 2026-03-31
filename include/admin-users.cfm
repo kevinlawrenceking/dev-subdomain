@@ -9,6 +9,7 @@
     .status-active { color: #198754; font-weight: 600; }
     .status-cancelled { color: #dc3545; font-weight: 600; }
     .status-pending { color: #fd7e14; font-weight: 600; }
+    .status-setup { color: #0dcaf0; font-weight: 600; }
     .status-other { color: #6c757d; font-weight: 600; }
     .user-row { cursor: pointer; }
     .user-row:hover { background-color: #f8f9fa; }
@@ -149,6 +150,7 @@
                                 <option value="Active">Active</option>
                                 <option value="Cancelled">Cancelled</option>
                                 <option value="Pending">Pending</option>
+                                <option value="Setup">Setup</option>
                             </select>
                         </div>
                     </div>
@@ -285,6 +287,7 @@
             if (sl === 'active') statusClass = 'status-active';
             else if (sl === 'cancelled') statusClass = 'status-cancelled';
             else if (sl === 'pending') statusClass = 'status-pending';
+            else if (sl === 'setup') statusClass = 'status-setup';
 
             var flags = '';
             if (Number(isBeta)) flags += '<span class="flag-badge flag-on me-1">Beta</span>';

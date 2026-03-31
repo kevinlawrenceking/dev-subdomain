@@ -1065,7 +1065,7 @@
     <cfargument name="newStatus" type="string" required="true">
 
     <cfset var result = { success: false, message: "" }>
-    <cfset var allowedStatuses = "Active,Cancelled,Pending">
+    <cfset var allowedStatuses = "Active,Cancelled,Pending,Setup">
 
     <cfif not listFindNoCase(allowedStatuses, arguments.newStatus)>
         <cfset result.message = "Invalid status value">
