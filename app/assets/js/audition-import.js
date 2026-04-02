@@ -192,6 +192,16 @@
                 uploadFile(e.dataTransfer.files[0]);
             }
         });
+
+        // Sample test data buttons
+        var testButtons = document.querySelectorAll('.btn-load-test');
+        testButtons.forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                var scenario = this.getAttribute('data-scenario');
+                loadTestData(scenario);
+            });
+        });
     }
 
     function uploadFile(file) {
@@ -299,7 +309,67 @@
     }
 
     // ========================================
-    // JOB ACTIONS - 
+    // SAMPLE TEST DATA LOADER
+    // ========================================
+
+    function loadTestData(scenario) {
+        console.log('[AUD] Loading test data, scenario:', scenario);
+
+        // Disable buttons and show progress
+        $j('.btn-load-test').prop('disabled', true);
+        $j('#upload-area').hide();
+        $j('#test-data-section').hide();
+        $j('#upload-progress').show();
+        $j('#upload-status').text('Generating test data (' + scenario + ')...');
+
+        var csrfToken = $j('#csrf-token').val() || '';
+        var appCsrfMeta = document.querySelector('meta[name="csrf-token"]');
+        var appCsrfToken = appCsrfMeta ? appCsrfMeta.getAttribute('content') : '';
+
+        $j.ajax({
+            url: '/ajax/import-auditions/generate-test.cfm?bypass=1',
+            type: 'POST',
+            data: { scenario: scenario, csrf_token: csrfToken },
+            headers: appCsrfToken ? { 'X-CSRF-Token': appCsrfToken } : {},
+            dataType: 'json',
+            success: function(response) {
+                console.log('[AUD] Generate test response:', response);
+                if (cfGet(response, 'success')) {
+                    var rData = cfGet(response, 'data') || {};
+                    var job = cfGet(rData, 'job') || {};
+                    var jobId = cfGet(job, 'job_id') || 0;
+
+                    if (!jobId) {
+                        showAlert('error', 'Test data generated but no job ID was returned.');
+                        resetTestDataUI();
+                        return;
+                    }
+
+                    // Redirect to job page (same as normal upload)
+                    window.location.href = '/app/auditions-import/?job_id=' + jobId;
+                } else {
+                    var errMsg = cfGet(response, 'message') || 'Failed to generate test data';
+                    showAlert('error', errMsg);
+                    resetTestDataUI();
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('[AUD] Generate test error:', error, xhr.responseText);
+                showErrorWithDebug(xhr, 'Failed to generate test data.');
+                resetTestDataUI();
+            }
+        });
+    }
+
+    function resetTestDataUI() {
+        $j('.btn-load-test').prop('disabled', false);
+        $j('#upload-area').show();
+        $j('#test-data-section').show();
+        $j('#upload-progress').hide();
+    }
+
+    // ========================================
+    // JOB ACTIONS -
     // ========================================
 
     function initJobActions() {

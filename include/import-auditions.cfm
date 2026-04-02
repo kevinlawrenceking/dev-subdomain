@@ -250,7 +250,12 @@ input[type="date"].form-control-sm {
     <cfoutput><input type="hidden" id="csrf-token" value="#encodeForHTMLAttribute(session.csrf_token)#"></cfoutput>
     <!--- UPLOAD STEP --->
     <div class="import-step" id="step-upload">
-        <h5><span class="step-number">1</span> Upload File</h5>
+        <h5>
+            <span class="step-number">1</span> Upload File
+            <a href="" title="How importing works" data-bs-toggle="modal" data-bs-target="#import-help-modal" style="vertical-align: middle;">
+                <i class="fe-help-circle font-14 ms-1" style="color: #406e8e;"></i>
+            </a>
+        </h5>
         <p class="text-muted">Upload your auditions file (max 50MB)</p>
 
         <div class="upload-area" id="upload-area">
@@ -266,6 +271,23 @@ input[type="date"].form-control-sm {
                 <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
             </div>
             <p class="mt-2 text-center" id="upload-status">Uploading...</p>
+        </div>
+
+        <!--- Sample test data loader --->
+        <div class="mt-3 pt-3" style="border-top: 1px dashed #dee2e6;" id="test-data-section">
+            <p class="text-muted small mb-2"><i class="fe-database"></i> Or load sample test data:</p>
+            <div class="d-flex gap-2 flex-wrap">
+                <button class="btn btn-sm btn-outline-secondary btn-load-test" data-scenario="clean">
+                    <i class="fe-check-circle"></i> Clean Data <span class="text-muted">(20 rows)</span>
+                </button>
+                <button class="btn btn-sm btn-outline-warning btn-load-test" data-scenario="mixed">
+                    <i class="fe-alert-triangle"></i> Mixed with Errors <span class="text-muted">(15 rows)</span>
+                </button>
+                <button class="btn btn-sm btn-outline-info btn-load-test" data-scenario="dupes">
+                    <i class="fe-copy"></i> With Duplicates <span class="text-muted">(15 rows)</span>
+                </button>
+            </div>
+            <p class="text-muted small mt-1 mb-0">Each click generates a unique file so you can re-run as many times as needed.</p>
         </div>
     </div>
 
@@ -651,6 +673,136 @@ input[type="date"].form-control-sm {
 <!--- ============================================================
      MODALS
      ============================================================ --->
+
+<!--- Import Help Modal --->
+<div class="modal fade" id="import-help-modal" tabindex="-1" aria-labelledby="import-help-label">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background: rgba(64,110,142,0.1);">
+                <h5 class="modal-title" id="import-help-label"><i class="fe-help-circle"></i> How to Import Auditions</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-3">Importing lets you bring audition records into TAO from a spreadsheet file. The process has four simple steps:</p>
+
+                <div class="accordion" id="import-help-accordion">
+
+                    <!--- Step 1: Upload --->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="help-heading-1">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#help-step-1" aria-expanded="true">
+                                <span class="badge rounded-pill me-2" style="background:#406e8e;">1</span>
+                                Upload Your File
+                            </button>
+                        </h2>
+                        <div id="help-step-1" class="accordion-collapse collapse show" data-bs-parent="#import-help-accordion">
+                            <div class="accordion-body">
+                                <p>Drag and drop your file onto the upload area, or click it to browse your computer.</p>
+                                <p class="mb-1"><strong>Accepted formats:</strong></p>
+                                <ul class="mb-2">
+                                    <li><strong>CSV</strong> &mdash; comma-separated values (works with Excel, Google Sheets, Numbers)</li>
+                                    <li><strong>XLS / XLSX</strong> &mdash; Microsoft Excel spreadsheets</li>
+                                </ul>
+                                <p class="mb-0 text-muted small">Your file should have column headers in the first row (e.g. "Project Name", "Role", "Audition Date").</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!--- Step 2: Map Columns --->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="help-heading-2">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#help-step-2">
+                                <span class="badge rounded-pill me-2" style="background:#406e8e;">2</span>
+                                Map Your Columns
+                            </button>
+                        </h2>
+                        <div id="help-step-2" class="accordion-collapse collapse" data-bs-parent="#import-help-accordion">
+                            <div class="accordion-body">
+                                <p>TAO reads your column headers and takes its best guess at matching them to audition fields. You will see a mapping screen showing what TAO detected.</p>
+                                <p><strong>What to do here:</strong></p>
+                                <ul class="mb-2">
+                                    <li>Review each mapping &mdash; if TAO guessed wrong, use the dropdown to pick the correct field</li>
+                                    <li>Set any column you don't need to <em>Ignore</em></li>
+                                    <li>Click <strong>Confirm Mapping &amp; Continue</strong> when everything looks right</li>
+                                </ul>
+                                <p class="mb-0 text-muted small">Common fields: Project Name, Role, Casting Director, Audition Date, Medium (Film, TV, Commercial, Theater, Voiceover), Self-Tape (Yes/No), and Notes.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!--- Step 3: Review --->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="help-heading-3">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#help-step-3">
+                                <span class="badge rounded-pill me-2" style="background:#406e8e;">3</span>
+                                Review &amp; Fix
+                            </button>
+                        </h2>
+                        <div id="help-step-3" class="accordion-collapse collapse" data-bs-parent="#import-help-accordion">
+                            <div class="accordion-body">
+                                <p>TAO validates every row and checks for potential duplicates. You will see your data in a table with tabs to quickly filter:</p>
+                                <ul>
+                                    <li><strong>Ready</strong> &mdash; good to go, no issues found</li>
+                                    <li><strong>Problems</strong> &mdash; rows with missing or invalid data (e.g. no project name, bad date format)</li>
+                                    <li><strong>Duplicates</strong> &mdash; rows that look similar to each other or to auditions already in your account</li>
+                                    <li><strong>Ignored</strong> &mdash; rows you have chosen to skip</li>
+                                </ul>
+                                <p><strong>Fixing issues:</strong></p>
+                                <ul class="mb-2">
+                                    <li>Click the <i class="fe-edit" style="font-size:12px;"></i> edit icon on any row to correct its values</li>
+                                    <li>For duplicates, click <strong>Resolve</strong> to decide whether to import it or skip it</li>
+                                    <li>You can use the search bar to find specific auditions by project, role, or casting director</li>
+                                </ul>
+                                <p class="mb-0 text-muted small">Only rows marked <em>Ready</em> or manually approved will be imported. Problem rows are never imported until you fix them.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!--- Step 4: Import --->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="help-heading-4">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#help-step-4">
+                                <span class="badge rounded-pill me-2" style="background:#406e8e;">4</span>
+                                Import
+                            </button>
+                        </h2>
+                        <div id="help-step-4" class="accordion-collapse collapse" data-bs-parent="#import-help-accordion">
+                            <div class="accordion-body">
+                                <p>Once you are happy with your data, click <strong>Continue to Import</strong> to see a final summary of what will be created.</p>
+                                <p>Click <strong>Import Auditions</strong> to finalize. Each approved row becomes an audition record in your account. If a contact name or email in your file matches someone in your TAO contacts, the audition will be linked to that contact automatically.</p>
+                                <p class="mb-0 text-muted small">It is safe to close this page and come back later &mdash; your progress is saved. You can also cancel an import at any time from the Import History table.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!--- Tips --->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="help-heading-tips">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#help-step-tips">
+                                <span class="badge rounded-pill me-2" style="background:#28a745;"><i class="fe-star" style="font-size:10px;"></i></span>
+                                Tips
+                            </button>
+                        </h2>
+                        <div id="help-step-tips" class="accordion-collapse collapse" data-bs-parent="#import-help-accordion">
+                            <div class="accordion-body">
+                                <ul class="mb-0">
+                                    <li>Export your audition log from Casting Networks, Actors Access, or your personal spreadsheet as a CSV &mdash; it usually works right out of the box.</li>
+                                    <li>Use consistent date formats (e.g. <code>04/15/2026</code> or <code>2026-04-15</code>) for the best results.</li>
+                                    <li>You can import the same information more than once safely &mdash; TAO will flag duplicates so you don't create double entries.</li>
+                                    <li>If you are just trying things out, use the <strong>Sample Test Data</strong> buttons below the upload area to load a pre-built file and walk through the steps.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                </div><!--- /accordion --->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Got it</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!--- Duplicate resolution modal --->
 <div class="modal fade" id="dupe-modal" tabindex="-1">
