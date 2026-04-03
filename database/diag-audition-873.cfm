@@ -172,30 +172,12 @@ try {
     writeOutput("<p style='color:red;'>ERROR: " & e.message & "<br>" & e.detail & "</p>");
 }
 
-// 7) roleDetails query (DETaudroles_24090)
-writeOutput("<h3>7. Role details query (DETaudroles_24090)</h3>");
+// 7) Call the ACTUAL service methods used by the modals
+writeOutput("<h3>7. DETaudroles_24090 via actual service (role edit modal)</h3>");
 if (qDet.recordCount and len(qDet.audroleid)) {
     try {
-        qRole = queryExecute("
-            SELECT r.audroleid, r.audprojectid, r.auddialectid, r.audRoleName,
-                r.charDescription, r.holdStartDate, r.holdEndDate,
-                rt.audroletype, rt.audroletypeid, d.auddialect,
-                s.audsource, s.audsourceid, r.contactid, r.payrate, r.netincome, r.buyout,
-                r.incometype, r.iscallback, r.isredirect, r.ispin, r.isbooked,
-                r.opencallid, c.recordname AS contactname,
-                r.paycycleid, pc.paycyclename,
-                r.submitsiteid, ss.submitsitename,
-                oc.opencallname
-            FROM audroles r
-            LEFT JOIN audroletypes rt ON rt.audroletypeid = r.audroletypeid
-            LEFT JOIN auddialects d ON d.auddialectid = r.auddialectid
-            LEFT JOIN audsources s ON s.audsourceid = r.audsourceid
-            LEFT JOIN contactdetails c ON c.contactid = r.contactid
-            LEFT JOIN paycycles pc ON pc.paycycleid = r.paycycleid
-            LEFT JOIN submitsites ss ON ss.submitsiteid = r.submitsiteid
-            LEFT JOIN opencalls oc ON oc.opencallid = r.opencallid
-            WHERE r.audroleid = :rid
-        ", { rid: { value: qDet.audroleid, cfsqltype: "cf_sql_integer" } }, { datasource: datasource });
+        roleService = createObject("component", "services.AuditionRoleService");
+        qRole = roleService.DETaudroles_24090(audroleid = val(qDet.audroleid));
         if (qRole.recordCount eq 0) {
             writeOutput("<p style='color:red;'>RETURNED 0 ROWS</p>");
         } else {
@@ -214,6 +196,29 @@ if (qDet.recordCount and len(qDet.audroleid)) {
     }
 } else {
     writeOutput("<p style='color:orange;'>Skipped - no audroleid from project query</p>");
+}
+
+// 7b) Call remoteaudupdateform.cfm dependencies in sequence (same as modal load)
+writeOutput("<h3>7b. Appointment modal query chain</h3>");
+try {
+    projService = createObject("component", "services.AuditionProjectService");
+    writeOutput("<p>a) DETaudprojects_24089(audprojectid=#pid#)... ");
+    qProjDet = projService.DETaudprojects_24089(audprojectID = pid);
+    writeOutput("<span style='color:green;'>OK (#qProjDet.recordCount# rows, audroleid=#qProjDet.recordCount ? qProjDet.audroleid : 'N/A'#)</span></p>");
+
+    if (qProjDet.recordCount) {
+        rid = val(qProjDet.audroleid);
+        roleService2 = createObject("component", "services.AuditionRoleService");
+        writeOutput("<p>b) DETaudroles_24090(audroleid=#rid#)... ");
+        qRoleDet = roleService2.DETaudroles_24090(audroleid = rid);
+        writeOutput("<span style='color:green;'>OK (#qRoleDet.recordCount# rows)</span></p>");
+    }
+
+    writeOutput("<p>c) SELaudprojects_24097(eventid=1574)... ");
+    qAudDet2 = projService.SELaudprojects_24097(eventid = 1574);
+    writeOutput("<span style='color:green;'>OK (#qAudDet2.recordCount# rows)</span></p>");
+} catch (any e) {
+    writeOutput("<span style='color:red;'>FAILED: " & e.message & "<br>" & e.detail & "</span></p>");
 }
 
 // 8) Check for missing lookup tables
