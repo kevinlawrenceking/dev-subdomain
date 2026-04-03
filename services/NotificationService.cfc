@@ -275,8 +275,6 @@
         INNER JOIN
             fusystemusers su ON su.suid = n.suid
         INNER JOIN
-            contactdetails c ON c.contactID = su.contactid
-        INNER JOIN
             fusystems s ON s.systemID = su.systemID
         INNER JOIN
             fuactions a ON a.actionid = n.actionid

@@ -356,6 +356,12 @@
             success: function(response) {
               console.log('Response from complete_not_ajax.cfm:', response);
 
+              var resp = (typeof response === 'string') ? JSON.parse(response) : response;
+              if (resp && resp.success === false) {
+                console.error('Reminder completion failed:', resp.error);
+                alert('Could not complete reminder: ' + (resp.error || 'Unknown error'));
+              }
+
               if ($.fn.DataTable.isDataTable('#remindersTable')) {
                 const table = $('#remindersTable').DataTable();
                 table.ajax.reload(function(json) {

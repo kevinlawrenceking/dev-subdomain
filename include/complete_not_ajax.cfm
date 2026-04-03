@@ -116,6 +116,7 @@
 </cfif>
 
 <!--- WO-4.4: Transaction wraps all writes in the completion workflow --->
+<cftry>
 <cftransaction>
 
 <!--- Update Notification --->
@@ -330,6 +331,13 @@ notsnext.recordcount: #notsnext.recordcount#
 </cfif>
 
 </cftransaction><!--- end WO-4.4 transaction --->
+
+<cfcatch type="any">
+  <!--- Transaction rolled back - return error so UI does not falsely remove the reminder --->
+  <cfoutput>{"success": false, "error": "Completion failed: #replace(cfcatch.message, '"', '\"', 'ALL')#"}</cfoutput>
+  <cfabort>
+</cfcatch>
+</cftry>
 
 <!--- Final Debug Summary --->
 <cfif dbug EQ "Y">

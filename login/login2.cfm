@@ -386,7 +386,7 @@ console.groupEnd();
         <cfset session.userid = loginQuery.userid>
         <cfset session.userLoggedIn = true>
 
-        <cflocation url="#loginQuery.status_url#?u=#loginquery.userid#" addtoken="true">
+        <cflocation url="#loginQuery.status_url#" addtoken="false">
     </cfif>
 
 </cfif>
