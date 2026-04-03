@@ -649,6 +649,39 @@ component displayname="AuditionImportService" accessors="true" output="false" {
             // Build rows array
             var rows = [];
             for (var row in qRows) {
+
+                // Merge row-level errors from validation_summary into factsMap
+                // so they display alongside fact-level errors in the UI.
+                // Row-level errors catch required-field-missing and unmapped-column cases.
+                if (!isNull(row.validation_summary) and len(row.validation_summary)) {
+                    try {
+                        var vs = deserializeJSON(row.validation_summary);
+                        if (structKeyExists(vs, "errors") and isArray(vs.errors) and arrayLen(vs.errors)) {
+                            if (!structKeyExists(factsMap, row.row_id)) {
+                                factsMap[row.row_id] = { data: {}, validation: {}, errors: [] };
+                            }
+                            // Track which fields already have fact-level errors
+                            var coveredFields = {};
+                            for (var fe in factsMap[row.row_id].errors) {
+                                coveredFields[fe.field] = true;
+                            }
+                            for (var rowErr in vs.errors) {
+                                var ef = structKeyExists(rowErr, "field") ? rowErr.field : (structKeyExists(rowErr, "FIELD") ? rowErr.FIELD : "");
+                                if (len(ef) and !structKeyExists(coveredFields, ef)) {
+                                    var em = structKeyExists(rowErr, "error") ? rowErr.error : (structKeyExists(rowErr, "ERROR") ? rowErr.ERROR : "");
+                                    arrayAppend(factsMap[row.row_id].errors, {
+                                        "field": ef,
+                                        "code": "REQUIRED",
+                                        "message": em
+                                    });
+                                }
+                            }
+                        }
+                    } catch (any e) {
+                        // Invalid validation_summary JSON - skip
+                    }
+                }
+
                 var rowData = {
                     "row_id": row.row_id,
                     "row_num": row.row_num,
@@ -1557,11 +1590,13 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                     "INSERT INTO events_tbl (
                         userid, audRoleID, eventtitle,
                         eventStart, eventStartTime,
-                        audLocation, audStepID, eventstatus, audTypeID
+                        audLocation, audStepID, eventstatus, audTypeID,
+                        isDeleted
                     ) VALUES (
                         :userid, :roleId, :eventtitle,
                         :eventStart, :eventStartTime,
-                        :audLocation, :audStepID, :eventstatus, :audTypeID
+                        :audLocation, :audStepID, :eventstatus, :audTypeID,
+                        0
                     )",
                     {
                         userid: { value: arguments.userid, cfsqltype: "cf_sql_integer" },
@@ -1611,15 +1646,16 @@ component displayname="AuditionImportService" accessors="true" output="false" {
 
                 fieldsWritten = qFacts.recordCount;
 
-                // E5) Update import_auditions_rows with the event ID as the primary reference
+                // E5) Update import_auditions_rows with the project ID as the primary reference
+                //     (links to /app/audition/?audprojectid=X)
                 queryExecute(
                     "UPDATE import_auditions_rows
-                     SET status = 'imported', created_audition_id = :event_id,
+                     SET status = 'imported', created_audition_id = :project_id,
                          imported_at = NOW(), updated_at = NOW()
                      WHERE row_id = :row_id",
                     {
                         row_id: { value: arguments.row_id, cfsqltype: "cf_sql_integer" },
-                        event_id: { value: newEventId, cfsqltype: "cf_sql_integer" }
+                        project_id: { value: newProjectId, cfsqltype: "cf_sql_integer" }
                     },
                     { datasource: application.datasource }
                 );
@@ -1637,7 +1673,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                     {
                         row_id: { value: arguments.row_id, cfsqltype: "cf_sql_integer" },
                         job_id: { value: arguments.job_id, cfsqltype: "cf_sql_integer" },
-                        audition_id: { value: newEventId, cfsqltype: "cf_sql_integer" },
+                        audition_id: { value: newProjectId, cfsqltype: "cf_sql_integer" },
                         fields_written: { value: fieldsWritten, cfsqltype: "cf_sql_integer" }
                     },
                     { datasource: application.datasource }

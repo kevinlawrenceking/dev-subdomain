@@ -877,7 +877,7 @@
             } else if (rowStatus === 'ignored') {
                 html += '<button class="btn btn-xs btn-outline-success btn-restore" data-row-id="' + rowId + '" title="Include in import"><i class="fe-check-circle"></i></button> ';
             } else if (rowStatus === 'imported' && createdAuditionId) {
-                html += '<a href="/app/auditions/?audition_id=' + createdAuditionId + '" class="btn btn-xs btn-outline-info" title="View audition"><i class="fe-eye"></i></a>';
+                html += '<a href="/app/audition/?audprojectid=' + createdAuditionId + '" class="btn btn-xs btn-outline-info" title="View audition"><i class="fe-eye"></i></a>';
             }
 
             html += '</td>';
@@ -1377,7 +1377,7 @@
                 }
                 var auditionId = match.audition_id || match.AUDITION_ID || match.auditionid || match.AUDITIONID || '';
                 if (auditionId) {
-                    html += '<a href="/app/auditions/?audition_id=' + auditionId + '" target="_blank" class="btn btn-xs btn-outline-info">View Audition</a>';
+                    html += '<a href="/app/audition/?audprojectid=' + auditionId + '" target="_blank" class="btn btn-xs btn-outline-info">View Audition</a>';
                 }
                 html += '</div>';
             }

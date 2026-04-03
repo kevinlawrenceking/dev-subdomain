@@ -655,6 +655,7 @@
             <cfset variables.rowWarnings = []>
             <cfset variables.errorCount = 0>
             <cfset variables.warningCount = 0>
+            <cfset variables.requiredFieldsCaughtAtFactLevel = "">
 
             <cfloop query="variables.qFacts">
                 <cfset variables.factId = variables.qFacts.fact_id>
@@ -840,6 +841,27 @@
                         </cfdefaultcase>
 
                     </cfswitch>
+                <cfelse>
+                    <!--- Value is empty: flag required fields at the fact level
+                         so the error is stored in validation_message and displayed in the UI --->
+                    <cfswitch expression="#variables.effectiveFieldName#">
+                        <cfcase value="project_name">
+                            <cfset variables.factIsValid = false>
+                            <cfset variables.validationCode = "REQUIRED">
+                            <cfset variables.validationMessage = "Project name is required">
+                            <cfset variables.errorCount++>
+                            <cfset arrayAppend(variables.rowErrors, { field: variables.effectiveFieldName, error: "Project name is required" })>
+                            <cfset variables.requiredFieldsCaughtAtFactLevel = listAppend(variables.requiredFieldsCaughtAtFactLevel, "project_name")>
+                        </cfcase>
+                        <cfcase value="audition_date">
+                            <cfset variables.factIsValid = false>
+                            <cfset variables.validationCode = "REQUIRED">
+                            <cfset variables.validationMessage = "Audition date is required">
+                            <cfset variables.errorCount++>
+                            <cfset arrayAppend(variables.rowErrors, { field: variables.effectiveFieldName, error: "Audition date is required" })>
+                            <cfset variables.requiredFieldsCaughtAtFactLevel = listAppend(variables.requiredFieldsCaughtAtFactLevel, "audition_date")>
+                        </cfcase>
+                    </cfswitch>
                 </cfif>
 
 
@@ -878,15 +900,16 @@
             </cfif>
 
             <!--- Row-level validation: require project_name and audition_date.
-                 contact_name is optional (casting_director often serves as the contact). --->
+                 contact_name is optional (casting_director often serves as the contact).
+                 Skip if the fact-level check already flagged the field (prevents double-count). --->
             <cfset variables.hasProjectName = structKeyExists(variables.rowData, "project_name") and len(trim(variables.rowData.project_name))>
             <cfset variables.hasAuditionDate = structKeyExists(variables.rowData, "audition_date") and len(trim(variables.rowData.audition_date))>
 
-            <cfif not variables.hasProjectName>
+            <cfif not variables.hasProjectName and not listFindNoCase(variables.requiredFieldsCaughtAtFactLevel, "project_name")>
                 <cfset variables.errorCount++>
                 <cfset arrayAppend(variables.rowErrors, { field: "project_name", error: "Project name is required" })>
             </cfif>
-            <cfif not variables.hasAuditionDate>
+            <cfif not variables.hasAuditionDate and not listFindNoCase(variables.requiredFieldsCaughtAtFactLevel, "audition_date")>
                 <cfset variables.errorCount++>
                 <cfset arrayAppend(variables.rowErrors, { field: "audition_date", error: "Audition date is required" })>
             </cfif>
