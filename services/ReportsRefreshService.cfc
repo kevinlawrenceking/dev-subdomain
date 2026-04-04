@@ -45,23 +45,26 @@
         <cfset resultSummary.totalSelected = report_2.recordcount>
 
 <!--- Loop through the query results --->
+<!--- PERF: Hoisted out of loop — query is invariant (same userid+reportid every iteration) --->
+            <cfquery name="findid">
+                SELECT r.ID AS new_id
+                FROM reports_user r
+                WHERE 
+                    r.userid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#">
+                    AND r.reportid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#new_reportid#">
+            </cfquery>
+
+<cfset new_id = 0>
+            <cfif findid.recordcount EQ 1>
+                <cfset new_id = findid.new_id>
+            </cfif>
+
         <cfloop query="report_2">
             <cfset i = i + 1>
             <cfset new_label = report_2.label>
             <cfset new_itemValueInt = report_2.totals>
             <cfset new_itemDataset = report_2.itemDataset>
 
-<!--- Find or create the report item ID --->
-            <cfquery name="findid">
-                SELECT r.ID AS new_id
-                FROM reports_user r
-                WHERE r.userid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#">
-                AND r.reportid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#new_reportid#">
-            </cfquery>
-
-<cfif findid.recordcount eq 1>
-                <cfset new_id = findid.new_id>
-            </cfif>
 
 <!--- Sanitize the label --->
             <cfset var new_label_new = Replace(new_label, "'", "", "All")>
@@ -134,16 +137,7 @@
         <cfset resultSummary.totalSelected = report_3.recordCount>
 
 <!--- Loop through results --->
-        <cfloop query="report_3">
-            <!--- Increment order number --->
-            <cfset i++>
-
-<!--- Define report variables --->
-            <cfset var new_label = report_3.label>
-            <cfset var new_itemValueInt = report_3.totals>
-            <cfset var new_itemDataset = report_3.itemDataset>
-
-<!--- Find existing ID for report item --->
+<!--- PERF: Hoisted out of loop — query is invariant (same userid+reportid every iteration) --->
             <cfquery name="findid">
                 SELECT r.ID AS new_id
                 FROM reports_user r
@@ -156,6 +150,16 @@
             <cfif findid.recordcount EQ 1>
                 <cfset new_id = findid.new_id>
             </cfif>
+
+        <cfloop query="report_3">
+            <!--- Increment order number --->
+            <cfset i++>
+
+<!--- Define report variables --->
+            <cfset var new_label = report_3.label>
+            <cfset var new_itemValueInt = report_3.totals>
+            <cfset var new_itemDataset = report_3.itemDataset>
+
 
 <!--- Insert or update report item --->
             <cfquery name="Insert_ReportItems" result="insertResult">
@@ -339,16 +343,7 @@ AND p.userid=<cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#"
         <cfset resultSummary.totalSelected = report_5.recordCount>
 
 <!--- Loop through results --->
-        <cfloop query="report_5">
-            <!--- Increment order number --->
-            <cfset i++>
-
-<!--- Define report variables --->
-            <cfset var new_label = report_5.label>
-            <cfset var new_itemValueInt = report_5.totals>
-            <cfset var new_itemDataset = report_5.itemDataset>
-
-<!--- Find existing ID for report item --->
+<!--- PERF: Hoisted out of loop — query is invariant (same userid+reportid every iteration) --->
             <cfquery name="findid">
                 SELECT r.ID AS new_id
                 FROM reports_user r
@@ -361,6 +356,16 @@ AND p.userid=<cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#"
             <cfif findid.recordcount EQ 1>
                 <cfset new_id = findid.new_id>
             </cfif>
+
+        <cfloop query="report_5">
+            <!--- Increment order number --->
+            <cfset i++>
+
+<!--- Define report variables --->
+            <cfset var new_label = report_5.label>
+            <cfset var new_itemValueInt = report_5.totals>
+            <cfset var new_itemDataset = report_5.itemDataset>
+
 
 <!--- Insert or update report item --->
             <cfquery name="Insert_ReportItems" result="insertResult">
@@ -450,23 +455,26 @@ AND p.userid=<cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#"
         <cfset resultSummary.totalSelected = report_6.recordcount>
 
 <!--- Loop through the query results --->
+<!--- PERF: Hoisted out of loop — query is invariant (same userid+reportid every iteration) --->
+            <cfquery name="findid">
+                SELECT r.ID AS new_id
+                FROM reports_user r
+                WHERE 
+                    r.userid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#">
+                    AND r.reportid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#new_reportid#">
+            </cfquery>
+
+<cfset new_id = 0>
+            <cfif findid.recordcount EQ 1>
+                <cfset new_id = findid.new_id>
+            </cfif>
+
         <cfloop query="report_6">
             <cfset i = i + 1>
             <cfset new_label = report_6.label>
             <cfset new_itemValueInt = report_6.totals>
             <cfset new_itemDataset = report_6.itemDataset>
 
-<!--- Find or create the report item ID --->
-            <cfquery name="findid">
-                SELECT r.ID AS new_id
-                FROM reports_user r
-                WHERE r.userid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#">
-                AND r.reportid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#new_reportid#">
-            </cfquery>
-
-<cfif findid.recordcount eq 1>
-                <cfset new_id = findid.new_id>
-            </cfif>
 
 <!--- Sanitize the label --->
             <cfset var new_label_new = Replace(new_label, "'", "", "All")>
@@ -545,24 +553,26 @@ AND p.userid=<cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#"
         <cfset resultSummary.totalSelected = report_7.recordCount>
 
 <!--- Loop through the results and insert report items --->
+<!--- PERF: Hoisted out of loop — query is invariant (same userid+reportid every iteration) --->
+            <cfquery name="findid">
+                SELECT r.ID AS new_id
+                FROM reports_user r
+                WHERE 
+                    r.userid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#">
+                    AND r.reportid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#new_reportid#">
+            </cfquery>
+
+<cfset var new_id = 0>
+            <cfif findid.recordcount EQ 1>
+                <cfset new_id = findid.new_id>
+            </cfif>
+
         <cfloop query="report_7">
             <cfset i++>
             <cfset var new_label = report_7.label>
             <cfset var new_itemValueInt = report_7.totals>
             <cfset var new_itemDataset = report_7.itemDataset>
 
-<!--- Find or create report item ID --->
-            <cfquery name="findid">
-                SELECT r.ID AS new_id
-                FROM reports_user r
-                WHERE r.userid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#">
-                AND r.reportid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#new_reportid#">
-            </cfquery>
-
-<cfset var new_id = 0>
-            <cfif findid.recordCount EQ 1>
-                <cfset new_id = findid.new_id>
-            </cfif>
 
 <!--- Sanitize label --->
             <cfset var new_label_new = Replace(new_label, "'", "", "All")>
@@ -641,24 +651,26 @@ AND p.userid=<cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#"
         <cfset resultSummary.totalSelected = report_8.recordCount>
 
 <!--- Loop through the query results --->
-        <cfloop query="report_8">
-            <cfset i++>
-            <cfset var new_label = report_8.label>
-            <cfset var new_itemValueInt = report_8.totals>
-            <cfset var new_itemDataset = report_8.itemDataset>
-
-<!--- Find or create the report item ID --->
+<!--- PERF: Hoisted out of loop — query is invariant (same userid+reportid every iteration) --->
             <cfquery name="findid">
                 SELECT r.ID AS new_id
                 FROM reports_user r
-                WHERE r.userid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#">
-                AND r.reportid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#new_reportid#">
+                WHERE 
+                    r.userid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#">
+                    AND r.reportid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#new_reportid#">
             </cfquery>
 
 <cfset var new_id = 0>
             <cfif findid.recordcount EQ 1>
                 <cfset new_id = findid.new_id>
             </cfif>
+
+        <cfloop query="report_8">
+            <cfset i++>
+            <cfset var new_label = report_8.label>
+            <cfset var new_itemValueInt = report_8.totals>
+            <cfset var new_itemDataset = report_8.itemDataset>
+
 
 <!--- Sanitize the label --->
             <cfset var new_label_new = Replace(new_label, "'", "", "All")>
@@ -734,23 +746,26 @@ AND p.userid=<cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#"
         <cfset resultSummary.totalSelected = report_9.recordcount>
 
 <!--- Loop through the query results --->
+<!--- PERF: Hoisted out of loop — query is invariant (same userid+reportid every iteration) --->
+            <cfquery name="findid">
+                SELECT r.ID AS new_id
+                FROM reports_user r
+                WHERE 
+                    r.userid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#">
+                    AND r.reportid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#new_reportid#">
+            </cfquery>
+
+<cfset new_id = 0>
+            <cfif findid.recordcount EQ 1>
+                <cfset new_id = findid.new_id>
+            </cfif>
+
         <cfloop query="report_9">
             <cfset i = i + 1>
             <cfset new_label = report_9.label>
             <cfset new_itemValueInt = report_9.totals>
             <cfset new_itemDataset = report_9.itemDataset>
 
-<!--- Find or create the report item ID --->
-            <cfquery name="findid">
-                SELECT r.ID AS new_id
-                FROM reports_user r
-                WHERE r.userid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#">
-                AND r.reportid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#new_reportid#">
-            </cfquery>
-
-<cfif findid.recordcount eq 1>
-                <cfset new_id = findid.new_id>
-            </cfif>
 
 <!--- Sanitize the label --->
             <cfset var new_label_new = Replace(new_label, "'", "", "All")>
@@ -817,13 +832,7 @@ AND p.userid=<cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#"
         <cfset totalSelected = reportQuery.recordCount>
 
 <!--- Loop through the query results and insert data into reportitems --->
-        <cfloop query="reportQuery">
-            <cfset i++>
-            <cfset var new_label = reportQuery.label>
-            <cfset var new_itemValueInt = reportQuery.totals>
-            <cfset var new_itemDataset = reportQuery.itemDataset>
-
-<!--- Find the associated ID --->
+<!--- PERF: Hoisted out of loop — query is invariant (same userid+reportid every iteration) --->
             <cfquery name="findIdQuery">
                 SELECT r.ID AS new_ID
                 FROM reports_user r
@@ -836,6 +845,13 @@ AND p.userid=<cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#"
             <cfif findIdQuery.recordCount EQ 1>
                 <cfset new_id = findIdQuery.new_ID>
             </cfif>
+
+        <cfloop query="reportQuery">
+            <cfset i++>
+            <cfset var new_label = reportQuery.label>
+            <cfset var new_itemValueInt = reportQuery.totals>
+            <cfset var new_itemDataset = reportQuery.itemDataset>
+
 
 <!--- Sanitize the label --->
             <cfset var new_label_new = Replace(new_label, "'", "", "All")>
@@ -906,13 +922,7 @@ AND p.userid=<cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#"
         <cfset resultSummary.totalSelected = report_11.recordCount>
 
 <!--- Loop through results --->    
-        <cfloop query="report_11">
-            <cfset i++>
-            <cfset var new_label = report_11.label>
-            <cfset var new_itemValueInt = report_11.totals>
-            <cfset var new_itemDataset = report_11.itemDataset>
-
-<!--- Find existing ID for report item --->    
+<!--- PERF: Hoisted out of loop — query is invariant (same userid+reportid every iteration) --->
             <cfquery name="findid">
                 SELECT r.ID AS new_id
                 FROM reports_user r
@@ -922,9 +932,16 @@ AND p.userid=<cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#"
             </cfquery>
 
 <cfset var new_id = 0>
-            <cfif findid.recordCount EQ 1>
+            <cfif findid.recordcount EQ 1>
                 <cfset new_id = findid.new_id>
             </cfif>
+
+        <cfloop query="report_11">
+            <cfset i++>
+            <cfset var new_label = report_11.label>
+            <cfset var new_itemValueInt = report_11.totals>
+            <cfset var new_itemDataset = report_11.itemDataset>
+
 
 <!--- Insert report item --->    
             <cfquery name="Insert_ReportItems" result="insertResult">
@@ -991,13 +1008,7 @@ AND p.userid=<cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#"
         <cfset resultSummary.totalSelected = report_12.recordCount>
 
 <!--- Loop through results --->    
-        <cfloop query="report_12">
-            <cfset i++>
-            <cfset var new_label = report_12.label>
-            <cfset var new_itemValueInt = report_12.totals>
-            <cfset var new_itemDataset = report_12.itemDataset>
-
-<!--- Find existing ID for report item --->    
+<!--- PERF: Hoisted out of loop — query is invariant (same userid+reportid every iteration) --->
             <cfquery name="findid">
                 SELECT r.ID AS new_id
                 FROM reports_user r
@@ -1007,9 +1018,16 @@ AND p.userid=<cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#"
             </cfquery>
 
 <cfset var new_id = 0>
-            <cfif findid.recordCount EQ 1>
+            <cfif findid.recordcount EQ 1>
                 <cfset new_id = findid.new_id>
             </cfif>
+
+        <cfloop query="report_12">
+            <cfset i++>
+            <cfset var new_label = report_12.label>
+            <cfset var new_itemValueInt = report_12.totals>
+            <cfset var new_itemDataset = report_12.itemDataset>
+
 
 <!--- Sanitize label --->
             <cfset var new_label_new = Replace(new_label, "'", "", "All")>
@@ -1077,24 +1095,26 @@ AND p.userid=<cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#"
         <cfset resultSummary.totalSelected = report_13.recordCount>
 
 <!--- Loop through the query results --->
-        <cfloop query="report_13">
-            <cfset i++>
-            <cfset var new_label = report_13.label>
-            <cfset var new_itemValueInt = report_13.totals>
-            <cfset var new_itemDataset = report_13.itemDataset>
-
-<!--- Find or create the report item ID --->
+<!--- PERF: Hoisted out of loop — query is invariant (same userid+reportid every iteration) --->
             <cfquery name="findid">
                 SELECT r.ID AS new_id
                 FROM reports_user r
-                WHERE r.userid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#">
-                AND r.reportid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#new_reportid#">
+                WHERE 
+                    r.userid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#">
+                    AND r.reportid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#new_reportid#">
             </cfquery>
 
 <cfset var new_id = 0>
             <cfif findid.recordcount EQ 1>
                 <cfset new_id = findid.new_id>
             </cfif>
+
+        <cfloop query="report_13">
+            <cfset i++>
+            <cfset var new_label = report_13.label>
+            <cfset var new_itemValueInt = report_13.totals>
+            <cfset var new_itemDataset = report_13.itemDataset>
+
 
 <!--- Sanitize the label --->
             <cfset var new_label_new = Replace(new_label, "'", "", "All")>
@@ -1161,6 +1181,20 @@ AND p.userid=<cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#"
         <cfset resultSummary.totalSelected = report_17.recordCount>
 
 <!--- Loop through report data ---> 
+<!--- PERF: Hoisted out of loop — query is invariant (same userid+reportid every iteration) --->
+            <cfquery name="findid">
+                SELECT r.ID AS new_id
+                FROM reports_user r
+                WHERE 
+                    r.userid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#">
+                    AND r.reportid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#new_reportid#">
+            </cfquery>
+
+<cfset var new_id = 0>
+            <cfif findid.recordcount EQ 1>
+                <cfset new_id = findid.new_id>
+            </cfif>
+
         <cfloop query="report_17">
             <!--- Increment order number ---> 
             <cfset i++>
@@ -1170,20 +1204,6 @@ AND p.userid=<cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#"
             <cfset var new_itemValueInt = report_17.totals>
             <cfset var new_itemDataset = report_17.itemDataset>
 
-<!--- Find existing ID for the report item ---> 
-            <cfquery name="findid">
-                SELECT r.ID AS new_id
-                FROM reports_user r
-                WHERE 
-                    r.userid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#">
-                    AND r.reportid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#new_reportid#">
-            </cfquery>
-
-<!--- Handle missing ID ---> 
-            <cfset var new_id = 0>
-            <cfif findid.recordcount EQ 1>
-                <cfset new_id = findid.new_id>
-            </cfif>
 
 <!--- Sanitize label ---> 
             <cfset var new_label_new = Replace(new_label, "'", "", "All")>
@@ -1293,24 +1313,25 @@ SELECT
         <cfset resultSummary.totalSelected = report_18.recordCount>
 
 <!--- Loop through the results and insert report items --->
+<!--- PERF: Hoisted out of loop — query is invariant (same userid+reportid every iteration) --->
+            <cfquery name="findid">
+                SELECT r.ID AS new_id
+                FROM reports_user r
+                WHERE 
+                    r.userid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#">
+                    AND r.reportid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#new_reportid#">
+            </cfquery>
+
+<cfset var new_id = 0>
+            <cfif findid.recordcount EQ 1>
+                <cfset new_id = findid.new_id>
+            </cfif>
+
         <cfloop query="report_18">
             <cfset i = i + 1>
             <cfset var new_label = report_18.label>
             <cfset var new_itemValueInt = report_18.totals>
             <cfset var new_itemDataset = report_18.itemDataset>
-
-<!--- Find or create report item ID --->
-            <cfquery name="findid">
-                SELECT r.ID AS new_id
-                FROM reports_user r
-                WHERE r.userid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#">
-                AND r.reportid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#new_reportid#">
-            </cfquery>
-
-<cfset var new_id = 0>
-            <cfif findid.recordcount eq 1>
-                <cfset new_id = findid.new_id>
-            </cfif>
 
 <!--- Sanitize the label --->
             <cfset var new_label_new = Replace(new_label, "'", "", "All")>

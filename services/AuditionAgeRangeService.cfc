@@ -3,9 +3,10 @@
 <cffunction output="false" name="SELaudageranges" access="public" returntype="query">
         <cfargument name="isDeleted" type="boolean" required="true">
 
-<cfquery name="result">
-            SELECT rangeid, rangename 
-            FROM audageranges 
+<!--- PERF: Age ranges rarely change; cache for 60 minutes. --->
+<cfquery name="result" cachedwithin="#createTimeSpan(0,1,0,0)#">
+            SELECT rangeid, rangename
+            FROM audageranges
             WHERE isdeleted = <cfqueryparam value="#arguments.isDeleted#" cfsqltype="CF_SQL_BIT">
             ORDER BY rangeid
         </cfquery>

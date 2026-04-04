@@ -76,9 +76,10 @@
     <cfargument name="userid" type="numeric" required="true">
     <cfargument name="isAuditionModule" type="boolean" required="true">
 
-<cfquery name="result">
-        SELECT eventtypename 
-        FROM eventtypes_user 
+<!--- PERF: Event type list; cache for 10 minutes. --->
+<cfquery name="result" cachedwithin="#createTimeSpan(0,0,10,0)#">
+        SELECT eventtypename
+        FROM eventtypes_user
         WHERE userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER" />
         <cfif arguments.isAuditionModule>
             AND eventtypename <> 'Audition'
@@ -92,10 +93,11 @@
 <cffunction output="false" name="SELeventtypes_user_24486" access="public" returntype="query">
     <cfargument name="userid" type="numeric" required="true">
 
-<cfquery name="result">
-        SELECT eventtypename 
-        FROM eventtypes_user 
-        WHERE userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER"> 
+<!--- PERF: Event type list; cache for 10 minutes. --->
+<cfquery name="result" cachedwithin="#createTimeSpan(0,0,10,0)#">
+        SELECT eventtypename
+        FROM eventtypes_user
+        WHERE userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
         ORDER BY eventtypename
     </cfquery>
 
@@ -105,19 +107,20 @@
 <cffunction output="false" name="SELeventtypes_user_24619" access="public" returntype="query">
     <cfargument name="userId" type="numeric" required="true">
 
-<cfquery name="result">
-        SELECT 
-            id, 
-            eventtypename, 
-            eventtypedescription, 
-            recordname, 
-            iscustom, 
-            eventtypecolor 
-        FROM 
-            eventtypes_user 
-        WHERE 
-            userid = <cfqueryparam value="#arguments.userId#" cfsqltype="CF_SQL_INTEGER"> 
-        ORDER BY 
+<!--- PERF: Event types change infrequently; cache for 10 minutes. --->
+<cfquery name="result" cachedwithin="#createTimeSpan(0,0,10,0)#">
+        SELECT
+            id,
+            eventtypename,
+            eventtypedescription,
+            recordname,
+            iscustom,
+            eventtypecolor
+        FROM
+            eventtypes_user
+        WHERE
+            userid = <cfqueryparam value="#arguments.userId#" cfsqltype="CF_SQL_INTEGER">
+        ORDER BY
             eventtypename
     </cfquery>
 
@@ -127,19 +130,20 @@
 <cffunction output="false" name="SELeventtypes_user_24661" access="public" returntype="query">
     <cfargument name="userid" type="numeric" required="true">
 
-<cfquery name="result">
-        SELECT 
-            id, 
-            eventtypename, 
-            eventtypedescription, 
-            recordname, 
-            iscustom, 
-            eventtypecolor 
-        FROM 
-            eventtypes_user 
-        WHERE 
-            userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER"> 
-        ORDER BY 
+<!--- PERF: Event type list; cache for 10 minutes. --->
+<cfquery name="result" cachedwithin="#createTimeSpan(0,0,10,0)#">
+        SELECT
+            id,
+            eventtypename,
+            eventtypedescription,
+            recordname,
+            iscustom,
+            eventtypecolor
+        FROM
+            eventtypes_user
+        WHERE
+            userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
+        ORDER BY
             eventtypename
     </cfquery>
 

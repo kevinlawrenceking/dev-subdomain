@@ -13,6 +13,8 @@
     dateformatid = form.dateformatid,
     tzid = form.tzid
 )>
+<!--- PERF: Bust fetchUsers session cache so next request picks up the changes --->
+<cfset session.bustUserCache = true>
 <cfoutput>
     <p>Rows Updated: #rowsAffected#</p>
 </cfoutput>

@@ -1,4 +1,4 @@
-<cfset notificationService = createObject("component", "services.NotificationService")>
+<cfset notificationService = request.svc("NotificationService")>
 <cfset notificationService.UPDfunotifications_23818(
     new_notstartdate = new_notstartdate, 
     notid = notsnext.notid

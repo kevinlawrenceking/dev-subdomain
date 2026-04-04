@@ -1,4 +1,4 @@
-<cfset contactItemService = createObject("component", "services.ContactItemService")>
+<cfset contactItemService = request.svc("ContactItemService")>
 
 <!--- Define the address struct dynamically --->
 <cfparam name="contactid" default="0">

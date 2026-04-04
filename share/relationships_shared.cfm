@@ -59,7 +59,7 @@
                         <div class="card">
                             <div class="card-body">
                                 <!--- Create service object --->
-                                <cfset contactItemService = createObject("component", "services.ContactItemService").init() />
+                                <cfset contactItemService = request.svc("ContactItemService").init() />
                                 
                                 <!--- Get relationships for user --->
                                 <cfset relationships = contactItemService.getContactsByUserId(request.shareUserID, true) />

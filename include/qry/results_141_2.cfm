@@ -1,2 +1,2 @@
-<cfset contactItemService = createObject("component", "services.ContactItemService")>
+<cfset contactItemService = request.svc("ContactItemService")>
 <cfset results = contactItemService.REScontactitems(userid=userid, uploadid=uploadid)>

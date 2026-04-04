@@ -19,7 +19,7 @@ Services: NotificationService for handling notification operations and batch pro
 <cfparam name="quoteoftheday" default="" />
 
 <!--- Initialize Services --->
-<cfset notificationService = createObject("component", "services.NotificationService") />
+<cfset notificationService = request.svc("NotificationService") />
 
 <!--- Batch Notification Processing Logic --->
 <cfif pgaction is "batch" AND batchlist is not "0">

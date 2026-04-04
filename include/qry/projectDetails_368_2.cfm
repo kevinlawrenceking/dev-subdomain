@@ -1,4 +1,4 @@
-<cfset auditionProjectService = createObject("component", "services.AuditionProjectService")>
+<cfset auditionProjectService = request.svc("AuditionProjectService")>
 <cfset projectDetails = auditionProjectService.DETaudprojects_24543(audprojectID=audprojectID)>
 
 <cfset current_queryResult = projectDetails />

@@ -1,4 +1,4 @@
-<cfset eventService = createObject("component", "services.EventService")>
+<cfset eventService = request.svc("EventService")>
 
 <!--- Ensure required variables are defined --->
 <cfif NOT structKeyExists(variables, "audroleid") OR NOT isNumeric(audroleid)>

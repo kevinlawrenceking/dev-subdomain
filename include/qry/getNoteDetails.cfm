@@ -1,2 +1,2 @@
-<cfset notesService = createObject("component", "services.NoteService")>
+<cfset notesService = request.svc("NoteService")>
 <cfset notes = notesService.SELnoteslog(noteid=noteid)>

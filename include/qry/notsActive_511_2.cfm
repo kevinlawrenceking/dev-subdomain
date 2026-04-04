@@ -1,2 +1,2 @@
-<cfset notificationService = createObject("component", "services.NotificationService")>
+<cfset notificationService = request.svc("NotificationService")>
 <cfset notsActivex = notificationService.SELfunotifications_24709(userid=userid)>

@@ -1,4 +1,4 @@
-<cfset eventService = createObject("component", "services.EventService")>
+<cfset eventService = request.svc("EventService")>
 <cfset events = eventService.SELevents_24546(audroleid=audroleid)>
 
 

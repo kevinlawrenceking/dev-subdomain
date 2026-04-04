@@ -1,4 +1,4 @@
-<cfset contactService = createObject("component", "services.ContactService")>
+<cfset contactService = request.svc("ContactService")>
 
 <cfset qFiltered = contactService.getFilteredContactsByEvent(
     contacts_table = contacts_table,

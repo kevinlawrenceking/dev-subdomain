@@ -1,4 +1,4 @@
-<cfset ticketService = createObject("component", "services.TicketService")>
+<cfset ticketService = request.svc("TicketService")>
 <cfset ticketService.UPDtickets_24335(
     ticketId = recid,
     userFirstName = uu.userfirstname,

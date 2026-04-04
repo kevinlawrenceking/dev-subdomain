@@ -450,9 +450,38 @@ x</button>
     </div>
 </div>
 
+<!--- PERF: Batch-fetch all notification data for active systems in 2 queries instead of 2*N. --->
+<!--- The original N+1 pattern ran notsactive_510_1.cfm and notsInactive_510_2.cfm per sysActive row. --->
+<cfset suidList = valueList(sysActive.suid)>
+
+<cfif listLen(suidList)>
+    <cfset notificationService = request.svc("NotificationService")>
+    <cfset allNotsActive = notificationService.SELfunotifications_batch(
+        currentid = currentid,
+        suidList = suidList,
+        userid = userid,
+        hide_completed = hide_completed
+    )>
+
+    <cfset notificationStatusService = createObject("component", "services.NotificationStatusService")>
+    <cfset allNotsInactive = notificationStatusService.SELnotstatuses_batch(
+        currentid = currentid,
+        suidList = suidList,
+        userid = userid
+    )>
+<cfelse>
+    <cfset allNotsActive = queryNew("notID,actionID,userID,suID,notTimeStamp,notStartDate,notEndDate,notStatus,notNotes,systemID,contactID,suTimeStamp,suStartDate,suEndDate,suStatus,suNotes,actionNo,actionDetails,actionTitle,navToURL,actionDaysNo,actionDaysRecurring,actionNotes,actionInfo,actionlinkid,BtnName,ActionLinkURL,endlink,targetlink,ispastdue,checktype,delstart,delend,status_color")>
+    <cfset allNotsInactive = queryNew("notID,actionID,userID,suID,notTimeStamp,notStartDate,notEndDate,notStatus,notNotes,systemID,contactID,suTimeStamp,suStartDate,suEndDate,suStatus,suNotes,actionNo,actionDetails,actionTitle,navToURL,actionDaysNo,actionDaysRecurring,actionNotes,actionInfo,actionlinkid,BtnName,ActionLinkURL,endlink,targetlink,ispastdue,checktype,delstart,delend,status_color")>
+</cfif>
+
 <cfloop query="sysactive">
-    <cfinclude template="/include/qry/notsactive_510_1.cfm" />
-    <cfinclude template="/include/qry/notsInactive_510_2.cfm" />
+    <!--- PERF: Filter batch results by suid using query-of-queries instead of per-iteration DB calls. --->
+    <cfquery name="notsActive" dbtype="query">
+        SELECT * FROM allNotsActive WHERE suID = <cfqueryparam value="#sysActive.suid#" cfsqltype="CF_SQL_INTEGER">
+    </cfquery>
+    <cfquery name="notsInactive" dbtype="query">
+        SELECT * FROM allNotsInactive WHERE suID = <cfqueryparam value="#sysActive.suid#" cfsqltype="CF_SQL_INTEGER">
+    </cfquery>
     
     <cfloop query="notsactive">
         <cfoutput>

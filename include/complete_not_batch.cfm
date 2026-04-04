@@ -47,6 +47,14 @@
 
 <cfset notEndDate = dateFormat(now(), 'yyyy-mm-dd') />
 
+<!--- PERF: Batch-fetch all notification details in one query instead of N queries --->
+<cfif len(trim(notids))>
+  <cfset notificationService = request.svc("NotificationService")>
+  <cfset allNotificationDetails = notificationService.GetNotificationsByIDList(notids=notids)>
+<cfelse>
+  <cfset allNotificationDetails = queryNew("contactid,userid,notid,systemid,newsystemscope,actionid,newsuid,actionDaysRecurring,uniquename,IsUnique,new_contactname")>
+</cfif>
+
 <!--- Process each notification --->
 <cfloop array="#notidList#" index="notid">
   <cftry>
@@ -58,7 +66,10 @@
     </cfif>
 
     <!--- Get Notification Details --->
-    <cfinclude template="/include/qry/getNotificationByID.cfm" />
+    <!--- Filter batch-fetched results for this notification --->
+    <cfquery name="NotificationDetails" dbtype="query">
+        SELECT * FROM allNotificationDetails WHERE notid = <cfqueryparam value="#notid#" cfsqltype="CF_SQL_INTEGER">
+    </cfquery>
 
     <cfif NotificationDetails.recordcount EQ 0>
       <cfset arrayAppend(results.errors, "Notification #notid# not found") />

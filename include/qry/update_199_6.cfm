@@ -1,4 +1,4 @@
-<cfset contactItemService = createObject("component", "services.ContactItemService")>
+<cfset contactItemService = request.svc("ContactItemService")>
 
 <!--- Initialize an empty structure to hold parameters --->
 <cfset args = {

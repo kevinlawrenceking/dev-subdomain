@@ -782,4 +782,117 @@ ORDER BY
 <cfreturn qNotifications>
     </cffunction>
 
+
+<cffunction name="GetNotificationsByIDList" access="public" output="false" returntype="query">
+    <cfargument name="notids" type="string" required="true">
+
+    <cfif NOT len(trim(arguments.notids))>
+        <cfset var emptyQuery = queryNew("contactid,userid,notid,systemid,newsystemscope,actionid,newsuid,actionDaysRecurring,uniquename,IsUnique,new_contactname")>
+        <cfreturn emptyQuery>
+    </cfif>
+
+    <cfquery name="result">
+        SELECT
+            su.contactid,
+            su.userid,
+            n.notid,
+            s.systemid,
+            s.systemscope AS newsystemscope,
+            n.actionid,
+            su.suID AS newsuid,
+            COALESCE(au.actionDaysRecurring, 0) AS actionDaysRecurring,
+            a.uniquename,
+            a.IsUnique,
+            u.recordname AS new_contactname
+        FROM
+            funotifications n
+        INNER JOIN
+            fusystemusers su ON su.suid = n.suid
+        INNER JOIN
+            fusystems s ON s.systemID = su.systemID
+        INNER JOIN
+            fuactions a ON a.actionid = n.actionid
+        LEFT JOIN
+            actionusers au ON au.actionid = n.actionid AND au.userid = n.userid
+        INNER JOIN
+            taousers u ON u.userid = n.userid
+        WHERE
+            n.notID IN (<cfqueryparam value="#arguments.notids#" cfsqltype="CF_SQL_INTEGER" list="true">)
+            AND n.isdeleted = 0
+    </cfquery>
+
+    <cfreturn result>
+
+</cffunction>
+
+<!--- PERF: Batch version of SELfunotifications_24706 to eliminate N+1 queries. --->
+<!--- Accepts a comma-delimited list of suIDs and returns all matching rows in one round-trip. --->
+<cffunction output="false" name="SELfunotifications_batch" access="public" returntype="query">
+        <cfargument name="currentid" type="numeric" required="true">
+        <cfargument name="suidList" type="string" required="true">
+        <cfargument name="userid" type="numeric" required="true">
+        <cfargument name="hide_completed" type="string" required="true">
+
+        <cfif NOT len(trim(arguments.suidList))>
+            <cfreturn queryNew("notID,actionID,userID,suID,notTimeStamp,notStartDate,notEndDate,notStatus,notNotes,systemID,contactID,suTimeStamp,suStartDate,suEndDate,suStatus,suNotes,actionNo,actionDetails,actionTitle,navToURL,actionDaysNo,actionDaysRecurring,actionNotes,actionInfo,actionlinkid,BtnName,ActionLinkURL,endlink,targetlink,ispastdue,checktype,delstart,delend,status_color")>
+        </cfif>
+
+<cfquery result="result" name="notsActive">
+            SELECT
+                n.notID,
+                n.actionID,
+                n.userID,
+                n.suID,
+                n.notTimeStamp,
+                n.notStartDate,
+                n.notEndDate,
+                n.notStatus,
+                n.notNotes,
+                f.systemID,
+                f.contactID,
+                f.suTimeStamp,
+                f.suStartDate,
+                f.suEndDate,
+                f.suStatus,
+                f.suNotes,
+                a.actionID,
+                a.actionNo,
+                a.actionDetails,
+                a.actionTitle,
+                a.navToURL,
+                au.actionDaysNo,
+                au.actionDaysRecurring,
+                a.actionNotes,
+                a.actionInfo,
+                l.actionlinkid,
+                l.BtnName,
+                l.ActionLinkURL,
+                l.endlink,
+                l.targetlink,
+                n.ispastdue,
+                ns.checktype,
+                ns.delstart,
+                ns.delend,
+                ns.status_color
+            FROM funotifications n
+            INNER JOIN fusystemusers f ON f.suID = n.suID
+            INNER JOIN fusystems s ON s.systemID = f.systemID
+            INNER JOIN fuactions a ON a.actionID = n.actionID
+            INNER JOIN actionusers au ON a.actionID = au.actionID
+            INNER JOIN fuActionLinks l ON l.actionlinkid = a.actionlinkid
+            INNER JOIN notstatuses ns ON ns.notstatus = n.notStatus
+            WHERE f.contactID = <cfqueryparam value="#arguments.currentid#" cfsqltype="cf_sql_integer">
+              AND f.suID IN (<cfqueryparam value="#arguments.suidList#" cfsqltype="cf_sql_integer" list="true">)
+              AND au.userID = <cfqueryparam value="#arguments.userid#" cfsqltype="cf_sql_integer">
+              AND n.notStartDate IS NOT NULL
+              AND n.isdeleted = 0
+              AND DATE(n.notStartDate) <= <cfqueryparam value="#DateFormat(Now(), 'yyyy-mm-dd')#" cfsqltype="cf_sql_date">
+            <cfif arguments.hide_completed is "Y">
+              AND n.notStatus NOT IN ('Completed', 'Skipped')
+            </cfif>
+            ORDER BY FIELD(n.notStatus, 'Pending', 'Completed', 'Skipped'), n.notEndDate
+        </cfquery>
+
+<cfreturn notsActive>
+    </cffunction>
 </cfcomponent>

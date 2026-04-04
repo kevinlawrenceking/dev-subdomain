@@ -1,4 +1,4 @@
-<cfset noteService = createObject("component", "services.NoteService")>
+<cfset noteService = request.svc("NoteService")>
 <cfset noteService.INSnoteslog_23966(
     userid = Val(userid),
     contactid = Val(rcontactid),

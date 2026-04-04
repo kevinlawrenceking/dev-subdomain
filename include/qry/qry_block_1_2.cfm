@@ -1,4 +1,4 @@
-<cfset UserService = createObject("component", "services.UserService")>
+<cfset UserService = request.svc("UserService")>
 
 <cfset UserService.UPDtaousers_23945(
     userid=userid,
@@ -13,3 +13,5 @@
     region_id=form.region_id,
     countryid=form.countryid
 )>
+<!--- PERF: Bust fetchUsers session cache so next request picks up the changes --->
+<cfset session.bustUserCache = true>

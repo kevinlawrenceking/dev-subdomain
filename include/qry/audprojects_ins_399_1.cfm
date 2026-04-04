@@ -1,4 +1,4 @@
-<cfset auditionProjectService = createObject("component", "services.AuditionProjectService")>
+<cfset auditionProjectService = request.svc("AuditionProjectService")>
 
 <Cfif #new_audsubcatid# is "">
 <Cfset new_audsubcatid = "0" />

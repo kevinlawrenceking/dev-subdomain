@@ -1,4 +1,4 @@
-<cfset eventService = createObject("component", "services.EventService")>
+<cfset eventService = request.svc("EventService")>
 <cfset eventService.UPDevents_24540(
     new_eventLocation = trim(new_eventLocation),
     new_audlocadd1 = trim(new_audlocadd1),

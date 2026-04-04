@@ -1,4 +1,4 @@
-<cfset eventService = createObject("component", "services.EventService")>
+<cfset eventService = request.svc("EventService")>
 <cfif new_region_id EQ "">
     <cfset new_region_id = 0>
 </cfif>

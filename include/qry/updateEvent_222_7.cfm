@@ -1,4 +1,4 @@
-<cfset eventService = createObject("component", "services.EventService")>
+<cfset eventService = request.svc("EventService")>
 <cfset eventService.UPDevents_24108(
     eventId = findEvent.eventid,
     newEventStart = new_eventStart,

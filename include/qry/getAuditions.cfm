@@ -1,4 +1,4 @@
-<cfset auditionProjectService = createObject("component", "services.AuditionProjectService")>
+<cfset auditionProjectService = request.svc("AuditionProjectService")>
 <cfset results = auditionProjectService.getAuditions(
     userid = userid,
     byimport = byimport,

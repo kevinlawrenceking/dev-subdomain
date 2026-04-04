@@ -1,4 +1,4 @@
-<cfset contactService = createObject("component", "services.ContactService")>
+<cfset contactService = request.svc("ContactService")>
 
 <!--- Simulate form submission or variable inputs --->
 <cfparam name="fname" default="">

@@ -1,4 +1,4 @@
-<cfset eventService = createObject("component", "services.EventService")>
+<cfset eventService = request.svc("EventService")>
 <cfset eventService.INSevents_23790(
     new_eventtitle=new_eventtitle,
     new_eventdescription=new_eventdescription,

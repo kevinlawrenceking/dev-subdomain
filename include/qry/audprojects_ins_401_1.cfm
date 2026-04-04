@@ -1,4 +1,4 @@
-<cfset AuditionProjectService = createObject("component", "services.AuditionProjectService")>
+<cfset AuditionProjectService = request.svc("AuditionProjectService")>
 
 <!--- Default handling for fetch variables --->
 <cfif NOT len(trim(new_projName))><cfset new_projName = ""></cfif>

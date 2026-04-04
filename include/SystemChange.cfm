@@ -1,12 +1,12 @@
 <!--- Get system user details ---> 
-<cfset systemUserService = createObject("component", "services.SystemUserService")>
+<cfset systemUserService = request.svc("SystemUserService")>
 <cfset oldSystemDetails = systemUserService.getOldSystemDetails(suid=suid)>
 
 <cfset old_systemscope = oldSystemDetails.systemscope>
 <cfset old_systemtype = oldSystemDetails.systemtype>
 
 <!--- Get contact tag status --->
-<cfset contactItemService = createObject("component", "services.ContactItemService")>
+<cfset contactItemService = request.svc("ContactItemService")>
 <cfset new_systemscope = contactItemService.getContactTagStatus(contactid=contactid, userid=userid)>
 
 <!--- Part c--->

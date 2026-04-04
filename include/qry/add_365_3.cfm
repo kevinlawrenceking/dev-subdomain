@@ -1,6 +1,6 @@
 <!--- don't add 
 
-<cfset eventService = createObject("component", "services.EventService")>
+<cfset eventService = request.svc("EventService")>
 <cfset new_eventid = eventService.INSevents_24528(
     new_projname = new_projname,
     new_projDescription = new_projDescription,

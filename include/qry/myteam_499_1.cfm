@@ -1,2 +1,2 @@
-<cfset contactService = createObject("component", "services.ContactService")>
+<cfset contactService = request.svc("ContactService")>
 <cfset myteam = contactService.SELcontactdetails_24683(userId=userid)>

@@ -24,8 +24,9 @@
 <cffunction output="false" name="SELcountries_24637" access="public" returntype="query">
     <cfargument name="countryIds" type="array" required="true">
 
-<cfquery name="result">
-        SELECT countryid, countryname FROM countries 
+<!--- PERF: Countries list rarely changes; cache for 24 hours. --->
+<cfquery name="result" cachedwithin="#createTimeSpan(1,0,0,0)#">
+        SELECT countryid, countryname FROM countries
         WHERE isdeleted = 0 and countryid in (select countryid from regions)
         ORDER BY countryname
     </cfquery>

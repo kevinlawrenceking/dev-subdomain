@@ -1,4 +1,4 @@
-<cfset noteService = createObject("component", "services.NoteService")>
+<cfset noteService = request.svc("NoteService")>
 <cfset noteService.UPDnoteslog_23974(
     noteDetails = trim(noteDetails),
     new_noteText = trim(new_notetext),

@@ -1,2 +1,2 @@
-<cfset notificationService = createObject("component", "services.NotificationService")>
+<cfset notificationService = request.svc("NotificationService")>
 <cfset toastmenu = notificationService.SELnotifications_24351(userID=userid)>

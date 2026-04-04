@@ -1,2 +1,2 @@
-<cfset pageService = createObject("component", "services.PageService") />
+<cfset pageService = request.svc("PageService") />
 <cfset FindRefPage = pageService.SELpgpages_23912(ref_pgid=ref_pgid) />

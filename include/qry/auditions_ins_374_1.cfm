@@ -1,4 +1,4 @@
-<cfset eventService = createObject("component", "services.EventService")>
+<cfset eventService = request.svc("EventService")>
 
 <!--- Prepare required arguments --->
 <cfset eventArguments = {

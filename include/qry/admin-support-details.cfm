@@ -1,5 +1,5 @@
 <!--- This ColdFusion page fetches ticket details and ticket log information based on a given record ID. --->
-<cfset ticketService = createObject("component", "services.TicketService")>
+<cfset ticketService = request.svc("TicketService")>
 
 <!--- Fetch ticket details using the DETtickets_24767 function --->
 <cfset ticketDetails = ticketService.DETtickets_24767(recid = #recid#)>

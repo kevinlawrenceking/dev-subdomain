@@ -1,4 +1,4 @@
-<cfset eventService = createObject("component", "services.EventService")>
+<cfset eventService = request.svc("EventService")>
 
 <!--- Default handling for integers --->
 <cfif NOT len(trim(new_audRoleID))><cfset new_audRoleID = 0></cfif>

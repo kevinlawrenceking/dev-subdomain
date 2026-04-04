@@ -50,7 +50,8 @@
 
 <cffunction name="SELaudcategories_24033" access="public" returntype="query" output="false">
 
-<cfquery name="categories" result="result">
+<!--- PERF: Audition categories rarely change; cache for 60 minutes. --->
+<cfquery name="categories" result="result" cachedwithin="#createTimeSpan(0,1,0,0)#">
         SELECT audcatid, audcatname
         FROM audcategories
         WHERE isdeleted = 0
@@ -176,7 +177,8 @@
 
 <cfset var result = "" />
 
-<cfquery name="result"  >
+<!--- PERF: Audition categories rarely change; cache for 60 minutes. --->
+<cfquery name="result" cachedwithin="#createTimeSpan(0,1,0,0)#">
             SELECT audcatid, audcatname
             FROM audcategories
             WHERE isdeleted = <cfqueryparam value="#arguments.isDeleted#" cfsqltype="CF_SQL_BIT">
@@ -190,7 +192,8 @@
 
 <cfset var result = "">
 
-<cfquery name="result"  >
+<!--- PERF: Audition categories rarely change; cache for 60 minutes. --->
+<cfquery name="result" cachedwithin="#createTimeSpan(0,1,0,0)#">
             SELECT a.audcatid, a.audcatname
             FROM audcategories a
             WHERE a.isDeleted = <cfqueryparam value="#arguments.isDeleted#" cfsqltype="CF_SQL_BIT">

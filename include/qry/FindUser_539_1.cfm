@@ -1,2 +1,2 @@
-<cfset userService = createObject("component", "services.UserService")>
+<cfset userService = request.svc("UserService")>
 <cfset FindUser = userService.SELtaousers_24760(userEmail=GetAuthUser())>

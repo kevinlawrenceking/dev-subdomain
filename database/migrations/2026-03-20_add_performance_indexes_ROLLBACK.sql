@@ -8,10 +8,10 @@
 --        Each DROP INDEX uses IF EXISTS for idempotent execution.
 -- =============================================================================
 
--- GROUP 1: funotifications
-DROP INDEX IF EXISTS idx_funot_user_status_deleted ON funotifications;
-DROP INDEX IF EXISTS idx_funot_suid_status ON funotifications;
-DROP INDEX IF EXISTS idx_funot_action_user_suid ON funotifications;
+-- GROUP 1: funotifications_tbl
+DROP INDEX IF EXISTS idx_funot_user_status_deleted ON funotifications_tbl;
+DROP INDEX IF EXISTS idx_funot_suid_status ON funotifications_tbl;
+DROP INDEX IF EXISTS idx_funot_action_user_suid ON funotifications_tbl;
 
 -- GROUP 2: fusystemusers_tbl
 DROP INDEX IF EXISTS idx_fusu_contact_user_status ON fusystemusers_tbl;
@@ -32,12 +32,12 @@ DROP INDEX IF EXISTS idx_ev_role_deleted_status ON events_tbl;
 -- GROUP 7: audroles
 DROP INDEX IF EXISTS idx_ar_project_deleted ON audroles;
 
--- GROUP 8: reports_user / reportitems
-DROP INDEX IF EXISTS idx_ru_user_report ON reports_user;
+-- GROUP 8: reports_user_tbl / reportitems
+DROP INDEX IF EXISTS idx_ru_user_report ON reports_user_tbl;
 DROP INDEX IF EXISTS idx_ri_user_id ON reportitems;
 
--- GROUP 9: actionusers
-DROP INDEX IF EXISTS idx_au_action_user ON actionusers;
+-- GROUP 9: actionusers_tbl
+DROP INDEX IF EXISTS idx_au_action_user ON actionusers_tbl;
 
 -- Cleanup helper procedure if it was left behind
 DROP PROCEDURE IF EXISTS AddIndexIfNotExists;

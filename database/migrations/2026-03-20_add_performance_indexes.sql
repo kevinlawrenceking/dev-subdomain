@@ -47,17 +47,17 @@ END //
 DELIMITER ;
 
 -- =============================================================================
--- GROUP 1: funotifications (notification engine - critical path)
+-- GROUP 1: funotifications_tbl (notification engine - critical path)
 -- =============================================================================
 
 -- Supports: notification dashboard queries (WHERE userid + notstatus + isdeleted)
-CALL AddIndexIfNotExists('funotifications', 'idx_funot_user_status_deleted', '(userid, notstatus, isdeleted)');
+CALL AddIndexIfNotExists('funotifications_tbl', 'idx_funot_user_status_deleted', '(userid, notstatus, isdeleted)');
 
 -- Supports: getNotificationsBySystem (WHERE suid + notstatus)
-CALL AddIndexIfNotExists('funotifications', 'idx_funot_suid_status', '(suid, notstatus)');
+CALL AddIndexIfNotExists('funotifications_tbl', 'idx_funot_suid_status', '(suid, notstatus)');
 
 -- Supports: notification lookup by action+user+system (JOIN patterns in complete_not_batch)
-CALL AddIndexIfNotExists('funotifications', 'idx_funot_action_user_suid', '(actionid, userid, suid)');
+CALL AddIndexIfNotExists('funotifications_tbl', 'idx_funot_action_user_suid', '(actionid, userid, suid)');
 
 -- =============================================================================
 -- GROUP 2: fusystemusers_tbl (relationship system enrollments)
@@ -105,21 +105,21 @@ CALL AddIndexIfNotExists('events_tbl', 'idx_ev_role_deleted_status', '(audroleid
 CALL AddIndexIfNotExists('audroles', 'idx_ar_project_deleted', '(audprojectid, isdeleted)');
 
 -- =============================================================================
--- GROUP 8: reports_user / reportitems (report refresh - critical N+1 path)
+-- GROUP 8: reports_user_tbl / reportitems (report refresh - critical N+1 path)
 -- =============================================================================
 
 -- Supports: findid query in ReportsRefreshService loop (WHERE userid + reportid)
-CALL AddIndexIfNotExists('reports_user', 'idx_ru_user_report', '(userid, reportid)');
+CALL AddIndexIfNotExists('reports_user_tbl', 'idx_ru_user_report', '(userid, reportid)');
 
 -- Supports: reportitems lookup (WHERE userid + ID)
 CALL AddIndexIfNotExists('reportitems', 'idx_ri_user_id', '(userid, ID)');
 
 -- =============================================================================
--- GROUP 9: actionusers (per-user action overrides - JOIN target)
+-- GROUP 9: actionusers_tbl (per-user action overrides - JOIN target)
 -- =============================================================================
 
 -- Supports: LEFT JOIN in notification queries (ON actionid + userid)
-CALL AddIndexIfNotExists('actionusers', 'idx_au_action_user', '(actionid, userid)');
+CALL AddIndexIfNotExists('actionusers_tbl', 'idx_au_action_user', '(actionid, userid)');
 
 -- =============================================================================
 -- Cleanup: drop the helper procedure

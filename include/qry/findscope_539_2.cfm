@@ -1,2 +1,2 @@
-<cfset contactItemService = createObject("component", "services.ContactItemService")>
+<cfset contactItemService = request.svc("ContactItemService")>
 <cfset findscope = contactItemService.SELcontactitems_24761(contactid=contactid)>

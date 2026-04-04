@@ -1,2 +1,2 @@
-<cfset auditionProjectService = createObject("component", "services.AuditionProjectService") />
+<cfset auditionProjectService = request.svc("AuditionProjectService") />
 <cfset findproject = auditionProjectService.SELaudprojects_24085(audprojectid=audprojectid) />

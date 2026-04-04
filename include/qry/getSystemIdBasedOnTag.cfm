@@ -1,5 +1,5 @@
 <!--- Create an instance of the ContactService component --->
-<cfset ContactService = createObject("component", "services.ContactService")>
+<cfset ContactService = request.svc("ContactService")>
 
 <!--- Initialize the systemId to a default value --->
 <cfset systemId = 0>

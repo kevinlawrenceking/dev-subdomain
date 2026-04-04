@@ -14,7 +14,7 @@
 <cfparam name="form.new_pgid" default="0" />
 <cfparam name="form.new_esthours" default="0" />
 
-<cfset ticketService = createObject("component", "services.TicketService")>
+<cfset ticketService = request.svc("TicketService")>
 <cfset ticketService.UPDtickets(
     ticketid = form.ticketid,
     new_ticketname = form.new_ticketname,

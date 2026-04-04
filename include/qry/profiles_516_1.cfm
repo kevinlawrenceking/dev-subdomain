@@ -1,2 +1,2 @@
-<cfset contactItemService = createObject("component", "services.ContactItemService")>
+<cfset contactItemService = request.svc("ContactItemService")>
 <cfset profiles = contactItemService.SELcontactitems_24715(contactid=contactid, userid=userid)>

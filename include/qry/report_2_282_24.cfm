@@ -1,4 +1,4 @@
-<cfset auditionProjectService = createObject("component", "services.AuditionProjectService")>
+<cfset auditionProjectService = request.svc("AuditionProjectService")>
 <cfset report_2 = auditionProjectService.SELaudprojects_24251(
     rangestart = rangeselected.rangestart,
     rangeend = rangeselected.rangeend,

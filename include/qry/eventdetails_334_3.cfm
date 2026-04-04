@@ -1,4 +1,4 @@
-<cfset eventService = createObject("component", "services.EventService")>
+<cfset eventService = request.svc("EventService")>
 
 <!--- Ensure eventid is numeric before calling the service --->
 <cfif isNumeric(eventid) and eventid gt 0>

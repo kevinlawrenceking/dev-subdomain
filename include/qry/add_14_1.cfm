@@ -1,4 +1,4 @@
-<cfset eventService = createObject("component", "services.EventService")>
+<cfset eventService = request.svc("EventService")>
 
 <!--- Ensure endRecur is a valid date or set it to null if not --->
 <cfif NOT isDate(endRecur)>

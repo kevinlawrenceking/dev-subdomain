@@ -1,2 +1,2 @@
-<cfset projectService = createObject("component", "services.AuditionProjectService")>
+<cfset projectService = request.svc("AuditionProjectService")>
 <cfset projectDetails = projectService.DETaudprojects_24716(audprojectID=audprojectID)>

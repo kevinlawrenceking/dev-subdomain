@@ -1,2 +1,2 @@
-<cfset contactItemService = createObject("component", "services.ContactItemService")>
+<cfset contactItemService = request.svc("ContactItemService")>
 <cfset mylinks = contactItemService.SELcontactitems_24682(userContactID=userContactID)>

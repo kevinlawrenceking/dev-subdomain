@@ -1,2 +1,2 @@
-<cfset contactService = createObject("component", "services.ContactService")>
+<cfset contactService = request.svc("ContactService")>
 <cfset details = contactService.DETcontactdetails_24685(rcontactid=rcontactid)>

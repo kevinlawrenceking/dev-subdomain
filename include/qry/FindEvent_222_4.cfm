@@ -1,6 +1,6 @@
 
 
-<Cfset eventService = createObject("component", "services.EventService")>
+<Cfset eventService = request.svc("EventService")>
  
 <cfif NOT len(trim(new_eventStart))>
     <cfset new_eventStart = "1970-01-01">  

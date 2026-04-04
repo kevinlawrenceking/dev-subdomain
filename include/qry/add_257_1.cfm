@@ -1,4 +1,4 @@
-<cfset ticketService = createObject("component", "services.TicketService")>
+<cfset ticketService = request.svc("TicketService")>
 <cfset recid = ticketService.INStickets(
     new_verid = new_verid,
     new_ticketName = new_ticketName,

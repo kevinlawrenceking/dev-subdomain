@@ -1,4 +1,4 @@
-<cfset eventService = createObject("component", "services.EventService")>
+<cfset eventService = request.svc("EventService")>
 <cfset eventresults = eventService.RESevents_24660(
     userID = userid
 )>

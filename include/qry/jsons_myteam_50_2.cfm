@@ -1,2 +1,2 @@
-<cfset eventService = createObject("component", "services.EventService")>
+<cfset eventService = request.svc("EventService")>
 <cfset jsons_myteam = eventService.SELevents_23803(userId=userid)>

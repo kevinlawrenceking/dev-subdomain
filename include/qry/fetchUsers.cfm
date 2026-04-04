@@ -1,6 +1,16 @@
 <cfinclude template="/include/perfcount.cfm" />
-<cfset userService = createObject("component", "services.UserService")>
-<cfset userData = userService.getUserById(userID)>
+
+<!--- PERF: Session-cache the user data struct. Only hit the DB on first
+      request of the session or when a profile update sets the bust flag.
+      MIGRATE: In Go, this becomes a JWT claims payload or Redis-cached user struct. --->
+<cfif NOT structKeyExists(session, "cachedUserData")
+      OR (structKeyExists(session, "bustUserCache") AND session.bustUserCache)>
+    <cfset userService = request.svc("UserService")>
+    <cfset session.cachedUserData = userService.getUserById(userID)>
+    <cfset session.bustUserCache = false>
+</cfif>
+
+<cfset userData = session.cachedUserData>
 
 <!--- Session-specific values --->
 <cfset session.dateformatExample = userData.dateformatExample>

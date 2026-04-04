@@ -3,7 +3,7 @@
  <cfparam name="SuStartDate" default="#def_suStartDate#" />
 
 
-<cfset systemUserService = createObject("component", "services.SystemUserService")>
+<cfset systemUserService = request.svc("SystemUserService")>
 <cfset NewSUID = systemUserService.addfuSystemUsers(
     systemid = systemid,
     contactid = contactid,

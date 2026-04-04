@@ -1,4 +1,4 @@
-<cfset systemUserService = createObject("component", "services.SystemUserService")>
+<cfset systemUserService = request.svc("SystemUserService")>
 <cfset result = systemUserService.INSfusystemusers_24477(
     systemID = systemID,
     contactID = contactID,

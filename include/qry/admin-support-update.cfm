@@ -1,7 +1,7 @@
 <!--- This ColdFusion page fetches ticket details, statuses, types, priorities, active pages, users, and versions from various services. --->
 
 <!--- Fetch ticket details using the Ticket_det function --->
-<cfset ticketService = createObject("component", "services.TicketService")>
+<cfset ticketService = request.svc("TicketService")>
 <cfset ticketDetails = ticketService.DETtickets(recid = recid)>
 
 <!--- Fetch the ticket statuses using the SELticketstatuses function --->
@@ -17,12 +17,12 @@
 <cfset ticketPriorities = ticketPriorityService.SELticketpriority()>
 
 <!--- Fetch active pages using the pages_sel function from PageService --->
-<cfset pageService = createObject("component", "services.PageService")>
+<cfset pageService = request.svc("PageService")>
 <cfset activePages = pageService.pages_sel()>
 <cfset pages = pageService.pages_sel()>
 
 <!--- Fetch users using the users_sel function from UserService --->
-<cfset userService = createObject("component", "services.UserService")>
+<cfset userService = request.svc("UserService")>
 <cfset users = userService.users_sel()>
 
 <!--- Call the versions_sel function from VersionsService --->

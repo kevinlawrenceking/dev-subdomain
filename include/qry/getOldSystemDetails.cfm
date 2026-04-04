@@ -1,4 +1,4 @@
-<cfset systemUserService = createObject("component", "services.SystemUserService")>
+<cfset systemUserService = request.svc("SystemUserService")>
 <cfset oldSystemDetails = systemUserService.getOldSystemDetails(suid=suid)>
 
 <cfoutput>

@@ -1,2 +1,2 @@
-<cfset eventsService = createObject("component", "services.AuditionProjectService")>
+<cfset eventsService = request.svc("AuditionProjectService")>
 <cfset events = eventsService.SELaudprojects_24062(audprojectid=#audprojectid#)>

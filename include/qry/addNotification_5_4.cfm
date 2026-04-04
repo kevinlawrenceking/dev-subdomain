@@ -1,4 +1,4 @@
-<cfset objNotificationService = createObject("component", "services.NotificationService")>
+<cfset objNotificationService = request.svc("NotificationService")>
 <cfset objNotificationService.INSfunotifications(
     actionID = addDaysNo.actionID,
     userid = userid,

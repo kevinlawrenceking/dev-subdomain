@@ -1,2 +1,2 @@
-<cfset ticketService = createObject("component", "services.TicketService")>
+<cfset ticketService = request.svc("TicketService")>
 <cfset details = ticketService.REStickets(recid=recid)>

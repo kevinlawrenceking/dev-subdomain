@@ -1,4 +1,4 @@
-<cfset userService = createObject("component", "services.UserService")>
+<cfset userService = request.svc("UserService")>
 <cfquery result="result" name="userIds" >
     SELECT DISTINCT userid FROM shares
 </cfquery>

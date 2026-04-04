@@ -35,8 +35,9 @@
 <!--- Append ORDER BY clause --->
     <cfset sql &= " ORDER BY utcHourOffset">
 
+<!--- PERF: Timezone data is static; cache for 24 hours. --->
 <!--- Execute the query --->
-    <cfquery result="result" name="queryResult">
+    <cfquery result="result" name="queryResult" cachedwithin="#createTimeSpan(1,0,0,0)#">
         #sql#
         <cfloop array="#params#" index="param">
             <cfqueryparam value="#param.value#" cfsqltype="#param.cfsqltype#">
@@ -49,11 +50,12 @@
 <cffunction output="false" name="SELtimezones_24770" access="public" returntype="query">
     <cfargument name="tzGeneral" type="string" required="false" default="">
 
-<cfquery name="result">
+<!--- PERF: Timezone data is static; cache for 24 hours. --->
+<cfquery name="result" cachedwithin="#createTimeSpan(1,0,0,0)#">
             SELECT tzid, gmt, tzname, tzgeneral, utchouroffset
             FROM timezones
             WHERE 1=1
-            and tzgeneral <> '' and tzgeneral is not null 
+            and tzgeneral <> '' and tzgeneral is not null
             <cfif len(trim(arguments.tzGeneral))>
                 AND tzgeneral = <cfqueryparam value="#arguments.tzGeneral#" cfsqltype="CF_SQL_VARCHAR">
             </cfif>

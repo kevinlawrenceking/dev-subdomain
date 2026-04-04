@@ -23,7 +23,7 @@
     <cfset formOrderDir = "asc">
 </cfif>
 
-<cfset contactService = createObject("component", "services.ContactService")>
+<cfset contactService = request.svc("ContactService")>
 <cfset qFiltered = contactService.getFilteredContacts(
     contacts_table = contacts_table,
     userid = userid,

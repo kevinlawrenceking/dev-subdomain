@@ -236,6 +236,17 @@
     <cfset request.perfPage = arguments.targetPage />
     <cfset request.perfQueryCount = 0 />
 
+    <!--- PERF: Request-scoped service cache. Lazy — each CFC is instantiated once
+          on first access, then reused for the rest of the request.
+          MIGRATE: In Go, services are injected via constructor DI. --->
+    <cfset request.services = {} />
+    <cfset request.svc = function(required string name) {
+        if (!structKeyExists(request.services, arguments.name)) {
+            request.services[arguments.name] = createObject("component", "services." & arguments.name);
+        }
+        return request.services[arguments.name];
+    } />
+
     <!--- Per-request datasource: immune to application-scope race conditions --->
     <cfset request.dsn = application.dsn />
 
@@ -300,6 +311,8 @@
         <!--- Admin confirmed — impersonate target user --->
         <cfset session.userid = url.u />
         <cfset userid = session.userid />
+        <!--- PERF: Force a fresh DB load for the impersonated user --->
+        <cfset session.bustUserCache = true />
         <cfinclude template="/include/qry/fetchUsers.cfm" />
 
         <cfset session.impersonating = true />

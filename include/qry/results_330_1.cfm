@@ -1,4 +1,4 @@
-<cfset ticketService = createObject("component", "services.TicketService")>
+<cfset ticketService = request.svc("TicketService")>
 <cfparam name="select_pgid" default="" />
 <cfoutput>
 <cfset results = ticketService.REStickets_24478(

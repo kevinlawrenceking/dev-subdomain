@@ -2,14 +2,15 @@
 
 <cffunction output="false" name="GetRegions" access="public" returntype="query"  hint="Retrieve all regions ordered by region name.">
         <cfset var regions = "">
-        <cfquery result="result" name="regions">
-            SELECT 
-                countryid, 
-                region_id, 
-                regionname 
-            FROM 
-                regions 
-            ORDER BY 
+        <!--- PERF: Regions list rarely changes; cache for 24 hours. --->
+        <cfquery result="result" name="regions" cachedwithin="#createTimeSpan(1,0,0,0)#">
+            SELECT
+                countryid,
+                region_id,
+                regionname
+            FROM
+                regions
+            ORDER BY
                 regionname
         </cfquery>
         <cfreturn regions>
