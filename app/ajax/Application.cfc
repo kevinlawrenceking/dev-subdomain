@@ -51,6 +51,15 @@
       </cfif>
     </cfif>
 
+    <!--- PERF: Request-scoped service cache (matches app/Application.cfc) --->
+    <cfset request.services = {} />
+    <cfset request.svc = function(required string name) {
+        if (!structKeyExists(request.services, arguments.name)) {
+            request.services[arguments.name] = createObject("component", "services." & arguments.name);
+        }
+        return request.services[arguments.name];
+    } />
+
     <cfreturn true>
   </cffunction>
 

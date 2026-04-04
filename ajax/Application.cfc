@@ -55,6 +55,15 @@
     <!--- Per-request datasource: immune to application-scope race conditions --->
     <cfset request.dsn = application.datasource>
 
+    <!--- PERF: Request-scoped service cache (matches app/Application.cfc) --->
+    <cfset request.services = {} />
+    <cfset request.svc = function(required string name) {
+        if (!structKeyExists(request.services, arguments.name)) {
+            request.services[arguments.name] = createObject("component", "services." & arguments.name);
+        }
+        return request.services[arguments.name];
+    } />
+
     <cfset userid = session.userid>
     <cfset request.userid = session.userid>
 

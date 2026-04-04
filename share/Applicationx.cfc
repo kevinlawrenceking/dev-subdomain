@@ -74,13 +74,22 @@
             if (not structKeyExists(application, "dsn")) {
                 onApplicationStart();
             }
-            
+
+            // PERF: Request-scoped service cache (matches app/Application.cfc)
+            request.services = {};
+            request.svc = function(required string name) {
+                if (!structKeyExists(request.services, arguments.name)) {
+                    request.services[arguments.name] = createObject("component", "services." & arguments.name);
+                }
+                return request.services[arguments.name];
+            };
+
             // Validate share tokens as needed
             if (structKeyExists(url, "shareToken")) {
                 // Here you would validate the token and set appropriate access variables
                 // This is where you'd implement the unique identifier validation
             }
-            
+
             return true;
         </cfscript>
     </cffunction>

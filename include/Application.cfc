@@ -1,6 +1,10 @@
 <cfcomponent extends="/app/Application">
   <cffunction name="onRequestStart" returntype="void" output="false">
     <cfargument name="targetPage" type="string" required="false" default="" />
+
+    <!--- Invoke parent onRequestStart (sets up request.svc, perf timing, user data, etc.) --->
+    <cfset super.onRequestStart(arguments.targetPage) />
+
     <cfscript>
       // Use datasource from parent Application.cfc
       application.datasourceName = application.dsn;
