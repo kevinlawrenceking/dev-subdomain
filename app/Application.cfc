@@ -525,16 +525,24 @@
       findNoCase("/ajax/", cgi.SCRIPT_NAME)
     )>
 
+    <!--- On dev/UAT, show full error detail so developers can diagnose quickly --->
+    <cfset var showDetail = (application.dsn NEQ "abo") />
+
     <cfif isAjax>
-      <!--- Return safe JSON error — no internals exposed --->
       <cfheader statuscode="500">
       <cfcontent type="application/json" reset="true">
-      <cfoutput>#serializeJSON({
-        "success": false,
-        "message": "An unexpected error occurred. Please try again or contact support."
-      })#</cfoutput>
+      <cfif showDetail>
+        <cfoutput>#serializeJSON({
+          "success": false,
+          "message": errDetail
+        })#</cfoutput>
+      <cfelse>
+        <cfoutput>#serializeJSON({
+          "success": false,
+          "message": "An unexpected error occurred. Please try again or contact support."
+        })#</cfoutput>
+      </cfif>
     <cfelse>
-      <!--- Return safe HTML error page — no stack trace, no SQL, no file paths --->
       <cfheader statuscode="500">
       <cfcontent type="text/html" reset="true">
       <cfoutput>
@@ -543,6 +551,9 @@
       <body>
       <div style="font-family:Arial,sans-serif;text-align:center;padding:60px 20px;color:##333">
       <h1 style="font-size:24px;margin-bottom:12px">Something went wrong</h1>
+      <cfif showDetail>
+        <p style="font-size:14px;color:##c00;text-align:left;max-width:800px;margin:20px auto;word-break:break-all;font-family:monospace;background:##f8f8f8;padding:16px;border:1px solid ##ddd;border-radius:4px">#htmlEditFormat(errDetail)#</p>
+      </cfif>
       <p style="font-size:16px;color:##666">An unexpected error occurred. Please try again or <a href="/app/" style="color:##2563eb;text-decoration:none">return to the dashboard</a>.</p>
       <p style="font-size:13px;color:##999;margin-top:30px">If this persists, contact support.</p>
       </div>
