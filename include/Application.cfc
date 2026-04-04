@@ -1,15 +1,21 @@
 <cfcomponent extends="/app/Application">
-  <cffunction name="onRequestStart" returntype="void" output="false">
+  <cffunction name="onRequestStart" returntype="boolean" output="false">
     <cfargument name="targetPage" type="string" required="false" default="" />
-
-    <!--- Invoke parent onRequestStart (sets up request.svc, perf timing, user data, etc.) --->
-    <cfset super.onRequestStart(arguments.targetPage) />
 
     <cfscript>
       // Use datasource from parent Application.cfc
       application.datasourceName = application.dsn;
       application.dsn = application.dsn;
     </cfscript>
+
+    <!--- PERF: Request-scoped service cache (matches app/Application.cfc) --->
+    <cfset request.services = {} />
+    <cfset request.svc = function(required string name) {
+        if (!structKeyExists(request.services, arguments.name)) {
+            request.services[arguments.name] = createObject("component", "services." & arguments.name);
+        }
+        return request.services[arguments.name];
+    } />
 
     <!--- CSRF validation for POST requests from authenticated users --->
     <!--- Accept token from form field (regular forms) OR X-CSRF-Token header (AJAX) --->
@@ -38,5 +44,7 @@
         <cfabort>
       </cfif>
     </cfif>
+
+    <cfreturn true />
   </cffunction>
 </cfcomponent>
