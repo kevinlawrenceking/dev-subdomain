@@ -112,31 +112,52 @@
     <cfreturn true>
   </cffunction>
 
-  <!--- Error handler: log full details, return safe JSON to client --->
+  <!--- TAO-SPEC-2026-005: Centralized error handler — always returns JSON --->
   <cffunction name="onError" access="public" returntype="void" output="true">
     <cfargument name="exception" />
     <cfargument name="eventName" />
 
-    <!--- Log full error server-side --->
+    <cfset var ticketId = "" />
+
     <cftry>
-      <cfset var errDetail = arguments.exception.message>
-      <cfif structKeyExists(arguments.exception, "detail") AND len(arguments.exception.detail)>
-        <cfset errDetail = errDetail & " | " & arguments.exception.detail>
+      <!--- Delegate to ErrorService (shared application scope via matching this.name) --->
+      <cfif structKeyExists(application, "services")
+            AND structKeyExists(application.services, "errorService")
+            AND isObject(application.services.errorService)>
+        <cfset var result = application.services.errorService.handleError(
+            arguments.exception, arguments.eventName, "ajax"
+        ) />
+        <cfset ticketId = result.ticketId />
+      <cfelse>
+        <!--- ErrorService not available — instantiate inline --->
+        <cfset var errorSvc = new services.ErrorService(
+            dsn = application.datasource,
+            fromEmail = "support@theactorsoffice.com",
+            toEmail = "support@theactorsoffice.com",
+            bccEmail = "kevinking7135@gmail.com",
+            appName = "TAO"
+        ) />
+        <cfset var result = errorSvc.handleError(
+            arguments.exception, arguments.eventName, "ajax"
+        ) />
+        <cfset ticketId = result.ticketId />
       </cfif>
-      <cfif structKeyExists(arguments.exception, "tagContext") AND isArray(arguments.exception.tagContext) AND arrayLen(arguments.exception.tagContext)>
-        <cfset errDetail = errDetail & " | " & arguments.exception.tagContext[1].template & ":" & arguments.exception.tagContext[1].line>
-      </cfif>
-      <cfif structKeyExists(arguments.exception, "sql")>
-        <cfset errDetail = errDetail & " | SQL: " & left(arguments.exception.sql, 500)>
-      </cfif>
-      <cflog file="tao_errors" type="error" text="[AJAX #cgi.SCRIPT_NAME#] #errDetail#">
-    <cfcatch><cflog file="tao_errors" type="error" text="AJAX onError logging failed: #cfcatch.message#"></cfcatch>
+
+    <cfcatch>
+      <!--- Fallback: generate ticket ID locally --->
+      <cfset ticketId = "ERR-" & Left(CreateUUID(), 8) />
+      <cftry>
+        <cflog file="TAO_error_fallback" type="error"
+               text="AJAX ErrorService failed: #cfcatch.message# | Ticket: #ticketId#" />
+        <cfcatch></cfcatch>
+      </cftry>
+    </cfcatch>
     </cftry>
 
-    <!--- Return safe JSON — no internals exposed --->
-    <cfheader statuscode="500">
-    <cfcontent type="application/json" reset="true">
-    <cfoutput>{"success":false,"message":"An unexpected error occurred. Please try again or contact support."}</cfoutput>
-    <cfabort>
+    <!--- Always return JSON — never HTML --->
+    <cfheader statuscode="500" />
+    <cfcontent type="application/json; charset=utf-8" reset="true" />
+    <cfoutput>{"success":false,"message":"An unexpected error occurred. Please try again or contact support.","ticketId":"#ticketId#","support":"support@theactorsoffice.com","reference":"Quote this ticket ID when contacting support."}</cfoutput>
+    <cfabort />
   </cffunction>
 </cfcomponent>

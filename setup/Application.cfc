@@ -97,4 +97,75 @@
     </cfscript>
 </cffunction>
 
+<!--- TAO-SPEC-2026-005: Centralized error handler for setup context --->
+<cffunction name="onError" access="public" returntype="void" output="true">
+    <cfargument name="exception" />
+    <cfargument name="eventName" />
+
+    <cfset var ticketId = "" />
+    <cfset var isAjax = false />
+
+    <cftry>
+      <!--- Use shared ErrorService if available (same this.name = shared application scope) --->
+      <cfif structKeyExists(application, "services")
+            AND structKeyExists(application.services, "errorService")
+            AND isObject(application.services.errorService)>
+        <cfset var result = application.services.errorService.handleError(
+            arguments.exception, arguments.eventName, "setup"
+        ) />
+      <cfelse>
+        <!--- Instantiate inline — setup may be first context hit (cold start) --->
+        <cfset var errorSvc = new services.ErrorService(
+            dsn = application.dsn,
+            fromEmail = "support@theactorsoffice.com",
+            toEmail = "support@theactorsoffice.com",
+            bccEmail = "kevinking7135@gmail.com",
+            appName = "TAO"
+        ) />
+        <cfset var result = errorSvc.handleError(
+            arguments.exception, arguments.eventName, "setup"
+        ) />
+      </cfif>
+
+      <cfset ticketId = result.ticketId />
+      <cfset isAjax = result.isAjax />
+
+    <cfcatch>
+      <cfset ticketId = "ERR-" & Left(CreateUUID(), 8) />
+      <cftry>
+        <cflog file="TAO_error_fallback" type="error"
+               text="Setup context ErrorService failed: #cfcatch.message# | Ticket: #ticketId#" />
+        <cfcatch></cfcatch>
+      </cftry>
+    </cfcatch>
+    </cftry>
+
+    <!--- Render response --->
+    <cfif isAjax>
+      <cfheader statuscode="500" />
+      <cfcontent type="application/json; charset=utf-8" reset="true" />
+      <cfoutput>{"success":false,"message":"An unexpected error occurred. Please try again or contact support.","ticketId":"#ticketId#","support":"support@theactorsoffice.com","reference":"Quote this ticket ID when contacting support."}</cfoutput>
+    <cfelse>
+      <cfheader statuscode="500" />
+      <cfcontent type="text/html; charset=utf-8" reset="true" />
+      <cftry>
+        <cfset request.errorTicketId = ticketId />
+        <cfinclude template="/templates/error/error-friendly.cfm" />
+      <cfcatch>
+        <cfoutput>
+        <!DOCTYPE html>
+        <html><head><title>Error</title></head>
+        <body style="font-family:sans-serif;text-align:center;padding:60px 20px;color:##333">
+        <h1 style="font-size:22px">Something went wrong</h1>
+        <p>Our team has been notified. Your ticket ID is: <strong>#ticketId#</strong></p>
+        <p><a href="/app/dashboard/" style="color:##406E8E">Return to Dashboard</a></p>
+        <p style="font-size:13px;color:##999">Contact support@theactorsoffice.com if this persists.</p>
+        </body></html>
+        </cfoutput>
+      </cfcatch>
+      </cftry>
+    </cfif>
+    <cfabort />
+</cffunction>
+
 </cfcomponent>

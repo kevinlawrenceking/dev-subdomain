@@ -58,10 +58,19 @@
     if (NOT structKeyExists(application, "services")) {
       application.services = {
         auditionSubmitSiteUserService = new services.AuditionSubmitSiteUserService()
-        // contactService = new services.ContactService()
-        // projectService = new services.ProjectService()
-        // add more as you consolidate
       };
+      // TAO-SPEC-2026-005: Error management service
+      try {
+        application.services.errorService = new services.ErrorService(
+          dsn = application.dsn,
+          fromEmail = "support@theactorsoffice.com",
+          toEmail = "support@theactorsoffice.com",
+          bccEmail = "kevinking7135@gmail.com",
+          appName = this.name
+        );
+      } catch (any e) {
+        // ErrorService init failed in pseudo-constructor — will retry in onApplicationStart
+      }
     }
 
     // Media paths - detect environment based on dsn
@@ -123,9 +132,21 @@
       application.datasource = this.datasource;
       application.services = {
         auditionSubmitSiteUserService = new services.AuditionSubmitSiteUserService()
-        // contactService = new services.ContactService()
-        // projectService = new services.ProjectService()
       };
+
+      // TAO-SPEC-2026-005: Error management service (application-scoped singleton)
+      try {
+        application.services.errorService = new services.ErrorService(
+          dsn = application.dsn,
+          fromEmail = "support@theactorsoffice.com",
+          toEmail = "support@theactorsoffice.com",
+          bccEmail = "kevinking7135@gmail.com",
+          appName = this.name
+        );
+      } catch (any e) {
+        cflog(file="TAO_error_fallback", type="error",
+              text="ErrorService init failed: " & e.message);
+      }
 
       // External API credentials — read from server environment variables.
       // Use structKeyExists to safely handle missing env vars on any CF engine.
@@ -479,87 +500,94 @@
     </cfif>
   </cffunction>
 
-  <!--- Error handler: log full details server-side, return safe response to client --->
+  <!--- TAO-SPEC-2026-005: Centralized error handler with ticket tracking --->
   <cffunction name="onError" access="public" returntype="void" output="true">
     <cfargument name="exception" />
     <cfargument name="eventName" />
 
-    <!--- 1) Always log the full error server-side --->
     <cftry>
-      <cfset var errDetail = arguments.exception.message>
-      <cfif structKeyExists(arguments.exception, "detail") AND len(arguments.exception.detail)>
-        <cfset errDetail = errDetail & " | " & arguments.exception.detail>
+      <!--- Delegate to ErrorService --->
+      <cfif structKeyExists(application, "services")
+            AND structKeyExists(application.services, "errorService")
+            AND isObject(application.services.errorService)>
+        <cfset var result = application.services.errorService.handleError(
+            arguments.exception, arguments.eventName, "app"
+        ) />
+      <cfelse>
+        <!--- ErrorService not in application scope — instantiate inline --->
+        <cfset var errorSvc = new services.ErrorService(
+            dsn = application.dsn,
+            fromEmail = "support@theactorsoffice.com",
+            toEmail = "support@theactorsoffice.com",
+            bccEmail = "kevinking7135@gmail.com",
+            appName = "TAO"
+        ) />
+        <cfset var result = errorSvc.handleError(
+            arguments.exception, arguments.eventName, "app"
+        ) />
       </cfif>
-      <cfif structKeyExists(arguments.exception, "tagContext") AND isArray(arguments.exception.tagContext) AND arrayLen(arguments.exception.tagContext)>
-        <cfset errDetail = errDetail & " | " & arguments.exception.tagContext[1].template & ":" & arguments.exception.tagContext[1].line>
+
+      <!--- Render response based on request type --->
+      <cfif result.isAjax>
+        <cfheader statuscode="500" />
+        <cfcontent type="application/json; charset=utf-8" reset="true" />
+        <cfoutput>{"success":false,"message":"#encodeForJavaScript(result.message)#","ticketId":"#encodeForJavaScript(result.ticketId)#","support":"support@theactorsoffice.com","reference":"Quote this ticket ID when contacting support."}</cfoutput>
+      <cfelse>
+        <cfheader statuscode="500" />
+        <cfcontent type="text/html; charset=utf-8" reset="true" />
+        <cfset request.errorTicketId = result.ticketId />
+        <cfinclude template="/templates/error/error-friendly.cfm" />
       </cfif>
-      <cfif structKeyExists(arguments.exception, "sql")>
-        <cfset errDetail = errDetail & " | SQL: " & left(arguments.exception.sql, 500)>
-      </cfif>
-      <!--- Dig into rootCause/cause for wrapped exceptions (e.g. onRequestStart failures) --->
-      <cfif structKeyExists(arguments.exception, "rootCause")>
-        <cfset var rc = arguments.exception.rootCause>
-        <cfif isStruct(rc)>
-          <cfif structKeyExists(rc, "message")><cfset errDetail = errDetail & " | ROOT: " & rc.message></cfif>
-          <cfif structKeyExists(rc, "detail") AND len(rc.detail)><cfset errDetail = errDetail & " | " & rc.detail></cfif>
-          <cfif structKeyExists(rc, "tagContext") AND isArray(rc.tagContext) AND arrayLen(rc.tagContext)>
-            <cfset errDetail = errDetail & " | " & rc.tagContext[1].template & ":" & rc.tagContext[1].line>
-          </cfif>
+
+    <cfcatch>
+      <!--- ABSOLUTE FALLBACK: ErrorService itself failed --->
+      <cfset var fallbackTicketId = "ERR-" & Left(CreateUUID(), 8) />
+
+      <!--- Log both the original error and the fallback failure --->
+      <cftry>
+        <cfset var origMsg = "" />
+        <cfif structKeyExists(arguments, "exception") AND structKeyExists(arguments.exception, "message")>
+          <cfset origMsg = Left(arguments.exception.message, 200) />
         </cfif>
-      <cfelseif structKeyExists(arguments.exception, "cause")>
-        <cfset var ca = arguments.exception.cause>
-        <cfif isStruct(ca) AND structKeyExists(ca, "message")>
-          <cfset errDetail = errDetail & " | CAUSE: " & ca.message>
-        </cfif>
+        <cflog file="TAO_error_fallback" type="error"
+               text="ErrorService failed: #cfcatch.message# | Original: #origMsg# | Ticket: #fallbackTicketId#" />
+        <cfcatch></cfcatch>
+      </cftry>
+
+      <!--- Detect AJAX for fallback response --->
+      <cfset var fallbackIsAjax = (
+        findNoCase("xmlhttprequest", cgi.HTTP_X_REQUESTED_WITH) GT 0 OR
+        findNoCase("/ajax/", cgi.SCRIPT_NAME) GT 0
+      ) />
+
+      <cfif fallbackIsAjax>
+        <cfheader statuscode="500" />
+        <cfcontent type="application/json; charset=utf-8" reset="true" />
+        <cfoutput>{"success":false,"message":"An unexpected error occurred. Please try again or contact support.","ticketId":"#fallbackTicketId#","support":"support@theactorsoffice.com","reference":"Quote this ticket ID when contacting support."}</cfoutput>
+      <cfelse>
+        <cfheader statuscode="500" />
+        <cfcontent type="text/html; charset=utf-8" reset="true" />
+        <cftry>
+          <cfset request.errorTicketId = fallbackTicketId />
+          <cfinclude template="/templates/error/error-friendly.cfm" />
+        <cfcatch>
+          <!--- Last resort: hardcoded minimal HTML --->
+          <cfoutput>
+          <!DOCTYPE html>
+          <html><head><title>Error</title></head>
+          <body style="font-family:sans-serif;text-align:center;padding:60px 20px;color:##333">
+          <h1 style="font-size:22px">Something went wrong</h1>
+          <p>Our team has been notified. Your ticket ID is: <strong>#fallbackTicketId#</strong></p>
+          <p><a href="/app/dashboard/" style="color:##406E8E">Return to Dashboard</a></p>
+          <p style="font-size:13px;color:##999">Contact support@theactorsoffice.com if this persists.</p>
+          </body></html>
+          </cfoutput>
+        </cfcatch>
+        </cftry>
       </cfif>
-      <cflog file="tao_errors" type="error" text="[#cgi.SCRIPT_NAME#] #errDetail#">
-    <cfcatch><cflog file="tao_errors" type="error" text="onError logging failed: #cfcatch.message#"></cfcatch>
+    </cfcatch>
     </cftry>
 
-    <!--- 2) Detect if this is an AJAX request --->
-    <cfset var isAjax = (
-      structKeyExists(cgi, "HTTP_X_REQUESTED_WITH") AND lcase(cgi.HTTP_X_REQUESTED_WITH) eq "xmlhttprequest"
-    ) OR (
-      structKeyExists(cgi, "HTTP_ACCEPT") AND findNoCase("application/json", cgi.HTTP_ACCEPT)
-    ) OR (
-      findNoCase("/ajax/", cgi.SCRIPT_NAME)
-    )>
-
-    <!--- On dev/UAT, show full error detail so developers can diagnose quickly --->
-    <cfset var showDetail = (application.dsn NEQ "abo") />
-
-    <cfif isAjax>
-      <cfheader statuscode="500">
-      <cfcontent type="application/json" reset="true">
-      <cfif showDetail>
-        <cfoutput>#serializeJSON({
-          "success": false,
-          "message": errDetail
-        })#</cfoutput>
-      <cfelse>
-        <cfoutput>#serializeJSON({
-          "success": false,
-          "message": "An unexpected error occurred. Please try again or contact support."
-        })#</cfoutput>
-      </cfif>
-    <cfelse>
-      <cfheader statuscode="500">
-      <cfcontent type="text/html" reset="true">
-      <cfoutput>
-      <!DOCTYPE html>
-      <html><head><title>Error</title></head>
-      <body>
-      <div style="font-family:Arial,sans-serif;text-align:center;padding:60px 20px;color:##333">
-      <h1 style="font-size:24px;margin-bottom:12px">Something went wrong</h1>
-      <cfif showDetail>
-        <p style="font-size:14px;color:##c00;text-align:left;max-width:800px;margin:20px auto;word-break:break-all;font-family:monospace;background:##f8f8f8;padding:16px;border:1px solid ##ddd;border-radius:4px">#htmlEditFormat(errDetail)#</p>
-      </cfif>
-      <p style="font-size:16px;color:##666">An unexpected error occurred. Please try again or <a href="/app/" style="color:##2563eb;text-decoration:none">return to the dashboard</a>.</p>
-      <p style="font-size:13px;color:##999;margin-top:30px">If this persists, contact support.</p>
-      </div>
-      </body></html>
-      </cfoutput>
-    </cfif>
     <cfabort />
   </cffunction>
 
