@@ -41,6 +41,9 @@
       // Persist to database (try/catch inside)
       var dbSuccess = persistTicket(diagnostics);
 
+      // Create support ticket in tickets table
+      createSupportTicket(diagnostics);
+
       // Send email notification (try/catch inside)
       var emailSuccess = sendErrorEmail(diagnostics);
 
@@ -210,6 +213,45 @@
         </cftry>
 
         <cfreturn false />
+      </cfcatch>
+    </cftry>
+  </cffunction>
+
+  <cffunction name="createSupportTicket" access="private" returntype="void" output="false"
+              hint="INSERT into tickets table so the error appears in the TAO support ticket system.">
+    <cfargument name="diagnostics" type="struct" required="true" />
+
+    <cftry>
+      <cfset var ticketName = arguments.diagnostics.ticketId & " - " & Left(arguments.diagnostics.errorMessage, 200) />
+      <cfset var ticketDetails = "Error Ticket: " & arguments.diagnostics.ticketId
+          & chr(10) & "Type: " & arguments.diagnostics.errorType
+          & chr(10) & "Script: " & arguments.diagnostics.scriptName
+          & chr(10) & "Query String: " & Left(arguments.diagnostics.queryString, 500)
+          & chr(10) & "Message: " & Left(arguments.diagnostics.errorMessage, 1000)
+          & chr(10) & "Detail: " & Left(arguments.diagnostics.errorDetail, 500) />
+      <cfset var ticketUserId = (len(arguments.diagnostics.userId) AND isNumeric(arguments.diagnostics.userId)) ? val(arguments.diagnostics.userId) : 0 />
+
+      <cfquery datasource="#variables.dsn#">
+        INSERT INTO tickets (
+          pgid, verid, ticketName, ticketdetails, tickettype, userid, ticketactive, ticketstring
+        ) VALUES (
+          <cfqueryparam value="0" cfsqltype="cf_sql_integer" />,
+          <cfqueryparam value="0" cfsqltype="cf_sql_integer" />,
+          <cfqueryparam value="#Left(ticketName, 255)#" cfsqltype="cf_sql_varchar" />,
+          <cfqueryparam value="#ticketDetails#" cfsqltype="cf_sql_longvarchar" />,
+          <cfqueryparam value="Error" cfsqltype="cf_sql_varchar" />,
+          <cfqueryparam value="#ticketUserId#" cfsqltype="cf_sql_integer" />,
+          <cfqueryparam value="Y" cfsqltype="cf_sql_varchar" />,
+          <cfqueryparam value="#Left(arguments.diagnostics.scriptName & '?' & arguments.diagnostics.queryString, 500)#" cfsqltype="cf_sql_varchar" />
+        )
+      </cfquery>
+
+      <cflog file="TAO_error_tickets" type="info"
+             text="Support ticket created for #arguments.diagnostics.ticketId#" />
+
+      <cfcatch>
+        <cflog file="TAO_error_fallback" type="warning"
+               text="Failed to create support ticket for #arguments.diagnostics.ticketId#: #cfcatch.message#" />
       </cfcatch>
     </cftry>
   </cffunction>
