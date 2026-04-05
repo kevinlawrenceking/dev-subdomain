@@ -64,8 +64,7 @@
         application.services.errorService = new services.ErrorService(
           dsn = application.dsn,
           fromEmail = "support@theactorsoffice.com",
-          toEmail = "support@theactorsoffice.com",
-          bccEmail = "kevinking7135@gmail.com",
+          toEmail = "kevinking7135@gmail.com",
           appName = this.name
         );
       } catch (any e) {
@@ -139,8 +138,7 @@
         application.services.errorService = new services.ErrorService(
           dsn = application.dsn,
           fromEmail = "support@theactorsoffice.com",
-          toEmail = "support@theactorsoffice.com",
-          bccEmail = "kevinking7135@gmail.com",
+          toEmail = "kevinking7135@gmail.com",
           appName = this.name
         );
       } catch (any e) {
@@ -518,8 +516,7 @@
         <cfset var errorSvc = new services.ErrorService(
             dsn = application.dsn,
             fromEmail = "support@theactorsoffice.com",
-            toEmail = "support@theactorsoffice.com",
-            bccEmail = "kevinking7135@gmail.com",
+            toEmail = "kevinking7135@gmail.com",
             appName = "TAO"
         ) />
         <cfset var result = errorSvc.handleError(

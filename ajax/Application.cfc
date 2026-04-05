@@ -133,8 +133,7 @@
         <cfset var errorSvc = new services.ErrorService(
             dsn = application.datasource,
             fromEmail = "support@theactorsoffice.com",
-            toEmail = "support@theactorsoffice.com",
-            bccEmail = "kevinking7135@gmail.com",
+            toEmail = "kevinking7135@gmail.com",
             appName = "TAO"
         ) />
         <cfset var result = errorSvc.handleError(
