@@ -549,11 +549,32 @@ input[type="date"].form-control-sm {
                 </li>
             </ul>
 
+            <!--- Bulk edit toolbar (shown when rows are selected) --->
+            <div id="bulk-edit-toolbar" class="alert alert-light border align-items-center gap-2 py-2 px-3 mb-2" style="display:none;">
+                <span class="small fw-bold text-muted me-1"><span id="bulk-edit-selected-count">0</span> selected</span>
+                <select id="bulk-edit-field" class="form-select form-select-sm" style="width:auto;max-width:160px;">
+                    <option value="">-- Field --</option>
+                    <option value="audition_date">Audition Date</option>
+                    <option value="audition_time">Audition Time</option>
+                    <option value="location">Location</option>
+                    <option value="status">Status</option>
+                    <option value="medium">Medium</option>
+                    <option value="notes">Notes</option>
+                </select>
+                <input type="text" id="bulk-edit-value" class="form-control form-control-sm" placeholder="New value" style="width:auto;max-width:200px;display:none;">
+                <select id="bulk-edit-value-select" class="form-select form-select-sm" style="width:auto;max-width:200px;display:none;">
+                </select>
+                <button class="btn btn-sm btn-primary" id="btn-apply-bulk-edit" style="background: linear-gradient(135deg, var(--ct-link-color), var(--ct-link-hover-color)); border:none;">
+                    <i class="fe-check"></i> Apply to Selected
+                </button>
+            </div>
+
             <!--- Review table --->
             <div class="table-responsive">
                 <table class="table table-sm table-hover review-table" id="review-table">
                     <thead>
                         <tr>
+                            <th width="30"><input type="checkbox" id="select-all-rows" title="Select all rows"></th>
                             <th width="40">##</th>
                             <th>Project</th>
                             <th>Role</th>
@@ -570,7 +591,7 @@ input[type="date"].form-control-sm {
                         </tr>
                     </thead>
                     <tbody id="review-tbody">
-                        <tr><td colspan="8" class="text-center p-4"><i class="fe-loader fe-spin"></i> Loading rows...</td></tr>
+                        <tr><td colspan="9" class="text-center p-4"><i class="fe-loader fe-spin"></i> Loading rows...</td></tr>
                     </tbody>
                 </table>
             </div>

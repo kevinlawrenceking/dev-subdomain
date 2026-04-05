@@ -77,6 +77,7 @@
         initModals();
         loadCategoryOptions();
         initStatusControls();
+        initBulkEdit();
 
         // Check for active job
         var jobIdInput = document.getElementById('job-id');
@@ -929,7 +930,7 @@
         console.log('[AUD] Loading rows for job:', state.jobId, 'Filter:', state.currentFilter);
 
         // Show loading indicator
-        $j('#review-tbody').html('<tr><td colspan="8" class="text-center p-4"><i class="fe-loader fe-spin"></i> Loading rows...</td></tr>');
+        $j('#review-tbody').html('<tr><td colspan="9" class="text-center p-4"><i class="fe-loader fe-spin"></i> Loading rows...</td></tr>');
 
         var url = '/ajax/import-auditions/rows.cfm?bypass=1&job_id=' + state.jobId +
             '&status=' + encodeURIComponent(state.currentFilter) +
@@ -958,11 +959,11 @@
                 updateStats();
             } else {
                 console.error('[AUD] Load rows failed with code:', cfGet(response, 'code'));
-                $j('#review-tbody').html('<tr><td colspan="8" class="text-center text-danger">' + escapeHtml(cfGet(response, 'message') || 'Unknown error') + '</td></tr>');
+                $j('#review-tbody').html('<tr><td colspan="9" class="text-center text-danger">' + escapeHtml(cfGet(response, 'message') || 'Unknown error') + '</td></tr>');
             }
         }).fail(function(xhr, status, error) {
             console.error('[AUD] Load rows HTTP error:', xhr.status, status, error);
-            $j('#review-tbody').html('<tr><td colspan="8" class="text-center text-danger">Failed to load rows. Please refresh the page.</td></tr>');
+            $j('#review-tbody').html('<tr><td colspan="9" class="text-center text-danger">Failed to load rows. Please refresh the page.</td></tr>');
         });
     }
 
@@ -974,7 +975,7 @@
 
     function renderRows(rows) {
         if (!rows || rows.length === 0) {
-            $j('#review-tbody').html('<tr><td colspan="8" class="text-center text-muted p-4">No rows found</td></tr>');
+            $j('#review-tbody').html('<tr><td colspan="9" class="text-center text-muted p-4">No rows found</td></tr>');
             return;
         }
 
@@ -998,6 +999,9 @@
 
             var rowClass = rowStatus === 'imported' ? 'table-light' : (rowStatus === 'ignored' ? 'table-light text-muted' : '');
             html += '<tr data-row-id="' + rowId + '" class="' + rowClass + '">';
+            html += '<td><input type="checkbox" class="row-checkbox" data-row-id="' + rowId + '" value="' + rowId + '"';
+            if (rowStatus === 'imported' || rowStatus === 'ignored') html += ' disabled';
+            html += '></td>';
             html += '<td>' + rowNum + '</td>';
             html += '<td>' + escapeHtml(project) + '</td>';
             html += '<td>' + escapeHtml(role) + '</td>';
@@ -1031,7 +1035,8 @@
             } else if (rowStatus === 'ignored') {
                 html += '<button class="btn btn-xs btn-outline-success btn-restore" data-row-id="' + rowId + '" title="Include in import"><i class="fe-check-circle"></i></button> ';
             } else if (rowStatus === 'imported' && createdAuditionId) {
-                html += '<a href="/app/audition/?audprojectid=' + createdAuditionId + '" class="btn btn-xs btn-outline-info" title="View audition"><i class="fe-eye"></i></a>';
+                html += '<a href="/app/audition/?audprojectid=' + createdAuditionId + '" class="btn btn-xs btn-outline-info" title="View audition"><i class="fe-eye"></i></a> ';
+                html += '<button class="btn btn-xs btn-outline-warning btn-undo" data-row-id="' + rowId + '" title="Undo import"><i class="fe-rotate-ccw"></i></button>';
             }
 
             html += '</td>';
@@ -1039,7 +1044,7 @@
 
             // Show validation errors
             if (rowStatus === 'problem' && errors && errors.length > 0) {
-                html += '<tr class="bg-light"><td colspan="8">';
+                html += '<tr class="bg-light"><td colspan="9">';
                 html += '<small class="text-danger">';
                 errors.forEach(function(err) {
                     var errField = err.field || err.FIELD || '';
@@ -1051,7 +1056,7 @@
 
             // Show duplicate info
             if (rowStatus === 'dupe' && duplicates && duplicates.length > 0) {
-                html += '<tr class="bg-warning-light"><td colspan="8">';
+                html += '<tr class="bg-warning-light"><td colspan="9">';
                 html += '<small class="text-warning"><i class="fe-alert-triangle"></i> ';
                 var dupeProject = duplicates[0].project_name || duplicates[0].PROJECT_NAME || 'Unknown';
                 var dupeRole = duplicates[0].role_name || duplicates[0].ROLE_NAME || '';
@@ -1090,6 +1095,14 @@
         $j('.row-category-select').on('change', function() {
             handleInlineCategoryChange($j(this));
         });
+
+        // Bind undo buttons
+        $j('.btn-undo').click(function() {
+            undoImportedRow($j(this).data('row-id'));
+        });
+
+        // Update bulk edit toolbar state based on checkbox selection
+        updateBulkEditToolbar();
     }
 
     function hasFieldError(validation, field) {
@@ -1697,7 +1710,7 @@
         if (problemCount > 0) msg += problemCount + ' with errors will be skipped\n';
         if (dupeCount > 0) msg += dupeCount + ' unresolved duplicates will be skipped\n';
         if (ignoredCount > 0) msg += ignoredCount + ' excluded by you\n';
-        msg += '\nThis action cannot be undone.';
+        msg += '\nYou can undo individual rows after import.';
 
         if (!confirm(msg)) {
             return;
@@ -1895,6 +1908,189 @@
             var el = document.getElementById(id);
             if (el) { el.style.opacity = '0'; setTimeout(function() { if (el.parentNode) el.remove(); }, 300); }
         }, 15000);
+    }
+
+    // ========================================
+    // UNDO IMPORTED ROW (V2 Feature)
+    // ========================================
+
+    function undoImportedRow(rowId) {
+        if (!confirm('Undo this import? The created audition project, role, and event will be deleted.')) {
+            return;
+        }
+
+        console.log('[AUD] Undoing imported row:', rowId);
+
+        var csrfToken = $j('#csrf-token').val() || '';
+        if (!csrfToken) {
+            showAlert('error', 'Security token missing. Please refresh the page.');
+            return;
+        }
+
+        var $btn = $j('.btn-undo[data-row-id="' + rowId + '"]');
+        $btn.prop('disabled', true).html('<i class="fe-loader fe-spin"></i>');
+
+        $j.ajax({
+            url: '/ajax/import-auditions/undo.cfm?bypass=1',
+            type: 'POST',
+            contentType: 'application/json',
+            dataType: 'json',
+            headers: { 'X-CSRF-Token': csrfToken },
+            data: JSON.stringify({ row_id: rowId, csrf_token: csrfToken }),
+            success: function(response) {
+                if (cfGet(response, 'success')) {
+                    showAlert('success', cfGet(response, 'message') || 'Import undone successfully.');
+                    // Reload the current view to show updated row status
+                    loadRows();
+                } else {
+                    showAlert('error', cfGet(response, 'message') || 'Undo failed.');
+                    $btn.prop('disabled', false).html('<i class="fe-rotate-ccw"></i>');
+                }
+            },
+            error: function(xhr) {
+                showErrorWithDebug(xhr, 'Undo failed.');
+                $btn.prop('disabled', false).html('<i class="fe-rotate-ccw"></i>');
+            }
+        });
+    }
+
+    // ========================================
+    // BULK FIELD EDITING (V2 Feature)
+    // ========================================
+
+    function initBulkEdit() {
+        // Select-all checkbox
+        $j(document).on('change', '#select-all-rows', function() {
+            var checked = this.checked;
+            $j('.row-checkbox:not(:disabled)').prop('checked', checked);
+            updateBulkEditToolbar();
+        });
+
+        // Individual checkbox change
+        $j(document).on('change', '.row-checkbox', function() {
+            updateBulkEditToolbar();
+            // Update select-all state
+            var total = $j('.row-checkbox:not(:disabled)').length;
+            var checked = $j('.row-checkbox:checked').length;
+            $j('#select-all-rows').prop('checked', total > 0 && checked === total);
+        });
+
+        // Apply bulk edit button
+        $j('#btn-apply-bulk-edit').click(function() {
+            applyBulkEdit();
+        });
+
+        // Show/hide value input based on field selection
+        $j('#bulk-edit-field').change(function() {
+            var field = $j(this).val();
+            var $valueInput = $j('#bulk-edit-value');
+            var $valueSelect = $j('#bulk-edit-value-select');
+
+            $valueInput.hide().val('');
+            $valueSelect.hide().val('');
+
+            if (!field) return;
+
+            var def = fieldDefinitions[field];
+            if (def && def.type === 'select' && def.options) {
+                // Build select options
+                var html = '';
+                def.options.forEach(function(opt) {
+                    html += '<option value="' + escapeHtml(opt.value) + '">' + escapeHtml(opt.label) + '</option>';
+                });
+                $valueSelect.html(html).show();
+            } else if (def && def.type === 'date') {
+                $valueInput.attr('type', 'date').show();
+            } else {
+                $valueInput.attr('type', 'text').show();
+            }
+        });
+    }
+
+    function getSelectedRowIds() {
+        var ids = [];
+        $j('.row-checkbox:checked').each(function() {
+            ids.push(parseInt($j(this).val()));
+        });
+        return ids;
+    }
+
+    function updateBulkEditToolbar() {
+        var selectedCount = $j('.row-checkbox:checked').length;
+        $j('#bulk-edit-selected-count').text(selectedCount);
+        if (selectedCount > 0) {
+            $j('#bulk-edit-toolbar').css('display', 'flex');
+        } else {
+            $j('#bulk-edit-toolbar').hide();
+        }
+    }
+
+    function applyBulkEdit() {
+        var rowIds = getSelectedRowIds();
+        if (rowIds.length === 0) {
+            showAlert('warning', 'No rows selected.');
+            return;
+        }
+
+        var fieldKey = $j('#bulk-edit-field').val();
+        if (!fieldKey) {
+            showAlert('warning', 'Please select a field to edit.');
+            return;
+        }
+
+        // Get value from either text input or select dropdown
+        var newValue = '';
+        if ($j('#bulk-edit-value-select').is(':visible')) {
+            newValue = $j('#bulk-edit-value-select').val();
+        } else {
+            newValue = $j('#bulk-edit-value').val();
+        }
+
+        var csrfToken = $j('#csrf-token').val() || '';
+        if (!csrfToken) {
+            showAlert('error', 'Security token missing. Please refresh the page.');
+            return;
+        }
+
+        var fieldLabel = fieldDefinitions[fieldKey] ? fieldDefinitions[fieldKey].label : fieldKey;
+        if (!confirm('Set "' + fieldLabel + '" to "' + newValue + '" for ' + rowIds.length + ' row(s)?')) {
+            return;
+        }
+
+        var $btn = $j('#btn-apply-bulk-edit');
+        $btn.prop('disabled', true).html('<i class="fe-loader fe-spin"></i> Applying...');
+
+        $j.ajax({
+            url: '/ajax/import-auditions/bulk_edit.cfm?bypass=1',
+            type: 'POST',
+            contentType: 'application/json',
+            dataType: 'json',
+            headers: { 'X-CSRF-Token': csrfToken },
+            data: JSON.stringify({
+                job_id: state.jobId,
+                row_ids: rowIds,
+                field_key: fieldKey,
+                new_value: newValue,
+                csrf_token: csrfToken
+            }),
+            success: function(response) {
+                $btn.prop('disabled', false).html('<i class="fe-check"></i> Apply to Selected');
+                if (cfGet(response, 'success')) {
+                    var data = cfGet(response, 'data') || {};
+                    var updatedCount = cfGet(data, 'updated_count') || 0;
+                    showAlert('success', updatedCount + ' row(s) updated.');
+                    // Clear selection and reload
+                    $j('#select-all-rows').prop('checked', false);
+                    loadRows();
+                } else {
+                    showAlert('error', cfGet(response, 'message') || 'Bulk edit failed.');
+                }
+            },
+            error: function(xhr) {
+                $btn.prop('disabled', false).html('<i class="fe-check"></i> Apply to Selected');
+                showErrorWithDebug(xhr, 'Bulk edit failed.');
+            }
+        });
     }
 
     /**

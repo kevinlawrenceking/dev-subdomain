@@ -1,0 +1,212 @@
+/* ============================================================
+   Admin Enum Dashboard - Panel & Inline Edit Styles
+   ============================================================ */
+
+/* --- Grid layout: 4 columns desktop, 2 tablet, 1 mobile --- */
+.admin-enum-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    align-items: start;
+}
+
+@media (max-width: 1199px) {
+    .admin-enum-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 767px) {
+    .admin-enum-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* --- Panel card --- */
+.admin-enum-panel {
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    transition: box-shadow 0.2s ease;
+}
+
+.admin-enum-panel:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.admin-enum-panel .card-header {
+    background: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    padding: 10px 15px;
+}
+
+.admin-enum-panel .card-header h5 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.admin-enum-panel .card-footer {
+    background: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+}
+
+/* --- Read-only panel muted styling --- */
+.admin-enum-readonly .card-header {
+    background: #f0f0f0;
+}
+
+.admin-enum-readonly .card-header h5 {
+    color: #6c757d;
+}
+
+.admin-enum-readonly .admin-enum-row {
+    color: #6c757d;
+}
+
+/* --- Scrollable row list --- */
+.admin-enum-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+/* --- Individual row --- */
+.admin-enum-row {
+    border-bottom: 1px solid #f0f0f0;
+    transition: background-color 0.15s ease;
+    min-height: 38px;
+}
+
+.admin-enum-row:last-child {
+    border-bottom: none;
+}
+
+.admin-enum-row:hover {
+    background-color: #f8f9fa;
+}
+
+.admin-enum-name {
+    font-size: 0.875rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 60%;
+}
+
+.admin-enum-parent {
+    font-size: 0.75rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 30%;
+}
+
+/* --- Action buttons on rows --- */
+.admin-enum-row .btn-link {
+    font-size: 0.875rem;
+    opacity: 0.4;
+    transition: opacity 0.15s ease;
+}
+
+.admin-enum-row:hover .btn-link {
+    opacity: 1;
+}
+
+/* --- Empty state --- */
+.admin-enum-empty {
+    font-size: 0.85rem;
+    font-style: italic;
+}
+
+/* --- Inline input row (add / edit mode) --- */
+.admin-enum-input-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: #fffde7;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.admin-enum-input-row input[type="text"] {
+    flex: 1;
+    min-width: 0;
+    font-size: 0.85rem;
+    padding: 3px 8px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+}
+
+.admin-enum-input-row input[type="text"]:focus {
+    border-color: #80bdff;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.15);
+}
+
+.admin-enum-input-row select {
+    width: auto;
+    max-width: 140px;
+    font-size: 0.8rem;
+    padding: 3px 6px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+}
+
+.admin-enum-input-row .btn {
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    white-space: nowrap;
+}
+
+/* --- Inline delete confirmation --- */
+.admin-enum-confirm {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background: #fff5f5;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 0.85rem;
+    min-height: 38px;
+}
+
+.admin-enum-confirm .confirm-text {
+    flex: 1;
+    color: #dc3545;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.admin-enum-confirm .btn {
+    font-size: 0.75rem;
+    padding: 2px 10px;
+}
+
+/* --- Count badge --- */
+.admin-enum-panel .badge {
+    font-size: 0.75rem;
+    min-width: 24px;
+}
+
+/* --- Inline error message --- */
+.admin-enum-error {
+    color: #dc3545;
+    font-size: 0.78rem;
+    padding: 4px 12px;
+    background: #fff5f5;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+/* --- Fade out animation for deleted rows --- */
+.admin-enum-row.fade-out {
+    opacity: 0;
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    overflow: hidden;
+    transition: opacity 0.3s ease, max-height 0.3s ease, padding 0.3s ease;
+}

@@ -1568,6 +1568,24 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                 }
             }
 
+            // D1b) Resolve casting director contact for project linking
+            var castingContactId = 0;
+            if (len(trim(audData.casting_director))) {
+                var qCastingContact = queryExecute(
+                    "SELECT contactid FROM contactdetails
+                     WHERE userid = :userid AND contactFullName = :name AND IsDeleted = 0
+                     LIMIT 1",
+                    {
+                        userid: { value: arguments.userid, cfsqltype: "cf_sql_integer" },
+                        name: { value: trim(audData.casting_director), cfsqltype: "cf_sql_varchar" }
+                    },
+                    { datasource: application.datasource }
+                );
+                if (qCastingContact.recordCount gt 0) {
+                    castingContactId = qCastingContact.contactid;
+                }
+            }
+
             // D2) Resolve category - prefer explicit audsubcatid fact, fall back to text resolution
             var audSubCatId = 0;
             if (len(trim(audData.audsubcatid)) and val(audData.audsubcatid) gt 0) {
@@ -1593,6 +1611,8 @@ component displayname="AuditionImportService" accessors="true" output="false" {
 
             transaction {
                 // E1) INSERT into audprojects (the real project table)
+                // Use casting director contact if found, otherwise fall back to row contact
+                var projectContactId = castingContactId gt 0 ? castingContactId : contactId;
                 var qProjectResult = {};
                 queryExecute(
                     "INSERT INTO audprojects (
@@ -1607,7 +1627,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                         projDescription: { value: audData.notes, cfsqltype: "cf_sql_longvarchar", null: !len(audData.notes) },
                         userid: { value: arguments.userid, cfsqltype: "cf_sql_integer" },
                         audSubCatID: { value: audSubCatId, cfsqltype: "cf_sql_integer" },
-                        contactid: { value: contactId, cfsqltype: "cf_sql_integer", null: contactId eq 0 },
+                        contactid: { value: projectContactId, cfsqltype: "cf_sql_integer", null: projectContactId eq 0 },
                         projdate: { value: eventDate, cfsqltype: "cf_sql_date" }
                     },
                     { datasource: application.datasource, result: "qProjectResult" }
@@ -1714,27 +1734,36 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                     { datasource: application.datasource }
                 );
 
-                // E6) Record result (idempotency via UNIQUE(row_id))
+                // E6) Record result with undo data (idempotency via UNIQUE(row_id))
+                var undoData = serializeJSON({
+                    "project_id": newProjectId,
+                    "role_id": newRoleId,
+                    "event_id": newEventId
+                });
                 queryExecute(
                     "INSERT INTO import_auditions_row_results (
-                        row_id, job_id, action_taken, audition_id, fields_written, created_at
+                        row_id, job_id, action_taken, audition_id, fields_written,
+                        undo_available, undo_json, created_at
                     ) VALUES (
-                        :row_id, :job_id, 'created', :audition_id, :fields_written, NOW()
+                        :row_id, :job_id, 'created', :audition_id, :fields_written,
+                        1, :undo_json, NOW()
                     )
                     ON DUPLICATE KEY UPDATE
                         action_taken = 'created', audition_id = :audition_id,
-                        fields_written = :fields_written",
+                        fields_written = :fields_written,
+                        undo_available = 1, undo_json = :undo_json",
                     {
                         row_id: { value: arguments.row_id, cfsqltype: "cf_sql_integer" },
                         job_id: { value: arguments.job_id, cfsqltype: "cf_sql_integer" },
                         audition_id: { value: newProjectId, cfsqltype: "cf_sql_integer" },
-                        fields_written: { value: fieldsWritten, cfsqltype: "cf_sql_integer" }
+                        fields_written: { value: fieldsWritten, cfsqltype: "cf_sql_integer" },
+                        undo_json: { value: undoData, cfsqltype: "cf_sql_longvarchar" }
                     },
                     { datasource: application.datasource }
                 );
             }
 
-            logEvent(job_id = arguments.job_id, userid = arguments.userid, event_type = "row_imported", row_id = arguments.row_id, detail = { event_id: newEventId, project_id: newProjectId, role_id: newRoleId, contactid: contactId, audSubCatId: audSubCatId, fields_written: fieldsWritten });
+            logEvent(job_id = arguments.job_id, userid = arguments.userid, event_type = "row_imported", row_id = arguments.row_id, detail = { event_id: newEventId, project_id: newProjectId, role_id: newRoleId, contactid: contactId, casting_contactid: castingContactId, audSubCatId: audSubCatId, fields_written: fieldsWritten });
             return { "success": true, "action": "created", "audition_id": newEventId };
 
         } catch (any e) {
@@ -2067,6 +2096,218 @@ component displayname="AuditionImportService" accessors="true" output="false" {
         } catch (any e) {
             writeLog(file="import_auditions", text="[bulkSetCategory] ERROR job_id=" & arguments.job_id & " message=" & e.message);
             return fail(code = "UPDATE_ERROR", message = "Failed to bulk-set category: " & e.message);
+        }
+    }
+
+    // =============================================================
+    // UNDO IMPORTED ROW
+    // =============================================================
+
+    /**
+     * Undo a single imported row: delete the created records and reset the row to ready.
+     * Wrapped in a transaction for atomicity.
+     */
+    public struct function undoImportedRow(required numeric row_id, required numeric userid) {
+        try {
+            // A) Look up row result and verify ownership
+            var qResult = queryExecute(
+                "SELECT rr.result_id, rr.row_id, rr.job_id, rr.undo_available, rr.undo_json,
+                        rr.action_taken, r.status AS row_status
+                 FROM import_auditions_row_results rr
+                 INNER JOIN import_auditions_rows r ON r.row_id = rr.row_id
+                 INNER JOIN import_auditions_jobs j ON j.job_id = rr.job_id
+                 WHERE rr.row_id = :row_id AND j.userid = :userid",
+                {
+                    row_id: { value: arguments.row_id, cfsqltype: "cf_sql_integer" },
+                    userid: { value: arguments.userid, cfsqltype: "cf_sql_integer" }
+                },
+                { datasource: application.datasource }
+            );
+
+            if (qResult.recordCount eq 0) {
+                return fail(code = "NOT_FOUND", message = "Row result not found or access denied");
+            }
+
+            if (qResult.undo_available neq 1) {
+                return fail(code = "UNDO_NOT_AVAILABLE", message = "Undo is not available for this row");
+            }
+
+            if (!len(trim(qResult.undo_json))) {
+                return fail(code = "NO_UNDO_DATA", message = "No undo data recorded for this row");
+            }
+
+            // B) Parse undo JSON
+            var undoInfo = {};
+            try {
+                undoInfo = deserializeJSON(qResult.undo_json);
+            } catch (any parseErr) {
+                return fail(code = "INVALID_UNDO_DATA", message = "Could not parse undo data");
+            }
+
+            var eventId = structKeyExists(undoInfo, "event_id") ? val(undoInfo.event_id) : 0;
+            var roleId = structKeyExists(undoInfo, "role_id") ? val(undoInfo.role_id) : 0;
+            var projectId = structKeyExists(undoInfo, "project_id") ? val(undoInfo.project_id) : 0;
+            var jobId = qResult.job_id;
+
+            writeLog(file="import_auditions", text="[undoImportedRow] START row_id=" & arguments.row_id & " event_id=" & eventId & " role_id=" & roleId & " project_id=" & projectId);
+
+            // C) Delete created records in a transaction (reverse order of creation)
+            transaction {
+                // C1) Delete event (only if it belongs to this user)
+                if (eventId gt 0) {
+                    queryExecute(
+                        "DELETE FROM events_tbl WHERE eventid = :eventid AND userid = :userid",
+                        {
+                            eventid: { value: eventId, cfsqltype: "cf_sql_integer" },
+                            userid: { value: arguments.userid, cfsqltype: "cf_sql_integer" }
+                        },
+                        { datasource: application.datasource }
+                    );
+                }
+
+                // C2) Delete role (only if no other events reference it)
+                if (roleId gt 0) {
+                    var qRoleRefs = queryExecute(
+                        "SELECT COUNT(*) as cnt FROM events_tbl WHERE audRoleID = :roleId AND isDeleted = 0",
+                        { roleId: { value: roleId, cfsqltype: "cf_sql_integer" } },
+                        { datasource: application.datasource }
+                    );
+                    if (qRoleRefs.cnt eq 0) {
+                        queryExecute(
+                            "DELETE FROM audroles WHERE audroleid = :roleId",
+                            { roleId: { value: roleId, cfsqltype: "cf_sql_integer" } },
+                            { datasource: application.datasource }
+                        );
+                    }
+                }
+
+                // C3) Delete project (only if no other roles reference it)
+                if (projectId gt 0) {
+                    var qProjRefs = queryExecute(
+                        "SELECT COUNT(*) as cnt FROM audroles WHERE audprojectID = :projectId",
+                        { projectId: { value: projectId, cfsqltype: "cf_sql_integer" } },
+                        { datasource: application.datasource }
+                    );
+                    if (qProjRefs.cnt eq 0) {
+                        queryExecute(
+                            "DELETE FROM audprojects WHERE audprojectid = :projectId",
+                            { projectId: { value: projectId, cfsqltype: "cf_sql_integer" } },
+                            { datasource: application.datasource }
+                        );
+                    }
+                }
+
+                // C4) Mark undo as used
+                queryExecute(
+                    "UPDATE import_auditions_row_results
+                     SET undo_available = 0, undone_at = NOW()
+                     WHERE row_id = :row_id",
+                    { row_id: { value: arguments.row_id, cfsqltype: "cf_sql_integer" } },
+                    { datasource: application.datasource }
+                );
+
+                // C5) Reset row to ready
+                queryExecute(
+                    "UPDATE import_auditions_rows
+                     SET status = 'ready', user_action = NULL,
+                         created_audition_id = NULL, imported_at = NULL,
+                         updated_at = NOW()
+                     WHERE row_id = :row_id",
+                    { row_id: { value: arguments.row_id, cfsqltype: "cf_sql_integer" } },
+                    { datasource: application.datasource }
+                );
+            }
+
+            // D) Update job counts
+            updateJobRowCounts(jobId);
+
+            logEvent(job_id = jobId, userid = arguments.userid, event_type = "row_undone", row_id = arguments.row_id, detail = { event_id: eventId, role_id: roleId, project_id: projectId });
+            writeLog(file="import_auditions", text="[undoImportedRow] SUCCESS row_id=" & arguments.row_id);
+
+            return ok(data = { "row_id": arguments.row_id }, message = "Import undone successfully. Row returned to ready status.");
+
+        } catch (any e) {
+            writeLog(file="import_auditions", text="[undoImportedRow] ERROR row_id=" & arguments.row_id & " message=" & e.message & " detail=" & e.detail);
+            return fail(code = "UNDO_ERROR", message = "Failed to undo import: " & e.message);
+        }
+    }
+
+    // =============================================================
+    // BULK UPDATE FIELD
+    // =============================================================
+
+    /**
+     * Bulk-update a single field for multiple rows.
+     * Only allowed for whitelisted field keys.
+     */
+    public struct function bulkUpdateField(
+        required numeric job_id,
+        required numeric userid,
+        required array row_ids,
+        required string field_key,
+        required string new_value
+    ) {
+        try {
+            // A) Verify job ownership
+            var jobResult = getJobForUser(arguments.job_id, arguments.userid);
+            if (!jobResult.success) return jobResult;
+
+            // B) Validate field_key against whitelist
+            var allowedFields = "audition_date,location,status,medium,notes,audition_time";
+            if (!listFindNoCase(allowedFields, arguments.field_key)) {
+                return fail(
+                    code = "INVALID_FIELD",
+                    message = "Field '" & arguments.field_key & "' is not allowed for bulk editing. Allowed: " & allowedFields
+                );
+            }
+
+            if (arrayLen(arguments.row_ids) eq 0) {
+                return fail(code = "MISSING_PARAMS", message = "No row IDs provided");
+            }
+
+            // C) Update each row via updateRowFacts (reuses validation and status recompute)
+            var updatedCount = 0;
+            var errors = [];
+            for (var rid in arguments.row_ids) {
+                if (!isNumeric(rid) or val(rid) lte 0) continue;
+
+                var fields = {};
+                fields[arguments.field_key] = arguments.new_value;
+
+                var rowResult = updateRowFacts(
+                    job_id = arguments.job_id,
+                    row_id = val(rid),
+                    fields = fields,
+                    userid = arguments.userid
+                );
+
+                if (rowResult.success) {
+                    updatedCount++;
+                } else {
+                    arrayAppend(errors, { "row_id": val(rid), "message": rowResult.message });
+                }
+            }
+
+            logEvent(
+                job_id = arguments.job_id,
+                userid = arguments.userid,
+                event_type = "bulk_field_update",
+                detail = {
+                    field_key: arguments.field_key,
+                    row_count: arrayLen(arguments.row_ids),
+                    updated: updatedCount,
+                    error_count: arrayLen(errors)
+                }
+            );
+
+            return ok(
+                data = { "updated_count": updatedCount, "errors": errors },
+                message = updatedCount & " row(s) updated"
+            );
+
+        } catch (any e) {
+            writeLog(file="import_auditions", text="[bulkUpdateField] ERROR job_id=" & arguments.job_id & " message=" & e.message);
+            return fail(code = "UPDATE_ERROR", message = "Failed to bulk-update field: " & e.message);
         }
     }
 
