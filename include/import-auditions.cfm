@@ -559,12 +559,18 @@ input[type="date"].form-control-sm {
                             <th>Role</th>
                             <th>Date</th>
                             <th>Contact</th>
+                            <th width="160">
+                                Category
+                                <select id="header-category-select" class="form-control form-control-sm d-inline-block ms-1" style="width:auto;max-width:120px;font-size:11px;padding:1px 4px;vertical-align:middle;" title="Apply category to all rows without one">
+                                    <option value="">-- Set All --</option>
+                                </select>
+                            </th>
                             <th width="80">Status</th>
                             <th width="100">Action</th>
                         </tr>
                     </thead>
                     <tbody id="review-tbody">
-                        <tr><td colspan="7" class="text-center p-4"><i class="fe-loader fe-spin"></i> Loading rows...</td></tr>
+                        <tr><td colspan="8" class="text-center p-4"><i class="fe-loader fe-spin"></i> Loading rows...</td></tr>
                     </tbody>
                 </table>
             </div>

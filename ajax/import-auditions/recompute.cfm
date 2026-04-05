@@ -914,6 +914,37 @@
                 <cfset arrayAppend(variables.rowErrors, { field: "audition_date", error: "Audition date is required" })>
             </cfif>
 
+            <!--- audsubcatid is required. Check if we have an explicit audsubcatid fact,
+                 or if category text resolves to one. If neither, flag as problem. --->
+            <cfset variables.hasAudSubCatId = structKeyExists(variables.rowData, "audsubcatid") and len(trim(variables.rowData.audsubcatid)) and val(variables.rowData.audsubcatid) gt 0>
+            <cfif not variables.hasAudSubCatId and structKeyExists(variables.rowData, "category") and len(trim(variables.rowData.category))>
+                <!--- Try resolving category text to audsubcatid --->
+                <cftry>
+                    <cfset variables.resolvedSubCatId = variables.audService.resolveCategoryToSubCatId(variables.rowData.category)>
+                    <cfif variables.resolvedSubCatId gt 0>
+                        <cfset variables.hasAudSubCatId = true>
+                        <!--- Store the resolved audsubcatid as a fact for this row --->
+                        <cfset queryExecute(
+                            "INSERT INTO import_auditions_facts (row_id, column_id, field_name, raw_value, normalized_value, is_valid, updated_at)
+                             VALUES (:row_id, 0, 'audsubcatid', :val, :val, 1, NOW())
+                             ON DUPLICATE KEY UPDATE
+                                 normalized_value = :val, raw_value = :val, is_valid = 1,
+                                 validation_code = NULL, validation_message = NULL, updated_at = NOW()",
+                            {
+                                row_id: { value: variables.rowId, cfsqltype: "cf_sql_integer" },
+                                val: { value: variables.resolvedSubCatId, cfsqltype: "cf_sql_varchar" }
+                            },
+                            { datasource: application.datasource }
+                        )>
+                    </cfif>
+                    <cfcatch type="any"><!--- resolution failed, leave hasAudSubCatId = false ---></cfcatch>
+                </cftry>
+            </cfif>
+            <cfif not variables.hasAudSubCatId>
+                <cfset variables.errorCount++>
+                <cfset arrayAppend(variables.rowErrors, { field: "audsubcatid", error: "Audition category is required" })>
+            </cfif>
+
             <!--- Build validation summary JSON --->
             <cfset variables.validationSummary = {
                 "errors": variables.rowErrors,

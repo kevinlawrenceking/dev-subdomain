@@ -1163,8 +1163,25 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                         }
                         break;
                     case "category":
-                        // Category is always valid - resolved at finalize time
-                        // Accept any text: "Film", "Film - Feature", "TV-Episodic", etc.
+                        // Category text is accepted - will attempt resolution at finalize time
+                        break;
+                    case "audsubcatid":
+                        // Must be a valid "Other" subcategory ID
+                        if (len(normalizedVal)) {
+                            var qValidCat = queryExecute(
+                                "SELECT s.audsubcatid
+                                 FROM audsubcategories s
+                                 INNER JOIN audcategories a ON a.audcatid = s.audcatid
+                                 WHERE s.audsubcatid = :id AND a.isdeleted = 0 AND s.audsubcatname = 'Other'",
+                                { id: { value: val(normalizedVal), cfsqltype: "cf_sql_integer" } },
+                                { datasource: application.datasource }
+                            );
+                            if (qValidCat.recordCount eq 0) {
+                                isValid = false;
+                                errCode = "INVALID_CATEGORY";
+                                errMsg = "Invalid category selection";
+                            }
+                        }
                         break;
                 }
 
@@ -1205,8 +1222,33 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                 { datasource: application.datasource }
             );
 
+            // Check for missing required audsubcatid
+            var qHasCat = queryExecute(
+                "SELECT normalized_value FROM import_auditions_facts
+                 WHERE row_id = :row_id AND field_name = 'audsubcatid'
+                   AND normalized_value IS NOT NULL AND normalized_value != '' AND normalized_value != '0'",
+                { row_id: { value: arguments.row_id, cfsqltype: "cf_sql_integer" } },
+                { datasource: application.datasource }
+            );
+            var missingCategory = (qHasCat.recordCount eq 0);
+
+            // If category is missing, ensure an invalid fact exists so the error is visible in the UI
+            if (missingCategory) {
+                queryExecute(
+                    "INSERT INTO import_auditions_facts (row_id, column_id, field_name, raw_value, normalized_value, is_valid, validation_code, validation_message, updated_at)
+                     VALUES (:row_id, 0, 'audsubcatid', '', '', 0, 'REQUIRED', 'Audition category is required', NOW())
+                     ON DUPLICATE KEY UPDATE
+                         is_valid = IF(normalized_value IS NULL OR normalized_value = '' OR normalized_value = '0', 0, is_valid),
+                         validation_code = IF(normalized_value IS NULL OR normalized_value = '' OR normalized_value = '0', 'REQUIRED', validation_code),
+                         validation_message = IF(normalized_value IS NULL OR normalized_value = '' OR normalized_value = '0', 'Audition category is required', validation_message),
+                         updated_at = NOW()",
+                    { row_id: { value: arguments.row_id, cfsqltype: "cf_sql_integer" } },
+                    { datasource: application.datasource }
+                );
+            }
+
             var newStatus = "ready";
-            if (qErrors.cnt gt 0) {
+            if (qErrors.cnt gt 0 or missingCategory) {
                 newStatus = "problem";
             } else if (!isNull(qRow.dupe_candidates_json) and len(qRow.dupe_candidates_json)) {
                 try {
@@ -1473,7 +1515,8 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                 "project_name": "", "role_name": "", "casting_director": "", "agency": "",
                 "audition_date": "", "audition_time": "", "location": "", "medium": "",
                 "status": "", "callback_date": "", "booking_date": "", "self_tape": "0",
-                "notes": "", "contact_name": "", "contact_email": "", "category": ""
+                "notes": "", "contact_name": "", "contact_email": "", "category": "",
+                "audsubcatid": ""
             };
 
             for (var fact in qFacts) {
@@ -1525,8 +1568,19 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                 }
             }
 
-            // D2) Resolve category (optional - 0 means no category, audition still imports)
-            var audSubCatId = resolveCategoryToSubCatId(audData.category);
+            // D2) Resolve category - prefer explicit audsubcatid fact, fall back to text resolution
+            var audSubCatId = 0;
+            if (len(trim(audData.audsubcatid)) and val(audData.audsubcatid) gt 0) {
+                audSubCatId = val(audData.audsubcatid);
+            } else if (len(trim(audData.category))) {
+                audSubCatId = resolveCategoryToSubCatId(audData.category);
+            }
+
+            // audsubcatid is required for import
+            if (audSubCatId eq 0) {
+                recordRowResult(row_id = arguments.row_id, job_id = arguments.job_id, action_taken = "failed", error_code = "MISSING_CATEGORY", error_message = "Audition category is required");
+                return { "success": false, "code": "MISSING_CATEGORY", "message": "Audition category is required" };
+            }
 
             // D3) Determine event date (default to today if no date provided)
             var eventDate = len(trim(audData.audition_date)) ? audData.audition_date : dateFormat(now(), "yyyy-mm-dd");
@@ -1552,7 +1606,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                         projName: { value: left(trim(audData.project_name), 500), cfsqltype: "cf_sql_varchar" },
                         projDescription: { value: audData.notes, cfsqltype: "cf_sql_longvarchar", null: !len(audData.notes) },
                         userid: { value: arguments.userid, cfsqltype: "cf_sql_integer" },
-                        audSubCatID: { value: audSubCatId, cfsqltype: "cf_sql_integer", null: audSubCatId eq 0 },
+                        audSubCatID: { value: audSubCatId, cfsqltype: "cf_sql_integer" },
                         contactid: { value: contactId, cfsqltype: "cf_sql_integer", null: contactId eq 0 },
                         projdate: { value: eventDate, cfsqltype: "cf_sql_date" }
                     },
@@ -1794,7 +1848,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
     // "Television", "TV", "Commercial", etc.
     // Returns 0 if no match (category is optional).
 
-    private numeric function resolveCategoryToSubCatId(required string categoryText) {
+    public numeric function resolveCategoryToSubCatId(required string categoryText) {
         var raw = trim(arguments.categoryText);
         if (!len(raw)) return 0;
 
@@ -1869,6 +1923,151 @@ component displayname="AuditionImportService" accessors="true" output="false" {
 
         // No match - return 0 (category will be NULL, audition still imports)
         return 0;
+    }
+
+    // =============================================================
+    // CATEGORY OPTIONS FOR IMPORT
+    // =============================================================
+    // Returns the 6 categories with their "Other" subcategory ID.
+    // Used in the review grid so users can assign a category per row.
+
+    public struct function getCategoryOptions() {
+        try {
+            var qCats = queryExecute(
+                "SELECT a.audcatid, a.audcatname, s.audsubcatid
+                 FROM audcategories a
+                 INNER JOIN audsubcategories s ON s.audcatid = a.audcatid
+                 WHERE a.isdeleted = 0 AND s.audsubcatname = 'Other'
+                 ORDER BY a.audcatname",
+                {},
+                { datasource: application.datasource }
+            );
+
+            var options = [];
+            for (var row in qCats) {
+                arrayAppend(options, {
+                    "audcatid": row.audcatid,
+                    "audcatname": row.audcatname,
+                    "audsubcatid": row.audsubcatid
+                });
+            }
+
+            return ok(data = { "options": options });
+
+        } catch (any e) {
+            writeLog(file="import_auditions", text="[getCategoryOptions] ERROR: " & e.message);
+            return fail(code = "QUERY_ERROR", message = "Failed to load category options: " & e.message);
+        }
+    }
+
+    /**
+     * Bulk-set audsubcatid for all rows in a job that don't already have one.
+     */
+    public struct function bulkSetCategory(
+        required numeric job_id,
+        required numeric userid,
+        required numeric audsubcatid
+    ) {
+        try {
+            // Verify job ownership
+            var jobResult = getJobForUser(arguments.job_id, arguments.userid);
+            if (!jobResult.success) return jobResult;
+
+            // Validate audsubcatid is one of the "Other" subcategories
+            var qValid = queryExecute(
+                "SELECT s.audsubcatid
+                 FROM audsubcategories s
+                 INNER JOIN audcategories a ON a.audcatid = s.audcatid
+                 WHERE s.audsubcatid = :id AND a.isdeleted = 0 AND s.audsubcatname = 'Other'",
+                { id: { value: arguments.audsubcatid, cfsqltype: "cf_sql_integer" } },
+                { datasource: application.datasource }
+            );
+            if (qValid.recordCount eq 0) {
+                return fail(code = "INVALID_CATEGORY", message = "Invalid category selection");
+            }
+
+            // Find all rows that lack an audsubcatid fact (or have empty/0 value)
+            var qRows = queryExecute(
+                "SELECT r.row_id
+                 FROM import_auditions_rows r
+                 WHERE r.job_id = :job_id AND r.status NOT IN ('imported', 'ignored')
+                   AND NOT EXISTS (
+                       SELECT 1 FROM import_auditions_facts f
+                       WHERE f.row_id = r.row_id AND f.field_name = 'audsubcatid'
+                         AND f.normalized_value IS NOT NULL AND f.normalized_value != '' AND f.normalized_value != '0'
+                   )",
+                { job_id: { value: arguments.job_id, cfsqltype: "cf_sql_integer" } },
+                { datasource: application.datasource }
+            );
+
+            var updatedCount = 0;
+            for (var row in qRows) {
+                // Upsert audsubcatid fact for this row
+                queryExecute(
+                    "INSERT INTO import_auditions_facts (row_id, column_id, field_name, raw_value, normalized_value, is_valid, updated_at)
+                     VALUES (:row_id, 0, 'audsubcatid', :val, :val, 1, NOW())
+                     ON DUPLICATE KEY UPDATE
+                         normalized_value = :val, raw_value = :val, is_valid = 1,
+                         validation_code = NULL, validation_message = NULL, updated_at = NOW()",
+                    {
+                        row_id: { value: row.row_id, cfsqltype: "cf_sql_integer" },
+                        val: { value: arguments.audsubcatid, cfsqltype: "cf_sql_varchar" }
+                    },
+                    { datasource: application.datasource }
+                );
+
+                // Recompute row status: remove audsubcatid error, check remaining errors
+                var qErrors = queryExecute(
+                    "SELECT COUNT(*) as cnt FROM import_auditions_facts WHERE row_id = :row_id AND is_valid = 0",
+                    { row_id: { value: row.row_id, cfsqltype: "cf_sql_integer" } },
+                    { datasource: application.datasource }
+                );
+
+                var newStatus = "ready";
+                if (qErrors.cnt gt 0) {
+                    newStatus = "problem";
+                } else {
+                    // Check dupes
+                    var qDupe = queryExecute(
+                        "SELECT dupe_candidates_json FROM import_auditions_rows WHERE row_id = :row_id",
+                        { row_id: { value: row.row_id, cfsqltype: "cf_sql_integer" } },
+                        { datasource: application.datasource }
+                    );
+                    if (qDupe.recordCount and !isNull(qDupe.dupe_candidates_json) and len(qDupe.dupe_candidates_json)) {
+                        try {
+                            var dupes = deserializeJSON(qDupe.dupe_candidates_json);
+                            if (isArray(dupes) and arrayLen(dupes) gt 0) newStatus = "dupe";
+                        } catch (any e) {}
+                    }
+                }
+
+                queryExecute(
+                    "UPDATE import_auditions_rows
+                     SET status = :status,
+                         error_count = (SELECT COUNT(*) FROM import_auditions_facts WHERE row_id = :row_id AND is_valid = 0),
+                         updated_at = NOW()
+                     WHERE row_id = :row_id",
+                    {
+                        row_id: { value: row.row_id, cfsqltype: "cf_sql_integer" },
+                        status: { value: newStatus, cfsqltype: "cf_sql_varchar" }
+                    },
+                    { datasource: application.datasource }
+                );
+
+                updatedCount++;
+            }
+
+            updateJobRowCounts(arguments.job_id);
+
+            return ok(
+                data = { "updated_count": updatedCount },
+                message = updatedCount & " row(s) updated with category"
+            );
+
+        } catch (any e) {
+            writeLog(file="import_auditions", text="[bulkSetCategory] ERROR job_id=" & arguments.job_id & " message=" & e.message);
+            return fail(code = "UPDATE_ERROR", message = "Failed to bulk-set category: " & e.message);
+        }
     }
 
 }

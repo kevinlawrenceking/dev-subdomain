@@ -75,6 +75,7 @@
         initJobActions();
         initReviewGrid();
         initModals();
+        loadCategoryOptions();
         initStatusControls();
 
         // Check for active job
@@ -135,10 +136,12 @@
             { value: '1', label: 'Yes' },
             { value: '0', label: 'No' }
         ]},
-        notes: { type: 'textarea', label: 'Notes', group: 'other' }
+        notes: { type: 'textarea', label: 'Notes', group: 'other' },
+        audsubcatid: { type: 'category_select', label: 'Category', group: 'project' }
     };
 
-
+    // Category options loaded from server (populated on init)
+    var categoryOptions = [];
 
     // State
     var state = {
@@ -786,11 +789,147 @@
         });
     }
 
+    // ========================================
+    // CATEGORY OPTIONS
+    // ========================================
+
+    function loadCategoryOptions() {
+        $j.get('/ajax/import-auditions/categories.cfm?bypass=1', function(response) {
+            if (cfGet(response, 'success')) {
+                var data = cfGet(response, 'data') || {};
+                categoryOptions = cfGet(data, 'options') || [];
+                console.log('[AUD] Loaded', categoryOptions.length, 'category options');
+                populateHeaderCategorySelect();
+            }
+        });
+    }
+
+    function populateHeaderCategorySelect() {
+        var $sel = $j('#header-category-select');
+        if (!$sel.length || categoryOptions.length === 0) return;
+        $sel.find('option:not(:first)').remove();
+        categoryOptions.forEach(function(opt) {
+            var id = opt.audsubcatid || opt.AUDSUBCATID;
+            var name = opt.audcatname || opt.AUDCATNAME;
+            $sel.append('<option value="' + id + '">' + escapeHtml(name) + '</option>');
+        });
+
+        // Bulk apply handler
+        $sel.off('change').on('change', function() {
+            var val = $j(this).val();
+            if (!val) return;
+            var name = $j(this).find('option:selected').text();
+            if (!confirm('Set category to "' + name + '" for all rows that don\'t have one yet?')) {
+                $j(this).val('');
+                return;
+            }
+            bulkApplyCategory(val);
+            $j(this).val('');
+        });
+    }
+
+    function bulkApplyCategory(audsubcatid) {
+        var csrfToken = $j('#csrf-token').val() || '';
+        $j.ajax({
+            url: '/ajax/import-auditions/bulk_category.cfm?bypass=1',
+            type: 'POST',
+            contentType: 'application/json',
+            headers: csrfToken ? { 'X-CSRF-Token': csrfToken } : {},
+            data: JSON.stringify({
+                job_id: state.jobId,
+                audsubcatid: parseInt(audsubcatid),
+                csrf_token: csrfToken
+            }),
+            success: function(response) {
+                if (cfGet(response, 'success')) {
+                    var data = cfGet(response, 'data') || {};
+                    var count = cfGet(data, 'updated_count') || 0;
+                    showAlert('success', count + ' row(s) updated with category');
+                    loadRows();
+                } else {
+                    showAlert('error', cfGet(response, 'message') || 'Failed to update');
+                }
+            },
+            error: function(xhr) {
+                showErrorWithDebug(xhr, 'Bulk category update failed.');
+            }
+        });
+    }
+
+    function getCategoryNameById(audsubcatid) {
+        var id = parseInt(audsubcatid);
+        for (var i = 0; i < categoryOptions.length; i++) {
+            var optId = categoryOptions[i].audsubcatid || categoryOptions[i].AUDSUBCATID;
+            if (parseInt(optId) === id) {
+                return categoryOptions[i].audcatname || categoryOptions[i].AUDCATNAME;
+            }
+        }
+        return '';
+    }
+
+    function buildCategorySelect(rowId, currentValue, isDisabled) {
+        var val = currentValue ? parseInt(currentValue) : 0;
+        var missing = !val || val === 0;
+        var cls = missing ? 'is-invalid' : '';
+        var disabled = isDisabled ? ' disabled' : '';
+        var html = '<select class="form-control form-control-sm row-category-select ' + cls + '"' +
+            ' data-row-id="' + rowId + '"' + disabled +
+            ' style="font-size:11px;padding:1px 4px;min-width:100px;">';
+        html += '<option value=""' + (missing ? ' selected' : '') + '>-- Select --</option>';
+        categoryOptions.forEach(function(opt) {
+            var id = opt.audsubcatid || opt.AUDSUBCATID;
+            var name = opt.audcatname || opt.AUDCATNAME;
+            var selected = (parseInt(id) === val) ? ' selected' : '';
+            html += '<option value="' + id + '"' + selected + '>' + escapeHtml(name) + '</option>';
+        });
+        html += '</select>';
+        return html;
+    }
+
+    function handleInlineCategoryChange($select) {
+        var rowId = $select.data('row-id');
+        var val = $select.val();
+        var csrfToken = $j('#csrf-token').val() || '';
+
+        $select.prop('disabled', true);
+        $j.ajax({
+            url: '/ajax/import-auditions/fact_update.cfm?bypass=1',
+            type: 'POST',
+            contentType: 'application/json',
+            headers: csrfToken ? { 'X-CSRF-Token': csrfToken } : {},
+            data: JSON.stringify({
+                job_id: state.jobId,
+                row_id: rowId,
+                fields: { audsubcatid: val },
+                csrf_token: csrfToken
+            }),
+            success: function(response) {
+                $select.prop('disabled', false);
+                if (cfGet(response, 'success')) {
+                    // Update visual state
+                    if (val) {
+                        $select.removeClass('is-invalid');
+                    } else {
+                        $select.addClass('is-invalid');
+                    }
+                    // Refresh to update status badges and stats
+                    loadRows();
+                } else {
+                    showAlert('error', cfGet(response, 'message') || 'Update failed');
+                }
+            },
+            error: function(xhr) {
+                $select.prop('disabled', false);
+                showErrorWithDebug(xhr, 'Category update failed.');
+            }
+        });
+    }
+
     function loadRows() {
         console.log('[AUD] Loading rows for job:', state.jobId, 'Filter:', state.currentFilter);
 
         // Show loading indicator
-        $j('#review-tbody').html('<tr><td colspan="7" class="text-center p-4"><i class="fe-loader fe-spin"></i> Loading rows...</td></tr>');
+        $j('#review-tbody').html('<tr><td colspan="8" class="text-center p-4"><i class="fe-loader fe-spin"></i> Loading rows...</td></tr>');
 
         var url = '/ajax/import-auditions/rows.cfm?bypass=1&job_id=' + state.jobId +
             '&status=' + encodeURIComponent(state.currentFilter) +
@@ -819,11 +958,11 @@
                 updateStats();
             } else {
                 console.error('[AUD] Load rows failed with code:', cfGet(response, 'code'));
-                $j('#review-tbody').html('<tr><td colspan="7" class="text-center text-danger">' + escapeHtml(cfGet(response, 'message') || 'Unknown error') + '</td></tr>');
+                $j('#review-tbody').html('<tr><td colspan="8" class="text-center text-danger">' + escapeHtml(cfGet(response, 'message') || 'Unknown error') + '</td></tr>');
             }
         }).fail(function(xhr, status, error) {
             console.error('[AUD] Load rows HTTP error:', xhr.status, status, error);
-            $j('#review-tbody').html('<tr><td colspan="7" class="text-center text-danger">Failed to load rows. Please refresh the page.</td></tr>');
+            $j('#review-tbody').html('<tr><td colspan="8" class="text-center text-danger">Failed to load rows. Please refresh the page.</td></tr>');
         });
     }
 
@@ -835,7 +974,7 @@
 
     function renderRows(rows) {
         if (!rows || rows.length === 0) {
-            $j('#review-tbody').html('<tr><td colspan="7" class="text-center text-muted p-4">No rows found</td></tr>');
+            $j('#review-tbody').html('<tr><td colspan="8" class="text-center text-muted p-4">No rows found</td></tr>');
             return;
         }
 
@@ -855,6 +994,7 @@
             var role = getVal(data, 'role_name') || '-';
             var audDate = getVal(data, 'audition_date') || '-';
             var contact = getVal(data, 'contact_name') || '-';
+            var audsubcatid = getVal(data, 'audsubcatid') || '';
 
             var rowClass = rowStatus === 'imported' ? 'table-light' : (rowStatus === 'ignored' ? 'table-light text-muted' : '');
             html += '<tr data-row-id="' + rowId + '" class="' + rowClass + '">';
@@ -863,6 +1003,20 @@
             html += '<td>' + escapeHtml(role) + '</td>';
             html += '<td>' + escapeHtml(audDate) + '</td>';
             html += '<td>' + escapeHtml(contact) + '</td>';
+
+            // Category inline dropdown
+            html += '<td>';
+            if (rowStatus === 'imported') {
+                var catName = getCategoryNameById(audsubcatid);
+                html += catName ? escapeHtml(catName) : '<span class="text-muted">-</span>';
+            } else if (rowStatus === 'ignored') {
+                var catName2 = getCategoryNameById(audsubcatid);
+                html += catName2 ? '<span class="text-muted">' + escapeHtml(catName2) + '</span>' : '<span class="text-muted">-</span>';
+            } else {
+                html += buildCategorySelect(rowId, audsubcatid, false);
+            }
+            html += '</td>';
+
             html += '<td><span class="status-badge status-' + rowStatus + '">' + rowStatus + '</span></td>';
             html += '<td>';
 
@@ -885,7 +1039,7 @@
 
             // Show validation errors
             if (rowStatus === 'problem' && errors && errors.length > 0) {
-                html += '<tr class="bg-light"><td colspan="7">';
+                html += '<tr class="bg-light"><td colspan="8">';
                 html += '<small class="text-danger">';
                 errors.forEach(function(err) {
                     var errField = err.field || err.FIELD || '';
@@ -897,7 +1051,7 @@
 
             // Show duplicate info
             if (rowStatus === 'dupe' && duplicates && duplicates.length > 0) {
-                html += '<tr class="bg-warning-light"><td colspan="7">';
+                html += '<tr class="bg-warning-light"><td colspan="8">';
                 html += '<small class="text-warning"><i class="fe-alert-triangle"></i> ';
                 var dupeProject = duplicates[0].project_name || duplicates[0].PROJECT_NAME || 'Unknown';
                 var dupeRole = duplicates[0].role_name || duplicates[0].ROLE_NAME || '';
@@ -930,6 +1084,11 @@
 
         $j('.btn-restore').click(function() {
             singleRowAction($j(this).data('row-id'), 'create');
+        });
+
+        // Bind inline category dropdowns
+        $j('.row-category-select').on('change', function() {
+            handleInlineCategoryChange($j(this));
         });
     }
 
@@ -1132,7 +1291,7 @@
 
         var fieldGroups = {
             'Contact': ['contact_name', 'contact_email'],
-            'Project': ['project_name', 'role_name', 'casting_director', 'agency'],
+            'Project': ['project_name', 'role_name', 'audsubcatid', 'casting_director', 'agency'],
             'Schedule': ['audition_date', 'audition_time', 'callback_date', 'booking_date'],
             'Details': ['location', 'medium', 'status', 'self_tape'],
             'Other': ['notes']
@@ -1158,7 +1317,7 @@
         var relevantFields = new Set(fieldsWithData.concat(fieldsWithErrors));
 
         // Always show core fields
-        ['project_name', 'role_name', 'audition_date', 'contact_name'].forEach(function(f) {
+        ['project_name', 'role_name', 'audsubcatid', 'audition_date', 'contact_name'].forEach(function(f) {
             relevantFields.add(f);
         });
 
@@ -1239,6 +1398,19 @@
                         html += '<option value="' + opt.value + '" ' + selected + '>' + escapeHtml(opt.label) + '</option>';
                     });
                 }
+                html += '</select>';
+                break;
+
+            case 'category_select':
+                html = '<select class="form-control form-control-sm ' + inputClass + '" name="' + field + '">';
+                html += '<option value="">-- Select Category --</option>';
+                var currentVal = value ? parseInt(value) : 0;
+                categoryOptions.forEach(function(opt) {
+                    var id = opt.audsubcatid || opt.AUDSUBCATID;
+                    var name = opt.audcatname || opt.AUDCATNAME;
+                    var selected = (parseInt(id) === currentVal) ? ' selected' : '';
+                    html += '<option value="' + id + '"' + selected + '>' + escapeHtml(name) + '</option>';
+                });
                 html += '</select>';
                 break;
 
