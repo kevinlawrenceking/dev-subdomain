@@ -316,6 +316,7 @@ notsnext.recordcount: #notsnext.recordcount#
     <cfinclude template="/include/qry/addNotifications.cfm" />
     <cfinclude template="/include/qry/findSystemByScope.cfm" />
     <cfset session.ftom = "Y" />
+    <cfset mode = "1" />
     <cfinclude template="/include/add_system.cfm" />
     <cfset debugCounters.createdMaintenanceSystems++ />
     <cfset debugCounters.insertedNotifications++ />
