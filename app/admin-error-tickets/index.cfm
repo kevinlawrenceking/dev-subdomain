@@ -8,7 +8,7 @@ Phase 2 of TAO-SPEC-2026-005 Centralized Error Management
 --->
 
 <!--- Security check --->
-<cfif NOT isDefined("session.userrole") OR session.userrole IS NOT "Administrator">
+<cfif NOT isDefined("userRole") OR (userRole NEQ "Admin" AND userRole NEQ "Administrator")>
     <cflocation url="/app/dashboard_new/" addtoken="false" />
 </cfif>
 

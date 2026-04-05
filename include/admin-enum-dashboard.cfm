@@ -5,8 +5,8 @@
     Included by: app/admin-enum-audition/index.cfm, app/admin-enum-relationship/index.cfm
 --->
 
-<!--- Security: admin only --->
-<cfif NOT structKeyExists(session, "userrole") OR session.userrole NEQ "Administrator">
+<!--- Security: admin only. userRole is set by fetchUsers.cfm in onRequestStart. --->
+<cfif NOT isDefined("userRole") OR (userRole NEQ "Admin" AND userRole NEQ "Administrator")>
     <cflocation url="/app/dashboard_new/" addtoken="false">
 </cfif>
 

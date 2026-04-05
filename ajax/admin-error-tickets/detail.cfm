@@ -5,7 +5,12 @@ GET /ajax/admin-error-tickets/detail.cfm
 Params: ticket_id (the ERR-xxxxxxxx string)
 Returns JSON: { success, data: { ...full ticket record... } }
 --->
-<cfif NOT isDefined("session.userrole") OR session.userrole IS NOT "Administrator">
+<!--- Admin check: query DB directly since AJAX context has no fetchUsers --->
+<cfquery name="qAdminCheck" datasource="#application.dsn#" maxrows="1">
+    SELECT userRole FROM taousers
+    WHERE userid = <cfqueryparam value="#session.userid#" cfsqltype="cf_sql_integer">
+</cfquery>
+<cfif qAdminCheck.recordCount EQ 0 OR (qAdminCheck.userRole NEQ "Admin" AND qAdminCheck.userRole NEQ "Administrator")>
     <cfheader statuscode="403" statustext="Forbidden" />
     <cfoutput>#serializeJSON({ "success": false, "message": "Access denied." })#</cfoutput>
     <cfabort />

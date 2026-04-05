@@ -7,8 +7,12 @@
 
 <cftry>
 
-    <!--- Admin check --->
-    <cfif NOT structKeyExists(session, "userrole") OR session.userrole NEQ "Administrator">
+    <!--- Admin check: query DB directly since AJAX context has no fetchUsers --->
+    <cfquery name="qAdminCheck" datasource="#request.dsn#" maxrows="1">
+        SELECT userRole FROM taousers
+        WHERE userid = <cfqueryparam value="#session.userid#" cfsqltype="cf_sql_integer">
+    </cfquery>
+    <cfif qAdminCheck.recordCount EQ 0 OR (qAdminCheck.userRole NEQ "Admin" AND qAdminCheck.userRole NEQ "Administrator")>
         <cfheader statuscode="403">
         <cfcontent type="application/json" reset="true">
         <cfoutput>{"success":false,"message":"Administrator access required."}</cfoutput>
