@@ -59,6 +59,10 @@
           <td>#encodeForHtml(len(d.userId) ? d.userId : "(none)")#</td>
         </tr>
         <tr>
+          <td style="font-weight:600; vertical-align:top;">Name:</td>
+          <td>#encodeForHtml(len(d.userName) ? d.userName : "(none)")#</td>
+        </tr>
+        <tr>
           <td style="font-weight:600; vertical-align:top;">Email:</td>
           <td>#encodeForHtml(len(d.userEmail) ? d.userEmail : "(none)")#</td>
         </tr>

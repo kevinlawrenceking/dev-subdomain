@@ -123,6 +123,16 @@
       // User context (safe session reads — returns "" if session unavailable)
       diag.userId = safeSessionRead("userid");
       diag.userEmail = safeSessionRead("email");
+      diag.userName = "";
+
+      // Look up name/email from taousers if we have a userId
+      if (len(diag.userId) AND isNumeric(diag.userId)) {
+        var userInfo = lookupUser(val(diag.userId));
+        diag.userName = userInfo.userName;
+        if (NOT len(diag.userEmail)) {
+          diag.userEmail = userInfo.userEmail;
+        }
+      }
 
       // CF and environment context
       diag.cfContext = arguments.cfContext;
@@ -167,7 +177,7 @@
           stack_trace, tag_context, sql_statement,
           script_name, query_string, http_method, http_referer,
           remote_ip, user_agent, form_data,
-          user_id, user_email,
+          user_id, user_name, user_email,
           cf_context, event_name, environment, cf_engine, server_name,
           email_sent
         ) VALUES (
@@ -186,6 +196,7 @@
           <cfqueryparam value="#arguments.diagnostics.userAgent#" cfsqltype="cf_sql_longvarchar" null="#NOT len(arguments.diagnostics.userAgent)#" />,
           <cfqueryparam value="#arguments.diagnostics.formData#" cfsqltype="cf_sql_longvarchar" null="#NOT len(arguments.diagnostics.formData)#" />,
           <cfqueryparam value="#arguments.diagnostics.userId#" cfsqltype="cf_sql_integer" null="#NOT len(arguments.diagnostics.userId) OR NOT isNumeric(arguments.diagnostics.userId)#" />,
+          <cfqueryparam value="#arguments.diagnostics.userName#" cfsqltype="cf_sql_varchar" null="#NOT len(arguments.diagnostics.userName)#" />,
           <cfqueryparam value="#arguments.diagnostics.userEmail#" cfsqltype="cf_sql_varchar" null="#NOT len(arguments.diagnostics.userEmail)#" />,
           <cfqueryparam value="#arguments.diagnostics.cfContext#" cfsqltype="cf_sql_varchar" null="#NOT len(arguments.diagnostics.cfContext)#" />,
           <cfqueryparam value="#arguments.diagnostics.eventName#" cfsqltype="cf_sql_varchar" null="#NOT len(arguments.diagnostics.eventName)#" />,
@@ -357,6 +368,28 @@
         return "Error reading form scope";
       }
     </cfscript>
+  </cffunction>
+
+  <cffunction name="lookupUser" access="private" returntype="struct" output="false"
+              hint="Queries taousers for name and email by userId. Returns struct with userName, userEmail.">
+    <cfargument name="userId" type="numeric" required="true" />
+    <cfset var result = { userName = "", userEmail = "" } />
+    <cftry>
+      <cfquery name="local.qUser" datasource="#variables.dsn#" maxrows="1">
+        SELECT userFirstName, userLastName, userEmail
+        FROM taousers
+        WHERE userID = <cfqueryparam value="#arguments.userId#" cfsqltype="cf_sql_integer" />
+      </cfquery>
+      <cfif local.qUser.recordCount>
+        <cfset result.userName = trim(local.qUser.userFirstName & " " & local.qUser.userLastName) />
+        <cfset result.userEmail = local.qUser.userEmail />
+      </cfif>
+      <cfcatch>
+        <cflog file="TAO_error_fallback" type="warning"
+               text="lookupUser failed for userId #arguments.userId#: #cfcatch.message#" />
+      </cfcatch>
+    </cftry>
+    <cfreturn result />
   </cffunction>
 
   <cffunction name="safeSessionRead" access="private" returntype="string" output="false"
