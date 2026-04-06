@@ -26,10 +26,14 @@
     <cfset browser_contact_avatar_filename = "#browser_contact_avatar_loc#/avatar.jpg" />
     
     <!--- Prepare calendar names and URLs --->
+    <cfparam name="session.userCalendarPath" default="" />
+    <cfparam name="session.userCalendarUrl" default="" />
+    <cfset cal_root_dir = session.userCalendarPath />
+    <cfset cal_root_url = session.userCalendarUrl />
     <cfset calendar_name3 = "#FindUser.userfirstname##FindUser.userlastname#" />
     <cfset calendar_name2 = #REReplace(calendar_name3, "[^0-9A-Za-z ]", "", "all")# />
     <cfset calendar_name = #replace(calendar_name2, " ", "", "all")# />
-    <cfset calendar_dir = "#cal_root_dir##calendar_name#.ics" />      
+    <cfset calendar_dir = "#cal_root_dir##calendar_name#.ics" />
     <cfset calendar_url = "#cal_root_url##calendar_name#.ics" />   
     
     <!--- Output avatar name --->
