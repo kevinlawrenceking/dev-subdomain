@@ -1,11 +1,58 @@
+<!--- MIGRATE: IPN handler -> Go webhook endpoint with signature middleware --->
 <cftry>
     <!--- Determine datasource from hostname --->
     <cfset dsn = ListFirst(cgi.server_name, ".") EQ "app" ? "abo" : "abod" />
     <cfset httpData = getHttpRequestData()>
     <cfset rawPostData = httpData.content>
+    <cfset httpHeaders = httpData.headers>
 
     <!--- Log raw payload for field discovery and debugging --->
     <cflog file="ipn_raw_payload" text="#rawPostData#">
+
+    <!--- ============================================================
+          HMAC Signature Verification
+          PayKickstart signs webhooks with HMAC-SHA256.
+          Secret is read from server environment variable.
+          ============================================================ --->
+    <cfscript>
+        webhookSecret = "";
+        env = {};
+        if (structKeyExists(server, "system") && structKeyExists(server.system, "environment")) {
+            env = server.system.environment;
+        }
+        if (structKeyExists(env, "TAO_PAYKICKSTART_WEBHOOK_SECRET") && len(env["TAO_PAYKICKSTART_WEBHOOK_SECRET"])) {
+            webhookSecret = env["TAO_PAYKICKSTART_WEBHOOK_SECRET"];
+        }
+
+        // Extract signature from header (check common PayKickstart header names)
+        receivedSig = "";
+        for (hName in ["X-PK-Signature", "x-pk-signature", "X-Webhook-Signature", "x-webhook-signature"]) {
+            if (structKeyExists(httpHeaders, hName) && len(httpHeaders[hName])) {
+                receivedSig = httpHeaders[hName];
+                break;
+            }
+        }
+    </cfscript>
+
+    <cfif len(webhookSecret)>
+        <!--- Secret is configured: enforce signature check --->
+        <cfif NOT len(receivedSig)>
+            <cflog file="ipn_security" text="REJECTED: No signature header present. IP=#cgi.remote_addr#">
+            <cfheader statuscode="403" />
+            <cfcontent type="text/plain" reset="true" /><cfoutput>Forbidden</cfoutput><cfabort />
+        </cfif>
+
+        <cfset computedSig = hmac(rawPostData, webhookSecret, "HmacSHA256", "utf-8") />
+
+        <cfif compareNoCase(computedSig, receivedSig) NEQ 0>
+            <cflog file="ipn_security" text="REJECTED: Signature mismatch. IP=#cgi.remote_addr# Expected=#computedSig# Got=#receivedSig#">
+            <cfheader statuscode="403" />
+            <cfcontent type="text/plain" reset="true" /><cfoutput>Forbidden</cfoutput><cfabort />
+        </cfif>
+    <cfelse>
+        <!--- No secret configured yet: log warning, allow request (deployment grace period) --->
+        <cflog file="ipn_security" text="WARNING: TAO_PAYKICKSTART_WEBHOOK_SECRET not configured. Skipping signature check. IP=#cgi.remote_addr#">
+    </cfif>
 
     <!--- Parse rawPostData into a struct --->
     <cfset paramStruct = {}>
@@ -22,6 +69,24 @@
             <cfset paramStruct[k] = "">
         </cfif>
     </cfloop>
+
+    <!--- ============================================================
+          Duplicate InvoiceID Detection
+          Prevent re-inserting the same webhook delivery.
+          ============================================================ --->
+    <cfif len(trim(paramStruct['invoice_id']))>
+        <cfquery name="qDupe" datasource="#dsn#">
+            SELECT id FROM thrivecart_tbl
+            WHERE InvoiceID = <cfqueryparam value="#paramStruct['invoice_id']#" cfsqltype="cf_sql_varchar">
+            LIMIT 1
+        </cfquery>
+
+        <cfif qDupe.recordCount GT 0>
+            <cflog file="ipn_duplicates" text="Duplicate InvoiceID=#paramStruct['invoice_id']# already exists as thrivecart_tbl.id=#qDupe.id#. IP=#cgi.remote_addr#">
+            <cfoutput>OK</cfoutput>
+            <cfabort />
+        </cfif>
+    </cfif>
 
     <!--- Derive full name --->
     <cfset fullName = trim(paramStruct['buyer_first_name'] & " " & paramStruct['buyer_last_name'])>
