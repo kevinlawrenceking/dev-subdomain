@@ -86,7 +86,7 @@
                 <p>Hi #encodeForHTML(variables.emailData.firstName)#,</p>
                 <p>An administrator has requested a password reset for your account.</p>
                 <p>Click on the link below to set a new password:</p>
-                <p><a href="https://#encodeForHTML(variables.emailData.host)#/recover/?cid=[CUSTOMER_ID]&email=#encodeForURL(variables.emailData.email)#&recover=[RECOVER_UUID]" style="display:inline-block;padding:10px 20px;background-color:##4CAF50;color:white;text-decoration:none;border-radius:4px;">RESET MY PASSWORD</a></p>
+                <p><a href="https://#encodeForHTML(variables.emailData.host)#/recover/?recover=[RECOVER_UUID]" style="display:inline-block;padding:10px 20px;background-color:##4CAF50;color:white;text-decoration:none;border-radius:4px;">RESET MY PASSWORD</a></p>
                 <p>If you did not request this, you can safely ignore this email.</p>
                 <p>The Actor's Office Support Team</p>
             </body>

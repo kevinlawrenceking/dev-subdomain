@@ -5,7 +5,7 @@
 <cfparam name="IMAGESURL" default="/media-abo/images" />
 
 
-<cfquery result="result" name="U" >
+<cfquery result="result" name="U" maxrows="1">
 SELECT th.id
 ,th.CustomerFirst
 ,th.CustomerLast

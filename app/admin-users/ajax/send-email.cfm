@@ -87,14 +87,10 @@
                     email: { value: variables.userEmail, cfsqltype: "cf_sql_varchar" },
                     uuid:  { value: variables.setupUUID, cfsqltype: "cf_sql_varchar" }
                 },
-                { datasource: application.datasource }
+                { datasource: application.datasource, result: "insertResult" }
             )>
-            <!--- Get the new thrivecart id and link it to the user --->
-            <cfset variables.newTcId = queryExecute(
-                "SELECT LAST_INSERT_ID() AS newid",
-                {},
-                { datasource: application.datasource }
-            ).newid>
+            <!--- Get the new thrivecart id from the INSERT result (connection-safe) --->
+            <cfset variables.newTcId = insertResult.generatedkey>
             <cfset queryExecute(
                 "UPDATE taousers_tbl SET customerid = :cid WHERE userid = :uid",
                 {
@@ -221,8 +217,6 @@
             { datasource: application.datasource }
         )>
 
-        <!--- Get customerid for the reset link --->
-        <cfset variables.customerId = variables.userData.customerid>
         <cfset addDebug("sending password_reset email to=#variables.userEmail# from=support@theactorsoffice.com")>
 
         <!--- Send password reset email --->
@@ -241,7 +235,7 @@
                 <p>Hi #encodeForHTML(variables.userFirst)#,</p>
                 <p>An administrator has requested a password reset for your account.</p>
                 <p>Click on the link below to set a new password:</p>
-                <p><a href="https://#encodeForHTML(variables.hostName)#/recover/?cid=#encodeForURL(variables.customerId)#&email=#encodeForURL(variables.userEmail)#&recover=#encodeForURL(variables.recoverUUID)#"><button>RESET MY PASSWORD</button></a></p>
+                <p><a href="https://#encodeForHTML(variables.hostName)#/recover/?recover=#encodeForURL(variables.recoverUUID)#"><button>RESET MY PASSWORD</button></a></p>
                 <p>If you did not request this, you can safely ignore this email.</p>
                 <p>The Actor's Office Support Team</p>
             </body>
