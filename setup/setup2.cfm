@@ -18,7 +18,7 @@
 <cfquery name="qSetup" datasource="#application.dsn#">
     SELECT id, customerid, customerfirst, customerlast, customeremail, productname
     FROM thrivecart_tbl
-    WHERE recoveryhash = <cfqueryparam value="#session.setupUUID#" cfsqltype="cf_sql_varchar">
+    WHERE uuid = <cfqueryparam value="#session.setupUUID#" cfsqltype="cf_sql_varchar">
     AND status = <cfqueryparam value="Emailed" cfsqltype="cf_sql_varchar">
     LIMIT 1
 </cfquery>
