@@ -93,7 +93,15 @@
                                 </div>
 
                                 <!--- Include the main page content --->
-                                <cfinclude template="/include/#pgFilename#" />
+                                <cfif pgFilename NEQ "">
+                                    <!--- Guard against path traversal in database-sourced filename --->
+                                    <cfif find("..", pgFilename) EQ 0 AND find("/", pgFilename) EQ 0 AND find("\", pgFilename) EQ 0>
+                                        <cfset filePath = expandPath("/include/#pgFilename#") />
+                                        <cfif fileExists(filePath)>
+                                            <cfinclude template="/include/#pgFilename#" />
+                                        </cfif>
+                                    </cfif>
+                                </cfif>
                             </div> <!--- end card-body --->
                         </div> <!--- end card --->
                     </div> <!--- end col --->
