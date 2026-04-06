@@ -16,11 +16,13 @@ Operating contract:
 
 TAO context (authoritative, confirm by discovery if code differs):
 - Primary app is ColdFusion (CFML) serving pages and AJAX endpoints.
-- Database is server side only. Clients never connect to the database directly.
+- Database is MySQL (NOT SQL Server). Clients never connect to the database directly.
 - ColdFusion datasource names:
-  - reach: application datasource (authoritative)
+  - abo: production datasource (hostname = app)
+  - abod: development datasource (any other hostname)
+- Production schema: actorsbusinessoffice. Dev schema: new_development.
 - TAO uses soft delete patterns in multiple areas (for example IsDeleted = 1).
-- Relationship workflows use these core tables (may be in MySQL or SQL Server depending on deployment):
+- Relationship workflows use these core tables (MySQL):
   - fuactions, actionusers, fusystems, fusystemusers, funotifications
 
 Required observability (server logs and debugging output):

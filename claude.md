@@ -51,10 +51,36 @@ Auditions and meetings are stored as events and can trigger follow-up and mainte
 
 ## Reference documentation
 
-Relationship workflow and data flow:
+### Deep reference library (C:\Users\kevin\TAO\claude-projects\)
+
+Three curated documentation packages with audit findings, schema maps, and architecture docs. Read specific files when you need depth beyond what CLAUDE.md provides.
+
+**tao-coldfusion-expert/** -- CF maintenance and hardening (20 docs):
+- `05-security-findings.md` -- 46 SQLi, 20 XSS, 94 CSRF gaps with exact file paths
+- `06-architecture.md` -- Application.cfc deep read, sub-apps, scope leaks
+- `09-database-schema.md` -- all 150+ tables with usage context and FK analysis
+- `10-risk-register.md` -- 54 findings ranked by severity
+- `03-relationship-system-architecture.md` -- full relationship workflow and state machine
+- `15-qry-elimination-plan.md` -- disposition for all 1,267 qry fragment files
+- `17-contact-data-model.md` -- contact tables, EAV pattern, type/category map
+- `11-service-migration-reference.md` -- legacy numbered function names to CRUD names
+- `12-import-v3-workflow.md` -- import state machine, endpoints, validation
+- `16-full-site-audit.md` -- complete findings register with severity and effort
+
+**tao-migration-analyst/** -- Go/Flutter migration planning (23 docs):
+- `05-migration-prep.md` -- session-to-JWT mapping, API surface map (75+ endpoints), file storage inventory
+- `15-repository-stubs.md` -- 8 Go repository pattern stubs (45 methods)
+- `14-crud-overlap.md` -- entity CRUD matrix, duplicate service functions
+
+**tao-flutter-expert/** -- Flutter frontend (10 docs):
+- `02-api-surface-map.md` -- complete API surface with Go route proposals
+- `04-relationship-workflow.md` -- relationship system for Flutter UI
+- `06-import-workflow.md` -- import wizard state machine
+
+### Relationship workflow reference
 - `/mnt/data/TAO Relationship System_ Process & Data Flow Documentation.md`
 
-Use it when a task touches systems, actions, scheduling, recurrence, or notification generation.
+Use deep reference docs when a task touches security hardening, schema design, service migration, relationship logic, or import workflows. Read the specific file -- do not guess from memory.
 
 ## Non-negotiables
 
