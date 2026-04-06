@@ -42,10 +42,9 @@
     </cfoutput>
 
     <cfquery result="result"  name="update" datasource="#dsn#">
-        UPDATE thrivecart
-        set STATUS = 'Completed'
-         
-        where id = #new_id#
+        UPDATE thrivecart_tbl
+        SET STATUS = 'Completed'
+        WHERE id = <cfqueryparam value="#new_id#" cfsqltype="cf_sql_integer">
     </cfquery>
 
 <cfmail from="support@theactorsoffice.com" to="support@theactorsoffice.com" bcc="kevinking7135@gmail.com" subject="Audition module activation: #new_recordname#" type="HTML">
@@ -76,10 +75,9 @@
         </HTML>
     </cfmail>
     <cfquery result="result"  name="update" datasource="#dsn#">
-        UPDATE taousers
-        set isAuditionModule = 1
-         
-        where userid = #new_userid#
+        UPDATE taousers_tbl
+        SET isAuditionModule = 1
+        WHERE userid = <cfqueryparam value="#new_userid#" cfsqltype="cf_sql_integer">
     </cfquery>
 
 </cfloop>

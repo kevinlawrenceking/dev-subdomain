@@ -27,6 +27,10 @@ WHERE th.STATUS = 'Emailed' and th.uuid = <cfqueryparam value="#uuid#" cfsqltype
 
 </cfif>
 
+<!--- Store validated UUID + thrivecart ID in session for setup2.cfm server-side re-validation --->
+<cfset session.setupUUID = uuid>
+<cfset session.setupThrivecartID = u.id>
+
 <cfparam name="pwrong" default="N" />
 
 <!DOCTYPE html>
@@ -108,26 +112,27 @@ WHERE th.STATUS = 'Emailed' and th.uuid = <cfqueryparam value="#uuid#" cfsqltype
   data-parsley-trigger="keyup" data-parsley-validate>
 
 <input type="hidden" name="pwrong" value="N" />
-                                    
-                                    <Cfoutput>
-                  <input type="hidden" name="id" value="#u.id#" />      
+<!--- TECH-DEBT: session-based CSRF in setup -- proper token framework needed app-wide --->
+<cfset session.setupCSRF = hash(createUUID(), "SHA-256")>
+<input type="hidden" name="csrfToken" value="<cfoutput>#session.setupCSRF#</cfoutput>" />
+
+                                    <Cfoutput>      
                                     <div class="row">
                                     
-                                                    <div class="form-group mb-2 col-md-6">
-                                        <label for="customerfirst">First Name<span class="text-danger">*</span></label>
-                                        <input class="form-control" type="text"  value="#u.customerfirst#" id="customerfirst" name="customerfirst" data-parsley-required data-parsley-error-message="First Name is required" placeholder="Enter your First Name" />
+                                                    <!--- Display-only: identity comes from DB in setup2.cfm, not form POST --->
+                                    <div class="form-group mb-2 col-md-6">
+                                        <label for="customerfirst">First Name</label>
+                                        <input class="form-control" type="text" value="#u.customerfirst#" id="customerfirst" readonly />
                                     </div>
 
 <div class="form-group mb-2 col-md-6">
-                                        <label for="emailaddress">Last Name<span class="text-danger">*</span></label>
-                                        <input class="form-control" type="text"   value="#u.customerlast#" id="customerlast" name="customerlast"  data-parsley-required data-parsley-error-message="Last Name is required" placeholder="Enter your Last Name" />
+                                        <label for="customerlast">Last Name</label>
+                                        <input class="form-control" type="text" value="#u.customerlast#" id="customerlast" readonly />
                                     </div>
 
 <div class="form-group mb-2 col-md-12">
-                                        <label for="emailaddress">Email address<span class="text-danger">*</span></label>
-                                        <input class="form-control"   value="#u.customeremail#" id="email_address" name="customeremail"  
-                                               
-                                               placeholder="Enter your email">
+                                        <label for="email_address">Email address</label>
+                                        <input class="form-control" type="text" value="#u.customeremail#" id="email_address" readonly />
                                     </div>
                                     
                                         </cfoutput>
