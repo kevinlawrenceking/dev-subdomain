@@ -6,6 +6,8 @@
 
 <!--- Define the search term argument --->
         <cfargument name="searchTerm" type="string" required="true">
+        <cfargument name="userid" type="numeric" required="false">
+        <cfargument name="dsn" type="string" required="false">
 
 <!--- Include the query logic for retrieving full names --->
         <cfinclude template="/include/qry/queryFullNames_129_1.cfm" />
