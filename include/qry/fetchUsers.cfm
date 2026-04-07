@@ -68,6 +68,11 @@
 <cfset refreshToken     = userData.refresh_token>
 <cfset accessToken      = userData.access_token>
 
+<!--- P11: Setup wizard session variables
+      Note: DB userstatus may have trailing spaces (CHAR-style padding). Trim for clean comparison. --->
+<cfset session.userstatus = trim(userData.userStatus)>
+<cfset session.setup_step = structKeyExists(userData, "setup_step") ? val(userData.setup_step) : 7>
+
 <!--- ThriveCart / billing --->
 <cfset customerId           = userData.customerId>
 <cfset customerFirst        = userData.customerFirst>

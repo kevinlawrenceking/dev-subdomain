@@ -81,8 +81,9 @@
     </cfif>
 
     <!--- INSERT new taousers_tbl record --->
+    <!--- P11: Include userstatus='Setup' so login2.cfm INNER JOIN on userstatuses works --->
     <cfquery name="insert" result="result" datasource="#application.dsn#">
-        INSERT INTO taousers_tbl (customerid, userfirstName, userLastName, userEmail, avatarname, passwordHash, passwordSalt)
+        INSERT INTO taousers_tbl (customerid, userfirstName, userLastName, userEmail, avatarname, passwordHash, passwordSalt, userstatus)
         VALUES (
             <cfqueryparam value="#qSetup.customerid#" cfsqltype="cf_sql_integer" />,
             <cfqueryparam value="#setupFirst#" cfsqltype="cf_sql_varchar" />,
@@ -90,7 +91,8 @@
             <cfqueryparam value="#setupEmail#" cfsqltype="cf_sql_varchar" />,
             <cfqueryparam value="#setupFirst#" cfsqltype="cf_sql_varchar" />,
             <cfqueryparam cfsqltype="char" value="#hash(pass1 & new_passwordSalt, 'SHA-512')#" />,
-            <cfqueryparam cfsqltype="char" value="#new_passwordSalt#" />
+            <cfqueryparam cfsqltype="char" value="#new_passwordSalt#" />,
+            <cfqueryparam cfsqltype="cf_sql_varchar" value="Setup" />
         )
     </cfquery>
 
@@ -134,4 +136,8 @@
 
 <cfinclude template="user_setup_core.cfm" />
 
-<cflocation url="setup-complete.cfm" addtoken="false" />
+<!--- P11: Set session.userid so the wizard guard works on first request --->
+<cfset session.userid = select_userid>
+
+<!--- P11: Redirect to onboarding wizard instead of static completion page --->
+<cflocation url="/app/setup-wizard/" addtoken="false" />

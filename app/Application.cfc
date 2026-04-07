@@ -454,6 +454,20 @@
       <cfif len(request.p.currentid)>
         <cfset defaultavatarurl = session.userContactsUrl & "/" & request.p.currentid & "/avatar.jpg" />
       </cfif>
+
+      <!--- P11: Setup wizard guard -- redirect Setup-status users to wizard
+            Note: DB stores userstatus with trailing space ('setup ') so we trim before comparing.
+            ColdFusion EQ is case-insensitive but trailing spaces are significant. --->
+      <cfif structKeyExists(session, "userstatus")
+            AND trim(session.userstatus) EQ "Setup"
+            AND NOT findNoCase("/setup-wizard/", cgi.SCRIPT_NAME)
+            AND NOT findNoCase("/ajax/", cgi.SCRIPT_NAME)
+            AND NOT findNoCase("/login", cgi.SCRIPT_NAME)
+            AND NOT findNoCase("/logout", cgi.SCRIPT_NAME)
+            AND NOT REFindNoCase("\.(css|js|png|jpg|gif|svg|woff|woff2|ttf|ico)$", cgi.SCRIPT_NAME)>
+        <cflocation url="/app/setup-wizard/" addtoken="false" />
+      </cfif>
+
     </cfif>
 
     <cfreturn true />
