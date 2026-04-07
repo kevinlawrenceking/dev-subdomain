@@ -60,6 +60,26 @@
         WHERE customerid = <cfqueryparam value="#qSetup.customerid#" cfsqltype="cf_sql_integer" />
     </cfquery>
 
+    <!--- Clear email on soft-deleted users to free the unique index slot.
+          Only NULLs the email on already-deleted rows -- never touches active accounts. --->
+    <cfquery datasource="#application.dsn#">
+        UPDATE taousers_tbl SET userEmail = NULL
+        WHERE userEmail = <cfqueryparam value="#setupEmail#" cfsqltype="cf_sql_varchar" />
+        AND isdeleted = 1
+    </cfquery>
+
+    <!--- Check if email is still taken by an active user (different customer) --->
+    <cfquery name="qEmailCheck" datasource="#application.dsn#">
+        SELECT userid FROM taousers_tbl
+        WHERE userEmail = <cfqueryparam value="#setupEmail#" cfsqltype="cf_sql_varchar" />
+        AND isdeleted = 0
+        LIMIT 1
+    </cfquery>
+    <cfif qEmailCheck.recordCount GT 0>
+        <cftransaction action="rollback" />
+        <cflocation url="/setup/?uuid=#session.setupUUID#&error=email_taken" addtoken="false">
+    </cfif>
+
     <!--- INSERT new taousers_tbl record --->
     <cfquery name="insert" result="result" datasource="#application.dsn#">
         INSERT INTO taousers_tbl (customerid, userfirstName, userLastName, userEmail, avatarname, passwordHash, passwordSalt)

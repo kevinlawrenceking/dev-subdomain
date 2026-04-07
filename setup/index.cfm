@@ -2,6 +2,7 @@
 <cfparam name="p" default="" />
 <cfparam name="recover" default="" />
 <cfparam name="uuid" default="" />
+<cfparam name="error" default="" />
 <cfparam name="IMAGESURL" default="/media-abo/images" />
 
 
@@ -95,11 +96,18 @@ WHERE th.STATUS = 'Emailed' and th.uuid = <cfqueryparam value="#uuid#" cfsqltype
                                 </div>
 <Cfoutput>
 
+<cfif error EQ "email_taken">
+	 <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                            <span >&times;</span>
+                                        </button>
+                                       That email address is already associated with an active account. Please use a different email or contact support.
+                                    </div>
+	</cfif>
 <cfif #pwrong# is "Y">
 	 <div class="alert alert-danger alert-dismissible fade show" role="alert">
                                         <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                            <span >
-&times;</span>
+                                            <span >&times;</span>
                                         </button>
                                        Incorrect Email Address and Password!
                                     </div>
