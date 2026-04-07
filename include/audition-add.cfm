@@ -11,7 +11,10 @@
                                 </div> value for rcontactid --->
 <cfparam name="isdirect" default="0"/>
 <!--- Set default value for isdirect --->
-<cfparam name="userCalStarttime" default=""/>
+<cfparam name="userCalStarttime" default="09:00:00"/>
+<cfparam name="userCalendtime" default="17:00:00"/>
+<cfparam name="calstarttime" default="#userCalStarttime#"/>
+<cfparam name="calendtime" default="#userCalendtime#"/>
 <cfparam name="new_region_id" default="CA">
 <cfparam name="new_countryid" default="US">
 <cfparam name="valueCountry" default="">
@@ -36,6 +39,7 @@
 
 <cfinclude template="/include/qry/audroletypes_sel_27_2.cfm"/>
 <cfinclude template="/include/qry/audtypes_sel_27_3.cfm"/>
+<cfinclude template="/include/qry/durations.cfm"/>
 <cfinclude template="/include/qry/casting_types_27_4.cfm"/>
 <cfinclude template="/include/qry/castingdirectors_sel.cfm">
 <!--- Include casting directors selection --->
