@@ -5,7 +5,7 @@
 <cfparam name="IMAGESURL" default="/media-abo/images" />
 
 
-<cfquery result="result" name="U" maxrows="1">
+<cfquery result="result" name="U" maxrows="1" datasource="#application.dsn#">
 SELECT th.id
 ,th.CustomerFirst
 ,th.CustomerLast
@@ -119,20 +119,19 @@ WHERE th.STATUS = 'Emailed' and th.uuid = <cfqueryparam value="#uuid#" cfsqltype
                                     <Cfoutput>      
                                     <div class="row">
                                     
-                                                    <!--- Display-only: identity comes from DB in setup2.cfm, not form POST --->
                                     <div class="form-group mb-2 col-md-6">
-                                        <label for="customerfirst">First Name</label>
-                                        <input class="form-control" type="text" value="#u.customerfirst#" id="customerfirst" readonly />
+                                        <label for="customerfirst">First Name<span class="text-danger">*</span></label>
+                                        <input class="form-control" type="text" value="#u.customerfirst#" id="customerfirst" name="customerfirst" data-parsley-required data-parsley-error-message="First Name is required" placeholder="Enter your First Name" />
                                     </div>
 
 <div class="form-group mb-2 col-md-6">
-                                        <label for="customerlast">Last Name</label>
-                                        <input class="form-control" type="text" value="#u.customerlast#" id="customerlast" readonly />
+                                        <label for="customerlast">Last Name<span class="text-danger">*</span></label>
+                                        <input class="form-control" type="text" value="#u.customerlast#" id="customerlast" name="customerlast" data-parsley-required data-parsley-error-message="Last Name is required" placeholder="Enter your Last Name" />
                                     </div>
 
 <div class="form-group mb-2 col-md-12">
-                                        <label for="email_address">Email address</label>
-                                        <input class="form-control" type="text" value="#u.customeremail#" id="email_address" readonly />
+                                        <label for="email_address">Email address<span class="text-danger">*</span></label>
+                                        <input class="form-control" type="email" value="#u.customeremail#" id="email_address" name="customeremail" data-parsley-required data-parsley-error-message="Email is required" placeholder="Enter your email" />
                                     </div>
                                     
                                         </cfoutput>

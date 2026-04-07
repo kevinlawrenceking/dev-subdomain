@@ -1,5 +1,8 @@
 <!--- MIGRATE: Setup flow -> Go SetupService with proper request validation middleware --->
 <cfparam name="pass1" default="" />
+<cfparam name="form.customerfirst" default="" />
+<cfparam name="form.customerlast" default="" />
+<cfparam name="form.customeremail" default="" />
 
 <!--- Re-validate UUID server-side -- never trust form fields --->
 <cfif NOT structKeyExists(session, "setupUUID") OR NOT len(trim(session.setupUUID))>
@@ -26,6 +29,12 @@
 <cfif qSetup.recordCount EQ 0>
     <cflocation url="/setup/?error=invalid" addtoken="false">
 </cfif>
+
+<!--- Name/email: accept user edits from form, fall back to DB values.
+      id and customerid always come from DB (security-critical). --->
+<cfset setupFirst = len(trim(form.customerfirst)) ? trim(form.customerfirst) : qSetup.customerfirst>
+<cfset setupLast = len(trim(form.customerlast)) ? trim(form.customerlast) : qSetup.customerlast>
+<cfset setupEmail = len(trim(form.customeremail)) ? trim(form.customeremail) : qSetup.customeremail>
 
 <!--- MIGRATE: Password hashing -> bcrypt in Go (SHA-512+salt is CF-era pattern) --->
 <cfset new_passwordSalt = hash(generateSecretKey("AES"), "SHA-512") />
@@ -56,10 +65,10 @@
         INSERT INTO taousers_tbl (customerid, userfirstName, userLastName, userEmail, avatarname, passwordHash, passwordSalt)
         VALUES (
             <cfqueryparam value="#qSetup.customerid#" cfsqltype="cf_sql_integer" />,
-            <cfqueryparam value="#qSetup.customerfirst#" cfsqltype="cf_sql_varchar" />,
-            <cfqueryparam value="#qSetup.customerlast#" cfsqltype="cf_sql_varchar" />,
-            <cfqueryparam value="#qSetup.customeremail#" cfsqltype="cf_sql_varchar" />,
-            <cfqueryparam value="#qSetup.customerfirst#" cfsqltype="cf_sql_varchar" />,
+            <cfqueryparam value="#setupFirst#" cfsqltype="cf_sql_varchar" />,
+            <cfqueryparam value="#setupLast#" cfsqltype="cf_sql_varchar" />,
+            <cfqueryparam value="#setupEmail#" cfsqltype="cf_sql_varchar" />,
+            <cfqueryparam value="#setupFirst#" cfsqltype="cf_sql_varchar" />,
             <cfqueryparam cfsqltype="char" value="#hash(pass1 & new_passwordSalt, 'SHA-512')#" />,
             <cfqueryparam cfsqltype="char" value="#new_passwordSalt#" />
         )
