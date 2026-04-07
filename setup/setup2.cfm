@@ -16,7 +16,7 @@
 
 <!--- Server-side re-query: pull ALL identity data from DB, not form POST --->
 <cfquery name="qSetup" datasource="#application.dsn#">
-    SELECT id, customerid, customerfirst, customerlast, customeremail, productname
+    SELECT id, customerid, customerfirst, customerlast, customeremail
     FROM thrivecart_tbl
     WHERE uuid = <cfqueryparam value="#session.setupUUID#" cfsqltype="cf_sql_varchar">
     AND status = <cfqueryparam value="Emailed" cfsqltype="cf_sql_varchar">
