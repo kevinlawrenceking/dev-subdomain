@@ -16,7 +16,8 @@
 
 <!--- Load data needed by the step partial --->
 <cfset userid = session.userid>
-<cfset userService = request.svc("UserService")>
+
+<cftry>
 
 <!--- Bust cache so step always gets fresh data --->
 <cfset session.bustUserCache = true>
@@ -46,3 +47,17 @@
         <cfinclude template="/app/setup-wizard/steps/step7.cfm" />
     </cfcase>
 </cfswitch>
+
+<cfcatch type="any">
+    <cfoutput>
+    <div class="text-danger p-3" style="font-size:13px;">
+        <strong>Step #stepNum# Error:</strong> #encodeForHTML(cfcatch.message)#<br/>
+        <strong>Detail:</strong> #encodeForHTML(cfcatch.detail)#<br/>
+        <cfif len(cfcatch.tagContext) AND isArray(cfcatch.tagContext) AND arrayLen(cfcatch.tagContext)>
+            <strong>File:</strong> #encodeForHTML(cfcatch.tagContext[1].template)#
+            line #cfcatch.tagContext[1].line#
+        </cfif>
+    </div>
+    </cfoutput>
+</cfcatch>
+</cftry>

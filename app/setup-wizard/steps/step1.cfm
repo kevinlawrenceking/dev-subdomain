@@ -45,7 +45,7 @@
 
 <!--- Date formats picklist --->
 <cfquery name="qDateFormats" datasource="#application.datasource#">
-    SELECT dateFormatID, dateformatExample FROM dateformats ORDER BY dateFormatID
+    SELECT id AS dateFormatID, formatexample AS dateformatExample FROM dateformats ORDER BY id
 </cfquery>
 
 <cfset avatarUrl = "/media-" & application.dsn & "/users/" & userid & "/avatar.jpg">

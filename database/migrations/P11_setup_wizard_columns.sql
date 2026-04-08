@@ -86,6 +86,7 @@ SELECT
     tu.isAuditionModule AS isAuditionModule,
     tu.imdbid AS imdbid,
     tu.isSetup AS isSetup,
+    tu.isDemo AS isDemo,
     tu.countryid AS countryid,
     tu.def_regionid AS def_regionid,
     tu.access_token AS access_token,

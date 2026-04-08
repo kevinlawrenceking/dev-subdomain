@@ -8,7 +8,7 @@
 <cfquery name="qProfile" datasource="#application.datasource#" maxrows="1">
     SELECT userFirstName, userLastName, userEmail,
            (SELECT tzname FROM timezones WHERE tzid = u.tzid) AS tzname,
-           (SELECT dateformatExample FROM dateformats WHERE dateFormatID = u.dateFormatID) AS dateformat,
+           (SELECT formatexample FROM dateformats WHERE id = u.dateFormatID) AS dateformat,
            isAuditionModule
     FROM taousers u
     WHERE userid = <cfqueryparam value="#userid#" cfsqltype="cf_sql_integer" />

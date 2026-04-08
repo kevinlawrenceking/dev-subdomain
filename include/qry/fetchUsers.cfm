@@ -30,7 +30,7 @@
 <cfset isSetup          = userData.isSetup>
 <cfset isAudition       = userData.isAudition>
 <cfset isBetaTester     = userData.isBetaTester>
-<cfset isDemo           = userData.isDemo>
+<cfset isDemo           = structKeyExists(userData, "isDemo") ? userData.isDemo : 0>
 <cfset isauditionmodule = userData.isauditionmodule>
 <cfset recover          = userData.recover>
 <cfset shareid          = userData.shareid>
