@@ -12,6 +12,13 @@
 
 <cfset userData = session.cachedUserData>
 
+<!--- Guard: if user was deleted or not found, force logout to prevent crashes --->
+<cfif structIsEmpty(userData)>
+    <cfset structDelete(session, "userid")>
+    <cfset structDelete(session, "cachedUserData")>
+    <cflocation url="/loginform.cfm" addtoken="false" />
+</cfif>
+
 <!--- Session-specific values --->
 <cfset session.dateformatExample = userData.dateformatExample>
 <cfset session.dateformatID = userData.dateformatID>
