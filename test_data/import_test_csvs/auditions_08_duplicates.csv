@@ -1,7 +1,0 @@
-project_name,role_name,casting_director,audition_date,status,notes
-The Last Summer,Jake Morrison,Sarah Chen,2026-03-20,Audition,First entry
-Night Watch,Detective Mills,Robert Kim,2026-03-22,Audition,Unique entry
-The Last Summer,Jake Morrison,Sarah Chen,2026-03-20,Audition,Duplicate of first entry
-Ocean Drive,Marco Reyes,David Hernandez,2026-04-01,Audition,Unique entry
-Night Watch,Detective Mills,Robert Kim,2026-03-22,Callback,Same project different status
-The Last Summer,Jake Morrison,Sarah Chen,2026-03-20,Audition,Third duplicate

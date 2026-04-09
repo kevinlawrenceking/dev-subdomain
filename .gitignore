@@ -9,3 +9,16 @@
 *.tmp
 ShowCodeGenerator_UpdateEmail.txt
 nul
+
+# Archive and generated output
+/_archive/
+/LOGS/
+/audit-output/
+/validation_runs/
+/test_data/
+/dev_backup/
+
+# Test/sample data at root
+*.log
+~$*.xlsx
+*.map

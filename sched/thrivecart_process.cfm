@@ -31,7 +31,6 @@
     ,pp.planName
     FROM thrivecart th
     INNER JOIN paymentplans pp ON pp.BasePaymentPlanId = th.BasePaymentPlanId
-    INNER JOIN products pr ON pr.BaseProductId = th.BaseProductId
     WHERE th.STATUS = 'Pending'
 </cfquery>
 

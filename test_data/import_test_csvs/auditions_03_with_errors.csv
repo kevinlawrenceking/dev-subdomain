@@ -1,8 +1,0 @@
-project_name,role_name,casting_director,audition_date,location,medium,notes
-Good Project,Good Role,Good CD,2026-05-01,Good Studio,In-Person,Normal row
-,Missing Project,Some CD,2026-05-02,,In-Person,Missing project name
-Has Project,,Some CD,not-a-date,,Self-Tape,Invalid date format
-Another Show,Another Role,,2026-13-45,,Virtual,Invalid date month 13
-,,,,,,,Completely empty row
-Valid Show,Valid Role,Valid CD,2026-05-10,Studio A,In-Person,
-Good Show 2,Lead Role,Jane Smith,May 15 2026,Studio B,In-Person,Non-standard date format

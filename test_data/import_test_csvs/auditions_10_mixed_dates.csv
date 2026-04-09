@@ -1,9 +1,0 @@
-project_name,role_name,casting_director,audition_date,callback_date,booking_date,notes
-Date Format Test 1,Role A,CD Alpha,2026-06-01,2026-06-05,,Standard ISO format
-Date Format Test 2,Role B,CD Beta,06/15/2026,06/20/2026,,US slash format
-Date Format Test 3,Role C,CD Gamma,June 1 2026,,,Written month name
-Date Format Test 4,Role D,CD Delta,2026/07/01,,,Slash ISO variant
-Date Format Test 5,Role E,CD Epsilon,01-08-2026,,,Ambiguous day-month
-Date Format Test 6,Role F,CD Zeta,not a date,,,Invalid date string
-Date Format Test 7,Role G,CD Eta,2026-09-15,Sep 20 2026,,Mixed formats
-Date Format Test 8,Role H,CD Theta,12/25/2026,,01/05/2027,Holiday audition with booking
