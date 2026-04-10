@@ -2,8 +2,10 @@
   <cffunction name="onRequestStart" returntype="boolean" output="false">
     <cfargument name="targetPage" type="string" required="true">
 
-    <!--- Allow localhost (ColdFusion scheduler) without auth --->
-    <cfif CGI.REMOTE_ADDR EQ "127.0.0.1" OR CGI.REMOTE_ADDR EQ "::1">
+    <!--- Allow localhost and same-server requests (ColdFusion scheduler) without auth --->
+    <cfif CGI.REMOTE_ADDR EQ "127.0.0.1"
+          OR CGI.REMOTE_ADDR EQ "::1"
+          OR (len(trim(CGI.LOCAL_ADDR)) AND CGI.REMOTE_ADDR EQ CGI.LOCAL_ADDR)>
       <cfset application.datasourceName = application.dsn>
       <cfreturn true>
     </cfif>
