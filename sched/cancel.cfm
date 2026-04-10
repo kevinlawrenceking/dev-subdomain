@@ -40,7 +40,7 @@
             </cfoutput>
 
 <cfquery result="result"  name="FindUser" maxrows="1">
-            SELECT * from taousers where customerid = <cfqueryparam cfsqltype="cf_sql_integer" value="#thrivecart_id#" />
+            SELECT * from taousers where customerid = <cfqueryparam cfsqltype="cf_sql_bigint" value="#thrivecart_id#" />
         </cfquery>
 
         <cfif #finduser.recordcount# is "1">

@@ -94,7 +94,7 @@
             <cfset queryExecute(
                 "UPDATE taousers_tbl SET customerid = :cid WHERE userid = :uid",
                 {
-                    cid: { value: variables.newTcId, cfsqltype: "cf_sql_integer" },
+                    cid: { value: variables.newTcId, cfsqltype: "cf_sql_bigint" },
                     uid: { value: variables.targetUserId, cfsqltype: "cf_sql_integer" }
                 },
                 { datasource: application.datasource }
@@ -104,7 +104,7 @@
             <!--- Look up existing UUID --->
             <cfset variables.qTC = queryExecute(
                 "SELECT id, uuid FROM thrivecart WHERE id = :cid",
-                { cid: { value: variables.customerId, cfsqltype: "cf_sql_integer" } },
+                { cid: { value: variables.customerId, cfsqltype: "cf_sql_bigint" } },
                 { datasource: application.datasource }
             )>
 
@@ -125,7 +125,7 @@
                     "UPDATE thrivecart_tbl SET uuid = :uuid WHERE id = :cid",
                     {
                         uuid: { value: variables.setupUUID, cfsqltype: "cf_sql_varchar" },
-                        cid: { value: variables.customerId, cfsqltype: "cf_sql_integer" }
+                        cid: { value: variables.customerId, cfsqltype: "cf_sql_bigint" }
                     },
                     { datasource: application.datasource }
                 )>

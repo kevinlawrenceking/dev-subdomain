@@ -57,7 +57,7 @@
     <!--- Soft-delete old users with same customerid --->
     <cfquery result="result" name="Del" datasource="#application.dsn#">
         UPDATE taousers_tbl SET isdeleted = 1
-        WHERE customerid = <cfqueryparam value="#qSetup.customerid#" cfsqltype="cf_sql_integer" />
+        WHERE customerid = <cfqueryparam value="#qSetup.customerid#" cfsqltype="cf_sql_bigint" />
     </cfquery>
 
     <!--- Clear email on soft-deleted users to free the unique index slot.
@@ -85,7 +85,7 @@
     <cfquery name="insert" result="result" datasource="#application.dsn#">
         INSERT INTO taousers_tbl (customerid, userfirstName, userLastName, userEmail, avatarname, passwordHash, passwordSalt, userstatus)
         VALUES (
-            <cfqueryparam value="#qSetup.customerid#" cfsqltype="cf_sql_integer" />,
+            <cfqueryparam value="#qSetup.customerid#" cfsqltype="cf_sql_bigint" />,
             <cfqueryparam value="#setupFirst#" cfsqltype="cf_sql_varchar" />,
             <cfqueryparam value="#setupLast#" cfsqltype="cf_sql_varchar" />,
             <cfqueryparam value="#setupEmail#" cfsqltype="cf_sql_varchar" />,
