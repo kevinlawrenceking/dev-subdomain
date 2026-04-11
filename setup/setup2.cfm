@@ -61,9 +61,10 @@
     </cfquery>
 
     <!--- Clear email on soft-deleted users to free the unique index slot.
-          Only NULLs the email on already-deleted rows -- never touches active accounts. --->
+          Uses a unique placeholder instead of NULL (userEmail has NOT NULL constraint).
+          Only touches already-deleted rows -- never touches active accounts. --->
     <cfquery datasource="#application.dsn#">
-        UPDATE taousers_tbl SET userEmail = NULL
+        UPDATE taousers_tbl SET userEmail = CONCAT('deleted_', userid, '_', UNIX_TIMESTAMP())
         WHERE userEmail = <cfqueryparam value="#setupEmail#" cfsqltype="cf_sql_varchar" />
         AND isdeleted = 1
     </cfquery>
