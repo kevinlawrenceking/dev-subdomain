@@ -66,7 +66,8 @@
   <cfabort>
 </cfif>
 
-<!--- Truncate child tables first, then parent --->
+<!--- TECH-DEBT: Unbounded DELETEs acceptable for dev-only cleanup tool.
+      In Go, staging data will use TTL-based expiry. --->
 <cftransaction>
   <cfquery datasource="#dsn#">DELETE FROM import_auditions_events</cfquery>
   <cfquery datasource="#dsn#">DELETE FROM import_auditions_row_results</cfquery>

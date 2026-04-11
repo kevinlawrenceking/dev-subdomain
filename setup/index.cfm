@@ -204,29 +204,6 @@ WHERE th.STATUS = 'Emailed' and th.uuid = <cfqueryparam value="#uuid#" cfsqltype
 });
  </script>  
         
-<script>
-  $(document).ready(function(){
-      
-    $('#email_address').parsley();
-
-    window.ParsleyValidator.addValidator('checkemail', {
-      validateString: function(value)
-      {
-        return $.ajax({
-          url:'fetch.php',
-          method:"POST",
-          data:{email:value},
-          dataType:"json",
-          success:function(data)
-          {
-            return true;
-          }
-        });
-      }
-    });
-
-  });
-</script>
         
     </body>
 </html>

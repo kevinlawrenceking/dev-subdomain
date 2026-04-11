@@ -421,6 +421,15 @@
 
     <!--- 4) Post-login user paths --->
     <cfif structKeyExists(session, "userid")>
+      <!--- Setup session verification -- remove after setup flow is confirmed stable --->
+      <cfif structKeyExists(session, "setupUUID") AND len(trim(session.setupUUID))>
+          <cflog file="TAO_setup_session" type="information"
+                 text="Setup user arrived at app | userid=#session.userid# | setupUUID=#session.setupUUID# | targetPage=#arguments.targetPage# | appName=#application.applicationName#" />
+          <!--- Clear the setup flag so this only logs once --->
+          <cfset structDelete(session, "setupUUID") />
+          <cfset structDelete(session, "setupThrivecartID") />
+      </cfif>
+
       <cfset userid = session.userid />
       <cfinclude template="/include/qry/fetchUsers.cfm" />
 

@@ -52,11 +52,9 @@
                                     <h5>Setup Complete</h5>
                                     <p class="text-muted mb-4 mt-3" style="font-size:14px;">You may now log into your account.</p>
                                 </div>
-                            <form action="<cfoutput>https://#cgi.server_name#/</cfoutput>">
-         <div class="form-group mb-0 text-center">
-                                  <a href="">         <button class="btn btn-block" style="color: white;background-color: #406E8E;border-color:#406E8E;" type="submit" value="Log In"> Log In </button>
-                                    </div>                      
-                        </form>
+                            <div class="form-group mb-0 text-center">
+                                <a href="<cfoutput>https://#cgi.server_name#/</cfoutput>" class="btn btn-block" style="color: white;background-color: ##406E8E;border-color:##406E8E;">Log In</a>
+                            </div>
                             </div> <!--- end card-body --->
                         </div>
                         <!--- end card --->

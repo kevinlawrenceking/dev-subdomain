@@ -140,5 +140,9 @@
 <!--- P11: Set session.userid so the wizard guard works on first request --->
 <cfset session.userid = select_userid>
 
+<!--- Session verification logging -- remove after setup flow is confirmed stable --->
+<cflog file="TAO_setup_session" type="information"
+       text="Setup complete | userid=#select_userid# | email=#setupEmail# | dsn=#application.dsn# | appName=#application.applicationName# | sessionTimeout=#this.sessionTimeout# | cfid=#cookie.cfid# | cftoken=#cookie.cftoken#" />
+
 <!--- P11: Redirect to onboarding wizard instead of static completion page --->
 <cflocation url="/app/setup-wizard/" addtoken="false" />

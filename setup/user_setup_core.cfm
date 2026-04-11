@@ -7,49 +7,33 @@
 --->
 
 <cfscript>
-    // Use datasource from Application.cfc
-  
-    variables.dsn = "abo";
+    // MIGRATE: Use centralized config -- Go SetupService will inject DSN via constructor
+    variables.dsn = application.dsn;
     // Parameters with validation
     param name="dbugz" default="N";
-    param name="dbug" default="Y"; 
+    param name="dbug" default="N";
     param name="select_user" default="0";
     param name="select_contactid" default="0";
     param name="select_userid" default="0";
     
-    // Debug helper function
+    // MIGRATE: Go SetupService will use structured logging (zerolog)
     function debugLog(message, showCondition = variables.dbug == "Y") {
         if (showCondition) {
-            writeOutput("<p style='color: ##666; font-size: 12px;'>" & message & "</p>");
+            cflog(file="TAO_setup_provisioning", type="information",
+                  text="userid=#variables.userid# | #reReplace(message, '<[^>]*>', '', 'all')#");
         }
     }
     
-    // Enhanced error logging function
+    // MIGRATE: Go SetupService will use structured error logging
     function logDatabaseError(operation, sql, params, error) {
-        var errorDetails = "<div style='border: 1px solid red; padding: 10px; margin: 5px; background: ##ffe6e6;'>";
-        errorDetails &= "<strong style='color: red;'>DATABASE ERROR IN: " & operation & "</strong><br>";
-        errorDetails &= "<strong>Error Message:</strong> " & htmlEditFormat(error.message) & "<br>";
-        if (structKeyExists(error, "detail") && len(error.detail)) {
-            errorDetails &= "<strong>Error Detail:</strong> " & htmlEditFormat(error.detail) & "<br>";
-        }
-        if (structKeyExists(error, "errorCode") && len(error.errorCode)) {
-            errorDetails &= "<strong>Error Code:</strong> " & error.errorCode & "<br>";
-        }
-        if (structKeyExists(error, "sqlState") && len(error.sqlState)) {
-            errorDetails &= "<strong>SQL State:</strong> " & error.sqlState & "<br>";
-        }
-        errorDetails &= "<strong>SQL Query:</strong><br><pre style='background: ##f5f5f5; padding: 5px; overflow-x: auto;'>" & htmlEditFormat(sql) & "</pre>";
-        if (isArray(params) && arrayLen(params) > 0) {
-            errorDetails &= "<strong>Parameters:</strong> " & serializeJSON(params) & "<br>";
-        }
-        errorDetails &= "<strong>Datasource:</strong> " & variables.dsn & "<br>";
-        errorDetails &= "</div>";
-        debugLog(errorDetails, true); // Always show database errors
+        var paramStr = isArray(params) ? serializeJSON(params) : "";
+        cflog(file="TAO_setup_errors", type="error",
+              text="userid=#variables.userid# | op=#operation# | err=#error.message# | sql=#left(sql, 200)# | params=#left(paramStr, 200)#");
     }
     
     // Validation
     if (val(select_userid) == 0) {
-        writeOutput("<p style='color: red;'>Error: No valid user ID provided</p>");
+        cflog(file="TAO_setup_errors", type="error", text="No valid user ID provided for setup");
         abort;
     }
     
@@ -79,29 +63,15 @@
         logDatabaseError("Database Connectivity Test", "SELECT COUNT(*) as recordCount FROM taousers WHERE userid = ?", [variables.userid], e);
     }
     
-    // Media path configuration - Fixed application scope pollution
-    variables.baseMediaPath = "C:\home\theactorsoffice.com\media-" & variables.dsn;
-    variables.baseMediaUrl = "/media-" & variables.dsn;
-    variables.imagesPath = variables.baseMediaPath & "\images";
-    
-    // Set application-level paths (corrected from nested application keys)
-    application.imagesUrl = variables.baseMediaUrl & "/images";
-    application.datesPath = variables.imagesPath & "\dates";
-    application.datesUrl = application.imagesUrl & "/dates";
-    application.defaultsPath = variables.imagesPath & "\defaults";
-    application.defaultsUrl = application.imagesUrl & "/defaults";
-    application.defaultAvatarPath = application.defaultsPath & "/avatar.jpg";
-    application.defaultAvatarUrl = application.defaultsUrl & "/avatar.jpg";
-    application.emailImagesPath = variables.imagesPath & "\email";
-    application.emailImagesUrl = application.imagesUrl & "/email";
-    application.filetypesPath = variables.imagesPath & "\filetypes";
-    application.filetypesUrl = application.imagesUrl & "/filetypes";
-    application.retinaIconsPath = variables.imagesPath & "\retina-circular-icons";
-    application.retinaIconsUrl = application.imagesUrl & "/retina-circular-icons";
-    application.retinaIcons14Path = application.retinaIconsPath & "\14";
-    application.retinaIcons14Url = application.retinaIconsUrl & "/14";
-    application.retinaIcons32Path = application.retinaIconsPath & "\32";
-    application.retinaIcons32Url = application.retinaIconsUrl & "/32";
+    // MIGRATE: Go SetupService will use config-driven paths
+    // Read from application scope (already set by /app/Application.cfc pseudo-constructor)
+    variables.baseMediaPath = application.baseMediaPath;
+    variables.baseMediaUrl = application.baseMediaUrl;
+    variables.imagesPath = application.imagesPath;
+
+    // Application-scope media paths are set by /app/Application.cfc pseudo-constructor
+    // (lines 77-113). Do not duplicate here -- shared this.name means shared application scope.
+    // MIGRATE: Go config package will own all path resolution.
     
     // User-specific session paths
     session.userMediaPath = variables.baseMediaPath & "\users\" & variables.userid;
@@ -966,11 +936,13 @@
     // Handle users without contactid (create contact records)
     try {
         debugLog("<strong>Creating missing contact records</strong>");
+        // TECH-DEBT: Only provision the current user -- orphan cleanup is an admin task
         usersQuery = queryExecute("
             SELECT userid, userfirstname, userlastname, contactid
-            FROM taousers 
-            WHERE contactid IS NULL OR contactid = ''",
-            {},
+            FROM taousers
+            WHERE userid = ?
+            AND (contactid IS NULL OR contactid = '')",
+            [variables.userid],
             {datasource: variables.dsn}
         );
         
@@ -1013,4 +985,31 @@
     
     debugLog("<hr><strong>User setup completed for userID " & variables.userid & "</strong>");
     debugLog("Total execution time: " & timeDiff);
+
+    // MIGRATE: Go SetupService will return a structured provisioning result
+    // Verify critical provisioning completed
+    try {
+        verifyQuery = queryExecute("
+            SELECT
+                (SELECT COUNT(*) FROM tags_user WHERE userid = ?) as tags,
+                (SELECT COUNT(*) FROM itemtypes_user WHERE userid = ?) as itemtypes,
+                (SELECT COUNT(*) FROM eventtypes_user WHERE userid = ?) as eventtypes,
+                (SELECT COUNT(*) FROM sitetypes_user WHERE userid = ?) as sitetypes,
+                (SELECT contactid FROM taousers WHERE userid = ?) as contactid
+        ", [variables.userid, variables.userid, variables.userid, variables.userid, variables.userid],
+        {datasource: variables.dsn});
+
+        if (verifyQuery.tags EQ 0 OR verifyQuery.itemtypes EQ 0
+            OR verifyQuery.eventtypes EQ 0 OR verifyQuery.sitetypes EQ 0
+            OR NOT len(trim(verifyQuery.contactid))) {
+            cflog(file="TAO_setup_errors", type="error",
+                  text="INCOMPLETE PROVISIONING userid=#variables.userid# | tags=#verifyQuery.tags# | itemtypes=#verifyQuery.itemtypes# | eventtypes=#verifyQuery.eventtypes# | sitetypes=#verifyQuery.sitetypes# | contactid=#verifyQuery.contactid#");
+        } else {
+            cflog(file="TAO_setup_provisioning", type="information",
+                  text="Provisioning verified userid=#variables.userid# | tags=#verifyQuery.tags# | itemtypes=#verifyQuery.itemtypes# | eventtypes=#verifyQuery.eventtypes# | sitetypes=#verifyQuery.sitetypes# | contactid=#verifyQuery.contactid#");
+        }
+    } catch (any e) {
+        cflog(file="TAO_setup_errors", type="error",
+              text="Provisioning verification failed userid=#variables.userid# | err=#e.message#");
+    }
 </cfscript>
