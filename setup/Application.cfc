@@ -69,7 +69,8 @@
           UUID validation in index.cfm handles access control. --->
     <cfscript>
         // Ensure application scope vars exist (cold-start / race-condition safety)
-        if (NOT structKeyExists(application, "dsn")) {
+        // Check baseMediaPath, not just dsn -- dsn can survive a partial reinit
+        if (NOT structKeyExists(application, "baseMediaPath")) {
             ensureAppVars();
         }
         request.dsn = application.dsn;
@@ -94,6 +95,9 @@
         application.auditionimporttemplate = application.baseMediaUrl & "/auditionimporttemplates.xlsx";
         application.imagesPath = application.baseMediaPath & "\\images";
         application.imagesUrl = application.baseMediaUrl & "/images";
+        application.datesPath = application.imagesPath & "\\dates";
+        application.defaultsPath = application.imagesPath & "\\defaults";
+        application.defaultAvatarPath = application.defaultsPath & "\\avatar.jpg";
     </cfscript>
 </cffunction>
 
