@@ -23,6 +23,7 @@
                 WHERE ecx.eventid = e.eventid AND ecx.contactid = c.contactid
             )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 
 
@@ -37,6 +38,7 @@
             <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.new_contactid#"/>
         )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn result.generatedKey>
 </cffunction>
 
@@ -50,6 +52,7 @@
         WHERE contactID = <cfqueryparam value="#arguments.ContactID#" cfsqltype="CF_SQL_INTEGER"> 
         AND eventid = <cfqueryparam value="#arguments.EventID#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -62,6 +65,7 @@
         SET isdeleted = 1 
         WHERE eventid = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.eventid#" />
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 
 <cffunction output="false" name="INSeventcontactsxref_23737" access="public" returntype="numeric">
@@ -75,6 +79,7 @@
             <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.new_contactid#" />
         )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn result.generatedKey>
 </cffunction>
 
@@ -86,6 +91,7 @@
         FROM eventcontactsxref
         WHERE eventid = <cfqueryparam value="#arguments.eventId#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -110,6 +116,7 @@
           AND e.audstepid <> <cfqueryparam value="#arguments.audStepID#" cfsqltype="CF_SQL_INTEGER">
           AND ecx.eventid IS NULL;
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn result.generatedKey>
 </cffunction>
 
@@ -134,6 +141,7 @@
             </cfloop>
         )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 
 <cffunction name="deleteEventContactsXref" access="public" returntype="query" output="false">
@@ -153,6 +161,7 @@
             WHERE audstepid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.audStepId#">
         )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -167,6 +176,7 @@
         WHERE eventid = <cfqueryparam value="#arguments.eventNumber#" cfsqltype="cf_sql_integer"> 
           AND contactid = <cfqueryparam value="#arguments.contactID#" cfsqltype="cf_sql_integer">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -182,6 +192,7 @@
                 <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.contactID#" />
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 <cffunction output="false" name="SELeventcontactsxref_24489" access="public" returntype="query">
     <cfargument name="eventid" type="numeric" required="true">
@@ -191,6 +202,7 @@
             FROM eventcontactsxref
             WHERE eventid = <cfqueryparam value="#arguments.eventid#" cfsqltype="CF_SQL_INTEGER" />
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -201,6 +213,7 @@
         SELECT * FROM eventcontactsxref
         WHERE eventid = <cfqueryparam value="#arguments.eventid#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfset var returnStruct = structNew()>
     <cfset returnStruct.query = result>
@@ -219,6 +232,7 @@
                 <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.new_contactid#" />
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 <cffunction output="false" name="UPDeventcontactsxref_24549" access="public" returntype="void">
@@ -234,6 +248,7 @@
             WHERE x.contactid = <cfqueryparam value="#arguments.deletecontactid#" cfsqltype="cf_sql_integer">
             AND p.audprojectid = <cfqueryparam value="#arguments.audprojectid#" cfsqltype="cf_sql_integer">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 </cfcomponent>

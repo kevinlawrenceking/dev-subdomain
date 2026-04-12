@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page initializes parameters and includes a query template for processing audit question types. --->
 
 <cfparam name="new_qtype" default="" />

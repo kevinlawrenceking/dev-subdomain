@@ -24,6 +24,7 @@
         WHERE 
             audlocid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_audlocid#">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 
 <cffunction output="false" name="INSaudlocations" access="public" returntype="numeric">
@@ -37,6 +38,7 @@
             <cfqueryparam value="#arguments.custom#" cfsqltype="CF_SQL_VARCHAR">
         )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn result.generatedKey>
 </cffunction>
 
@@ -49,6 +51,7 @@
         WHERE l.userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER"> 
         ORDER BY l.eventLocation
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>

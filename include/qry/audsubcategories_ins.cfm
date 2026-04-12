@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page initializes parameters, includes a query, and sets a new subcategory ID based on the result. --->
 
 <cfparam name="new_audSubCatName" default="" />

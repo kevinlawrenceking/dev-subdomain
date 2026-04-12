@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page initializes parameters and includes a template for processing role types. --->
 <cfparam name="new_audroletype" default="" />
 <cfparam name="new_audCatid" default="2" />

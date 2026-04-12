@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves version details and ticket information based on a given version ID. --->
 <cfparam name="recid" default=""/>
 <cfparam name="verid" default=""/>

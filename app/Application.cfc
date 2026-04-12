@@ -254,6 +254,7 @@
     <cfset request.perfStart = getTickCount() />
     <cfset request.perfPage = arguments.targetPage />
     <cfset request.perfQueryCount = 0 />
+    <cfset request.perfSvcQueryCount = 0 />
 
     <!--- PERF: Request-scoped service cache. Lazy — each CFC is instantiated once
           on first access, then reused for the rest of the request.
@@ -498,11 +499,13 @@
       <cfset var elapsed = getTickCount() - request.perfStart />
       <cfset var userid = structKeyExists(session, "userid") ? session.userid : 0 />
       <cfset var qcount = structKeyExists(request, "perfQueryCount") ? request.perfQueryCount : -1 />
+      <cfset var svcqcount = structKeyExists(request, "perfSvcQueryCount") ? request.perfSvcQueryCount : -1 />
       <cfset var logLine = dateTimeFormat(now(), "yyyy-MM-dd HH:nn:ss") & chr(9)
           & userid & chr(9)
           & request.perfPage & chr(9)
           & elapsed & chr(9)
           & qcount & chr(9)
+          & svcqcount & chr(9)
           & cgi.QUERY_STRING />
 
       <cftry>

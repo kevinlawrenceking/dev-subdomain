@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page handles the generation and management of user reports, including checking for existing reports, inserting new ones, and calculating statistics based on user input. --->
 
 <cfparam name="new_rangeid" default="1" />

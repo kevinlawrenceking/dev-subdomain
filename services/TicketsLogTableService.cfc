@@ -13,5 +13,6 @@
             <cfqueryparam value="#arguments.new_ticketstatus#" cfsqltype="cf_sql_varchar" />
         )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 </cfcomponent>

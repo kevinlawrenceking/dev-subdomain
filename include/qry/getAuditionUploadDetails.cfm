@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- Legacy query file: DETauditionsimport was removed when AuditionImportService was rebuilt for v3.
      This file is still triggered by the pgFilename column in the pages DB table.
      Return an empty query so downstream code (valuelist, etc.) does not crash. --->

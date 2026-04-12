@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves date format examples and notes from the database. --->
 
 <cfparam name="dbug" default="N" />

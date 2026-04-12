@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves union information from the database, with optional filtering by country ID and audit category ID. --->
 <cfquery name="audunions_sel">
     SELECT 

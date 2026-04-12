@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves active audio types from the database for display. --->
 <cfparam name="dbug" default="N" />
 

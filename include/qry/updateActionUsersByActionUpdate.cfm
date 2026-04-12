@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfparam name="deleteaction" default="0" /> 
 <cfset ActionUserService = createObject("component", "services.ActionUserService")>
 

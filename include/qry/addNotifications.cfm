@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset notificationsService = createObject("component", "services.NotificationsService")>
 <cfset newNotificationID = notificationsService.addNotifications(
     subtitle = subtitle,

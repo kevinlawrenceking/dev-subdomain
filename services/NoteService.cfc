@@ -12,6 +12,7 @@
                 <cfqueryparam cfsqltype="cf_sql_longvarchar" value="#trim(arguments.newnoteDetails)#" />
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 <cfreturn result.generatedKey>
 </cffunction>
 <cffunction output="false" name="DELnoteslog" access="public" returntype="void" hint="Deletes a note by its ID">
@@ -21,6 +22,7 @@
             DELETE FROM noteslog 
             WHERE noteid = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.noteid#" />
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 <cffunction output="false" name="DELnoteslog_23709" access="public" returntype="void">
@@ -30,6 +32,7 @@
             DELETE FROM noteslog 
             WHERE noteid = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.noteId#" />
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 <cffunction output="false" name="INSnoteslog_23730" access="public" returntype="numeric">
@@ -47,6 +50,7 @@
                 <cfqueryparam value="1" cfsqltype="CF_SQL_BIT">
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
        <cfreturn result.generatedKey>
 </cffunction>
 <cffunction output="false" name="SELnoteslog" access="public" returntype="query">
@@ -57,6 +61,7 @@
             FROM noteslog 
             WHERE noteid = <cfqueryparam value="#arguments.noteid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -68,6 +73,7 @@
             SET isdeleted = 1 
             WHERE noteid = <cfqueryparam value="#arguments.recid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 <cffunction output="false" name="INSnoteslog_23966" access="public" returntype="numeric" >
@@ -89,6 +95,7 @@
                 <cfqueryparam cfsqltype="cf_sql_longvarchar" value="#arguments.notedetailshtml#" />
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result.generatedKey>
 </cffunction>
@@ -102,6 +109,7 @@
         ) 
         WHERE NOTEDETAILSHTML LIKE '%<input %';
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 
 <cffunction output="false" name="INSnoteslog_23969" access="public" returntype="numeric">
@@ -122,6 +130,7 @@
                 <cfqueryparam cfsqltype="cf_sql_longvarchar" value="#arguments.notedetailshtml#" />
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 <cfreturn result.generatedKey>
 </cffunction>
 <cffunction output="false" name="INSnoteslog_23972" access="public" returntype="numeric">
@@ -141,6 +150,7 @@
                 <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.eventid#" />
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 <cffunction output="false" name="UPDnoteslog_23974" access="public" returntype="void">
@@ -158,6 +168,7 @@
             WHERE 
                 noteid = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.noteid#">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 <cffunction output="false" name="UPDnoteslog_23980" access="public" returntype="void" >
@@ -173,6 +184,7 @@
             WHERE
                 noteid = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.noteid#">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 <cffunction output="false" name="SELnoteslog_23987" access="public" returntype="query">
@@ -203,6 +215,7 @@
             ORDER BY 
                 n.noteTimestamp DESC
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -225,6 +238,7 @@
             WHERE 
                 n.noteid = <cfqueryparam value="#arguments.updateNoteID#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -245,6 +259,7 @@
                 <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.eventid#" />
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result.generatedKey>
 </cffunction>
@@ -263,6 +278,7 @@
                 0
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 <cffunction output="false" name="SELnoteslog_24400" access="public" returntype="query">
@@ -277,6 +293,7 @@
             AND contactid = <cfqueryparam value="#arguments.select_contactid#" cfsqltype="CF_SQL_INTEGER"> 
             AND noteDetails LIKE '#arguments.noteDetailsPrefix#%'
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -294,6 +311,7 @@
                 <cfqueryparam value="1" cfsqltype="CF_SQL_BIT">
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
       <cfreturn result.generatedKey>
 </cffunction>
 <cffunction output="false" name="SELnoteslog_24698" access="public" returntype="query">
@@ -321,6 +339,7 @@
             AND n.audprojectid <> 0
             ORDER BY n.noteTimestamp DESC
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -363,6 +382,7 @@ ORDER BY n.noteTimestamp DESC;
 
 
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -392,6 +412,7 @@ ORDER BY n.noteTimestamp DESC;
             AND n.eventid = <cfqueryparam value="#arguments.eventID#" cfsqltype="CF_SQL_INTEGER">
             ORDER BY n.noteTimestamp DESC
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 
@@ -425,6 +446,7 @@ ORDER BY n.noteTimestamp DESC;
             AND n.contactid = <cfqueryparam value="#arguments.contactID#" cfsqltype="CF_SQL_INTEGER">
             ORDER BY n.noteTimestamp DESC
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>

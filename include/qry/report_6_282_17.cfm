@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset auditionProjectService = request.svc("AuditionProjectService")>
 <cfset report_6 = auditionProjectService.SELaudprojects_24244(
     rangestart = rangeselected.rangestart,

@@ -5,6 +5,7 @@
         FROM audmediatypes 
         WHERE mediatypeid IN (9, 10, 11)
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn result>
 </cffunction>
 
@@ -20,6 +21,7 @@
             </cfloop>
         )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -36,6 +38,7 @@
         FROM audmediatypes
         WHERE mediatypeid IN (<cfqueryparam value="#mediaTypeList#" cfsqltype="CF_SQL_INTEGER" list="true">)
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <!--- Return the query result --->
     <cfreturn result>
@@ -53,6 +56,7 @@
 
         ORDER BY mediatype
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <!--- Return the result --->
     <cfreturn queryResult>
@@ -67,6 +71,7 @@
         AND isdeleted = 0
    
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn queryResult>
 </cffunction>
 
@@ -80,6 +85,7 @@
             <cfqueryparam cfsqltype="CF_SQL_BIT" value="#arguments.new_isDeleted#">
         )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn result.generatedKey>
 </cffunction>
 
@@ -97,6 +103,7 @@
         WHERE 
             mediaTypeID = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_mediaTypeID#">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 
 </cfcomponent>

@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset eventService = request.svc("EventService")>
 
 <!--- Ensure endRecur is a valid date or set it to null if not --->

@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset userService = request.svc("UserService")>
 <cfset userService.UPDtaousers_23945(
     new_userfirstname = new_userfirstname,

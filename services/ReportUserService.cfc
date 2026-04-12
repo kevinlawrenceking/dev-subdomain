@@ -9,6 +9,7 @@
         WHERE r.userid = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.userID#" />
         AND r.reportid = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.reportID#" />
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -23,6 +24,7 @@
         WHERE r.userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
         AND r.reportid = <cfqueryparam value="#arguments.new_reportid#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -35,6 +37,7 @@
         FROM reports_user 
         WHERE userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -51,6 +54,7 @@
         AND userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
         AND reportname = <cfqueryparam value="#arguments.reportname#" cfsqltype="CF_SQL_VARCHAR">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -84,6 +88,7 @@
             <cfqueryparam value="#arguments.colorid#" cfsqltype="CF_SQL_INTEGER">
         )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn result.generatedKey>
 </cffunction>
 
@@ -119,6 +124,7 @@
         ORDER BY 
             r.reportorderno
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -154,6 +160,7 @@
             ORDER BY 
                 r.reportorderno
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -167,6 +174,7 @@
             WHERE u.userid = <cfqueryparam value="#arguments.userId#" cfsqltype="CF_SQL_INTEGER">
             AND u.reportid = <cfqueryparam value="13" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn result>
 </cffunction>
 <cffunction output="false" name="SELreports_user_24737" access="public" returntype="query">
@@ -180,6 +188,7 @@
             WHERE u.userid = <cfqueryparam value="#arguments.userId#" cfsqltype="CF_SQL_INTEGER">
             AND u.reportid = <cfqueryparam value="#arguments.reportId#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>

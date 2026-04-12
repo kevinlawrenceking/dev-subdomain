@@ -27,6 +27,7 @@
             </cfif>
         ORDER BY i.valuetype
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfset result.types = types>
     <cfset result.recordcount = types.recordcount>
@@ -58,6 +59,7 @@
         ORDER BY 
             i.valuetype
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfset resultStruct.types = types>
     <cfset resultStruct.recordcount = types.recordcount>
@@ -82,6 +84,7 @@
         ORDER BY 
             i.valuetype
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfset resultStruct.types = types>
     <cfset resultStruct.recordcount = types.recordcount>
@@ -102,6 +105,7 @@
         AND i.typeid <> <cfqueryparam value="#arguments.excludeTypeId#" cfsqltype="CF_SQL_INTEGER">
         ORDER BY i.valuetype
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -141,12 +145,14 @@
                 <cfqueryparam value="#param.value#" cfsqltype="#param.cfsqltype#">
             </cfloop>
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfelse>
         <!--- Return an empty query if no conditions are provided --->
         <cfquery result="result" name="queryResult" dbtype="query">
             SELECT typeid, valuetype, typeicon
             WHERE 1=0
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     </cfif>
 
 <!--- Return the result set --->

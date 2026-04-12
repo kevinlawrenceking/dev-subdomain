@@ -16,6 +16,7 @@
             WHERE v.versionstatus = 'Pending'
             ORDER BY v.major, v.minor, v.patch, v.version, v.build
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
         <!--- Return the query result --->
         <cfreturn activeVersions />
@@ -43,6 +44,7 @@
             ORDER BY 
                 major, minor, patch, version
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
         <cfreturn result>
     </cffunction>
@@ -59,6 +61,7 @@
             ORDER BY isactive DESC, verid DESC
             LIMIT 1
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         <cfreturn result>
     </cffunction>
 
@@ -103,6 +106,7 @@
                 <cfqueryparam value = "#param.value#" cfsqltype = "#param.cfsqltype#">
             </cfloop>
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn local.result>
     </cffunction>
@@ -115,6 +119,7 @@
             ORDER BY verid DESC
             LIMIT 1
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
     </cffunction>
@@ -129,6 +134,7 @@
             WHERE v.verid = <cfqueryparam value = "#arguments.old_verid#" 
                       cfsqltype = "CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
     </cffunction>
@@ -143,6 +149,7 @@
             WHERE v.verid = <cfqueryparam value = "#arguments.new_verid#" 
                       cfsqltype = "CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
     </cffunction>
@@ -164,6 +171,7 @@
                       cfsqltype = "CF_SQL_VARCHAR">
             AND build = <cfqueryparam value = "#arguments.new_build#" cfsqltype = "CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
     </cffunction>
@@ -234,6 +242,7 @@
             </cfif>
         )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <cfreturn result.GENERATEDKEY>
 </cffunction>
@@ -285,6 +294,7 @@
         WHERE 
             verid = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.verid#" />
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 
 </cfcomponent>

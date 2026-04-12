@@ -15,6 +15,7 @@
             ORDER BY 
                 audtype
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn result>
 </cffunction>
 
@@ -33,6 +34,7 @@
             )
             ORDER BY audtype
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn result>
 </cffunction>
 
@@ -52,6 +54,7 @@
             ORDER BY 
                 audtype
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn result>
 </cffunction>
 
@@ -71,6 +74,7 @@
             AND audcategories LIKE <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="%%#arguments.new_audcatid#%%">
         </cfif>
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn queryResult>
 </cffunction>
@@ -98,6 +102,7 @@
             ORDER BY 
                 audtypes.audtype, audsteps.audstep
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn result>
 </cffunction>
 
@@ -123,6 +128,7 @@
             AND p.projdate <= <cfqueryparam cfsqltype="CF_SQL_DATE" value="#arguments.rangeend#" />
             AND p.userid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#" />
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn result>
 </cffunction>
 
@@ -134,6 +140,7 @@
             FROM audtypes 
             WHERE audtypeid = <cfqueryparam value="#arguments.new_audtypeid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn result>
 </cffunction>
 
@@ -150,6 +157,7 @@
                 <cfqueryparam cfsqltype="CF_SQL_BIT" value="#arguments.new_isDeleted#" null="#NOT len(trim(arguments.new_isDeleted))#">
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 <cfreturn result.generatedKey>
 </cffunction>
 <cffunction output="false" name="SELaudtypes_24608" access="public" returntype="query">
@@ -167,6 +175,7 @@
             ORDER BY 
                 audtype
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -185,6 +194,7 @@
             WHERE 
                 audtypeid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_audtypeid#">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 </cfcomponent>

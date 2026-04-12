@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page handles the deletion of records from the audvocaltypes_audition_xref table based on the provided audroleid. --->
 
 <cfquery name="delete">

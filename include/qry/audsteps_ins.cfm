@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page initializes parameters and includes a query template for processing audit steps. --->
 <cfparam name="new_audstep" default="" />
 <cfparam name="new_isDeleted" default="0" />

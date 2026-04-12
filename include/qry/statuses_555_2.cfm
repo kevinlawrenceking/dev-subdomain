@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves ticket statuses for display. --->
 <cfquery name="statuses">
     <!--- Retrieve ticket statuses for display. --->

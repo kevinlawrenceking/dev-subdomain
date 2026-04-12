@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves ticket priorities from the database for display purposes. --->
 
 <cfquery name="priorities">

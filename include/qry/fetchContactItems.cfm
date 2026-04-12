@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page fetches active and inactive contact items from the ContactItems service. --->
 <cfset contactItemsService = request.svc("ContactItemService")>
 

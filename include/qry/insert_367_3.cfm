@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page inserts a new contact item into the CONTACTITEMS table. --->
 
 <cfquery name="insert">

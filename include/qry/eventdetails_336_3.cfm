@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves event details based on the provided event ID. --->
 
 <cfquery name="eventdetails">

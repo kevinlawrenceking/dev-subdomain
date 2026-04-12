@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves active contact items from the database based on a specified contact ID. --->
 <cfparam name="contactid" default="1" />
 

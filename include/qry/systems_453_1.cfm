@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves system types and their names from the database. --->
 <cfquery name="systems">
     <!--- Query to select system types and their corresponding names from the fusystemtypes table. --->

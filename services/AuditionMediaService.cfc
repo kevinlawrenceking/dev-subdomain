@@ -36,6 +36,7 @@
             ORDER BY 
                 m.mediaName
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
     <cffunction output="false" name="GetMaterials" access="public" returntype="query"  hint="Retrieve headshots for a specific user ID.">
         <cfargument name="userid" type="numeric" required="yes" hint="ID of the user to retrieve headshots for.">
@@ -72,6 +73,7 @@
             ORDER BY 
                 m.mediaName
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn materials_sel>
     </cffunction>
@@ -89,6 +91,7 @@
             AND m.mediatypeid = <cfqueryparam value="#arguments.mediatypeid#" cfsqltype="CF_SQL_INTEGER"> 
             AND m.isdeleted IS FALSE
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -115,6 +118,7 @@
             WHERE m.eventid = <cfqueryparam value="#arguments.eventid#" cfsqltype="CF_SQL_INTEGER">
             AND m.isdeleted = <cfqueryparam value="false" cfsqltype="CF_SQL_BIT">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -126,6 +130,7 @@
             SET isdeleted = 1 
             WHERE mediaid = <cfqueryparam value="#arguments.mediaid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 <cffunction output="false" name="DETaudmedia" access="public" returntype="query">
@@ -136,6 +141,7 @@
             FROM audmedia 
             WHERE mediaid = <cfqueryparam value="#arguments.mediaid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -162,6 +168,7 @@
             WHERE 
                 m.mediaid = <cfqueryparam value="#arguments.mediaid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -203,6 +210,7 @@
             ORDER BY 
                 m.medianame;
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 
@@ -238,6 +246,7 @@
                 <cfqueryparam cfsqltype="CF_SQL_BIT" value="#arguments.new_isshare#" null="#NOT len(trim(arguments.new_isshare))#">
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
        <cfreturn result.generatedKey>
 </cffunction>
 <cffunction output="false" name="SELaudmedia_24569" access="public" returntype="query">
@@ -270,6 +279,7 @@
             AND x.audprojectid <> 0
             AND t.mediaType <> 'Headshot'
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -324,6 +334,7 @@
             ORDER BY 
                 t.mediaType, m.mediaName
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 
@@ -350,6 +361,7 @@
             WHERE 
                 mediaID = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_mediaID#">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 <cffunction output="false" name="SELaudmedia_24572" access="public" returntype="query">
@@ -381,6 +393,7 @@
               AND m.isdeleted IS FALSE
               AND x.audprojectid <> 0
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 
@@ -415,6 +428,7 @@
               AND x.audprojectid <> 0 
               AND t.mediatypeid = 1
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 
@@ -453,6 +467,7 @@
             ORDER BY 
                 m.mediaName
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -488,6 +503,7 @@
             ORDER BY 
                 m.mediaName
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 
@@ -521,6 +537,7 @@
             WHERE 
                 m.mediaid = <cfqueryparam value="#arguments.mediaid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 
@@ -558,6 +575,7 @@
                     SELECT mediaid FROM audmedia_auditions_xref WHERE audprojectid = <cfqueryparam value="#arguments.audprojectid#" cfsqltype="CF_SQL_INTEGER">
                 )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 
@@ -595,6 +613,7 @@
             ORDER BY 
                 m.mediaName
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>

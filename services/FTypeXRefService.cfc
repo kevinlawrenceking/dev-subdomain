@@ -7,6 +7,7 @@
             FROM ftypexref_tbl 
             WHERE ftypefull = <cfqueryparam value="#arguments.type#" cfsqltype="CF_SQL_VARCHAR">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
     </cffunction>

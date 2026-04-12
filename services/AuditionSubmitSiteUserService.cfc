@@ -18,6 +18,7 @@
         </cfif>
         WHERE submitsiteid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.submitsiteid#">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 
 <cffunction output="false" name="SELaudsubmitsites_user" access="public" returntype="query">
@@ -30,6 +31,7 @@
         AND submitsitename <> ''
         ORDER BY submitsitename
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn result>
 </cffunction>
 
@@ -43,6 +45,7 @@
         WHERE userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER"> 
           AND submitsitename = <cfqueryparam value="#arguments.new_submitsitename#" cfsqltype="CF_SQL_VARCHAR">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn result>
 </cffunction>
 
@@ -61,6 +64,7 @@
             </cfif>
         WHERE submitsiteid = <cfqueryparam value="#arguments.submitsiteid#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 
 <cffunction output="false" name="INSaudsubmitsites_user" access="public" returntype="numeric">
@@ -75,6 +79,7 @@
             <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
         )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn result.generatedKey>
 </cffunction>
 
@@ -86,6 +91,7 @@
         FROM audsubmitsites_user
         WHERE submitsiteid = <cfqueryparam value="#arguments.submitsiteid#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn result>
 </cffunction>
 
@@ -101,6 +107,7 @@
         AND isdeleted = 0 
         ORDER BY submitsitename
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn result>
 </cffunction>
 
@@ -118,6 +125,7 @@
                 userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER"> 
                 AND submitsitename = <cfqueryparam value="#trim(arguments.new_submitsitename)#" cfsqltype="CF_SQL_VARCHAR">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -130,6 +138,7 @@
             SET catlist = <cfqueryparam value="#arguments.new_catlist#" cfsqltype="CF_SQL_VARCHAR">
             WHERE submitsiteid = <cfqueryparam value="#arguments.new_submitsiteid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 <cffunction output="false" name="INSaudsubmitsites_user_24297" access="public" returntype="numeric">
@@ -145,6 +154,7 @@
                 <cfqueryparam value="#arguments.new_catid#" cfsqltype="CF_SQL_VARCHAR">
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
  <cfreturn result.generatedKey>
 </cffunction>
 </cfcomponent>

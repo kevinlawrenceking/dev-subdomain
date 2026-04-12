@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This page retrieves fields from the pgfields table based on the provided pgid and a specific updatename. --->
 
 <cfquery name="FindKey">

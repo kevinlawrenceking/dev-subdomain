@@ -10,6 +10,7 @@
         WHERE userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER"> 
         AND audplatform = <cfqueryparam value="#arguments.CustomPlatform#" cfsqltype="CF_SQL_VARCHAR">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -26,6 +27,7 @@
             <cfqueryparam value="0" cfsqltype="CF_SQL_BIT">
         )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn result.GeneratedKey>
 </cffunction>
 
@@ -38,6 +40,7 @@
         WHERE userid = <cfqueryparam value="#arguments.new_userid#" cfsqltype="cf_sql_integer" />
         ORDER BY audplatform
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>

@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves a list of values and text from a specified table based on the given category ID. --->
 <cfquery name="selects">
     <!--- Query to select values and text from the specified table based on the category ID --->

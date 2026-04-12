@@ -43,6 +43,7 @@
             <cfqueryparam value="#param.value#" cfsqltype="#param.cfsqltype#">
         </cfloop>
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <!--- Return the query result --->
     <cfreturn queryResult>
@@ -61,6 +62,7 @@
             </cfif>
             ORDER BY gmt
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>

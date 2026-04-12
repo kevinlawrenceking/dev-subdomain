@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset ageRangeService = createObject("component", "services.AuditionAgeRangeService")>
 <cfset new_rangeid = ageRangeService.INSaudageranges(
     new_rangename = trim(new_rangename),

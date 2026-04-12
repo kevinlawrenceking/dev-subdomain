@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfparam name="dbug" default="N" />
 <cfparam name="audprojectid" default="0" />
 

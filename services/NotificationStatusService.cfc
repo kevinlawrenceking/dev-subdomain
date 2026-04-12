@@ -36,6 +36,7 @@
             n.notstatus = <cfqueryparam value="Pending" cfsqltype="CF_SQL_VARCHAR"> AND
             ns.notstatus = <cfqueryparam value="Future" cfsqltype="CF_SQL_VARCHAR">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     
 
@@ -85,6 +86,7 @@
             n.notstatus = <cfqueryparam value="Pending" cfsqltype="CF_SQL_VARCHAR"> AND
             ns.notstatus = <cfqueryparam value="Future" cfsqltype="CF_SQL_VARCHAR">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>

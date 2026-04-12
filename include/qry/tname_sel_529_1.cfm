@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves a list of items from a specified table, optionally filtered by a category ID, and orders the results. --->
 
 <cfquery name="#tname#_sel">

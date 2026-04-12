@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves casting directors' information from the database based on user ID and specific criteria. --->
 
 <cfparam name="dbug" default="N" />

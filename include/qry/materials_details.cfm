@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves details about media items from the database based on the provided media ID. --->
 
 <cfparam name="userid" default="0" />

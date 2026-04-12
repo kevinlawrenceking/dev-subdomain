@@ -7,6 +7,7 @@
             DELETE FROM audanswers
             WHERE eventid = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.eventid#">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     </cffunction>
 
 <cffunction output="false" name="INSaudanswers" access="public" returntype="numeric">
@@ -20,6 +21,7 @@
                 <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.eventid#">
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         <cfreturn result.generatedKey>
     </cffunction>
 
@@ -39,6 +41,7 @@
             </cfif>
             WHERE answerID = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_answerID#">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     </cffunction>
 
 <cffunction output="false" name="INSaudanswers_24506" access="public" returntype="numeric">
@@ -60,6 +63,7 @@
                 <cfqueryparam cfsqltype="CF_SQL_BIT" value="#arguments.new_isDeleted#">
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         <cfreturn result.generatedKey>
     </cffunction>
 
@@ -84,6 +88,7 @@
             WHERE 
                 answerID = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_answerID#">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     </cffunction>
 
 </cfcomponent>

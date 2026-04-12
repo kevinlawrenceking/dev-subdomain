@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves user tags and formats them into a list for display. --->
 
 <cfinclude template="/include/qry/tagsvalid_542_1.cfm" />		

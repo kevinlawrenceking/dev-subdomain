@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page updates a specified field in a database table based on a given record ID. --->
 <cfquery name="update">
     <!--- Execute an update on the specified table --->

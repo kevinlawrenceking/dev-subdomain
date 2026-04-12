@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page fetches events for the logged-in user based on their ID and related event types --->
 <cfquery name="events">
     <!--- Query to fetch events for the logged-in user based on their ID and related event types --->

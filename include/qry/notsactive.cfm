@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves active and inactive notifications for a user based on various criteria. --->
 
 <Cfset currentStartDate="#DateFormat(Now(),'yyyy-mm-dd')#" /> 

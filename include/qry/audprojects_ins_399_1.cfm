@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset auditionProjectService = request.svc("AuditionProjectService")>
 
 <Cfif #new_audsubcatid# is "">

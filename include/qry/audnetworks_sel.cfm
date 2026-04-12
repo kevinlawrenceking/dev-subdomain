@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page initializes parameters and includes a query for selecting user categories related to ad networks. --->
 
 <cfparam name="dbug" default="N" />

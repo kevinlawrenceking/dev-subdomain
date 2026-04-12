@@ -20,6 +20,7 @@
             <cfqueryparam value="#arguments.conditions[key]#" cfsqltype="#determineSQLType(key)#">
         </cfloop>
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn queryResult>
 </cffunction>

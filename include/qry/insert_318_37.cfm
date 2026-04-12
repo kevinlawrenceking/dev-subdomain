@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset objItemCategoryXRefUserService = createObject("component", "services.ItemCategoryXRefUserService")>
 <cfset objItemCategoryXRefUserService.INSitemcatxref_user_24468(
     new_typeid = new_typeid,

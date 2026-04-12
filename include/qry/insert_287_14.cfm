@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page inserts a new record into the audgenres_audition_xref table --->
 <cfquery name="insert">
     <!--- Insert a new record into the audgenres_audition_xref table with specified genre and role IDs --->

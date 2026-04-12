@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves notes and contact details for a specific user and contact. --->
 
 <cfparam name="contactid" default="1" />

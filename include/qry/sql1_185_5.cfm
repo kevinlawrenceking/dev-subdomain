@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page updates a record in the specified table with a new value based on the provided primary key. --->
 
 <cfquery name="sql1">        

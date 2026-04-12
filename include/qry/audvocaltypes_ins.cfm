@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page inserts a new vocal type into the audvocaltypes table and retrieves the generated key for the new entry. --->
 
 <cfparam name="new_vocaltype" default="" />

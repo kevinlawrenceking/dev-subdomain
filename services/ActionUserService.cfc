@@ -17,6 +17,7 @@
       WHERE systemid = <cfqueryparam value="#arguments.target_id_system#" cfsqltype="CF_SQL_INTEGER">
       )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cffunction output="false" name="INSactionusers_24455" access="public" returntype="numeric">
   <cfargument name="actionid" type="numeric" required="true">
@@ -39,6 +40,7 @@
     0
     )
   </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
   <cfreturn result.generatedKey>
 </cffunction>
 
@@ -64,6 +66,7 @@
       WHERE a.systemid = <cfqueryparam value="#arguments.target_id_system#" cfsqltype="CF_SQL_INTEGER">
       AND au.actionid IS NULL
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     </cftransaction><!--- end WO-4.4 transaction --->
 
@@ -100,6 +103,7 @@
       0
       )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn result.generatedKey>
   </cffunction>
 
@@ -150,6 +154,7 @@
 
 
   </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 
 <cffunction name="GetActionUsers" access="public" returntype="query" output="false" hint="Retrieve user actions with optional filtering">
@@ -190,6 +195,7 @@
     ORDER BY
     a.actionNo
   </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
   <cfreturn result>
 </cffunction>

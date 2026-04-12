@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page dynamically generates insert queries for tables matching a specific pattern and saves them to files. --->
 
 <cfinclude template="/include/qry/y_536_1.cfm" />

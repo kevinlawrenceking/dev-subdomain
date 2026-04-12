@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page handles the deletion of records from the audmedia_auditions_xref table based on media ID and audition project ID. --->
 
 <cfquery name="ins">   

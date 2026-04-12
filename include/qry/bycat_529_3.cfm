@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves audio records by category from the database, filtering based on provided criteria. --->
 
 <cfquery name="bycat">

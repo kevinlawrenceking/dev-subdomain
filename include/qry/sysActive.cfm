@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves active system users for a specific contact and user, with an option to hide completed statuses. --->
 
 <cfparam name="hide_completed" default="N" />

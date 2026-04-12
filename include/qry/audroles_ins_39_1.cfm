@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset auditionRoleService = createObject("component", "services.AuditionRoleService")>
 <cfset new_audRoleID = auditionRoleService.INSaudroles(
     new_audRoleName = new_audRoleName,

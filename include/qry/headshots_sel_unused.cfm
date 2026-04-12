@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves media information for a specific user, filtering out deleted items and specific media types. --->
 
 <cfparam name="userid" default="0" />

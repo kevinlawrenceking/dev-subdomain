@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page initializes parameters and includes a query for inserting audio sources. --->
 
 <cfparam name="new_audsource" default="" />

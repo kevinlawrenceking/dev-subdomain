@@ -78,6 +78,7 @@
         <cfquery name="qSchema" datasource="#application.datasource#" timeout="5">
             SELECT DATABASE() AS schema_name
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         <cfset result.schema = qSchema.schema_name>
 
         <!--- Check contactdetails - get both existence and table type --->
@@ -87,6 +88,7 @@
             WHERE TABLE_SCHEMA = DATABASE()
               AND TABLE_NAME = 'contactdetails'
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         <cfset result.tables.contactdetails = qCheckDetails.recordCount gt 0>
         <cfif qCheckDetails.recordCount gt 0>
             <cfset result.table_types.contactdetails = qCheckDetails.TABLE_TYPE>
@@ -99,6 +101,7 @@
             WHERE TABLE_SCHEMA = DATABASE()
               AND TABLE_NAME = 'contactitems'
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         <cfset result.tables.contactitems = qCheckItems.recordCount gt 0>
         <cfif qCheckItems.recordCount gt 0>
             <cfset result.table_types.contactitems = qCheckItems.TABLE_TYPE>
@@ -111,6 +114,7 @@
             WHERE TABLE_SCHEMA = DATABASE()
               AND TABLE_NAME = 'contactdetails_tbl'
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         <cfset result.base_tables.contactdetails_tbl = qCheckDetailsTbl.recordCount gt 0>
 
         <cfquery name="qCheckItemsTbl" datasource="#application.datasource#" timeout="5">
@@ -119,6 +123,7 @@
             WHERE TABLE_SCHEMA = DATABASE()
               AND TABLE_NAME = 'contactitems_tbl'
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         <cfset result.base_tables.contactitems_tbl = qCheckItemsTbl.recordCount gt 0>
 
         <!--- Both contactdetails and contactitems must exist (as views or tables) --->
@@ -198,6 +203,7 @@
               AND (ci.isDeleted IS NULL OR ci.isDeleted = 0)
               AND ci.valueCategory IN ('Email', 'Phone')
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
         <cfset result.items_total = qItems.recordCount>
 
@@ -371,6 +377,7 @@
             </cfloop>
           )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <!--- Initialize result struct --->
     <cfloop query="qDetails">
@@ -403,6 +410,7 @@
           AND (isDeleted IS NULL OR isDeleted = 0)
           AND valueCategory IN ('Email', 'Phone', 'Company', 'Address')
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <!--- Populate items into result struct --->
     <cfloop query="qItems">
@@ -727,6 +735,7 @@
           )
         LIMIT 100
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <!--- Convert to array --->
     <cfloop query="qCandidates">
@@ -767,6 +776,7 @@
             </cfloop>
           )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <!--- Initialize result struct --->
     <cfloop query="qDetails">
@@ -799,6 +809,7 @@
           AND (isDeleted IS NULL OR isDeleted = 0)
           AND valueCategory IN ('Email', 'Phone', 'Company', 'Address')
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <!--- Populate items into result struct --->
     <cfloop query="qItems">
@@ -858,6 +869,7 @@
           )
         LIMIT <cfqueryparam cfsqltype="cf_sql_integer" value="#this.NAME_FALLBACK_LIMIT#">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <!--- Build result struct --->
     <cfloop query="qNameMatch">
@@ -1176,6 +1188,7 @@
           AND (ci.isDeleted IS NULL OR ci.isDeleted = 0)
           AND LOWER(ci.valuetext) = <cfqueryparam cfsqltype="cf_sql_varchar" value="#lcase(arguments.email)#">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <cfreturn result>
 </cffunction>
@@ -1206,6 +1219,7 @@
           AND (ci.isDeleted IS NULL OR ci.isDeleted = 0)
           AND REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(ci.valuetext, ' ', ''), '-', ''), '(', ''), ')', ''), '+', '') = <cfqueryparam cfsqltype="cf_sql_varchar" value="#arguments.phone#">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <cfreturn result>
 </cffunction>
@@ -1233,6 +1247,7 @@
               OR LOWER(d.recordname) = <cfqueryparam cfsqltype="cf_sql_varchar" value="#lcase(arguments.fullName)#">
           )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <cfreturn result>
 </cffunction>
@@ -1267,6 +1282,7 @@
           )
           AND LOWER(ci.valueCompany) = <cfqueryparam cfsqltype="cf_sql_varchar" value="#lcase(arguments.company)#">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <cfreturn result>
 </cffunction>
@@ -1301,6 +1317,7 @@
           )
           AND LOWER(ci.valueCity) = <cfqueryparam cfsqltype="cf_sql_varchar" value="#lcase(arguments.city)#">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <cfreturn result>
 </cffunction>
@@ -1389,6 +1406,7 @@
           AND d.userid = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.userid#">
           AND (d.isdeleted IS NULL OR d.isdeleted = 0)
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <cfif qContact.recordCount eq 0>
         <cfreturn result>
@@ -1407,6 +1425,7 @@
           AND itemStatus = 'Active'
           AND (isDeleted IS NULL OR isDeleted = 0)
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfloop query="qEmails">
         <cfset arrayAppend(result.emails, {value: qEmails.valuetext, type: qEmails.valueType})>
     </cfloop>
@@ -1420,6 +1439,7 @@
           AND itemStatus = 'Active'
           AND (isDeleted IS NULL OR isDeleted = 0)
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfloop query="qPhones">
         <cfset arrayAppend(result.phones, {value: qPhones.valuetext, type: qPhones.valueType})>
     </cfloop>
@@ -1435,6 +1455,7 @@
           AND primary_yn = 'Y'
         LIMIT 1
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfif qCompany.recordCount gt 0>
         <cfset result.company = qCompany.valueCompany>
     </cfif>
@@ -1450,6 +1471,7 @@
           AND primary_yn = 'Y'
         LIMIT 1
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfif qAddress.recordCount gt 0>
         <cfset result.city = qAddress.valueCity>
         <cfset result.state = qAddress.valueRegion>

@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset sel_search = "">
 <cfparam name="select_userid" default="%" />
 <cfparam name="select_ticketstatus" default="%" />

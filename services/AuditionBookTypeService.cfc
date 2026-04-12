@@ -11,6 +11,7 @@
             AND audbooktypeid = <cfqueryparam value="#arguments.audbooktypeid#" cfsqltype="CF_SQL_INTEGER">
         </cfif>
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>

@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves income types from the database. --->
 
 <cfset dbug = "Y" />

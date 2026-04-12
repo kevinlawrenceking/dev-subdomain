@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves and processes data from various database tables based on a given pgid, preparing results for further use. --->
 <cfinclude template="/include/qry/FindFields_188_7.cfm" />
 <cfset fieldset = valuelist(FindFields.fname) />

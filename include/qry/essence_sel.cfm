@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves a list of essences for a specific user that are not marked as deleted. --->
 
 <cfparam name="dbug" default="N" />

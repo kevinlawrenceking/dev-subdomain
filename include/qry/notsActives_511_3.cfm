@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves the total count of pending notifications for a specific user. --->
 
 <cfquery name="notsActives">

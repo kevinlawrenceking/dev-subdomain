@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 
 
 <cfparam name="neventidefault" default="0" />

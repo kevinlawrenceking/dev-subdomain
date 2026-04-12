@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page checks if a user is associated with a specific maintenance list based on contact ID and user ID. --->
 
 <cfquery name="checkformaint" maxrows="1">

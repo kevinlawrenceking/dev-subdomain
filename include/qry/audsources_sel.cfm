@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page sets up parameters and includes a query template for user data without deleted entries. --->
 <cfparam name="dbug" default="N" />
 

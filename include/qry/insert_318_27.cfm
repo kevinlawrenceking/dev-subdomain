@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset objTagsUserService = createObject("component", "services.TagsUserService")>
 <cfset objTagsUserService.INStags_user_24458(
     tagname = x.tagname,

@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves active audio types based on the specified category. --->
 
 <cfquery name="audtypes_sel">

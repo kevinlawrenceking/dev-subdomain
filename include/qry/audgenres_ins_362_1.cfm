@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset auditionGenreService = createObject("component", "services.AuditionGenreService")>
 <!--- Create new audition genre using the standardized function name --->
 <cfset new_audgenreid = auditionGenreService.create(

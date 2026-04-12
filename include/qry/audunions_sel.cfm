@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves union information based on specified country and audit category IDs. --->
 <cfparam name="dbug" default="N" />
 <cfparam name="new_audcatid" default="0" />

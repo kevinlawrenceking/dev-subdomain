@@ -28,6 +28,7 @@
         ORDER BY 
             l.link_no
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -54,6 +55,7 @@
         ORDER BY 
             l.link_no
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -72,6 +74,7 @@
         AND l.pluginname <> <cfqueryparam value="global" cfsqltype="CF_SQL_VARCHAR">
         ORDER BY l.link_no
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>

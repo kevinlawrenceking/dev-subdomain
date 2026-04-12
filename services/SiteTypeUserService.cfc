@@ -8,6 +8,7 @@
         FROM sitetypes_user_tbl 
         WHERE sitetypeid = <cfqueryparam value="#arguments.sitetypeid#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <!--- Return the query result --->
     <cfreturn result>
@@ -21,6 +22,7 @@
         SET isdeleted = 1 
         WHERE sitetypeid = <cfqueryparam value="#arguments.sitetypeid#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 <cffunction output="false" name="SELsitetypes_user_24133" access="public" returntype="query">
     <cfargument name="new_sitetypeid" type="numeric" required="true">
@@ -40,6 +42,7 @@
         WHERE 
             s.sitetypeid = <cfqueryparam value="#arguments.new_sitetypeid#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -59,6 +62,7 @@ WHERE
 
 
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 <cffunction output="false" name="SELsitetypes_user_24144" access="public" returntype="query">
@@ -71,6 +75,7 @@ WHERE
         WHERE userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
         AND sitetypename = <cfqueryparam value="#arguments.new_sitetypename#" cfsqltype="CF_SQL_VARCHAR">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -87,6 +92,7 @@ WHERE
             <cfqueryparam value="0" cfsqltype="CF_SQL_BIT">
         )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn result.generatedKey>
 </cffunction>
 <cffunction output="false" name="SELsitetypes_user_24146" access="public" returntype="query">
@@ -97,6 +103,7 @@ WHERE
         FROM sitetypes_user
         WHERE sitetypeid = <cfqueryparam value="#arguments.sitetypeid#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -109,6 +116,7 @@ WHERE
         SET pnid = <cfqueryparam value="#arguments.new_pnid#" cfsqltype="CF_SQL_INTEGER">
         WHERE sitetypeid = <cfqueryparam value="#arguments.new_sitetypeid#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 <cffunction output="false" name="SELsitetypes_user_24438" access="public" returntype="query">
     <cfargument name="sitetypename" type="string" required="true">
@@ -120,6 +128,7 @@ WHERE
         WHERE sitetypename = <cfqueryparam value="#arguments.sitetypename#" cfsqltype="CF_SQL_VARCHAR"> 
         AND userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -136,6 +145,7 @@ WHERE
             <cfqueryparam value="#arguments.userId#" cfsqltype="CF_SQL_INTEGER">
         )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn result.generatedKey>
 </cffunction>
 <cffunction output="false" name="SELsitetypes_user_24447" access="public" returntype="query">
@@ -148,6 +158,7 @@ WHERE
             WHERE sitetypename = <cfqueryparam value="#arguments.sitetypename#" cfsqltype="CF_SQL_VARCHAR"> 
             AND userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -160,6 +171,7 @@ WHERE
             WHERE userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
             ORDER BY sitetypename
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>

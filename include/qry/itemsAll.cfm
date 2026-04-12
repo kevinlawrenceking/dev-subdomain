@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves contact items from the database based on the contact ID and category area. --->
 
 <cfparam name="contactid" default="1" />

@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page performs a database update based on specific conditions. --->
 
 <cfquery name="update">

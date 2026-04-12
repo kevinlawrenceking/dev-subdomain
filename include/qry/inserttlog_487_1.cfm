@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset objTicketsLogTableService = createObject("component", "services.TicketsLogTableService")>
 <cfset objTicketsLogTableService.INSticketslog(
     new_tlogDetails = new_tlogDetails,

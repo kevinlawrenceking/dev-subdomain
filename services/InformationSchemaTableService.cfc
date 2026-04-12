@@ -8,6 +8,7 @@
         FROM information_schema.tables
         WHERE TABLE_NAME LIKE <cfqueryparam value="#arguments.tableNamePattern#" cfsqltype="CF_SQL_VARCHAR">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>

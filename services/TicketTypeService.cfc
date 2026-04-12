@@ -7,6 +7,7 @@
         FROM tickettypes 
         ORDER BY tickettype
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <!--- Return the query result --->
     <cfreturn result>

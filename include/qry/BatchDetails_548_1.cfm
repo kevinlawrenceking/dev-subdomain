@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves batch details from the contactdetails table based on a list of contact IDs. --->
 
 <cfquery name="BatchDetails">

@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page processes user input and displays results based on certain conditions. --->
 
 <cfset userInput = "">

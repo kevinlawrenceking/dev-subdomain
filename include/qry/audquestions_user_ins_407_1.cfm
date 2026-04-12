@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset service = createObject("component", "services.AuditionQuestionUserService")>
 <cfset new_qID = service.INSaudquestions_user(
     new_qTypeID = new_qTypeID,

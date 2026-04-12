@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <Cfoutput>new_contactid</cfoutput>
 
 <cfset contactService = request.svc("ContactService")>

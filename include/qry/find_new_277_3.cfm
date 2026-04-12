@@ -1,2 +1,3 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset contactAuditionService = createObject("component", "services.ContactAuditionService")>
 <cfset find_new = contactAuditionService.getAuditionContacts(audprojectid=audprojectid, new_contactid=new_contactid)>

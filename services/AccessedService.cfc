@@ -16,20 +16,24 @@
                   AND filename = <cfqueryparam value="#arguments.filename#" cfsqltype="cf_sql_varchar">
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
  <cfquery name="x">
         delete FROM `AccessedFiles` WHERE filename not like '%.cfm'
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
  <cfquery name="xu">
         UPDATE accessedfiles
 SET path = '/qry'
 WHERE path LIKE '%include%' AND path LIKE '%qry%';
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
  <cfquery name="xu">
 UPDATE accessedfiles
 SET path = '/include'
 WHERE path LIKE '%include%' AND path NOT LIKE '%qry%';
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 
     </cffunction>

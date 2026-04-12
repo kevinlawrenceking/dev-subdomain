@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset noteService = request.svc("NoteService")>
 <cfset find_note = noteService.SELnoteslog_24400(
     select_userid = select_userid,

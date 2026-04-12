@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset auditionRoleService = createObject("component", "services.AuditionRoleService")>
 
 <!--- Handle empty numeric fields --->

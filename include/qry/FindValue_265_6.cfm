@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves a value from the RPG update table based on a given record ID. --->
 
 <cfquery name="FindValue">

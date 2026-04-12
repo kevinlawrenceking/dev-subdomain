@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfcontent type="application/json">
 <cftry>
     <cfparam name="form.contactid" type="integer">

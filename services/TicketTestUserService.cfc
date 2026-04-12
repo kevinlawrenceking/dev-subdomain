@@ -9,6 +9,7 @@
         WHERE ticketid = <cfqueryparam value="#arguments.recid#" cfsqltype="CF_SQL_INTEGER"> 
           AND userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -27,6 +28,7 @@
             <cfqueryparam cfsqltype="cf_sql_varchar" value="#arguments.new_rejectnotes#" />
         )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn result.generatedKey>
 </cffunction>
 <cffunction output="false" name="UPDtickettestusers" access="public" returntype="void">
@@ -42,6 +44,7 @@
         WHERE 
             id = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.testid#" />
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 <cffunction output="false" name="SELtickettestusers_24474" access="public" returntype="query">
     <cfargument name="ticketId" type="numeric" required="true">
@@ -63,6 +66,7 @@
             tu.ticketid = <cfqueryparam value="#arguments.ticketId#" cfsqltype="CF_SQL_INTEGER"> 
             AND tu.userid <> <cfqueryparam value="#arguments.userId#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -86,6 +90,7 @@
             tu.ticketid = <cfqueryparam value="#arguments.recid#" cfsqltype="CF_SQL_INTEGER"> 
             AND tu.userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>

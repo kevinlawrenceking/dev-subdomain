@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset systemUserService = request.svc("SystemUserService")>
 <cfset findsystem = systemUserService.SELfusystemusers_24426(
     maint_contactid = maint_contactid,

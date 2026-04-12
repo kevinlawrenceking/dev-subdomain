@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset componentPath = "/services/AuditionVocalTypeXRefService">
 <cfset auditionService = createObject("component", componentPath)>
 <cfset new_ = auditionService.INSaudvocaltypes_audition_xref_24613(

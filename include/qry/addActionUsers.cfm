@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset actionUserService = createObject("component", "services.ActionUserService")>
 <cfset actionUserService.addActionUsers(
     actionid = xs.actionid,

@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves active ranges from the audageranges table for display. --->
 
 <!--- PERF: Age ranges are reference data; cache for 60 minutes. --->

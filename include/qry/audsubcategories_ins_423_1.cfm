@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset service = createObject("component", "services.AuditionSubcategorieService")>
 <cfset service.UPDaudsubcategories(
     new_audSubCatName = trim(new_audSubCatName),

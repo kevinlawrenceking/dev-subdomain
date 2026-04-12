@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves the latest unread notifications for the user --->
 <cfquery name="toasts" maxrows="5">
     <!--- Retrieve the latest unread notifications for the user --->

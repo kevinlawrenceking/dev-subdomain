@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves user data based on the provided user ID and orders the results. --->
 
 <!--- Sanitize ORDER BY column name to prevent SQL injection --->

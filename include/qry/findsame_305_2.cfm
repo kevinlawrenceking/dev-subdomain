@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset contactItemService = request.svc("ContactItemService")>
 <cfset findSame = contactItemService.SELcontactitems_24347(
     new_contactid = new_contactid,

@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset contactService = request.svc("ContactService")>
 <cfset contactService.UPDcontactdetails_24202(
     contactid = contactid,

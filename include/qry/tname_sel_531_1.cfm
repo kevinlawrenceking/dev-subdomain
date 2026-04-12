@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves active records from a specified table and orders them by a given field. --->
 
 <!--- Sanitize ORDER BY column name to prevent SQL injection --->

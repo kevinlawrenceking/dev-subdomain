@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset eventService = request.svc("EventService")>
 <cfset eventService.INSevents_23790(
     new_eventtitle=new_eventtitle,

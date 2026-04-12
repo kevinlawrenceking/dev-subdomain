@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset componentPath = "/services/AuditionSubcategorieService">
 <cfset componentInstance = createObject("component", componentPath)>
 <cfset new_audSubCatId = componentInstance.INSaudsubcategories(

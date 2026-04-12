@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves and displays records from a specified table, with optional filtering by category. --->
 <cfset dbug = "y" />
 <cfparam name="new_audcatid" default="0" />

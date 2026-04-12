@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 
 
 <cfparam name="new_audgenre" default="" />

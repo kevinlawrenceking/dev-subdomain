@@ -6,6 +6,7 @@
         FROM ticketpriority 
         ORDER BY orderNo
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <!--- Return the query result --->
     <cfreturn result>

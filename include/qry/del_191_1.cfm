@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset auditionProjectService = request.svc("AuditionProjectService")>
 
 <cfparam name="projectids" default="0" />

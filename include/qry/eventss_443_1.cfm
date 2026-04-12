@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset eventService = request.svc("EventService")>
 <cfset eventss = eventService.SELevents_24618(
     sessionUserId = userid,

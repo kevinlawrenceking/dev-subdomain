@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page updates the audunions table with new values based on provided parameters. --->
 <cfparam name="new_unionName" default="" />
 <cfparam name="new_countryid" default="" />

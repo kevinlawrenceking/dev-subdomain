@@ -16,6 +16,7 @@
         AND x.contactid = <cfqueryparam value="#arguments.contactId#" cfsqltype="CF_SQL_INTEGER">
         AND e.audstepid <> <cfqueryparam value="#arguments.audStepId#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <!--- Return the total number of records inserted --->
     <cfreturn result.recordCount>
@@ -36,6 +37,7 @@
         WHERE userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
         AND col1 = <cfqueryparam value="#arguments.autocomplete_aud#" cfsqltype="CF_SQL_VARCHAR">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <!--- If a contactid is found, proceed with the insert --->
     <cfif contactQuery.recordCount EQ 1>
@@ -47,6 +49,7 @@
                 xrefNotes = <cfqueryparam value="/qry/audition.cfm" cfsqltype="CF_SQL_VARCHAR">, 
                 contactid = <cfqueryparam value="#new_contactid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     </cfif>
 
 <!--- Return new_contactid --->
@@ -63,6 +66,7 @@
             xrefNotes = <cfqueryparam value="audition-add2.cfm" cfsqltype="CF_SQL_VARCHAR">, 
             contactid = <cfqueryparam value="#arguments.new_contactid#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 
@@ -76,6 +80,7 @@
         WHERE audprojectid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.audprojectid#">
         AND contactid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_contactid#">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -94,6 +99,7 @@
         WHERE audprojectid = <cfqueryparam value="#arguments.audprojectid#" cfsqltype="CF_SQL_INTEGER">
         AND contactid = <cfqueryparam value="#arguments.old_contactid#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 
 
@@ -107,6 +113,7 @@
             audprojectid = <cfqueryparam value="#arguments.audprojectid#" cfsqltype="CF_SQL_INTEGER">, 
             contactid = <cfqueryparam value="#arguments.contactid#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 
 <cffunction output="false" name="DELaudcontacts_auditions_xref_24127" access="public" returntype="void">
@@ -116,6 +123,7 @@
         DELETE FROM audcontacts_auditions_xref 
         WHERE audprojectid = <cfqueryparam value="#arguments.audprojectid#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 
 <cffunction output="false" name="INSaudcontacts_auditions_xref_24512" access="public" returntype="numeric">
@@ -130,6 +138,7 @@
             <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_audprojectid#">
         )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <!--- Return the generated key --->
     <cfreturn result.generatedKey>
@@ -147,6 +156,7 @@
         WHERE 
             audprojectid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="0">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 
 <cffunction output="false" name="DELaudcontacts_auditions_xref_24545" access="public" returntype="numeric">
@@ -157,6 +167,7 @@
         WHERE audprojectid = <cfqueryparam value="#arguments.audprojectid#" cfsqltype="CF_SQL_INTEGER"> 
         AND xrefNotes = <cfqueryparam value="Referral" cfsqltype="CF_SQL_VARCHAR">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <cfreturn result.recordcount>
 </cffunction>
@@ -171,6 +182,7 @@
             WHERE audprojectid = <cfqueryparam value="#arguments.audprojectid#" cfsqltype="cf_sql_integer"> 
             AND contactid = <cfqueryparam value="#arguments.deletecontactid#" cfsqltype="cf_sql_integer">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 <cffunction output="false" name="INSaudcontacts_auditions_xref_24551" access="public" returntype="void">
@@ -182,6 +194,7 @@
             SET audprojectid = <cfqueryparam value="#arguments.audprojectid#" cfsqltype="cf_sql_integer">, 
                 contactid = <cfqueryparam value="#arguments.contactid#" cfsqltype="cf_sql_integer">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 </cfcomponent>

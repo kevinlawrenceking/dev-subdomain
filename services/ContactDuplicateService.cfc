@@ -33,6 +33,7 @@
             HAVING COUNT(*) > 1 
             ORDER BY duplicate_count DESC, contactlast, contactfirst
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         
         <cfreturn qDuplicatesByName />
     </cffunction>
@@ -61,6 +62,7 @@
             HAVING COUNT(DISTINCT cd.contactid) > 1 
             ORDER BY duplicate_count DESC, ci.valuetext
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         
         <cfreturn qDuplicatesByEmail />
     </cffunction>
@@ -80,6 +82,7 @@
               AND cd.isdeleted = <cfqueryparam value="0" cfsqltype="cf_sql_bit" />
             ORDER BY cd.timestamp ASC
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         
         <cfreturn qContactDetails />
     </cffunction>
@@ -98,6 +101,7 @@
             WHERE ci.contactid IN (<cfqueryparam value="#arguments.contactIds#" cfsqltype="cf_sql_varchar" list="true" />)
             ORDER BY ci.contactid, ic.valueCategory, ci.itemid
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         
         <cfreturn qContactItems />
     </cffunction>
@@ -131,6 +135,7 @@
                     WHERE contactid = <cfqueryparam value="#arguments.primaryContactId#" cfsqltype="cf_sql_integer" />
                       AND userid = <cfqueryparam value="#arguments.userid#" cfsqltype="cf_sql_integer" />
                 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
                 <!--- Move contact items from duplicate to primary --->
                 <cfquery datasource="#application.dsn#">
@@ -148,6 +153,7 @@
                           ) as duplicates
                       )
                 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
                 <!--- Move notes from duplicate to primary --->
                 <cfquery datasource="#application.dsn#">
@@ -155,6 +161,7 @@
                     SET contactid = <cfqueryparam value="#arguments.primaryContactId#" cfsqltype="cf_sql_integer" />
                     WHERE contactid = <cfqueryparam value="#arguments.duplicateContactId#" cfsqltype="cf_sql_integer" />
                 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
                 <!--- Move appointments from duplicate to primary --->
                 <cfquery datasource="#application.dsn#">
@@ -162,6 +169,7 @@
                     SET eventid = <cfqueryparam value="#arguments.primaryContactId#" cfsqltype="cf_sql_integer" />
                     WHERE eventid = <cfqueryparam value="#arguments.duplicateContactId#" cfsqltype="cf_sql_integer" />
                 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
                 <!--- Move relationship systems from duplicate to primary --->
                 <cfquery datasource="#application.dsn#">
@@ -169,6 +177,7 @@
                     SET contactid = <cfqueryparam value="#arguments.primaryContactId#" cfsqltype="cf_sql_integer" />
                     WHERE contactid = <cfqueryparam value="#arguments.duplicateContactId#" cfsqltype="cf_sql_integer" />
                 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
                 <!--- Move notifications from duplicate to primary --->
                 <cfquery datasource="#application.dsn#">
@@ -176,6 +185,7 @@
                     SET contactid = <cfqueryparam value="#arguments.primaryContactId#" cfsqltype="cf_sql_integer" />
                     WHERE contactid = <cfqueryparam value="#arguments.duplicateContactId#" cfsqltype="cf_sql_integer" />
                 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
                 <!--- Move tags from duplicate to primary --->
                 <cfquery datasource="#application.dsn#">
@@ -192,6 +202,7 @@
                           ) as duplicate_tags
                       )
                 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
                 <!--- Mark duplicate contact as deleted --->
                 <cfquery datasource="#application.dsn#">
@@ -200,6 +211,7 @@
                     WHERE contactid = <cfqueryparam value="#arguments.duplicateContactId#" cfsqltype="cf_sql_integer" />
                       AND userid = <cfqueryparam value="#arguments.userid#" cfsqltype="cf_sql_integer" />
                 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
                 <cfset result.success = true />
                 <cfset result.message = "Contacts merged successfully" />

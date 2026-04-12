@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- contacts_gallery.cfm - Query contacts for gallery card display --->
 <!--- Depends on: contacts_table, bytag, byimport, gallerysearch, userid --->
 

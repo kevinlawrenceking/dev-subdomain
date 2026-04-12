@@ -55,6 +55,7 @@
             { tid = { value = ticketId, cfsqltype = "cf_sql_varchar" } },
             { datasource = variables.dsn }
           );
+          if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
         } catch (any e) {
           cflog(file = "TAO_error_fallback", type = "warning",
                 text = "Failed to update email_sent for " & ticketId & ": " & e.message);
@@ -206,6 +207,7 @@
           <cfqueryparam value="0" cfsqltype="cf_sql_tinyint" />
         )
       </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
       <cflog file="TAO_error_tickets" type="error"
              text="Ticket #arguments.diagnostics.ticketId# persisted | #arguments.diagnostics.scriptName# | #Left(arguments.diagnostics.errorMessage, 200)#" />
@@ -256,6 +258,7 @@
           <cfqueryparam value="#Left(arguments.diagnostics.scriptName & '?' & arguments.diagnostics.queryString, 500)#" cfsqltype="cf_sql_varchar" />
         )
       </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
       <cflog file="TAO_error_tickets" type="info"
              text="Support ticket created for #arguments.diagnostics.ticketId#" />
@@ -380,6 +383,7 @@
         FROM taousers
         WHERE userID = <cfqueryparam value="#arguments.userId#" cfsqltype="cf_sql_integer" />
       </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
       <cfif local.qUser.recordCount>
         <cfset result.userName = trim(local.qUser.userFirstName & " " & local.qUser.userLastName) />
         <cfset result.userEmail = local.qUser.userEmail />

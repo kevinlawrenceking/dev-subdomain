@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves notes related to an event and specific contact details for a note. --->
 
 <cfparam name="eventid" default="0" />

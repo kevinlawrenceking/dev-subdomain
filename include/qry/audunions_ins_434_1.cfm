@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset auditionUnionService = createObject("component", "services.AuditionUnionService")>
 <cfset auditionUnionService.UPDaudunions(
     new_unionName = trim(new_unionName),

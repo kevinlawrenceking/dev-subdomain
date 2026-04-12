@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset ticketService = request.svc("TicketService")>
 <cfparam name="select_pgid" default="" />
 <cfoutput>

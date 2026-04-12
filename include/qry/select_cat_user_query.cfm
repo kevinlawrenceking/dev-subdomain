@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves audio category data based on user ID and optional audio category ID. --->
 <cfset dbug = "y" />
 <cfparam name="new_audcatid" default="0" />

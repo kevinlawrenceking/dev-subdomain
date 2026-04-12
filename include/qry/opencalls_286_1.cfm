@@ -1,2 +1,3 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset auditionOpenCallOptionUserService = createObject("component", "services.AuditionOpenCallOptionUserService")>
 <cfset opencalls = auditionOpenCallOptionUserService.SELaudopencalloptions_user(userid=userid)>

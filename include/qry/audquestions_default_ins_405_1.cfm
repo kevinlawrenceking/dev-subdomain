@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset componentPath = "/services/AuditionQuestionsDefaultService">
 <cfset auditionQuestionsService = createObject("component", componentPath)>
 <cfset new_qID = auditionQuestionsService.INSaudquestions_default(

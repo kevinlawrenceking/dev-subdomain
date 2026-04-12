@@ -19,6 +19,7 @@ FROM contactitems
               AND tagtype = <cfqueryparam value="C" cfsqltype="CF_SQL_CHAR">
           )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <Cfif #tagcheck.totaltags# is "1">
 <Cfset result = "Casting Director" />
@@ -50,6 +51,7 @@ FROM contactitems
             AND col1 = <cfqueryparam value="#arguments.topsearch_myteam#" cfsqltype="CF_SQL_VARCHAR">
         LIMIT 1
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 <cffunction name="deleteAudContact" access="public" returntype="void" output="false">
     <cfargument name="contactid" type="numeric" required="true">
@@ -59,6 +61,7 @@ FROM contactitems
             WHERE contactid = <cfqueryparam value="#arguments.contactid#" cfsqltype="CF_SQL_INTEGER">
             AND audprojectid = <cfqueryparam value="#arguments.audprojectid#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 
 <cffunction name="deleteTeam" access="public" returntype="void" output="false">
@@ -68,6 +71,7 @@ FROM contactitems
             WHERE contactid = <cfqueryparam value="#arguments.contactid#" cfsqltype="CF_SQL_INTEGER">
             AND valuetext = 'My Team'
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 <cffunction output="false" name="itemsByCatActive" access="public" returntype="struct">
     <!--- Define required arguments --->
@@ -108,6 +112,7 @@ FROM contactitems
           AND c.catArea_UCB IN ('B', <cfqueryparam value="#arguments.catArea_UCB#" cfsqltype="cf_sql_varchar">)
         ORDER BY i.valuetext
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <!--- Create struct to hold query and record count --->
     <cfset var resultStruct = structNew()>
@@ -132,6 +137,7 @@ FROM contactitems
             WHERE c.valuecategory <> 'Tag'
             ORDER BY finalorder
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         <!--- Return the query result --->
         <cfreturn ActiveCategories />
     </cffunction>
@@ -151,6 +157,7 @@ FROM contactitems
             WHERE c.valuecategory <> 'Tag' AND c.catid = 0
             ORDER BY finalorder
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         <!--- Return the query result --->
         <cfreturn InactiveCategories />
     </cffunction>
@@ -178,6 +185,7 @@ FROM contactitems
                 ELSE 'Industry'
             END AS new_systemscope
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn findscope.new_systemscope[1]>
 </cffunction>
@@ -198,6 +206,7 @@ FROM contactitems
                 AND valueCategory = <cfqueryparam value="Tag" cfsqltype="CF_SQL_VARCHAR"> 
                 AND valuetext <> ''
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -213,6 +222,7 @@ FROM contactitems
             ORDER BY contactitems.primary_YN DESC
             LIMIT 1
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -228,6 +238,7 @@ FROM contactitems
             ORDER BY contactitems.primary_YN DESC
             LIMIT 1
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -245,6 +256,7 @@ FROM contactitems
                 <cfqueryparam value="Active" cfsqltype="CF_SQL_VARCHAR">
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         <cfreturn result.generatedKey>
 </cffunction>
 <cffunction output="false" name="INScontactitems_23771" access="public" returntype="numeric">
@@ -260,6 +272,7 @@ FROM contactitems
           AND itemstatus = 'Active'
         LIMIT 1
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <cfif checkExisting.recordCount GT 0>
         <cfreturn checkExisting.itemid>
@@ -275,6 +288,7 @@ FROM contactitems
             <cfqueryparam value="Active" cfsqltype="CF_SQL_VARCHAR">
         )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn result.generatedKey>
 </cffunction>
 <cffunction output="false" name="SELcontactitems_23840" access="public" returntype="query">
@@ -286,6 +300,7 @@ FROM contactitems
             INNER JOIN itemcategory c ON c.valuecategory = i.valuecategory
             WHERE contactid = <cfqueryparam value="#arguments.currentid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -299,6 +314,7 @@ FROM contactitems
             AND valuetext <> <cfqueryparam value="My Team" cfsqltype="CF_SQL_VARCHAR">
             AND valuecategory = <cfqueryparam value="Tag" cfsqltype="CF_SQL_VARCHAR">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 
 
@@ -319,6 +335,7 @@ FROM contactitems
             WHERE 
                 i.itemid = <cfqueryparam value="#arguments.itemid#" cfsqltype="cf_sql_integer">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn queryResult>
 </cffunction>
@@ -334,6 +351,7 @@ FROM contactitems
             AND itemstatus = <cfqueryparam cfsqltype="cf_sql_varchar" value="Active" />
             AND valuecategory = <cfqueryparam cfsqltype="cf_sql_varchar" value="URL" />
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn queryResult>
 </cffunction>
@@ -348,6 +366,7 @@ FROM contactitems
             AND itemstatus = <cfqueryparam cfsqltype="cf_sql_varchar" value="Active" /> 
             AND valuecategory = <cfqueryparam cfsqltype="cf_sql_varchar" value="Email" />
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -362,6 +381,7 @@ FROM contactitems
             AND itemstatus = <cfqueryparam cfsqltype="cf_sql_varchar" value="Active" />
             AND valuecategory = <cfqueryparam cfsqltype="cf_sql_varchar" value="Email" />
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -375,6 +395,7 @@ FROM contactitems
             AND itemstatus = <cfqueryparam cfsqltype="cf_sql_varchar" value="Active" />
             AND valuecategory = <cfqueryparam cfsqltype="cf_sql_varchar" value="Company" />
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -389,6 +410,7 @@ FROM contactitems
             AND itemstatus = <cfqueryparam cfsqltype="cf_sql_varchar" value="Active" />
             AND valuecategory = <cfqueryparam cfsqltype="cf_sql_varchar" value="Phone" />
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -403,6 +425,7 @@ FROM contactitems
             AND itemstatus = <cfqueryparam cfsqltype="cf_sql_varchar" value="Active" />
             AND valuecategory = <cfqueryparam cfsqltype="cf_sql_varchar" value="Phone" />
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -418,6 +441,7 @@ FROM contactitems
             AND itemstatus = <cfqueryparam cfsqltype="cf_sql_varchar" value="Active" /> 
             AND valuecategory = <cfqueryparam cfsqltype="cf_sql_varchar" value="Phone" />
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn queryResult>
 </cffunction>
@@ -439,6 +463,7 @@ FROM contactitems
                 AND itemstatus = <cfqueryparam cfsqltype="cf_sql_varchar" value="Active" /> 
                 AND valuecategory = <cfqueryparam cfsqltype="cf_sql_varchar" value="Address" />
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -460,6 +485,7 @@ FROM contactitems
                 AND itemstatus = <cfqueryparam cfsqltype="cf_sql_varchar" value="Active" /> 
                 AND valuecategory = <cfqueryparam cfsqltype="cf_sql_varchar" value="Address" />
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -473,6 +499,7 @@ FROM contactitems
             AND itemstatus = <cfqueryparam cfsqltype="cf_sql_varchar" value="Active" />
             AND contactID = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.contactID#" />
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -486,6 +513,7 @@ FROM contactitems
             FROM contactitems i
             WHERE i.itemid = <cfqueryparam value="#arguments.itemid#" cfsqltype="cf_sql_integer">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn queryResult>
 </cffunction>
@@ -521,6 +549,7 @@ FROM contactitems
             ORDER BY 
                 d.contactfullname
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 
@@ -560,6 +589,7 @@ FROM contactitems
         ORDER BY 
             d.contactfullname
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -584,6 +614,7 @@ FROM contactitems
                 <cfqueryparam value="Y" cfsqltype="CF_SQL_CHAR">
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result.generatedKey>
 </cffunction>
@@ -596,6 +627,7 @@ FROM contactitems
             WHERE contactid = <cfqueryparam value="#arguments.deletecontactid#" cfsqltype="CF_SQL_INTEGER"> 
             AND valuetext = <cfqueryparam value="My Team" cfsqltype="CF_SQL_VARCHAR">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -607,6 +639,7 @@ FROM contactitems
             SET isdeleted = 1 
             WHERE itemid = <cfqueryparam value="#arguments.new_itemid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 <cffunction output="false" name="UPDcontactitems_23952" access="public" returntype="void">
@@ -619,6 +652,7 @@ FROM contactitems
             WHERE itemid = <cfqueryparam value="#arguments.itemid#" cfsqltype="CF_SQL_INTEGER"> 
             AND contactid = <cfqueryparam value="#arguments.contactid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 <cffunction output="false" name="UPDcontactitems_23953" access="public" returntype="void">
@@ -630,6 +664,7 @@ FROM contactitems
             WHERE contactid = <cfqueryparam value="#arguments.currentid#" cfsqltype="CF_SQL_INTEGER"> 
             AND itemstatus = <cfqueryparam value="Pending" cfsqltype="CF_SQL_VARCHAR">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 <cffunction output="false" name="SELcontactitems_23954" access="public" returntype="query">
@@ -643,6 +678,7 @@ FROM contactitems
             AND valueCategory = <cfqueryparam value="#arguments.valuecategory#" cfsqltype="CF_SQL_VARCHAR"> 
             AND itemStatus = 'Pending'
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -660,6 +696,7 @@ FROM contactitems
                 <cfqueryparam value="Pending" cfsqltype="CF_SQL_VARCHAR">
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 <cffunction output="false" name="SELcontactitems_23962" access="public" returntype="query">
@@ -679,6 +716,7 @@ FROM contactitems
                 AND valuecategory = <cfqueryparam value="Tag" cfsqltype="CF_SQL_VARCHAR">
                 AND valuetext <> <cfqueryparam value="My Rep Team" cfsqltype="CF_SQL_VARCHAR">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -694,6 +732,7 @@ FROM contactitems
             ORDER BY contactitems.primary_YN DESC
             LIMIT 1
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -709,6 +748,7 @@ FROM contactitems
             ORDER BY contactitems.primary_YN DESC
             LIMIT 1
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -727,6 +767,7 @@ FROM contactitems
             GROUP BY i.valueCompany
             ORDER BY i.valuecompany
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -753,6 +794,7 @@ FROM contactitems
             </cfif>
         )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result.generatedKey>
 </cffunction>
@@ -795,6 +837,7 @@ FROM contactitems
             </cfif>
             WHERE itemid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.itemid#">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 <cffunction output="false" name="INScontactitems_24049" access="public" returntype="numeric">
@@ -811,6 +854,7 @@ FROM contactitems
                 <cfqueryparam value="Active" cfsqltype="CF_SQL_VARCHAR">
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 <cfreturn result.generatedKey>
 </cffunction>
 <cffunction output="false" name="INScontactitems_24050" access="public" returntype="numeric">
@@ -827,6 +871,7 @@ FROM contactitems
                 <cfqueryparam value="Active" cfsqltype="CF_SQL_VARCHAR">
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn result.generatedKey>
 </cffunction>
 <cffunction output="false" name="INScontactitems_24051" access="public" returntype="numeric">
@@ -843,6 +888,7 @@ FROM contactitems
                 <cfqueryparam value="Active" cfsqltype="CF_SQL_VARCHAR">
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         <cfreturn result.generatedKey>
 </cffunction>
 <cffunction output="false" name="INScontactitems_24052" access="public" returntype="numeric">
@@ -859,6 +905,7 @@ FROM contactitems
                 <cfqueryparam value="Active" cfsqltype="CF_SQL_VARCHAR">
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 <cfreturn result.generatedKey>
 </cffunction>
 <cffunction output="false" name="INScontactitems_24057" access="public" returntype="numeric">
@@ -875,6 +922,7 @@ FROM contactitems
                 <cfqueryparam value="Active" cfsqltype="CF_SQL_VARCHAR">
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 <cfreturn result.generatedKey>
 </cffunction>
 <cffunction output="false" name="INScontactitems_24058" access="public" returntype="numeric">
@@ -891,6 +939,7 @@ FROM contactitems
                 <cfqueryparam value="Active" cfsqltype="CF_SQL_VARCHAR">
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
       <cfreturn result.generatedKey>
 </cffunction>
 <cffunction output="false" name="SELcontactitems_24064" access="public" returntype="query">
@@ -907,6 +956,7 @@ FROM contactitems
             AND i.valuecompany <> 'Custom'
             ORDER BY i.valuecompany
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -927,6 +977,7 @@ FROM contactitems
             WHERE 
                 i.itemid = <cfqueryparam value="#arguments.itemid#" cfsqltype="cf_sql_integer">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 
@@ -1000,6 +1051,7 @@ FROM contactitems
 
 WHERE itemid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.itemid#">
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 
 <cffunction output="false" name="UPDcontactitems_24179" access="public" returntype="void">
@@ -1011,6 +1063,7 @@ WHERE itemid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.itemid
             SET valuetype = <cfqueryparam value="#arguments.valuetype#" cfsqltype="CF_SQL_VARCHAR">
             WHERE itemid = <cfqueryparam value="#arguments.itemid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 <cffunction output="false" name="SELcontactitems_24207" access="public" returntype="query">
@@ -1026,6 +1079,7 @@ WHERE itemid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.itemid
             AND valuetext = <cfqueryparam value="#arguments.new_tagname#" cfsqltype="CF_SQL_VARCHAR"> 
             ORDER BY valuetext
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -1040,6 +1094,7 @@ WHERE itemid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.itemid
             AND contactid = <cfqueryparam value="#arguments.contactid#" cfsqltype="CF_SQL_INTEGER"> 
             AND itemstatus = <cfqueryparam value="Active" cfsqltype="CF_SQL_VARCHAR">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -1052,6 +1107,7 @@ WHERE itemid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.itemid
  
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -1063,6 +1119,7 @@ WHERE itemid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.itemid
             WHERE valuecategory = <cfqueryparam value="Tag" cfsqltype="CF_SQL_VARCHAR">
             AND contactid = <cfqueryparam value="#arguments.contactid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 <cffunction output="false" name="INScontactitems_24327" access="public" returntype="numeric">
@@ -1079,6 +1136,7 @@ WHERE itemid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.itemid
                 <cfqueryparam value="Active" cfsqltype="CF_SQL_VARCHAR">
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         <cfreturn result.generatedKey>
 
 </cffunction>
@@ -1097,6 +1155,7 @@ WHERE itemid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.itemid
             )
             AND valueText = <cfqueryparam value="#left(arguments.tagname, 40)#" cfsqltype="CF_SQL_VARCHAR">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -1112,6 +1171,7 @@ WHERE itemid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.itemid
             AND VALUETEXT = <cfqueryparam value="#arguments.new_tagname#" cfsqltype="CF_SQL_VARCHAR"> 
             AND itemstatus = <cfqueryparam value="Active" cfsqltype="CF_SQL_VARCHAR">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -1129,6 +1189,7 @@ WHERE itemid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.itemid
                 <cfqueryparam value="Active" cfsqltype="CF_SQL_VARCHAR">
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 <cfreturn result.generatedKey>
 </cffunction>
 <cffunction output="false" name="UPDCONTACTITEMS_24349" access="public" returntype="void">
@@ -1141,6 +1202,7 @@ WHERE itemid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.itemid
                 itemnotes = <cfqueryparam value="Delete via Bulk Update - #arguments.new_currentStartDate#" cfsqltype="CF_SQL_VARCHAR">
             WHERE itemid = <cfqueryparam value="#arguments.itemid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 <cffunction output="false" name="addContactItemsTag" access="public" returntype="numeric">
@@ -1164,6 +1226,7 @@ WHERE itemid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.itemid
             AND valueText = <cfqueryparam value="#arguments.new_tag#" cfsqltype="CF_SQL_VARCHAR">
         )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 
     <!--- If a key is generated, return it --->
@@ -1189,6 +1252,7 @@ WHERE itemid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.itemid
                 <cfqueryparam value="Active" cfsqltype="CF_SQL_VARCHAR">
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         <cfreturn result.generatedKey>
 </cffunction>
 <cffunction output="false" name="INScontactitems_24412" access="public" returntype="numeric">
@@ -1205,6 +1269,7 @@ WHERE itemid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.itemid
                 <cfqueryparam value="Active" cfsqltype="CF_SQL_VARCHAR">
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
        <cfreturn result.generatedKey>
 </cffunction>
 <cffunction output="false" name="INScontactitems_24414" access="public" returntype="numeric">
@@ -1221,6 +1286,7 @@ WHERE itemid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.itemid
                 <cfqueryparam value="Active" cfsqltype="CF_SQL_VARCHAR">
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result.generatedKey>
 </cffunction>
@@ -1238,6 +1304,7 @@ WHERE itemid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.itemid
                 <cfqueryparam value="Active" cfsqltype="CF_SQL_VARCHAR">
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
       <cfreturn result.generatedKey>
 </cffunction>
 <cffunction output="false" name="INScontactitems_24418" access="public" returntype="numeric">
@@ -1254,6 +1321,7 @@ WHERE itemid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.itemid
                 <cfqueryparam value="Active" cfsqltype="CF_SQL_VARCHAR">
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 <cfreturn result.generatedKey>
 </cffunction>
 <cffunction output="false" name="INScontactitems_24420" access="public" returntype="numeric">
@@ -1270,6 +1338,7 @@ WHERE itemid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.itemid
                 <cfqueryparam value="Active" cfsqltype="CF_SQL_VARCHAR">
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 <cfreturn result.generatedKey>
 </cffunction>
 <cffunction output="false" name="INScontactitems_24422" access="public" returntype="numeric">
@@ -1286,6 +1355,7 @@ WHERE itemid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.itemid
                 <cfqueryparam value="Active" cfsqltype="CF_SQL_VARCHAR">
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 <cfreturn result.generatedKey>
 </cffunction>
 <cffunction output="false" name="INScontactitems_24424" access="public" returntype="numeric">
@@ -1318,6 +1388,7 @@ WHERE itemid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.itemid
                 <cfqueryparam value="Active" cfsqltype="CF_SQL_VARCHAR">
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         <cfreturn result.generatedKey>
 </cffunction>
 <cffunction output="false" name="SELcontactitems_24620" access="public" returntype="query">
@@ -1341,6 +1412,7 @@ WHERE itemid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.itemid
             ORDER BY 
                 c.recordname
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 
@@ -1356,6 +1428,7 @@ WHERE itemid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.itemid
             AND itemstatus = <cfqueryparam value="Active" cfsqltype="CF_SQL_VARCHAR">
             ORDER BY primary_yn DESC limit 1
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -1374,6 +1447,7 @@ WHERE itemid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.itemid
             ORDER BY i.valuetext 
             LIMIT 1
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 '' AND i.valuecompany IS NOT null ORDER BY i.valuetext LIMIT 1">
 
@@ -1408,6 +1482,7 @@ WHERE itemid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.itemid
             AND i.valuetext <> ''
             AND i.itemStatus = 'Active'
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -1432,6 +1507,7 @@ WHERE itemid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.itemid
                 i.contactID = <cfqueryparam value="#arguments.currentid#" cfsqltype="CF_SQL_INTEGER"> 
                 AND c.catArea_UCB IN ('B', <cfqueryparam value="#arguments.catArea_UCB#" cfsqltype="CF_SQL_VARCHAR">)
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -1460,6 +1536,7 @@ WHERE itemid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.itemid
             ORDER BY 
                 i.valuetext
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -1483,6 +1560,7 @@ WHERE itemid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.itemid
             ORDER BY 
                 i.valuetype
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -1497,6 +1575,7 @@ WHERE itemid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.itemid
             AND itemstatus = <cfqueryparam value="Active" cfsqltype="CF_SQL_VARCHAR"> 
             ORDER BY primary_yn DESC
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -1528,6 +1607,7 @@ WHERE itemid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.itemid
                 and m.typeiconmdi is not null
                 order by t.typeid
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -1554,6 +1634,7 @@ WHERE itemid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.itemid
                 AND i.itemstatus = <cfqueryparam value="Active" cfsqltype="CF_SQL_VARCHAR"> 
                 AND t.userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -1576,6 +1657,7 @@ WHERE itemid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.itemid
             WHERE 
                 i.itemid = <cfqueryparam value="#arguments.itemid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn queryResult>
 </cffunction>
@@ -1595,6 +1677,7 @@ WHERE itemid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.itemid
                 AND tagtype = <cfqueryparam value="C" cfsqltype="CF_SQL_CHAR">
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -1614,6 +1697,7 @@ WHERE itemid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.itemid
             ORDER BY 
                 valuetext
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>

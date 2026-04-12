@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset eventTypesUserService = createObject("component", "services.EventTypesUserService")>
 <cfset find = eventTypesUserService.SELeventtypes_user(
     eventTypeName = xs.eventtypeName,

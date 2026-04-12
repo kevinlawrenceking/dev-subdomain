@@ -76,6 +76,7 @@
         <cfquery name="qSchema" datasource="#application.datasource#" timeout="5">
             SELECT DATABASE() AS schema_name
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         <cfset result.schema = qSchema.schema_name>
 
         <cfquery name="qCheck" datasource="#application.datasource#" timeout="5">
@@ -84,6 +85,7 @@
             WHERE TABLE_SCHEMA = DATABASE()
               AND TABLE_NAME = 'auditions'
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
         <cfif qCheck.recordCount gt 0>
             <cfset result.available = true>
@@ -135,6 +137,7 @@
             WHERE a.userid = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.userid#">
               AND (a.status IS NULL OR a.status != 'cancelled')
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
         <cfset result.items_total = qAuditions.recordCount>
 
@@ -348,6 +351,7 @@
             WHERE a.audition_id IN (<cfqueryparam cfsqltype="cf_sql_integer" value="#idList#" list="true">)
               AND a.userid = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.userid#">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
         <cfloop query="qDetails">
             <cfset arrayAppend(details, {

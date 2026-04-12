@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset auditionSubmitSiteUserService = createObject("component", "services.AuditionSubmitSiteUserService")>
 <cfset auditionSubmitSiteUserService.INSaudsubmitsites_user(
     new_submitsitename = new_submitsitename,

@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves headshot media information for a specific user that is not marked as deleted and is associated with a specific audition project. --->
 <cfparam name="userid" default="0" />
 

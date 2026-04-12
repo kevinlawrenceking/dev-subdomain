@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset objService = createObject("component", "services.AuditionProjectsCastingAboutService")>
 <cfset new_ID = objService.INSaudprojects_castingabout(
     new_projName = new_projName,

@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page handles the deletion and insertion of user panel references based on provided panel IDs. --->
 
 <cfparam name="newpnids" default="" />

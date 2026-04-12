@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves system names and their IDs from the fusystems table and orders them by system name. --->
 
 <cfquery name="systemnames">                      

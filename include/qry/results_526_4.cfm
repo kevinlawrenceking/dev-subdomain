@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves data from the database while filtering out deleted records. --->
 
 <cfquery name="results">

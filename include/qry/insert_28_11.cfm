@@ -1,2 +1,3 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset auditionPlatformUserService = createObject("component", "services.AuditionPlatformUserService")>
 <cfset resultx = auditionPlatformUserService.INSaudPlatforms_user_23779(CustomPlatform=CustomPlatform, userid=userid)>

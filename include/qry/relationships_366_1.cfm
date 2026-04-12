@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves contact details for the logged-in user, excluding empty record names, and orders the results by contact full name. --->
 
 <cfquery name="relationships">

@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset vocalTypeService = createObject("component", "services.AuditionVocalTypeService")>
 <cfset vocalTypeService.UPDaudvocaltypes(
     new_vocaltype = new_vocaltype,

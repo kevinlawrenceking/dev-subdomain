@@ -18,6 +18,7 @@
                 quotedate DESC
             LIMIT 1
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfif quoteOfTheDay.recordcount eq 0>
 
@@ -33,6 +34,7 @@
                 ORDER BY RAND()
                 LIMIT 1
             </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfif randomQuote.recordcount gt 0>
                 <cfquery result="result">
@@ -43,6 +45,7 @@
                         quoteDay = <cfqueryparam cfsqltype="cf_sql_varchar" value="#todayDay#">
                     WHERE id = <cfqueryparam cfsqltype="cf_sql_integer" value="#randomQuote.id#">
                 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn randomQuote>
             </cfif>

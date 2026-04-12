@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page initializes project parameters and includes a query for inserting new projects. --->
 <cfparam name="new_projName" default="" />
 <!--- Parameter for project name --->

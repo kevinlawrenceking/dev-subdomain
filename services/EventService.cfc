@@ -19,6 +19,7 @@
               AND r.isdeleted = 0 
               AND ecx.eventid IS NULL;
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
         <!--- 2. Update event titles based on project names --->
         <cfquery datasource="#application.dsn#">
@@ -28,6 +29,7 @@
             SET e.eventtitle = p.projname
             WHERE e.eventtitle <> p.projname;
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
         <cfquery datasource="#application.dsn#">
             UPDATE audprojects
@@ -35,6 +37,7 @@
             WHERE projDate IS NULL
             AND audprojectdate IS NOT NULL;
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
         <!--- 3. Soft delete events with NULL start date --->
         <cfquery datasource="#application.dsn#">
@@ -43,18 +46,21 @@
             WHERE isdeleted = 0
               AND eventStart IS NULL;
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
         <!--- 4. Delete orphaned eventcontactsxref rows (event no longer exists) --->
         <cfquery datasource="#application.dsn#">
             DELETE FROM eventcontactsxref
             WHERE eventid NOT IN (SELECT eventid FROM events);
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
         <!--- 5. Delete eventcontactsxref rows where event is deleted --->
         <cfquery datasource="#application.dsn#">
             DELETE FROM eventcontactsxref
             WHERE eventid IN (SELECT eventid FROM events WHERE isdeleted = 1);
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
         <!--- 6. Update contact dateadded field from events or systemusers 
         <cfquery datasource="#application.dsn#">
@@ -80,6 +86,7 @@
             WHERE d.isdeleted = 0
               AND d.dateadded IS NULL;
         </cfquery> --->
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
    <cfquery datasource="#application.dsn#">
         UPDATE audprojects pr
 JOIN (
@@ -96,6 +103,7 @@ JOIN (
 SET pr.projdate = x.actual_projdate
 WHERE  pr.projdate <> x.actual_projdate OR pr.projdate IS NULL;
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     </cftransaction>
 </cffunction>
@@ -132,6 +140,7 @@ WHERE  pr.projdate <> x.actual_projdate OR pr.projdate IS NULL;
 
             e.eventid = e.eventid;
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 
 
@@ -143,6 +152,7 @@ WHERE  pr.projdate <> x.actual_projdate OR pr.projdate IS NULL;
         SET isdeleted = 0 
         WHERE eventid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_eventid#">;
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 
 <cffunction output="false" name="eventresults" access="public" returntype="struct">
@@ -188,6 +198,7 @@ WHERE  pr.projdate <> x.actual_projdate OR pr.projdate IS NULL;
 
 ORDER BY e.eventstart DESC
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfset var resultStruct=structNew()>
     <cfset resultStruct.eventresults=eventresults>
@@ -254,6 +265,7 @@ ORDER BY e.eventstart DESC
             </cfif>
         )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <!--- Return the primary key of the newly inserted record --->
     <cfreturn insertResult.generatedKey>
@@ -270,6 +282,7 @@ ORDER BY e.eventstart DESC
       SET eventstarttime = <cfqueryparam value="#arguments.newStartTime#" cfsqltype="CF_SQL_TIME">
       WHERE eventstarttime IS NULL
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
   <cffunction output="false" name="UPDevents_23725" access="public" returntype="void">
@@ -281,6 +294,7 @@ ORDER BY e.eventstart DESC
       WHERE eventstarttime = <cfqueryparam value="#arguments.eventStartTime#" cfsqltype="CF_SQL_TIME">
       AND eventstoptime IS NULL
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
   <cffunction output="false" name="UPDevents_23726" access="public" returntype="void">
@@ -292,6 +306,7 @@ ORDER BY e.eventstart DESC
       WHERE eventstop IS NULL
       AND eventstart IS NOT NULL
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
   <cffunction output="false" name="UPDevents_23731" access="public" returntype="void">
@@ -302,6 +317,7 @@ ORDER BY e.eventstart DESC
       SET isdeleted = 1
       WHERE eventid = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.eventid#"/>
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
   <cffunction output="false" name="UPDevents_23733" access="public" returntype="void">
@@ -368,6 +384,7 @@ ORDER BY e.eventstart DESC
 WHERE
       eventid = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.eventid#"/>
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
   </cffunction>
 
 <cffunction output="false" name="RESevents" access="public" returntype="query">
@@ -418,6 +435,7 @@ WHERE
         ORDER BY 
             a.eventStart DESC
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -431,6 +449,7 @@ WHERE
             e.eventdescription = p.projDescription
         WHERE e.eventtitle != p.projName
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 
 <cffunction output="false" name="SELevents" access="public" returntype="numeric">
@@ -458,6 +477,7 @@ WHERE
         ORDER BY
             e.eventid DESC
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <!--- Return contactid or 0 --->
     <cfif result.recordCount GT 0>
@@ -477,6 +497,7 @@ WHERE
             AND isdeleted = <cfqueryparam value="0" cfsqltype="CF_SQL_BIT">
             AND audstepid = <cfqueryparam value="2" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction> <cffunction output="false" name="SELevents_23786" access="public" returntype="query">
@@ -489,6 +510,7 @@ WHERE
             AND isdeleted = <cfqueryparam value="0" cfsqltype="CF_SQL_BIT">
             AND audstepid = <cfqueryparam value="3" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction> <cffunction output="false" name="SELevents_23787" access="public" returntype="query">
@@ -501,6 +523,7 @@ WHERE
             AND isdeleted = <cfqueryparam value="0" cfsqltype="CF_SQL_BIT">
             AND audstepid = <cfqueryparam value="4" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction> <cffunction output="false" name="SELevents_23788" access="public" returntype="query">
@@ -513,6 +536,7 @@ WHERE
             AND isdeleted = <cfqueryparam value="0" cfsqltype="CF_SQL_BIT">
             AND audstepid = <cfqueryparam value="5" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction> <cffunction output="false" name="SELevents_23789" access="public" returntype="query">
@@ -524,6 +548,7 @@ WHERE
             INNER JOIN audroles r ON r.audroleid = e.audroleid
             WHERE r.audprojectid = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.audprojectid#">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction> <cffunction output="false" name="INSevents_23790" access="public" returntype="numeric">
@@ -578,6 +603,7 @@ WHERE
                 <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_audlocid#">
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
      <cfreturn result.generatedKey>
 </cffunction> <cffunction output="false" name="SELevents_23803" access="public" returntype="query">
     <cfargument name="userId" type="numeric" required="true">
@@ -604,6 +630,7 @@ WHERE
                 AND t.userid = <cfqueryparam value="#arguments.userId#" cfsqltype="CF_SQL_INTEGER">
                 AND e.eventstart >= CURDATE()
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 
@@ -615,6 +642,7 @@ WHERE
             SET isdeleted = 1
             WHERE eventid = <cfqueryparam value="#arguments.recid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction> <cffunction output="false" name="SELevents_24012" access="public" returntype="query">
     <cfargument name="userid" type="numeric" required="true">
@@ -641,6 +669,7 @@ WHERE
             GROUP BY
                 p.audprojectID
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction> <cffunction output="false" name="SELevents_24014" access="public" returntype="query">
@@ -667,6 +696,7 @@ WHERE
             GROUP BY
                 p.audprojectID
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction> <cffunction output="false" name="UPDevents_24018" access="public" returntype="void">
@@ -679,6 +709,7 @@ WHERE
             AND eventStart IS NULL
             AND userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction> 
 
@@ -732,6 +763,7 @@ WHERE
             <cfqueryparam cfsqltype="CF_SQL_BIT" value="1">
         )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <!--- Return the generated key --->
     <cfreturn result.generatedKey>
@@ -760,6 +792,7 @@ WHERE
         WHERE
             eventid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.eventId#">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction> <cffunction output="false" name="DETevents" access="public" returntype="query">
     <cfargument name="eventid" type="numeric" required="true">
 
@@ -768,6 +801,7 @@ WHERE
             FROM events
             WHERE eventid = <cfqueryparam value="#arguments.eventid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction> <cffunction output="false" name="UPDevents_24118" access="public" returntype="void">
@@ -778,6 +812,7 @@ WHERE
             SET isdeleted = 1
             WHERE eventid = <cfqueryparam value="#arguments.eventid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction> <cffunction output="false" name="UPDevents_24119" access="public" returntype="void">
     <cfargument name="eventid" type="numeric" required="true">
@@ -787,6 +822,7 @@ WHERE
             SET isdeleted = 1
             WHERE eventid = <cfqueryparam value="#arguments.eventid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction> <cffunction output="false" name="SELevents_24123" access="public" returntype="query">
     <cfargument name="audroleid" type="numeric" required="true">
@@ -796,6 +832,7 @@ WHERE
             FROM events
             WHERE audroleid = <cfqueryparam value="#arguments.audroleid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction> <cffunction output="false" name="UPDevents_24124" access="public" returntype="void" >
@@ -806,6 +843,7 @@ WHERE
             SET isdeleted = 1
             WHERE eventid = <cfqueryparam value="#arguments.new_eventid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction> 
 
@@ -818,6 +856,7 @@ WHERE
             WHERE eventtypename = <cfqueryparam value="#arguments.eventtypename#" cfsqltype="CF_SQL_VARCHAR">
             AND userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction> 
@@ -867,6 +906,7 @@ WHERE
         END = ROUND(d.durHours * 3600)
             WHERE e.eventid = <cfqueryparam value="#arguments.eventid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 
@@ -897,6 +937,7 @@ WHERE
             FROM events e
             WHERE e.eventid = <cfqueryparam value="#arguments.eventid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction> <cffunction output="false" name="SELevents_24527" access="public" returntype="query">
@@ -921,6 +962,7 @@ WHERE
             WHERE
                 ad.eventid = <cfqueryparam value="#arguments.new_eventid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 
@@ -969,6 +1011,7 @@ WHERE
                 <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.new_eventid#" />
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 <cfreturn result.generatedKey>
 
 </cffunction> <cffunction output="false" name="UPDevents_24530" access="public" returntype="void">
@@ -982,6 +1025,7 @@ WHERE
             WHERE eventstarttime = <cfqueryparam value="#arguments.eventStartTime#" cfsqltype="CF_SQL_TIME">
             AND eventstoptime IS NULL
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction> <cffunction output="false" name="UPDevents_24540" access="public" returntype="void">
     <cfargument name="new_eventLocation" type="string" required="true">
@@ -1004,6 +1048,7 @@ WHERE
             WHERE
                 eventid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_eventid#">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction> <cffunction output="false" name="SELevents_24546" access="public" returntype="query">
     <cfargument name="audroleid" type="numeric" required="true">
@@ -1034,6 +1079,7 @@ WHERE
                 AND r.audroleid = <cfqueryparam value="#arguments.audroleid#" cfsqltype="cf_sql_integer">
             ORDER BY a.eventStart
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 
@@ -1067,6 +1113,7 @@ WHERE
             ORDER BY
                 a.eventStart
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -1117,6 +1164,7 @@ WHERE
             <cfif isBoolean(arguments.new_trackmileage)>, <cfqueryparam cfsqltype="CF_SQL_BIT" value="#arguments.new_trackmileage#"></cfif>
         )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result.generatedKey>
 </cffunction>
@@ -1144,6 +1192,7 @@ WHERE
 audzip = <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#trim(arguments.new_audzip)#" maxlength="10" null="#NOT len(trim(arguments.new_audzip))#">
             WHERE eventid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_eventid#">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 <cffunction output="false" name="UPDevents_24557" access="public" returntype="void">
@@ -1206,6 +1255,7 @@ audzip = <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#trim(arguments.new_aud
     WHERE
         eventid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_eventid#">;
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 
@@ -1235,6 +1285,7 @@ audzip = <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#trim(arguments.new_aud
   
         WHERE eventid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_eventid#">;
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 
@@ -1262,6 +1313,7 @@ audzip = <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#trim(arguments.new_aud
             ORDER BY
                 a.eventStart DESC
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 
@@ -1310,6 +1362,7 @@ audzip = <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#trim(arguments.new_aud
                 )
             </cfif>
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 
@@ -1375,6 +1428,7 @@ audzip = <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#trim(arguments.new_aud
                 )
             </cfif>
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn queryResult>
 </cffunction> <cffunction output="false" name="RESevents_24660" access="public" returntype="query">
@@ -1428,6 +1482,7 @@ audzip = <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#trim(arguments.new_aud
             </cfif>
             ORDER BY e.eventstart DESC
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn queryResult>
 </cffunction> <cffunction output="false" name="DETevents_24675" access="public" returntype="query">
@@ -1458,6 +1513,7 @@ audzip = <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#trim(arguments.new_aud
             ORDER BY
                 e.eventid
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 
@@ -1483,6 +1539,7 @@ audzip = <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#trim(arguments.new_aud
                     SELECT eventid FROM eventcontactsxref WHERE contactid = <cfqueryparam value="#arguments.contactId#" cfsqltype="CF_SQL_INTEGER">
                 )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 
@@ -1509,6 +1566,7 @@ audzip = <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#trim(arguments.new_aud
                     SELECT eventid FROM eventcontactsxref WHERE contactid = <cfqueryparam value="#arguments.contactID#" cfsqltype="CF_SQL_INTEGER">
                 )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction> </cfcomponent>>

@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset contactItemService = request.svc("ContactItemService")>
 
 <!--- Initialize an empty structure to hold parameters --->

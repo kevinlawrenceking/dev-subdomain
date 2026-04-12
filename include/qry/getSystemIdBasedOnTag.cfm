@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- Create an instance of the ContactService component --->
 <cfset ContactService = request.svc("ContactService")>
 

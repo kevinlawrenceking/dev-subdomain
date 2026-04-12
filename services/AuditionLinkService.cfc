@@ -9,6 +9,7 @@ Here is the updated ColdFusion component code:
         FROM audlinks 
         WHERE audroleid = <cfqueryparam value="#arguments.audroleid#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -28,6 +29,7 @@ Here is the updated ColdFusion component code:
             <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.audroleid#" />
         )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn result.generatedKey>
 </cffunction>
 
@@ -39,6 +41,7 @@ Here is the updated ColdFusion component code:
         FROM audlinks 
         WHERE linkid = <cfqueryparam value="#arguments.linkid#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -51,5 +54,6 @@ Here is the updated ColdFusion component code:
         SET isdeleted = 1 
         WHERE linkid = <cfqueryparam value="#arguments.linkid#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 </cfcomponent>

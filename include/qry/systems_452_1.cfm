@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This page retrieves system types from the database for further processing or display. --->
 
 <cfquery name="systems">                      

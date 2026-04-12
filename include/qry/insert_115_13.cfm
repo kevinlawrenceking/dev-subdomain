@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset componentPath = "/services/ExportItemService">
 <cfset exportItemService = createObject("component", componentPath)>
 

@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves the old value of a specified record from the database based on the provided record ID. --->
 
 <cfquery name="FindOld">

@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- Safely setup form parameters with cfparam --->
 <cfparam name="form.ticketid" default="0" />
 <cfparam name="form.new_ticketname" default="" />

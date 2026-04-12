@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves application, component, and page details based on a specific page ID. --->
 
 <cfquery name="FindRefPage">

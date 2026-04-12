@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page handles the insertion of new audio types into the database. --->
 <cfparam name="new_audtype" default="" />
 <cfparam name="new_audCatid" default="2" />

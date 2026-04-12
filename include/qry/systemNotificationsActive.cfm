@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves user information based on the authenticated user's email. --->
 <cfparam name="suID" default="7" />
 

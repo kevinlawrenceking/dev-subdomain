@@ -26,6 +26,7 @@ WHERE
 HAVING daysuntil BETWEEN 0 AND <cfqueryparam value="#arguments.daysLimit#" cfsqltype="cf_sql_integer">
 ORDER BY daysuntil
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <!--- Return the query result --->
     <cfreturn birthdays>
 </cffunction>

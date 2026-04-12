@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page updates the audtypes table with new values based on user input. --->
 <cfparam name="new_audtype" default="" />
 <cfparam name="new_audCatid" default="2" />

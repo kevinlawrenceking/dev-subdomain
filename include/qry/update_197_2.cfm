@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset componentPath = "/services/AuditionSubmitSiteUserService">
 <cfset objService = createObject("component", componentPath)>
 <cfset objService.UPDaudsubmitsites_user(

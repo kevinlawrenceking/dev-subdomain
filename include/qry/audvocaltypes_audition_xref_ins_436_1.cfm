@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset objService = createObject("component", "services.AuditionVocalTypeXRefService")>
 <cfset objService.UPDaudvocaltypes_audition_xref(
     new_audRoleID = new_audRoleID,

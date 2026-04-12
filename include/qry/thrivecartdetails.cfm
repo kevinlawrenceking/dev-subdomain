@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page initializes the customer ID if it is not provided. --->
 
 <cfif #customerid# is "">

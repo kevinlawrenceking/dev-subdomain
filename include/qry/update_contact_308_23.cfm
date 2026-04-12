@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset componentPath = "/services/AuditionImportService">
 <cfset auditionImportService = createObject("component", componentPath)>
 <cfset auditionImportService.UPDauditionsimport_24374(

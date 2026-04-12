@@ -8,6 +8,7 @@
         FROM reportranges
         where rangeid not in (1,7)
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn qryResult>
 </cffunction>
@@ -23,6 +24,7 @@
             rangeend = <cfqueryparam cfsqltype="cf_sql_date" value="#arguments.new_rangeend#" />
         WHERE rangeid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.current_rangeid#" />
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 
@@ -36,6 +38,7 @@
             rangeend = <cfqueryparam cfsqltype="cf_sql_date" value="#arguments.customEnd#" />
         WHERE rangename = 'Custom'
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 
@@ -48,6 +51,7 @@
         FROM reportranges
         WHERE rangeid = <cfqueryparam value="#arguments.new_rangeid#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <!--- Initialize the output struct --->
     <cfset var rangeSelected = {}>
@@ -86,6 +90,7 @@
         FROM reportranges 
         WHERE 1=1
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn result>
 </cffunction>
 

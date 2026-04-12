@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset eventContactsXRefService = createObject("component", "services.EventContactsXRefService")>
 
 <!--- Validate that both contactid and eventid exist and are numeric before calling the function --->

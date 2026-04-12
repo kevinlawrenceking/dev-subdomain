@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves event types for a specific user from the database. --->
 
 <cfquery name="types">

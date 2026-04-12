@@ -43,6 +43,7 @@
             <cfqueryparam value="#param.value#" cfsqltype="#param.cfsqltype#">
         </cfloop>
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <!--- Return the result --->
     <cfreturn queryResult>
@@ -63,6 +64,7 @@
             <cfqueryparam cfsqltype="CF_SQL_BIT" value="#arguments.new_isDeleted#" null="#NOT len(trim(arguments.new_isDeleted))#">
         )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn result.generatedKey>
 </cffunction>
 
@@ -83,5 +85,6 @@
         WHERE 
             unionID = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_unionID#">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 </cfcomponent>

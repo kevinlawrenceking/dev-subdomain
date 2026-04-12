@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset objService = createObject("component", "services.AuditionNetworkUserService")>
 <cfset new_networkid = objService.INSaudnetworks_user(
     CustomNetwork = CustomNetwork,

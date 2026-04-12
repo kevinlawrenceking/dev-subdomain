@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset eventService = request.svc("EventService")>
 <cfif new_region_id EQ "">
     <cfset new_region_id = 0>

@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfparam name="contacts_table" default="#contacts_table#" type="string">
 <cfparam name="userid" default="#userid#" type="numeric">
 <cfparam name="draw" default="1" type="integer" />

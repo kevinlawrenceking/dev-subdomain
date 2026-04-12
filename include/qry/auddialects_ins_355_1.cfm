@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset service = createObject("component", "services.AuditionDialectService")>
 <cfset new_auddialectid = service.INSauddialects(
     new_auddialect = new_auddialect,

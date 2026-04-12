@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves audio categories and user-related data from the database based on specified filters. --->
 <cfquery name="#tname#_sel">
     SELECT 

@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset auditionMediaService = createObject("component", "services.AuditionMediaService")>
 <cfset auditionMediaService.UPDaudmedia_24571(
     new_mediaTypeID = new_mediaTypeID,

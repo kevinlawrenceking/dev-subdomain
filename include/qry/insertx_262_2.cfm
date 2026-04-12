@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page handles the insertion of user category references into the itemcatxref_user table. --->
 
 <cfquery name="insertx">

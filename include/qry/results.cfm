@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset dbug = "n" />
 <!--- Include fields query template --->
 <cfinclude template="/include/qry/FindFields_188_7.cfm" />

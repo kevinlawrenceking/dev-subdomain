@@ -8,6 +8,7 @@
         FROM auditionsimport_error 
         WHERE id = <cfqueryparam value="#arguments.id#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -23,6 +24,7 @@
             <cfqueryparam value="#arguments.errorMsg#" cfsqltype="CF_SQL_VARCHAR">
         )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn arguments.id>
 </cffunction>
 
@@ -37,6 +39,7 @@
             <cfqueryparam value="#arguments.errorMsg#" cfsqltype="CF_SQL_VARCHAR">
         )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn arguments.id>
 </cffunction>
 
@@ -51,6 +54,7 @@
             <cfqueryparam value="#arguments.errorMsg#" cfsqltype="CF_SQL_VARCHAR">
         )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn arguments.id>
 </cffunction>
 
@@ -65,6 +69,7 @@
             <cfqueryparam value="#arguments.errorMsg#" cfsqltype="CF_SQL_VARCHAR">
         )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn arguments.id>
 </cffunction>
 
@@ -79,6 +84,7 @@
             <cfqueryparam value="#arguments.errorMsg#" cfsqltype="CF_SQL_VARCHAR">
         )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn arguments.id>
 </cffunction>
 

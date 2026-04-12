@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page initializes parameters and includes a query for user categories related to audio genres. --->
 
 <cfparam name="dbug" default="N" />

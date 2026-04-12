@@ -62,6 +62,7 @@
             </cfloop>
         )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <cfreturn insertResult.generatedKey>
 </cffunction>
@@ -94,6 +95,7 @@
         FROM contactdetails
         WHERE contactid = <cfqueryparam value="#arguments.contactid#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <!--- Return empty struct if not found --->
     <cfif qRead.recordCount EQ 0>
@@ -205,6 +207,7 @@
             </cfif>
         WHERE contactid = <cfqueryparam value="#arguments.contactid#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 
 <cffunction name="update22" access="public" returntype="void" output="false" hint="Update an existing contact record">
@@ -261,6 +264,7 @@
             </cfloop>
             <cfqueryparam value="#arguments.contactid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     </cfif>
 </cffunction>
 
@@ -290,6 +294,7 @@
             isdeleted          = <cfqueryparam value="#data.isdeleted#"          cfsqltype="CF_SQL_BIT"     null="#isNull(data.isdeleted)#">
         WHERE contactid = <cfqueryparam value="#arguments.contactid#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 
 <!---
@@ -347,6 +352,7 @@
             </cfloop>
             <cfqueryparam value="#arguments.contactid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     </cfif>
 </cffunction>
 
@@ -361,6 +367,7 @@
         SET isdeleted = <cfqueryparam value="1" cfsqltype="CF_SQL_BIT">
         WHERE contactid = <cfqueryparam value="#arguments.contactid#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 
 <cffunction name="list" access="public" returntype="query" output="false" hint="List contacts with optional filters">
@@ -416,6 +423,7 @@
             <cfqueryparam value="#params[i].value#" cfsqltype="#params[i].cfsqltype#">
         </cfloop>
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <cfreturn qList>
 </cffunction>
@@ -436,6 +444,7 @@
         SET #arguments.uniquename# = 'Y'
         WHERE contactid = <cfqueryparam value="#arguments.contactid#" cfsqltype="cf_sql_integer">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 
 
@@ -464,6 +473,7 @@
                 AND valuetext = 'My Team'
           )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 
 </cffunction>
@@ -486,6 +496,7 @@
                 AND i.valuecategory = 'Tag'  
                 AND tu.tagtype = 'C'
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <!--- Determine system ID based on tag existence --->
         <cfif findtag.recordcount EQ 1>
@@ -509,6 +520,7 @@
         WHERE userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
         AND contactid = <cfqueryparam value="#arguments.relationship#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <!--- Return the count result --->
     <cfreturn qCount.totalCount>
@@ -531,6 +543,7 @@
             WHERE eventid = <cfqueryparam value="#arguments.eventid#" cfsqltype="CF_SQL_INTEGER">
         )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <!--- Return the query result --->
     <cfreturn qFiltered>
@@ -560,6 +573,7 @@
               AND fc.userID = <cfqueryparam value="#arguments.userid#" cfsqltype="cf_sql_integer">
               AND fc.sustatus = 'Active'
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn ru>
     </cffunction>
@@ -662,6 +676,7 @@
                     <cfqueryparam value="#param.value#" cfsqltype="#param.cfsqltype#">
                 </cfloop>
             </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
             <!--- Return the query result --->
             <cfreturn qFiltered>
 
@@ -695,6 +710,7 @@
         GROUP BY 
             d.contactfullname
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn updates>
 </cffunction>
@@ -710,6 +726,7 @@
             AND d.contactid = <cfqueryparam value="#arguments.newContactId#" cfsqltype="CF_SQL_INTEGER">
 
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -723,6 +740,7 @@
               AND userid = <cfqueryparam value="#arguments.userId#" cfsqltype="CF_SQL_INTEGER"> 
             ORDER BY d.contactfullname
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -787,6 +805,7 @@
             WHERE contactbirthday IS NOT NULL 
             AND contactid = <cfqueryparam value="#arguments.contactid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -814,6 +833,7 @@
         SET #arguments.uniquename# = <cfqueryparam value="Y" cfsqltype="CF_SQL_CHAR">
         WHERE contactid = <cfqueryparam value="#arguments.contactid#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 <cffunction output="false" name="INScontactdetails_23839" access="public" returntype="numeric" hint="Legacy wrapper - delegates to create()">
     <cfargument name="userid" type="numeric" required="true">
@@ -840,6 +860,7 @@
             </cfif>
             ORDER BY contactid
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn result>
 </cffunction>
 <cffunction output="false" name="UPDcontactdetails_23861" access="public" returntype="void">
@@ -852,6 +873,7 @@
         SET isdeleted = 1
         WHERE contactid IN (#idList#)
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 
 <cffunction output="false" name="SELcontactdetails_23888" access="public" returntype="query">
@@ -873,6 +895,7 @@
                 AND d.userid = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.userId#"> 
                 AND d.contactid IN (<cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.idList#" list="true">)
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -901,6 +924,7 @@ SELECT DISTINCT recordname AS contactfullname
 ORDER BY contactfullname
             LIMIT 10
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 
@@ -915,6 +939,7 @@ ORDER BY contactfullname
             FROM contactdetails 
             WHERE contactid = <cfqueryparam value="#arguments.contactid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -932,6 +957,7 @@ ORDER BY contactfullname
             WHERE contactid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_contactid#">
             AND contactid <> 0
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -947,6 +973,7 @@ ORDER BY contactfullname
             AND d.contactid = <cfqueryparam value="#arguments.contactId#" cfsqltype="CF_SQL_INTEGER"> 
             LIMIT 1
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 
@@ -980,6 +1007,7 @@ ORDER BY contactfullname
                 <cfqueryparam value="#TRIM(arguments.contactfullname)#" cfsqltype="CF_SQL_VARCHAR">
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 <cfreturn result.generatedKey>
 </cffunction>
 <cffunction output="false" name="SELcontactdetails_24069" access="public" returntype="query" hint="Legacy wrapper - delegates to list()">
@@ -1000,6 +1028,7 @@ ORDER BY contactfullname
         WHERE userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
         ORDER BY contactfullname
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <cfreturn result>
 </cffunction>
@@ -1112,6 +1141,7 @@ ORDER BY contactfullname
             AND recordname <> ''
             ORDER BY recordname
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -1145,6 +1175,7 @@ ORDER BY contactfullname
             WHERE userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER"> 
             AND recordname = <cfqueryparam value="#arguments.referral#" cfsqltype="CF_SQL_VARCHAR">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -1159,6 +1190,7 @@ ORDER BY contactfullname
                 <cfqueryparam value="#arguments.contactfullname#" cfsqltype="CF_SQL_VARCHAR">
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 <cffunction output="false" name="DETcontactdetails_24340" access="public" returntype="query">
@@ -1175,6 +1207,7 @@ ORDER BY contactfullname
             <cfqueryparam value="#arguments.idList#" cfsqltype="CF_SQL_INTEGER" list="true">
         )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cfif>
@@ -1190,6 +1223,7 @@ ORDER BY contactfullname
             WHERE contactfullname = <cfqueryparam value="#arguments.cdfullname#" cfsqltype="CF_SQL_VARCHAR"> 
             AND userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -1203,6 +1237,7 @@ ORDER BY contactfullname
             WHERE contactfullname = <cfqueryparam value="#arguments.fname# #arguments.lname#" cfsqltype="CF_SQL_VARCHAR">
             AND userid = <cfqueryparam value="#userid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -1225,6 +1260,7 @@ ORDER BY contactfullname
         WHERE contactfullname = '#trim(arguments.new_x.fname)# #trim(arguments.new_x.lname)#'
         AND userid = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.userid#">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <cfif checkExisting.recordCount>
         <!--- Update the existing record --->
@@ -1242,6 +1278,7 @@ ORDER BY contactfullname
                                     <cfelse>NULL</cfif>
             WHERE contactid = <cfqueryparam cfsqltype="cf_sql_integer" value="#checkExisting.contactid#">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
         <!--- Return success response for update --->
         <cfset result.new_contactid = checkExisting.contactid />
@@ -1277,6 +1314,7 @@ ORDER BY contactfullname
                 </cfif>
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
         <!--- Return success response for insert --->
         <cfset result.new_contactid = result.generatedKey />
@@ -1293,6 +1331,7 @@ ORDER BY contactfullname
             status = <cfqueryparam value="#result.status#" cfsqltype="cf_sql_varchar">
         WHERE id = <cfqueryparam value="#arguments.new_x.new_id#" cfsqltype="cf_sql_integer">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <!--- Return the final result --->
     <cfreturn result>
@@ -1314,6 +1353,7 @@ ORDER BY contactfullname
             </cfif>
             ORDER BY contactid
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -1342,6 +1382,7 @@ ORDER BY contactfullname
         ORDER BY
             d.contactfullname
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <cfreturn result>
 </cffunction>
@@ -1367,6 +1408,7 @@ ORDER BY contactfullname
             ORDER BY 
                 d.recordname
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -1381,6 +1423,7 @@ ORDER BY contactfullname
                 <cfqueryparam value="#arguments.cdfullname#" cfsqltype="CF_SQL_VARCHAR">
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result.generatedKey>
 </cffunction>
@@ -1402,6 +1445,7 @@ ORDER BY contactfullname
             ORDER BY 
                 datediff(d.contactbirthday)
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -1436,6 +1480,7 @@ ORDER BY contactfullname
     LEFT JOIN contactdetails d2 ON d.refer_contact_id = d2.contactid  
     WHERE d.contactID = <cfqueryparam value="#arguments.contactid#" cfsqltype="CF_SQL_INTEGER">
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 
@@ -1465,6 +1510,7 @@ ORDER BY contactfullname
             INNER JOIN taousers u ON u.userid = d.userid
             WHERE d.contactID = <cfqueryparam value="#arguments.refer_contact_id#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -1483,6 +1529,7 @@ ORDER BY contactfullname
             ORDER BY 
                 d.contactfullname
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -1512,6 +1559,7 @@ ORDER BY contactfullname
             INNER JOIN taousers u ON u.userid = d.userid
             WHERE d.contactID = <cfqueryparam value="#arguments.refer_contact_id#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -1538,6 +1586,7 @@ ORDER BY contactfullname
             GROUP BY 
                 d.contactfullname
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -1567,6 +1616,7 @@ ORDER BY contactfullname
             ORDER BY 
                 d.contactfullname
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -1610,6 +1660,7 @@ ORDER BY contactfullname
             ORDER BY 
                 d.col1
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -1658,6 +1709,7 @@ ORDER BY contactfullname
             ORDER BY 
                 d.col1
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -1701,6 +1753,7 @@ ORDER BY contactfullname
             ORDER BY 
                 d.col1
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -1733,6 +1786,7 @@ ORDER BY contactfullname
             INNER JOIN taousers u ON u.userid = d.userid
             WHERE d.contactID = <cfqueryparam value="#arguments.rcontactid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>

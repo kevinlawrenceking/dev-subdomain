@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page initializes parameters and includes a template for inserting user questions. --->
 
 <cfparam name="new_qTypeID" default="2" />

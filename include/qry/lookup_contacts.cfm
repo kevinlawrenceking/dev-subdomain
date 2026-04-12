@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset userId = session.userid>
 <cfset searchTerm = cgi.searchTerm>
 <cfset lookupService = createObject("component", "services.LookupService")>

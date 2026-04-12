@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset componentPath = "/services/AuditionLocationService">
 <cfset auditionLocationService = createObject("component", componentPath)>
 <cfset auditionLocationService.UPDaudlocations(

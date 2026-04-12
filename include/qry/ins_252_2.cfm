@@ -1,2 +1,3 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset AuditionMediaXRefService = createObject("component", "services.AuditionMediaXRefService")>
 <cfset AuditionMediaXRefServiceINSaudmedia_auditions_xref_24153(mediaid=mediaid, audprojectid=audprojectid)>

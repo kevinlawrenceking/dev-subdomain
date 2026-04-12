@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset systemService = createObject("component", "services.SystemService")>
 <cfset find_fu = systemService.SELfusystems_23933(
     new_userid = new_userid,

@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset audlinks = "" />
 
 <cfset audlinkService = createObject("component", "services.AuditionLinkService") />

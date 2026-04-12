@@ -199,6 +199,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                 { job_id: { value: arguments.job_id, cfsqltype: "cf_sql_integer" } },
                 { datasource: application.datasource }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
             
             if (qJob.recordCount eq 1) {
                 result.found = true;
@@ -229,6 +230,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                 },
                 { datasource: application.datasource }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
             
             if (qCheck.recordCount eq 1) {
                 return { "valid": true };
@@ -267,6 +269,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                 },
                 { datasource: application.datasource }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
             
             if (qJob.recordCount eq 0) {
                 var qExists = queryExecute(
@@ -274,6 +277,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                     { job_id: { value: arguments.job_id, cfsqltype: "cf_sql_integer" } },
                     { datasource: application.datasource }
                 );
+                if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
                 
                 if (qExists.recordCount eq 0) {
                     return fail(code = "NOT_FOUND", message = "Import job not found.", data = { job_id: arguments.job_id });
@@ -332,6 +336,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                     },
                     { datasource: application.datasource }
                 );
+                if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
             } else {
                 queryExecute(
                     "INSERT INTO import_v3_events (job_id, userid, event_type, event_detail, created_at)
@@ -344,6 +349,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                     },
                     { datasource: application.datasource }
                 );
+                if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
             }
             return true;
         } catch (any e) {
@@ -396,6 +402,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                 },
                 { datasource: application.datasource, result: "qResult" }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
             
             if (qResult.recordCount eq 1) {
                 logEvent(job_id = arguments.job_id, userid = arguments.userid, event_type = "lock_acquired", detail = { purpose: arguments.lock_purpose });
@@ -445,6 +452,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                 },
                 { datasource: application.datasource }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
             
             logEvent(job_id = arguments.job_id, userid = arguments.userid, event_type = "lock_released", detail = { previous_status: job.status, new_status: targetStatus });
             writeLog(file="importv3", text="[releaseJobLock] RELEASED job_id=" & arguments.job_id & " userid=" & arguments.userid & " from=" & job.status & " to=" & targetStatus);
@@ -508,6 +516,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
             structAppend(params, additionalParams);
             
             queryExecute("UPDATE import_v3_jobs SET status = :new_status, updated_at = NOW() " & additionalFields & " WHERE job_id = :job_id AND userid = :userid", params, { datasource: application.datasource });
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
             
             logEvent(job_id = arguments.job_id, userid = arguments.userid, event_type = "status_changed", detail = { from_status: currentStatus, to_status: arguments.new_status });
             writeLog(file="importv3", text="[setJobStatus] TRANSITION job_id=" & arguments.job_id & " userid=" & arguments.userid & " from=" & currentStatus & " to=" & arguments.new_status);
@@ -589,6 +598,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                 },
                 { datasource: application.datasource }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
 
             result.jobs_found = qJobs.recordCount;
 
@@ -610,6 +620,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                     { jobIdList: { value: jobIdList, cfsqltype: "cf_sql_integer", list: true } },
                     { datasource: application.datasource }
                 );
+                if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
                 result.events_deleted = qEventCount.cnt;
 
                 // Get row_ids for this job to count facts
@@ -618,6 +629,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                     { jobIdList: { value: jobIdList, cfsqltype: "cf_sql_integer", list: true } },
                     { datasource: application.datasource }
                 );
+                if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
                 if (qRowIds.recordCount gt 0) {
                     var rowIdList = valueList(qRowIds.row_id);
                     var qFactCount = queryExecute(
@@ -625,6 +637,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                         { rowIdList: { value: rowIdList, cfsqltype: "cf_sql_integer", list: true } },
                         { datasource: application.datasource }
                     );
+                    if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
                     result.facts_deleted = qFactCount.cnt;
 
                     var qResultCount = queryExecute(
@@ -632,6 +645,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                         { rowIdList: { value: rowIdList, cfsqltype: "cf_sql_integer", list: true } },
                         { datasource: application.datasource }
                     );
+                    if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
                     result.row_results_deleted = qResultCount.cnt;
                 }
 
@@ -640,6 +654,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                     { jobIdList: { value: jobIdList, cfsqltype: "cf_sql_integer", list: true } },
                     { datasource: application.datasource }
                 );
+                if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
                 result.rows_deleted = qRowCount.cnt;
 
                 var qColCount = queryExecute(
@@ -647,6 +662,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                     { jobIdList: { value: jobIdList, cfsqltype: "cf_sql_integer", list: true } },
                     { datasource: application.datasource }
                 );
+                if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
                 result.columns_deleted = qColCount.cnt;
 
                 result.jobs_deleted = qJobs.recordCount;
@@ -680,6 +696,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                     { jobIdList: { value: jobIdList, cfsqltype: "cf_sql_integer", list: true } },
                     { datasource: application.datasource, result: "qEventDel" }
                 );
+                if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
                 result.events_deleted = structKeyExists(qEventDel, "recordCount") ? qEventDel.recordCount : 0;
 
                 // 2. Get row_ids first for facts deletion
@@ -688,6 +705,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                     { jobIdList: { value: jobIdList, cfsqltype: "cf_sql_integer", list: true } },
                     { datasource: application.datasource }
                 );
+                if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
 
                 // 3. Delete facts and row_results (reference row_id)
                 if (qRowIds.recordCount gt 0) {
@@ -698,6 +716,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                         { rowIdList: { value: rowIdList, cfsqltype: "cf_sql_integer", list: true } },
                         { datasource: application.datasource, result: "qFactDel" }
                     );
+                    if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
                     result.facts_deleted = structKeyExists(qFactDel, "recordCount") ? qFactDel.recordCount : 0;
 
                     // 3b. Delete row_results (references row_id)
@@ -707,6 +726,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                         { rowIdList: { value: rowIdList, cfsqltype: "cf_sql_integer", list: true } },
                         { datasource: application.datasource, result: "qResultDel" }
                     );
+                    if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
                     result.row_results_deleted = structKeyExists(qResultDel, "recordCount") ? qResultDel.recordCount : 0;
                 }
 
@@ -717,6 +737,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                     { jobIdList: { value: jobIdList, cfsqltype: "cf_sql_integer", list: true } },
                     { datasource: application.datasource, result: "qRowDel" }
                 );
+                if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
                 result.rows_deleted = structKeyExists(qRowDel, "recordCount") ? qRowDel.recordCount : 0;
 
                 // 5. Delete columns (references job_id)
@@ -726,6 +747,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                     { jobIdList: { value: jobIdList, cfsqltype: "cf_sql_integer", list: true } },
                     { datasource: application.datasource, result: "qColDel" }
                 );
+                if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
                 result.columns_deleted = structKeyExists(qColDel, "recordCount") ? qColDel.recordCount : 0;
 
                 // 6. Delete jobs (parent table - last in transaction)
@@ -735,6 +757,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                     { jobIdList: { value: jobIdList, cfsqltype: "cf_sql_integer", list: true } },
                     { datasource: application.datasource, result: "qJobDel" }
                 );
+                if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
                 result.jobs_deleted = structKeyExists(qJobDel, "recordCount") ? qJobDel.recordCount : 0;
                 result.deleted_job_ids = jobIds;
 
@@ -841,6 +864,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
             },
             { datasource: application.datasource }
         );
+        if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
     }
 
     /**
@@ -892,6 +916,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                 { limit: { value: arguments.limit, cfsqltype: "cf_sql_integer" } },
                 { datasource: application.datasource }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
 
             var jobs = [];
             for (var row in qJobs) {
@@ -939,6 +964,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                 {},
                 { datasource: application.datasource }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
 
             // 7-day averages
             var qWeek = queryExecute(
@@ -953,6 +979,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                 {},
                 { datasource: application.datasource }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
 
             // Active jobs (not terminal)
             var qActive = queryExecute(
@@ -962,6 +989,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                 {},
                 { datasource: application.datasource }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
 
             // Unique users with jobs
             var qUsers = queryExecute(
@@ -971,6 +999,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                 {},
                 { datasource: application.datasource }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
 
             return ok(data = {
                 "completed_today": val(qToday.completed_today),
@@ -1013,6 +1042,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                 {},
                 { datasource: application.datasource }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
 
             var users = [];
             for (var row in qUsers) {
@@ -1048,6 +1078,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                 { userid: { value: arguments.userid, cfsqltype: "cf_sql_integer" } },
                 { datasource: application.datasource }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
 
             if (qUser.recordCount eq 0) {
                 return fail(code = "USER_NOT_FOUND", message = "User not found.", data = {});
@@ -1064,6 +1095,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                 },
                 { datasource: application.datasource }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
 
             return ok(message = "User added to allowlist.");
         } catch (any e) {
@@ -1086,6 +1118,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                 { userid: { value: arguments.userid, cfsqltype: "cf_sql_integer" } },
                 { datasource: application.datasource }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
 
             return ok(message = "User removed from allowlist.");
         } catch (any e) {
@@ -1113,6 +1146,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                 },
                 { datasource: application.datasource, result: "qResult" }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
 
             if (val(qResult.recordCount) eq 0) {
                 return fail(code = "FLAG_NOT_FOUND", message = "Feature flag not found.", data = {});
@@ -1220,6 +1254,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                 { job_id: { value: arguments.job_id, cfsqltype: "cf_sql_integer" } },
                 { datasource: application.datasource, result: "qReset" }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
             if (qReset.recordCount gt 0) {
                 writeLog(file="importv3", text="[finalizeJob] RESET_FAILED_ROWS job_id=" & arguments.job_id & " count=" & qReset.recordCount);
             }
@@ -1238,6 +1273,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                 { job_id: { value: arguments.job_id, cfsqltype: "cf_sql_integer" } },
                 { datasource: application.datasource }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
 
             counts.attempted = qRows.recordCount;
 
@@ -1441,6 +1477,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                     { row_id: { value: arguments.row_id, cfsqltype: "cf_sql_integer" } },
                     { datasource: application.datasource }
                 );
+                if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
 
                 if (qExistingResult.recordCount gt 0) {
                     return {
@@ -1462,6 +1499,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                 { row_id: { value: arguments.row_id, cfsqltype: "cf_sql_integer" } },
                 { datasource: application.datasource }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
 
             if (qFacts.recordCount eq 0) {
                 // No valid facts - mark as failed
@@ -1529,6 +1567,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                     },
                     { datasource: application.datasource, result: "qInsertResult" }
                 );
+                if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
 
                 newContactId = qInsertResult.generatedKey;
 
@@ -1549,6 +1588,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                     },
                     { datasource: application.datasource }
                 );
+                if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
 
                 // D4) Record result in import_v3_row_results
                 queryExecute(
@@ -1573,6 +1613,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                     },
                     { datasource: application.datasource }
                 );
+                if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
             }
 
             // D5) Insert notes if provided
@@ -1588,6 +1629,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                         },
                         { datasource: application.datasource }
                     );
+                    if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
                 } catch (any noteErr) {
                     writeLog(file="importv3", text="[processRowForImport] NOTE_INSERT_WARNING job_id=" & arguments.job_id & " row_id=" & arguments.row_id & " error=" & noteErr.message);
                 }
@@ -1642,6 +1684,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                     },
                     { datasource: application.datasource }
                 );
+                if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
             } catch (any updateErr) {
                 // Ignore update errors
             }
@@ -1812,6 +1855,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                     },
                     { datasource: application.datasource }
                 );
+                if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
                 itemsCreated++;
             }
         }
@@ -1829,6 +1873,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                     },
                     { datasource: application.datasource }
                 );
+                if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
                 itemsCreated++;
             }
         }
@@ -1845,6 +1890,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                 },
                 { datasource: application.datasource }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
             itemsCreated++;
         }
 
@@ -1874,6 +1920,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                 },
                 { datasource: application.datasource }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
             itemsCreated++;
         }
 
@@ -1888,6 +1935,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                 },
                 { datasource: application.datasource }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
             itemsCreated++;
         }
 
@@ -1902,6 +1950,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                 },
                 { datasource: application.datasource }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
             itemsCreated++;
         }
 
@@ -1915,6 +1964,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                 },
                 { datasource: application.datasource }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
             itemsCreated++;
         }
 
@@ -1928,6 +1978,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                 },
                 { datasource: application.datasource }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
             itemsCreated++;
         }
 
@@ -1943,6 +1994,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                     },
                     { datasource: application.datasource }
                 );
+                if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
                 itemsCreated++;
             }
         }
@@ -1958,6 +2010,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                 },
                 { datasource: application.datasource }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
             itemsCreated++;
         }
 
@@ -1986,6 +2039,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
             },
             { datasource: application.datasource }
         );
+        if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
         return qCheck.recordCount gt 0;
     }
 
@@ -2028,6 +2082,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                 },
                 { datasource: application.datasource }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
         } catch (any e) {
             // Ignore errors recording results - don't fail the import
         }
@@ -2053,6 +2108,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                 },
                 { datasource: application.datasource }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
         } catch (any e) {
             // Ignore errors updating counts
         }
@@ -2085,6 +2141,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                 { job_id: { value: arguments.job_id, cfsqltype: "cf_sql_integer" } },
                 { datasource: application.datasource }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
 
             var total = 0;
             for (var row in qStats) {
@@ -2171,6 +2228,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
             }
 
             var qCount = queryExecute(countSql, countParams, { datasource: application.datasource });
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
             var totalRows = qCount.cnt;
             var totalPages = ceiling(totalRows / safePageSize);
 
@@ -2202,6 +2260,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
             }
 
             var qRows = queryExecute(rowsSql, rowParams, { datasource: application.datasource });
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
 
             // Collect row IDs for batch fact loading
             var rowIds = [];
@@ -2222,6 +2281,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                 var qFacts = queryExecute(factsSql, {
                     row_id_list: { value: arrayToList(rowIds), cfsqltype: "cf_sql_integer", list: true }
                 }, { datasource: application.datasource });
+                if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
 
                 for (var fact in qFacts) {
                     if (!structKeyExists(factsMap, fact.row_id)) {
@@ -2317,6 +2377,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                 },
                 { datasource: application.datasource }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
 
             if (qRow.recordCount eq 0) {
                 return fail(code = "NOT_FOUND", message = "Row not found");
@@ -2335,6 +2396,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                 { row_id: { value: arguments.row_id, cfsqltype: "cf_sql_integer" } },
                 { datasource: application.datasource }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
 
             // Build data and validation structs
             var data = {};
@@ -2394,6 +2456,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                                 },
                                 { datasource: application.datasource }
                             );
+                            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
                             if (qContact.recordCount gt 0) {
                                 dupeInfo.contactFullName = qContact.contactFullName;
                             }
@@ -2472,6 +2535,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                 },
                 { datasource: application.datasource }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
 
             if (qRow.recordCount eq 0) {
                 return fail(code = "NOT_FOUND", message = "Row not found or access denied");
@@ -2545,6 +2609,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                     },
                     { datasource: application.datasource, result: "updateResult" }
                 );
+                if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
 
                 // If no existing fact matched, insert a new one
                 if (updateResult.recordCount eq 0) {
@@ -2572,6 +2637,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                         },
                         { datasource: application.datasource }
                     );
+                    if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
                 }
 
                 arrayAppend(updatedFields, fieldName);
@@ -2606,6 +2672,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                 },
                 { datasource: application.datasource }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
 
             // Update job counts
             updateJobRowCounts(arguments.job_id);
@@ -2635,6 +2702,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                 { row_id: { value: arguments.row_id, cfsqltype: "cf_sql_integer" } },
                 { datasource: application.datasource }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
 
             var firstName = "";
             var lastName = "";
@@ -2659,6 +2727,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                     },
                     { datasource: application.datasource }
                 );
+                if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
             }
         } catch (any e) {
             // Ignore errors
@@ -2676,6 +2745,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
             { row_id: { value: arguments.row_id, cfsqltype: "cf_sql_integer" } },
             { datasource: application.datasource }
         );
+        if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
 
         if (qErrors.cnt gt 0) {
             return "problem";
@@ -2713,6 +2783,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                 { job_id: { value: arguments.job_id, cfsqltype: "cf_sql_integer" } },
                 { datasource: application.datasource }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
         } catch (any e) {
             // Ignore errors
         }
@@ -2786,6 +2857,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                 },
                 { datasource: application.datasource }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
 
             if (qRow.recordCount eq 0) {
                 return fail(code = "NOT_FOUND", message = "Row not found or access denied");
@@ -2817,6 +2889,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                     },
                     { datasource: application.datasource }
                 );
+                if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
             } else {
                 queryExecute(
                     "UPDATE import_v3_rows
@@ -2830,6 +2903,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                     },
                     { datasource: application.datasource }
                 );
+                if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
             }
 
             // Update job counts
@@ -2963,6 +3037,7 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
 
             var result = {};
             queryExecute(updateSql, updateParams, { datasource: application.datasource, result: "result" });
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
 
             var updatedCount = structKeyExists(result, "recordCount") ? result.recordCount : arrayLen(safeIds);
 

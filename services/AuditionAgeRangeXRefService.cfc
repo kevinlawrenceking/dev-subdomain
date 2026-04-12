@@ -10,6 +10,7 @@
             WHERE audroleid = <cfqueryparam value="#arguments.audroleid#" cfsqltype="CF_SQL_INTEGER"> 
             AND rangeid = <cfqueryparam value="#arguments.new_rangeid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
     </cffunction>
@@ -21,6 +22,7 @@
             DELETE FROM audageranges_audtion_xref
             WHERE audroleid = <cfqueryparam value="#arguments.new_audroleid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     </cffunction>
 
 <cffunction output="false" name="INSaudageranges_audtion_xref" access="public" returntype="numeric">
@@ -34,6 +36,7 @@
                 <cfqueryparam value="#arguments.new_audroleid#" cfsqltype="CF_SQL_INTEGER">
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
          <cfreturn result.generatedKey>
     </cffunction>
 
@@ -48,6 +51,7 @@
                 <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_rangeid#" null="#NOT len(trim(arguments.new_rangeid))#">
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         <cfreturn result.generatedKey>
     </cffunction>
 
@@ -64,6 +68,7 @@
             WHERE 
                 id = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_id#">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     </cffunction>
 
 </cfcomponent>

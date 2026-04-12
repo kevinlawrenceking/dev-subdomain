@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfparam name="devicetype" default="desktop" />
 
 <!--- This ColdFusion page includes different contact queries based on the device type (mobile or desktop) --->

@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!---
     PURPOSE: Supporting queries for ThriveCart results page
     AUTHOR: Kevin King  

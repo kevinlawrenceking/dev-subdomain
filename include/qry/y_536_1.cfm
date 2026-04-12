@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves table names from the information schema that start with 'aud' --->
 <cfquery name="y">  
     <!--- Query to select table names from the information schema --->

@@ -17,6 +17,7 @@
             ORDER BY 
                 tagname
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
         <cfreturn tagData>
     </cffunction>
@@ -38,6 +39,7 @@
             ORDER BY 
                 recordname
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
         <cfreturn contactData>
     </cffunction>
@@ -75,6 +77,7 @@ FROM
             ORDER BY 
                 recordname
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
         <cfreturn contactData>
     </cffunction>
@@ -102,6 +105,7 @@ FROM
                 AND e.eventstart >= CURDATE()
                 AND LOWER(c.recordname) LIKE LOWER(<cfqueryparam value="%#arguments.searchTerm#%" cfsqltype="CF_SQL_VARCHAR">)
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
         <cfreturn appointmentData>
     </cffunction>

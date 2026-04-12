@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset componentPath = "/services/AuditionContractTypeService">
 <cfset auditionContractTypeService = createObject("component", componentPath)>
 <cfset new_contracttypeid = auditionContractTypeService.INSaudcontracttypes(

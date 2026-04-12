@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves a list of values and their corresponding text from a specified table and orders them by record name. --->
 
 <cfquery name="selects">

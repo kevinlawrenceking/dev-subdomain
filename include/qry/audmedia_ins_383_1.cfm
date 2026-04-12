@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset AuditionMediaService = createObject("component", "services.AuditionMediaService")>
 
 <cfset new_mediaID = AuditionMediaService.INSaudmedia(

@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset auditionService = createObject("component", "services.AuditionImportService")>
 <cfset auditionService.UPDauditionsimport_24376(
     formData = {

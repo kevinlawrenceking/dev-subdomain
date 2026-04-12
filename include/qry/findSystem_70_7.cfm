@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves system IDs from the fusystems table based on a specific system type and scope. --->
 
 <cfquery name="findSystem">

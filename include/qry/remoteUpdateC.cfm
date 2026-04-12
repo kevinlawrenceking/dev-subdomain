@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page handles the display and submission of a form for updating contact item details. --->
 
 <cfinclude template="/include/qry/details_521_1.cfm" />

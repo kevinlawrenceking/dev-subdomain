@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 
 <cfset AuditionAnswerService = createObject("component", AuditionAnswerService)>
 <cfset new_answerID = AuditionAnswerService.INSaudanswers_24506(

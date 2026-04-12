@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
    <cfparam name="audsourceid" default="0" />
 <cfset auditionRoleService = createObject("component", "services.AuditionRoleService")>
 <cfset auditionRoleService.UPDaudroles_24542(audsourceid)>

@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfparam name="userid" default="">
 
 <cfset auditionMediaService = createObject("component", "services.AuditionMediaService")>

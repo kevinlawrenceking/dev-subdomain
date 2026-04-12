@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves user information from the database based on specific criteria. --->
 <!--- Sanitize ORDER BY column name to prevent SQL injection --->
 <cfset orderby = reReplace(orderby, "[^a-zA-Z0-9_]", "", "all")>

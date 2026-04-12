@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves a list of records from a specified table and formats them for selection. --->
 
 <cfquery name="selects">

@@ -65,6 +65,7 @@
                     null = "#NOT len(trim(arguments.new_Website))#"/>
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 
@@ -98,6 +99,7 @@
             FROM exportitems
             WHERE exportid = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.exportID#" />
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>

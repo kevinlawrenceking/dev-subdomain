@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset attendeesService = createObject("component", "services.EventContactsXRefService")>
 <cfset attendeesStruct = attendeesService.SELeventcontactsxref_24499(eventid=eventid)>
 

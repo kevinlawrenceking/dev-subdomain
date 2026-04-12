@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page allows users to update project information including category, subcategory, project name, description, union, network, tone, and contract type. --->
 <cfinclude template="/include/qry/audunions_sel.cfm" />
 <cfinclude template="/include/qry/audnetworks_sel.cfm" />

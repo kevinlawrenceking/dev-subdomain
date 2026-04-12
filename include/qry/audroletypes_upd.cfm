@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page initializes parameters for a new audit role type and includes a query template for processing. --->
 
 <cfparam name="new_audroletype" default="" />

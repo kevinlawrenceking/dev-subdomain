@@ -10,6 +10,7 @@
             <cfqueryparam cfsqltype="CF_SQL_BIT" value="#arguments.new_isDeleted#">
         );
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn result.generatedKey>
 </cffunction>
 <cffunction output="false" name="UPDaudqtypes" access="public" returntype="void">
@@ -25,5 +26,6 @@
         WHERE 
             qtypeid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_qtypeid#">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 </cfcomponent>

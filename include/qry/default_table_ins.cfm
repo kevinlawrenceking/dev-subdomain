@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page processes database table descriptions and inserts new records based on the structure of the specified table. --->
 
 <cfset dbug="Y" />

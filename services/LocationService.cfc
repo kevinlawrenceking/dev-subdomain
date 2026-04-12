@@ -7,6 +7,7 @@
             AND countryid IN (SELECT countryid FROM regions)
             ORDER BY countryname
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         <cfreturn qCountries>
     </cffunction>
     <cffunction output="false" name="getRegions" access="public" returntype="query"  hint="Fetches regions for the selected country">
@@ -15,6 +16,7 @@
             FROM regions 
             ORDER BY regionname
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         <cfreturn qRegions>
     </cffunction>
 </cfcomponent>

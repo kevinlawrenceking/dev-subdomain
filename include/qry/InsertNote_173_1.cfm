@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset objNoteService = request.svc("NoteService")>
 <cfset objNoteService.INSnoteslog_23972(
     userid = userid,

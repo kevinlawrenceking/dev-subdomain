@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page updates vocal type information in the audvocaltypes table based on provided parameters. --->
 
 <cfparam name="new_vocaltype" default="" />

@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfparam name="userid" default="">
 <cfparam name="audprojectid" default="">
 

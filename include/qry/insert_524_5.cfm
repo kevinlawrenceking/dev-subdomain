@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset reportUserService = createObject("component", "services.ReportUserService")>
 <cfset reportUserService.INSreports_user(
     reportid = x.reportid,

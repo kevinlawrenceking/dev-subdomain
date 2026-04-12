@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves contact details and related information based on user input. --->
 
 <cfinclude template="/include/qry/details_451_1.cfm" />

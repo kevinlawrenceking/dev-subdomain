@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves a primary key from a specified table based on a given value for a specific field. --->
 
 <cfquery name="find">        

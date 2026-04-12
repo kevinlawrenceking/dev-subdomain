@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves a specific report range based on the provided range ID. --->
 
 <cfquery name="rangeselected">

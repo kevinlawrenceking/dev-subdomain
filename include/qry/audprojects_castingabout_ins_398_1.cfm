@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset componentPath = "/services/AuditionProjectsCastingAboutService">
 <cfset componentInstance = createObject("component", componentPath)>
 <cfset componentInstance.UPDaudprojects_castingabout(

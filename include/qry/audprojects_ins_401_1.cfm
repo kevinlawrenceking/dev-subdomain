@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset AuditionProjectService = request.svc("AuditionProjectService")>
 
 <!--- Default handling for fetch variables --->

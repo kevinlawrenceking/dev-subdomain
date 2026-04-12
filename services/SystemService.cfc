@@ -17,6 +17,7 @@
             WHERE 
                 u.suid = <cfqueryparam value="#arguments.suid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         
         <cfreturn findSystemByID>
     </cffunction>
@@ -30,6 +31,7 @@
         FROM fusystemtypes 
         ORDER BY systemtype
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn queryResult>
 </cffunction>
 
@@ -42,6 +44,7 @@
         WHERE s.systemtype = <cfqueryparam value="Maintenance List" cfsqltype="CF_SQL_VARCHAR">
         AND s.systemscope = <cfqueryparam value="#arguments.newsystemscope#" cfsqltype="CF_SQL_VARCHAR">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -61,6 +64,7 @@
         AND (s.systemid = <cfqueryparam value="#arguments.new_systemid#" cfsqltype="CF_SQL_INTEGER" null="#not structKeyExists(arguments, 'new_systemid')#"> 
              OR s.systemid IN (<cfqueryparam value="3,4" cfsqltype="CF_SQL_INTEGER" list="true">))
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -73,6 +77,7 @@
         FROM fusystems
         WHERE systemid = <cfqueryparam value="#arguments.systemId#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -101,6 +106,7 @@
         ORDER BY 
             a.actionNo
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -132,6 +138,7 @@
         WHERE au.userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
         ORDER BY a.actionNo
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -166,6 +173,7 @@
             AND au.userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
             ORDER BY a.actionNo
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 
@@ -197,6 +205,7 @@
             INNER JOIN actionusers au ON au.actionid = a.actionid
             WHERE au.id = <cfqueryparam value="#arguments.id#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 
@@ -211,6 +220,7 @@
             WHERE systemtype = <cfqueryparam cfsqltype="cf_sql_varchar" value="#arguments.systemtype#" />
             AND systemscope = <cfqueryparam cfsqltype="cf_sql_varchar" value="#arguments.systemscope#" />
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -224,6 +234,7 @@
             WHERE systemtype = <cfqueryparam cfsqltype="cf_sql_varchar" value="#arguments.systemType#" />
             AND systemscope = <cfqueryparam cfsqltype="cf_sql_varchar" value="#arguments.systemScope#" />
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
     </cffunction>
@@ -238,6 +249,7 @@
         )
         ORDER BY FIELD(systemid, #arguments.systemIds#)
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -273,6 +285,7 @@
             AND au.userid = <cfqueryparam value="#arguments.userID#" cfsqltype="CF_SQL_INTEGER">
             ORDER BY a.actionNo
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn queryResult>
 </cffunction>
@@ -299,6 +312,7 @@
             GROUP BY a.actionID, a.actionTitle, a.actionno 
             ORDER BY a.actionno
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         <cfreturn result>
 
 </cffunction>
@@ -312,6 +326,7 @@
             WHERE systemtype = <cfqueryparam cfsqltype="cf_sql_varchar" value="#arguments.systemType#" />
             AND SystemScope = <cfqueryparam cfsqltype="cf_sql_varchar" value="#arguments.systemScope#" />
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -345,6 +360,7 @@
             AND au.userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
             ORDER BY a.actionNo
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -354,6 +370,7 @@
         FROM fusystems 
         ORDER BY systemname
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn queryResult>
 </cffunction>
 
@@ -387,6 +404,7 @@
             AND au.userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
             ORDER BY a.actionNo
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 
@@ -409,6 +427,7 @@
               ) 
             ORDER BY FIELD(systemtype, 'Targeted List', 'Follow Up', 'Maintenance List')
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 
@@ -449,6 +468,7 @@
                 <cfqueryparam value="#param.value#" cfsqltype="#param.cfsqltype#">
             </cfloop>
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn queryResult>
 </cffunction>

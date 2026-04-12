@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset auditionRoleTypeService = createObject("component", "services.AuditionRoleTypeService")>
 <cfset auditionRoleTypeService.UPDaudroletypes(
     new_audroletype = trim(new_audroletype),

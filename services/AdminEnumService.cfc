@@ -19,6 +19,7 @@
             WHERE   enum_id   = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.enum_id#">
               AND   is_active = 1
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
         <cfif local.qDef.recordCount EQ 0>
             <cfthrow type="AdminEnumService.NotFound"
@@ -57,6 +58,7 @@
               AND   is_active  = 1
             ORDER BY sort_order
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
         <cfreturn local.q>
     </cffunction>
@@ -91,6 +93,7 @@
             </cfif>
             ORDER BY t.#def.name_column#
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
         <cfreturn local.qRows>
     </cffunction>
@@ -118,6 +121,7 @@
               AND  is_active  = 1
             LIMIT 1
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
         <cfset var parentSoftDelete = (local.qParentDef.recordCount GT 0 AND local.qParentDef.has_soft_delete EQ 1)>
 
@@ -131,6 +135,7 @@
             </cfif>
             ORDER BY #def.parent_name_col#
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
         <cfreturn local.qParent>
     </cffunction>
@@ -170,6 +175,7 @@
             </cfif>
             LIMIT 1
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
         <cfif local.qDup.recordCount GT 0>
             <cfset result.message = "A row named '#trimmedName#' already exists.">
@@ -192,6 +198,7 @@
                 <cfif def.has_soft_delete EQ 1>, 0</cfif>
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
         <!--- For varchar PK tables (e.g. fusystemtypes), generatedKey may not apply.
               For integer auto-increment tables it will. --->
@@ -242,6 +249,7 @@
             </cfif>
             LIMIT 1
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
         <cfif local.qDup.recordCount GT 0>
             <cfset result.message = "A row named '#trimmedName#' already exists.">
@@ -259,6 +267,7 @@
                    </cfif>
             WHERE  #def.pk_column# = <cfqueryparam cfsqltype="#cfSqlType(def.pk_type)#" value="#arguments.pk_value#">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
         <cfif local.upd.recordCount EQ 0>
             <cfset result.message = "Row not found. It may have been deleted.">
@@ -293,11 +302,13 @@
                 SET    isDeleted = 1
                 WHERE  #def.pk_column# = <cfqueryparam cfsqltype="#cfSqlType(def.pk_type)#" value="#arguments.pk_value#">
             </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         <cfelse>
             <cfquery result="local.del" datasource="#application.dsn#">
                 DELETE FROM #def.table_name#
                 WHERE  #def.pk_column# = <cfqueryparam cfsqltype="#cfSqlType(def.pk_type)#" value="#arguments.pk_value#">
             </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         </cfif>
 
         <cfif local.del.recordCount EQ 0>

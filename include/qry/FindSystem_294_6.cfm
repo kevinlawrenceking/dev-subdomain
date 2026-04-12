@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset systemService = createObject("component", "services.SystemService")>
 <cfset FindSystem = systemService.SELfusystems_24317(
     systemtype = new_systemtype, 

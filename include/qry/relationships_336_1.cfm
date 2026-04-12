@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves active contact details for a specific user from the database. --->
 
 <cfquery name="relationships">

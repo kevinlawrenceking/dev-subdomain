@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page updates the notification status in the funotifications table based on certain conditions. --->
 
 <cfquery name="updatesystem">

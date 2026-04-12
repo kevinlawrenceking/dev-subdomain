@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page inserts a new record into the audvocaltypes_audition_xref table using provided role and vocal type IDs. --->
 
 <cfparam name="new_audRoleID" default="" />

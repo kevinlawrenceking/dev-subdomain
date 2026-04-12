@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 
 <cfparam name="audprojectid" default="0" />
 <cfinclude template="/include/qry/auditionprojectDetails_370_1.cfm" />

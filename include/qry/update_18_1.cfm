@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset eventService = request.svc("EventService")>
 <cfif NOT isDate(endRecur)>
     <cfset endRecur = "">

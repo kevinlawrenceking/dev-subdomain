@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <CFINCLUDE template="/include/remote_load.cfm" />
 
 <cfquery name="activeversions"  datasource="#dsn#"  >

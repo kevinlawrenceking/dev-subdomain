@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves all fields from the 'allfields' query excluding specific keys. --->
 <cfquery dbtype="query" name="x">
     <!--- Select all fields from the 'allfields' query --->

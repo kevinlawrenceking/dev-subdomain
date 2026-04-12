@@ -13,6 +13,7 @@
             <cfqueryparam value="1" cfsqltype="CF_SQL_BIT">
         )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn result.generatedKey>
 </cffunction>
 
@@ -28,6 +29,7 @@
         AND typeid = <cfqueryparam value="#arguments.new_typeid#" cfsqltype="CF_SQL_INTEGER">
         AND catid = <cfqueryparam value="#arguments.new_catid#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -45,6 +47,7 @@
             <cfqueryparam value="#arguments.select_userid#" cfsqltype="CF_SQL_INTEGER">
         )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn result.generatedKey>
 </cffunction>
 </cfcomponent>

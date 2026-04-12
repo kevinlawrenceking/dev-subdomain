@@ -8,6 +8,7 @@ SELECT * FROM audvocaltypes t
 inner join audvocaltypes_audition_xref x on x.vocaltypeid = t.vocaltypeid
 WHERE audroleid = <cfqueryparam value="#arguments.audroleid#" cfsqltype="CF_SQL_INTEGER"> 
   </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -22,6 +23,7 @@ WHERE audroleid = <cfqueryparam value="#arguments.audroleid#" cfsqltype="CF_SQL_
         WHERE audroleid = <cfqueryparam value="#arguments.audroleid#" cfsqltype="CF_SQL_INTEGER"> 
         AND vocaltypeid = <cfqueryparam value="#arguments.new_vocaltypeid#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -33,6 +35,7 @@ WHERE audroleid = <cfqueryparam value="#arguments.audroleid#" cfsqltype="CF_SQL_
         DELETE FROM audvocaltypes_audition_xref
         WHERE audroleid = <cfqueryparam value="#arguments.audroleid#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 
 <cffunction output="false" name="INSaudvocaltypes_audition_xref" access="public" returntype="numeric">
@@ -46,6 +49,7 @@ WHERE audroleid = <cfqueryparam value="#arguments.audroleid#" cfsqltype="CF_SQL_
             <cfqueryparam value="#arguments.new_audroleid#" cfsqltype="CF_SQL_INTEGER">
         )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn result.generatedKey>
 </cffunction>
 
@@ -60,6 +64,7 @@ WHERE audroleid = <cfqueryparam value="#arguments.audroleid#" cfsqltype="CF_SQL_
             <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_vocaltypeid#" null="#NOT len(trim(arguments.new_vocaltypeid))#">
         )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn result.generatedKey>
 </cffunction>
 
@@ -76,6 +81,7 @@ WHERE audroleid = <cfqueryparam value="#arguments.audroleid#" cfsqltype="CF_SQL_
         WHERE 
             id = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_id#" null="#NOT len(trim(arguments.new_id))#">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 
 </cfcomponent>

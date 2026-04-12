@@ -19,6 +19,7 @@
         ORDER BY 
             p.pnorderno
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn result>
 </cffunction>
 
@@ -29,6 +30,7 @@
         SET isvisible = 0 
         WHERE userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 <cffunction output="false" name="UPDpgpanels_user_23858" access="public" returntype="void">
     <cfargument name="userid" type="numeric" required="true">
@@ -42,6 +44,7 @@
         WHERE userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
         AND pnid IN (#arguments.new_isvisible#)
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 
 <cffunction output="false" name="UPDpgpanels_user_23886" access="public" returntype="void">
@@ -51,6 +54,7 @@
         SET isdeleted = 1
         WHERE pnid = <cfqueryparam value="#arguments.pnid#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 
 <cffunction output="false" name="SELpgpanels_user_24136" access="public" returntype="query">
@@ -69,6 +73,7 @@
             p.userid = <cfqueryparam value="#arguments.userId#" cfsqltype="CF_SQL_INTEGER"> 
             AND p.pntitle <> s.pntitle
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -80,6 +85,7 @@ INNER JOIN sitetypes_user AS s ON p.pnid = s.pnid
 SET 
     p.pnTitle = CONCAT(s.sitetypename, ' Links');
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 
 <cffunction output="false" name="SELpgpanels_user_24147" access="public" returntype="query">
@@ -91,6 +97,7 @@ SET
         WHERE p.userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
         ORDER BY p.pnOrderno DESC
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -123,6 +130,7 @@ SET
             <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
         )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn result.generatedKey>
 </cffunction>
 
@@ -136,6 +144,7 @@ SET
             WHERE userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
             AND pnFilename = <cfqueryparam value="#arguments.pnFilename#" cfsqltype="CF_SQL_VARCHAR">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -166,6 +175,7 @@ SET
                 <cfqueryparam value="1" cfsqltype="CF_SQL_BIT">
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 <cfreturn result.generatedKey>
 </cffunction>
 <cffunction output="false" name="SELpgpanels_user_24440" access="public" returntype="query">
@@ -177,6 +187,7 @@ SET
             WHERE p.userid = <cfqueryparam value="#arguments.select_userid#" cfsqltype="CF_SQL_INTEGER">
             ORDER BY p.pnOrderno DESC
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -208,6 +219,7 @@ SET
                 <cfqueryparam value="#arguments.select_userid#" cfsqltype="CF_SQL_INTEGER">
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 <cfreturn result.generatedKey>
 </cffunction>
 <cffunction output="false" name="SELpgpanels_user_24640" access="public" returntype="query">
@@ -229,6 +241,7 @@ SET
             ORDER BY 
                 p.pnorderno
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -251,6 +264,7 @@ SET
             ORDER BY 
                 pnOrderno
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>

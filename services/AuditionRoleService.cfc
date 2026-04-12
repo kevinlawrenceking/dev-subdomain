@@ -16,6 +16,7 @@
         SET c.contactmeetingdate = sub.first_event_date
         WHERE c.contactmeetingdate IS NULL
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 
 
@@ -51,6 +52,7 @@
             LEFT OUTER JOIN incometypes i ON (i.incometypeid = r.incometypeid)
             WHERE r.audroleid = <cfqueryparam value="#arguments.audroleid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 
@@ -95,6 +97,7 @@
                 <cfqueryparam cfsqltype="CF_SQL_BIT" value="#arguments.isdirect#">
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 <cfreturn result.generatedKey>
 </cffunction>
 <cffunction output="false" name="UPDaudroles" access="public" returntype="void">
@@ -105,6 +108,7 @@
             SET isbooked = 1
             WHERE audroleid = <cfqueryparam value="#arguments.audroleid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 <cffunction output="false" name="SELaudroles_23809" access="public" returntype="query">
@@ -136,6 +140,7 @@
             WHERE 
                 r.audroleid = <cfqueryparam value="#arguments.audroleid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 
@@ -184,6 +189,7 @@
         
         WHERE audroleid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_audroleid#">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 
@@ -201,6 +207,7 @@
             SET #arguments.statusField# = <cfqueryparam value="0" cfsqltype="CF_SQL_INTEGER"> 
             WHERE audroleid = <cfqueryparam value="#arguments.newAudRoleId#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 <cffunction output="false" name="UPDaudroles_23814" access="public" returntype="void">
@@ -212,6 +219,7 @@
             SET #arguments.statusField# = <cfqueryparam value="1" cfsqltype="CF_SQL_BIT">
             WHERE audroleid = <cfqueryparam value="#arguments.newAudroleId#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 <cffunction output="false" name="SELaudroles_23851" access="public" returntype="query">
@@ -249,6 +257,7 @@
             LEFT OUTER JOIN incometypes i ON (i.incometypeid = r.incometypeid)
             WHERE r.audroleid = <cfqueryparam value="#arguments.audroleid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -279,6 +288,7 @@
             INNER JOIN audsubcategories subcat ON (proj.audSubCatID = subcat.audSubCatId)
             WHERE r.audroleid = <cfqueryparam value="#arguments.audroleid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 
@@ -310,6 +320,7 @@
             INNER JOIN audsubcategories subcat ON (proj.audSubCatID = subcat.audSubCatId)
             WHERE r.audroleid = <cfqueryparam value="#arguments.audroleid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 
@@ -352,6 +363,7 @@
             LEFT OUTER JOIN audpaycycles p ON p.paycycleid = r.paycycleid
             WHERE r.audroleid = <cfqueryparam value="#arguments.audroleid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 
@@ -391,6 +403,7 @@
             LEFT OUTER JOIN contactdetails c ON (c.contactid = r.contactid)
             WHERE r.audroleid = <cfqueryparam value="#arguments.audroleid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -402,6 +415,7 @@
             SET isdeleted = 1
             WHERE audroleid = <cfqueryparam value="#arguments.audroleid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 <cffunction output="false" name="SELaudroles_24165" access="public" returntype="query">
@@ -414,6 +428,7 @@
             WHERE userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
             AND submitsiteid = <cfqueryparam value="#arguments.submitsiteid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -432,6 +447,7 @@
                 isbooked = <cfqueryparam value="#arguments.new_isbooked#" cfsqltype="CF_SQL_BIT">
             WHERE audroleid = <cfqueryparam value="#arguments.audroleid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 <cffunction output="false" name="UPDaudroles_24299" access="public" returntype="void">
@@ -487,6 +503,7 @@
         WHERE 
             audRoleID = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_audRoleID#">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 
 <cffunction output="false" name="INSaudroles_24372" access="public" returntype="numeric">
@@ -526,6 +543,7 @@
                 <cfqueryparam cfsqltype="CF_SQL_BIT" value="#arguments.isredirect#" null="#NOT len(trim(arguments.isredirect))#">
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 <cfreturn result.generatedKey>
 </cffunction>
 <cffunction output="false" name="UPDaudroles_24542" access="public" returntype="void">
@@ -537,6 +555,7 @@
         SET submitsiteid = NULL, contactid = NULL, opencallid = NULL 
         WHERE audsourceid = <cfqueryparam value="#arguments.audsourceid#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 
 </cffunction>
@@ -563,6 +582,7 @@
             LEFT JOIN audopencalloptions_user o ON o.opencallid = r.opencallid
             WHERE r.audroleid = <cfqueryparam value="#arguments.audroleid#" cfsqltype="cf_sql_integer">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -626,6 +646,7 @@
             <cfqueryparam cfsqltype="CF_SQL_BIT" value="#arguments.isredirect#">
         )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result.generatedKey>
 </cffunction>
@@ -659,6 +680,7 @@
             WHERE 
                 audRoleID = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_audRoleID#">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <!--- Handle error as needed --->
 

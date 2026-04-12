@@ -13,6 +13,7 @@
                 contactid = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.new_contactid#">
             WHERE id = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.id#">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 
@@ -29,6 +30,7 @@
         WHERE uploadid = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.uploadid#">
           AND status = <cfqueryparam cfsqltype="cf_sql_varchar" value="Added">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
  --->
     <cfreturn result>
 </cffunction>
@@ -55,6 +57,7 @@
         and status = 'Added'
         and business_email <> '' and business_email is not null
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <!--- Return the query result --->
     <cfreturn result>
@@ -80,6 +83,7 @@
         and status = 'Added'
         and personal_email <> '' and personal_email is not null
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <!--- Return the query result --->
     <cfreturn result>
@@ -105,6 +109,7 @@
         and status = 'Added'
         and work_phone <> '' and work_phone is not null
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <!--- Return the query result --->
     <cfreturn result>
@@ -130,6 +135,7 @@
         and status = 'Added'
         and mobile_phone <> '' and mobile_phone is not null
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <!--- Return the query result --->
     <cfreturn result>
@@ -155,6 +161,7 @@
         and status = 'Added'
         and home_phone <> '' and home_phone is not null
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <!--- Return the query result --->
     <cfreturn result>
@@ -180,6 +187,7 @@
         and status = 'Added'
         and Company <> '' and Company is not null
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <!--- Return the query result --->
     <cfreturn result>
@@ -205,6 +213,7 @@
         and status = 'Added'
         and website <> '' and website is not null
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <!--- Return the query result --->
     <cfreturn result>
@@ -229,6 +238,7 @@
         WHERE uploadid = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.uploadid#">
         and status = 'Added'
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <!--- Return the query result --->
     <cfreturn result>
@@ -255,6 +265,7 @@
         and status = 'Added'
         and contactid is not null
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <!--- Return the query result --->
     <cfreturn result>
@@ -275,6 +286,7 @@
         WHERE uploadid = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.uploadid#">
         and fname <> ''
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <cfreturn result>
 </cffunction>
@@ -300,6 +312,7 @@
           AND #arguments.tag_label# <> ''
           AND  #arguments.tag_label# IS NOT NULL
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <cfreturn result>
 </cffunction>
@@ -333,6 +346,7 @@
                 u.uploadstatus,
                 i.status
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn imports>
     </cffunction>
@@ -360,6 +374,7 @@
             GROUP BY 
                 u.uploadid, u.timestamp, u.userid, u.uploadstatus, i.status
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
     </cffunction>                                                                                       
@@ -442,6 +457,7 @@
 
                     )
                 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
                 <!--- Increment the row count ---> 
                 <cfset rowCount++>

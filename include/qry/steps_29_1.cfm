@@ -1,2 +1,3 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset stepsService = createObject("component", "services.AuditionStepService")>
 <cfset steps = stepsService.SELaudsteps()>

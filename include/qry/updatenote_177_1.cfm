@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page updates a note in the noteslog table based on the provided note ID and new details. --->
 
 <cfquery name="updatenote">

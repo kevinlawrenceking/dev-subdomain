@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset objService = createObject("component", "services.AuditionCategoryService")>
 <cfset objService.UPDaudcategories(
     new_audCatName = new_audCatName, 

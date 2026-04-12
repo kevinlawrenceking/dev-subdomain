@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset panelUserService = createObject("component", "services.PanelUserService") />
 
 <cfset new_pnid = panelUserService.INSpgpanels_user(

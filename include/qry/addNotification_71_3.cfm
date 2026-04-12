@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset notificationService = request.svc("NotificationService")>
 <cfset notificationService.INSfunotifications_23817(
     actionID = NotificationDetails.actionID,

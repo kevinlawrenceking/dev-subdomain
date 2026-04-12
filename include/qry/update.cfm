@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page handles the retrieval and updating of RPG data based on specified criteria. --->
 
 <cfset fieldset = valuelist(rpgupdate.fname) />

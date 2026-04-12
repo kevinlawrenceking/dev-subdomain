@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset auditionProjectService = request.svc("AuditionProjectService")>
 <cfset new_audprojectID = auditionProjectService.INSaudprojects(
     new_projName = new_projName,

@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves event details, notes, and contact information based on user session and contact ID. --->
 
 <cfinclude template="/include/qry/events_505_1.cfm" />

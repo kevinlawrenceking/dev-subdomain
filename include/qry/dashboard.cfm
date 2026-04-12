@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves user-specific dashboard panels and counts active notifications for the user. --->
 
 <cfinclude template="/include/qry/dashboards_458_1.cfm" />

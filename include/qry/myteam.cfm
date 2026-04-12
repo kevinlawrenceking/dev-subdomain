@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves active contacts for the user's team and selects audio sources based on certain criteria. --->
 
 <cfinclude template="/include/qry/myteam_499_1.cfm" />		

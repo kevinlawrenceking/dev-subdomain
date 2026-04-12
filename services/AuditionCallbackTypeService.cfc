@@ -15,6 +15,7 @@
         ORDER BY 
             callbacktype
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -29,6 +30,7 @@
         AND callbacktype = <cfqueryparam value="Callback" cfsqltype="CF_SQL_VARCHAR">
         ORDER BY callbacktype
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>

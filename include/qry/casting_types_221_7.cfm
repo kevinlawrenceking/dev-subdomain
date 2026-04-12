@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves casting types for a specific user from the database. --->
 
 <cfquery name="casting_types">

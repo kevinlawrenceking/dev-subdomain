@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page initializes parameters and includes an events query template. --->
 
 <cfparam name="focusid" default="0" />

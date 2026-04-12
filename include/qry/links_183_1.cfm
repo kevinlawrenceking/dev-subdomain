@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset linkService = createObject("component", "services.linkService")>
 
 <!--- Call the function with the specified note ID --->

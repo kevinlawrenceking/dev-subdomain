@@ -99,6 +99,7 @@
                         notenddate = <cfqueryparam value="#formattedDate#" cfsqltype="CF_SQL_DATE">
                     WHERE notid = <cfqueryparam value="#arguments.notid#" cfsqltype="CF_SQL_INTEGER">
                 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
                 <cfset logAction("completeNotification", "UPDATE", "Marked notification " & arguments.notid & " as " & arguments.status, {
                     "notid": arguments.notid,
@@ -113,6 +114,7 @@
                         SET #uniquename# = 'Y'
                         WHERE contactid = <cfqueryparam value="#contactid#" cfsqltype="CF_SQL_INTEGER">
                     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
                     <cfset logAction("completeNotification", "UPDATE", "Set uniqueness flag " & uniquename & " for contact " & contactid, {
                         "contactid": contactid,
@@ -135,6 +137,7 @@
                             <cfqueryparam value="Pending" cfsqltype="CF_SQL_VARCHAR">
                         )
                     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
                     <cfset result.data.newNotificationId = insertResult.generatedKey />
                     <cfset logAction("completeNotification", "INSERT", "Created recurring notification", {
@@ -159,6 +162,7 @@
                                 notstatus = 'Pending'
                             WHERE notid = <cfqueryparam value="#nextNotification.notid#" cfsqltype="CF_SQL_INTEGER">
                         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
                         <cfset logAction("completeNotification", "UPDATE", "Scheduled next notification", {
                             "nextNotid": nextNotification.notid,
@@ -173,6 +177,7 @@
                                 suenddate = <cfqueryparam value="#formattedDate#" cfsqltype="CF_SQL_DATE">
                             WHERE suid = <cfqueryparam value="#suid#" cfsqltype="CF_SQL_INTEGER">
                         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
                         <cfset result.data.systemCompleted = true />
                         <cfset logAction("completeNotification", "UPDATE", "System completed", {
@@ -250,6 +255,7 @@
                       AND isdeleted = 0
                     FOR UPDATE
                 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
                 <cfif checkExisting.recordCount GT 0>
                     <cfset result.message = "Contact already enrolled in this system" />
@@ -271,6 +277,7 @@
                         <cfqueryparam value="#arguments.notes#" cfsqltype="CF_SQL_VARCHAR" null="#NOT Len(Trim(arguments.notes))#">
                     )
                 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
                 <cfset var newSuid = insertResult.generatedKey />
                 <cfset result.data.suid = newSuid />
@@ -295,6 +302,7 @@
                       AND (au.isdeleted = 0 OR au.isdeleted IS NULL)
                     ORDER BY a.actionno
                 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
                 <cfset var notificationsCreated = 0 />
                 <cfset var firstActionScheduled = false />
@@ -310,6 +318,7 @@
                             WHERE contactid = <cfqueryparam value="#arguments.contactid#" cfsqltype="CF_SQL_INTEGER">
                               AND #getActions.uniquename# = 'Y'
                         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
                         <cfif checkUnique.recordCount GT 0>
                             <cfset shouldAdd = false />
                         </cfif>
@@ -337,6 +346,7 @@
                                 'Pending'
                             )
                         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
                         <cfset notificationsCreated = notificationsCreated + 1 />
                     </cfif>
@@ -394,6 +404,7 @@
                   AND su.sustatus = 'Active'
                   AND su.isdeleted = 0
             </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
             <cfif checkMaintenance.recordCount GT 0>
                 <cfset result.message = "Maintenance system already exists" />
@@ -409,6 +420,7 @@
                   AND systemscope = <cfqueryparam value="#arguments.systemscope#" cfsqltype="CF_SQL_VARCHAR">
                 LIMIT 1
             </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
             <cfif findMaintenanceSystem.recordCount EQ 0>
                 <cfset result.message = "No maintenance system found for scope: " & arguments.systemscope />
@@ -442,6 +454,7 @@
                         0
                     )
                 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
                 <cfset logAction("startMaintenanceIfNeeded", "INSERT", "Auto-started maintenance system", {
                     "contactid": arguments.contactid,
@@ -493,6 +506,7 @@
             LEFT JOIN contactdetails cd ON cd.contactid = su.contactid AND cd.userid = su.userid
             WHERE n.notid = <cfqueryparam value="#arguments.notid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
         <cfreturn notificationDetails />
     </cffunction>
@@ -517,6 +531,7 @@
             ORDER BY a.actionno, n.notid
             LIMIT 1
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
         <cfreturn nextPending />
     </cffunction>
@@ -560,12 +575,14 @@
         <cfquery name="qActiveSystems">
             SELECT COUNT(*) AS cnt FROM fusystemusers WHERE sustatus = 'Active' AND isdeleted = 0
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         <cfset health.activeSystems = qActiveSystems.cnt />
 
         <cfquery name="qPending">
             SELECT COUNT(*) AS cnt FROM funotifications
             WHERE notstatus = 'Pending' AND isdeleted = 0 AND notstartdate IS NOT NULL
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         <cfset health.pendingNotifications = qPending.cnt />
 
         <cfquery name="qOverdue">
@@ -574,6 +591,7 @@
               AND notstartdate IS NOT NULL
               AND notstartdate < CURDATE()
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         <cfset health.overdueNotifications = qOverdue.cnt />
 
         <cfquery name="qStuck">
@@ -582,6 +600,7 @@
             LEFT JOIN funotifications n ON n.suid = su.suid AND n.notstatus = 'Pending' AND n.isdeleted = 0
             WHERE su.sustatus = 'Active' AND su.isdeleted = 0 AND n.notid IS NULL
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         <cfset health.stuckSystems = qStuck.cnt />
 
         <cfquery name="qDuplicates">
@@ -594,6 +613,7 @@
                 HAVING COUNT(*) > 1
             ) t
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         <cfset health.duplicateEnrollments = qDuplicates.cnt />
 
         <cfreturn health />

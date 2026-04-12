@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page handles the audition submission form, including category and subcategory selection. --->
 
 <cfset dbug = "N" />

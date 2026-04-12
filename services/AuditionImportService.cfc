@@ -159,6 +159,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                 { job_id: { value: arguments.job_id, cfsqltype: "cf_sql_integer" } },
                 { datasource: application.datasource }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
 
             if (qJob.recordCount eq 1) {
                 result.found = true;
@@ -189,6 +190,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                 },
                 { datasource: application.datasource }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
 
             if (qCheck.recordCount eq 1) {
                 return { "valid": true };
@@ -226,6 +228,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                 },
                 { datasource: application.datasource }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
 
             if (qJob.recordCount eq 0) {
                 var qExists = queryExecute(
@@ -233,6 +236,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                     { job_id: { value: arguments.job_id, cfsqltype: "cf_sql_integer" } },
                     { datasource: application.datasource }
                 );
+                if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
 
                 if (qExists.recordCount eq 0) {
                     return fail(code = "NOT_FOUND", message = "Import job not found.", data = { job_id: arguments.job_id });
@@ -288,6 +292,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                     },
                     { datasource: application.datasource }
                 );
+                if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
             } else {
                 queryExecute(
                     "INSERT INTO import_auditions_events (job_id, userid, event_type, event_detail, created_at)
@@ -300,6 +305,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                     },
                     { datasource: application.datasource }
                 );
+                if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
             }
             return true;
         } catch (any e) {
@@ -351,6 +357,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                 },
                 { datasource: application.datasource, result: "qResult" }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
 
             if (qResult.recordCount eq 1) {
                 logEvent(job_id = arguments.job_id, userid = arguments.userid, event_type = "lock_acquired", detail = { purpose: arguments.lock_purpose });
@@ -400,6 +407,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                 },
                 { datasource: application.datasource }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
 
             logEvent(job_id = arguments.job_id, userid = arguments.userid, event_type = "lock_released", detail = { previous_status: job.status, new_status: targetStatus });
             writeLog(file="import_auditions", text="[releaseJobLock] RELEASED job_id=" & arguments.job_id & " from=" & job.status & " to=" & targetStatus);
@@ -462,6 +470,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
             structAppend(params, additionalParams);
 
             queryExecute("UPDATE import_auditions_jobs SET status = :new_status, updated_at = NOW() " & additionalFields & " WHERE job_id = :job_id AND userid = :userid", params, { datasource: application.datasource });
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
 
             logEvent(job_id = arguments.job_id, userid = arguments.userid, event_type = "status_changed", detail = { from_status: currentStatus, to_status: arguments.new_status });
             writeLog(file="import_auditions", text="[setJobStatus] TRANSITION job_id=" & arguments.job_id & " from=" & currentStatus & " to=" & arguments.new_status);
@@ -503,6 +512,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                 { job_id: { value: arguments.job_id, cfsqltype: "cf_sql_integer" } },
                 { datasource: application.datasource }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
 
             var total = 0;
             for (var row in qStats) {
@@ -577,6 +587,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
             }
 
             var qCount = queryExecute(countSql, countParams, { datasource: application.datasource });
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
             var totalRows = qCount.cnt;
             var totalPages = ceiling(totalRows / safePageSize);
 
@@ -610,6 +621,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
             }
 
             var qRows = queryExecute(rowsSql, rowParams, { datasource: application.datasource });
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
 
             // Collect row IDs for batch fact loading
             var rowIds = [];
@@ -629,6 +641,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                     { row_id_list: { value: arrayToList(rowIds), cfsqltype: "cf_sql_integer", list: true } },
                     { datasource: application.datasource }
                 );
+                if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
 
                 for (var fact in qFacts) {
                     if (!structKeyExists(factsMap, fact.row_id)) {
@@ -745,6 +758,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                 },
                 { datasource: application.datasource }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
 
             if (qRow.recordCount eq 0) {
                 return fail(code = "NOT_FOUND", message = "Row not found");
@@ -763,6 +777,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                 { row_id: { value: arguments.row_id, cfsqltype: "cf_sql_integer" } },
                 { datasource: application.datasource }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
 
             var data = {};
             var validation = {};
@@ -820,6 +835,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                                 },
                                 { datasource: application.datasource }
                             );
+                            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
                             if (qAud.recordCount gt 0) {
                                 dupeInfo["project_name"] = qAud.project_name;
                                 dupeInfo["role_name"] = qAud.role_name;
@@ -910,6 +926,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                 },
                 { datasource: application.datasource }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
 
             if (qRow.recordCount eq 0) {
                 return fail(code = "NOT_FOUND", message = "Row not found or access denied");
@@ -935,6 +952,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                     },
                     { datasource: application.datasource }
                 );
+                if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
             } else {
                 queryExecute(
                     "UPDATE import_auditions_rows
@@ -946,6 +964,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                     },
                     { datasource: application.datasource }
                 );
+                if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
             }
 
             updateJobRowCounts(arguments.job_id);
@@ -1042,6 +1061,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
 
             var result = {};
             queryExecute(updateSql, updateParams, { datasource: application.datasource, result: "result" });
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
             var updatedCount = structKeyExists(result, "recordCount") ? result.recordCount : arrayLen(safeIds);
 
             updateJobRowCounts(arguments.job_id);
@@ -1076,6 +1096,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                 { job_id: { value: arguments.job_id, cfsqltype: "cf_sql_integer" } },
                 { datasource: application.datasource }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
         } catch (any e) {
             // Ignore errors
         }
@@ -1103,6 +1124,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                 },
                 { datasource: application.datasource }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
 
             if (qRow.recordCount eq 0) {
                 return fail(code = "NOT_FOUND", message = "Row not found or access denied");
@@ -1176,6 +1198,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                                 { id: { value: val(normalizedVal), cfsqltype: "cf_sql_integer" } },
                                 { datasource: application.datasource }
                             );
+                            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
                             if (qValidCat.recordCount eq 0) {
                                 isValid = false;
                                 errCode = "INVALID_CATEGORY";
@@ -1211,6 +1234,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                     },
                     { datasource: application.datasource }
                 );
+                if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
 
                 arrayAppend(updatedFields, fieldName);
             }
@@ -1221,6 +1245,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                 { row_id: { value: arguments.row_id, cfsqltype: "cf_sql_integer" } },
                 { datasource: application.datasource }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
 
             // Check for missing required audsubcatid
             var qHasCat = queryExecute(
@@ -1230,6 +1255,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                 { row_id: { value: arguments.row_id, cfsqltype: "cf_sql_integer" } },
                 { datasource: application.datasource }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
             var missingCategory = (qHasCat.recordCount eq 0);
 
             // If category is missing, ensure an invalid fact exists so the error is visible in the UI
@@ -1245,6 +1271,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                     { row_id: { value: arguments.row_id, cfsqltype: "cf_sql_integer" } },
                     { datasource: application.datasource }
                 );
+                if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
             }
 
             var newStatus = "ready";
@@ -1271,6 +1298,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                 },
                 { datasource: application.datasource }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
 
             updateJobRowCounts(arguments.job_id);
 
@@ -1333,10 +1361,12 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                 "SELECT COUNT(*) as cnt FROM audroletypes WHERE audroletypeid = 1",
                 {}, { datasource: application.datasource }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
             var qStepCheck = queryExecute(
                 "SELECT COUNT(*) as cnt FROM audsteps WHERE audstepid = 1",
                 {}, { datasource: application.datasource }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
             if (qRoleTypeCheck.cnt eq 0 or qStepCheck.cnt eq 0) {
                 releaseJobLock(job_id = arguments.job_id, userid = arguments.userid, lock_token = lockToken);
                 return fail(
@@ -1355,6 +1385,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                 { job_id: { value: arguments.job_id, cfsqltype: "cf_sql_integer" } },
                 { datasource: application.datasource, result: "qReset" }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
             if (qReset.recordCount gt 0) {
                 writeLog(file="import_auditions", text="[finalizeJob] RESET_FAILED_ROWS job_id=" & arguments.job_id & " count=" & qReset.recordCount);
             }
@@ -1372,6 +1403,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                 { job_id: { value: arguments.job_id, cfsqltype: "cf_sql_integer" } },
                 { datasource: application.datasource }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
 
             counts.attempted = qRows.recordCount;
 
@@ -1490,6 +1522,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                 { row_id: { value: arguments.row_id, cfsqltype: "cf_sql_integer" } },
                 { datasource: application.datasource }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
             if (qExistingResult.recordCount gt 0 && qExistingResult.action_taken eq "created") {
                 return { "success": true, "action": "skipped_already_imported", "audition_id": qExistingResult.audition_id };
             }
@@ -1504,6 +1537,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                 { row_id: { value: arguments.row_id, cfsqltype: "cf_sql_integer" } },
                 { datasource: application.datasource }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
 
             if (qFacts.recordCount eq 0) {
                 recordRowResult(row_id = arguments.row_id, job_id = arguments.job_id, action_taken = "failed", error_code = "NO_VALID_FACTS", error_message = "No valid fields to import");
@@ -1547,6 +1581,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                     },
                     { datasource: application.datasource }
                 );
+                if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
                 if (qContact.recordCount gt 0) {
                     contactId = qContact.contactid;
                 }
@@ -1563,6 +1598,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                     },
                     { datasource: application.datasource }
                 );
+                if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
                 if (qContact2.recordCount gt 0) {
                     contactId = qContact2.contactid;
                 }
@@ -1581,6 +1617,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                     },
                     { datasource: application.datasource }
                 );
+                if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
                 if (qCastingContact.recordCount gt 0) {
                     castingContactId = qCastingContact.contactid;
                 }
@@ -1632,6 +1669,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                     },
                     { datasource: application.datasource, result: "qProjectResult" }
                 );
+                if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
                 newProjectId = qProjectResult.generatedKey;
 
                 // E2) INSERT into audroles (linked to project)
@@ -1653,6 +1691,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                     },
                     { datasource: application.datasource, result: "qRoleResult" }
                 );
+                if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
                 newRoleId = qRoleResult.generatedKey;
 
                 // E3) INSERT into events_tbl (linked to role - the actual audition event)
@@ -1685,6 +1724,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                     },
                     { datasource: application.datasource, result: "qEventResult" }
                 );
+                if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
                 newEventId = qEventResult.generatedKey;
 
                 // E4) Also write to flat auditions table (backward-compat for dupe detection)
@@ -1717,6 +1757,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                     },
                     { datasource: application.datasource }
                 );
+                if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
 
                 fieldsWritten = qFacts.recordCount;
 
@@ -1733,6 +1774,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                     },
                     { datasource: application.datasource }
                 );
+                if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
 
                 // E6) Record result with undo data (idempotency via UNIQUE(row_id))
                 var undoData = serializeJSON({
@@ -1761,6 +1803,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                     },
                     { datasource: application.datasource }
                 );
+                if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
             }
 
             logEvent(job_id = arguments.job_id, userid = arguments.userid, event_type = "row_imported", row_id = arguments.row_id, detail = { event_id: newEventId, project_id: newProjectId, role_id: newRoleId, contactid: contactId, casting_contactid: castingContactId, audSubCatId: audSubCatId, fields_written: fieldsWritten });
@@ -1776,6 +1819,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                     { row_id: { value: arguments.row_id, cfsqltype: "cf_sql_integer" }, error: { value: left(e.message, 500), cfsqltype: "cf_sql_varchar" } },
                     { datasource: application.datasource }
                 );
+                if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
             } catch (any updateErr) {}
             return { "success": false, "code": "IMPORT_EXCEPTION", "message": e.message };
         }
@@ -1806,6 +1850,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                 },
                 { datasource: application.datasource }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
         } catch (any e) {
             writeLog(file="import_auditions", text="[recordRowResult] ERROR row_id=" & arguments.row_id & " message=" & e.message);
         }
@@ -1830,6 +1875,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                 },
                 { datasource: application.datasource }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
         } catch (any e) {
             writeLog(file="import_auditions", text="[updateFinalCounts] ERROR job_id=" & arguments.job_id & " message=" & e.message);
         }
@@ -1851,6 +1897,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
             },
             { datasource: application.datasource }
         );
+        if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
     }
 
     public query function getUserJobHistory(required numeric userid, numeric limit = 25) {
@@ -1868,6 +1915,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
             },
             { datasource: application.datasource }
         );
+        if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
     }
 
     // =============================================================
@@ -1893,6 +1941,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
             { raw: { value: raw, cfsqltype: "cf_sql_varchar" } },
             { datasource: application.datasource }
         );
+        if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
         if (qExact.recordCount) return qExact.audsubcatid;
 
         // Try with dash separator (no spaces): "Film-Feature"
@@ -1906,6 +1955,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
             { raw: { value: raw, cfsqltype: "cf_sql_varchar" } },
             { datasource: application.datasource }
         );
+        if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
         if (qDash.recordCount) return qDash.audsubcatid;
 
         // Try category name only - pick the first subcategory
@@ -1920,6 +1970,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
             { raw: { value: raw, cfsqltype: "cf_sql_varchar" } },
             { datasource: application.datasource }
         );
+        if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
         if (qCatOnly.recordCount) return qCatOnly.audsubcatid;
 
         // Try subcategory name only (e.g. "Feature", "Episodic")
@@ -1933,6 +1984,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
             { raw: { value: raw, cfsqltype: "cf_sql_varchar" } },
             { datasource: application.datasource }
         );
+        if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
         if (qSubOnly.recordCount) return qSubOnly.audsubcatid;
 
         // Try LIKE match on category or subcategory
@@ -1948,6 +2000,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
             { pattern: { value: "%" & lcase(raw) & "%", cfsqltype: "cf_sql_varchar" } },
             { datasource: application.datasource }
         );
+        if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
         if (qFuzzy.recordCount) return qFuzzy.audsubcatid;
 
         // No match - return 0 (category will be NULL, audition still imports)
@@ -1971,6 +2024,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                 {},
                 { datasource: application.datasource }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
 
             var options = [];
             for (var row in qCats) {
@@ -2011,6 +2065,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                 { id: { value: arguments.audsubcatid, cfsqltype: "cf_sql_integer" } },
                 { datasource: application.datasource }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
             if (qValid.recordCount eq 0) {
                 return fail(code = "INVALID_CATEGORY", message = "Invalid category selection");
             }
@@ -2028,6 +2083,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                 { job_id: { value: arguments.job_id, cfsqltype: "cf_sql_integer" } },
                 { datasource: application.datasource }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
 
             var updatedCount = 0;
             for (var row in qRows) {
@@ -2044,6 +2100,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                     },
                     { datasource: application.datasource }
                 );
+                if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
 
                 // Recompute row status: remove audsubcatid error, check remaining errors
                 var qErrors = queryExecute(
@@ -2051,6 +2108,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                     { row_id: { value: row.row_id, cfsqltype: "cf_sql_integer" } },
                     { datasource: application.datasource }
                 );
+                if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
 
                 var newStatus = "ready";
                 if (qErrors.cnt gt 0) {
@@ -2062,6 +2120,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                         { row_id: { value: row.row_id, cfsqltype: "cf_sql_integer" } },
                         { datasource: application.datasource }
                     );
+                    if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
                     if (qDupe.recordCount and !isNull(qDupe.dupe_candidates_json) and len(qDupe.dupe_candidates_json)) {
                         try {
                             var dupes = deserializeJSON(qDupe.dupe_candidates_json);
@@ -2082,6 +2141,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                     },
                     { datasource: application.datasource }
                 );
+                if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
 
                 updatedCount++;
             }
@@ -2123,6 +2183,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                 },
                 { datasource: application.datasource }
             );
+            if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
 
             if (qResult.recordCount eq 0) {
                 return fail(code = "NOT_FOUND", message = "Row result not found or access denied");
@@ -2163,6 +2224,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                         },
                         { datasource: application.datasource }
                     );
+                    if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
                 }
 
                 // C2) Delete role (only if no other events reference it)
@@ -2172,12 +2234,14 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                         { roleId: { value: roleId, cfsqltype: "cf_sql_integer" } },
                         { datasource: application.datasource }
                     );
+                    if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
                     if (qRoleRefs.cnt eq 0) {
                         queryExecute(
                             "DELETE FROM audroles WHERE audroleid = :roleId",
                             { roleId: { value: roleId, cfsqltype: "cf_sql_integer" } },
                             { datasource: application.datasource }
                         );
+                        if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
                     }
                 }
 
@@ -2188,12 +2252,14 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                         { projectId: { value: projectId, cfsqltype: "cf_sql_integer" } },
                         { datasource: application.datasource }
                     );
+                    if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
                     if (qProjRefs.cnt eq 0) {
                         queryExecute(
                             "DELETE FROM audprojects WHERE audprojectid = :projectId",
                             { projectId: { value: projectId, cfsqltype: "cf_sql_integer" } },
                             { datasource: application.datasource }
                         );
+                        if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
                     }
                 }
 
@@ -2205,6 +2271,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                     { row_id: { value: arguments.row_id, cfsqltype: "cf_sql_integer" } },
                     { datasource: application.datasource }
                 );
+                if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
 
                 // C5) Reset row to ready
                 queryExecute(
@@ -2216,6 +2283,7 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                     { row_id: { value: arguments.row_id, cfsqltype: "cf_sql_integer" } },
                     { datasource: application.datasource }
                 );
+                if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
             }
 
             // D) Update job counts

@@ -12,6 +12,7 @@
             </cfif>
             ORDER BY s.sitename
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn result>
 </cffunction>
 </cfcomponent>

@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page initializes parameters and includes a query template for user tones. --->
 <cfparam name="dbug" default="N" />
 

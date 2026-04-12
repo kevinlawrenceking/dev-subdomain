@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset objService = createObject("component", "services.AuditionAgeRangeService")>
 <cfset objService.UPDaudageranges(
     new_rangename = new_rangename,

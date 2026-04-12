@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset auditionTypeService = createObject("component", "services.AuditionTypeService")>
 <cfset new_audtypeid - auditionTypeService.INSaudtypes(
     new_audtype=new_audtype,

@@ -1,2 +1,3 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset contactAuditionService = createObject("component", "services.ContactAuditionService")>
 <cfset contactAuditionService.INSaudcontacts_auditions_xref_24059(audprojectid=#audprojectid#, contactid=#CONTACTID#)>

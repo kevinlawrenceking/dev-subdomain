@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset auditionTypeService = createObject("component", "services.AuditionTypeService")>
 <cfset Findit = auditionTypeService.SELaudtypes_24234(
     audstepid = report_4_loop.audstepid,

@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page updates the status of a user in the fusystemusers table to 'Completed' based on the provided user ID. --->
 
 <cfquery name="updatesystem">

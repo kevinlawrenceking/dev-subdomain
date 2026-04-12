@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset auditionProjectService = request.svc("AuditionProjectService")>
 <cfset report_13 = auditionProjectService.SELaudprojects_24239(
     userid = userid,

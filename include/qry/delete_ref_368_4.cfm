@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset contactAuditionService = createObject("component", "services.ContactAuditionService")>
 
 <cfset rowsDeleted = contactAuditionService.DELaudcontacts_auditions_xref_24545(audprojectid=audprojectid)>

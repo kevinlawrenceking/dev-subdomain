@@ -40,6 +40,7 @@
             </cfif>
             WHERE ticketid = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.ticketid#">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 <cffunction output="false" name="SELtickets" access="public" returntype="query">
@@ -70,6 +71,7 @@
                 <cfqueryparam value="#param.value#" cfsqltype="#param.cfsqltype#">
             </cfloop>
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <!--- Return the query result --->
     <cfreturn queryResult>
@@ -103,6 +105,7 @@
             <cfqueryparam value="#arguments.col6#" cfsqltype="CF_SQL_DECIMAL">
             <cfqueryparam value="#arguments.verid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 
@@ -116,6 +119,7 @@
                 isdeleted = <cfqueryparam value="1" cfsqltype="CF_SQL_BIT">
             WHERE ticketid = <cfqueryparam value="#arguments.recid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 <cffunction output="false" name="SELtickets_23997" access="public" returntype="query">
@@ -160,6 +164,7 @@
             WHERE t.verid = <cfqueryparam value="#arguments.recid#" cfsqltype="CF_SQL_INTEGER">
             AND t.patchnote <> <cfqueryparam value="" cfsqltype="CF_SQL_VARCHAR">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -210,6 +215,7 @@
             INNER JOIN pgpages p ON p.pgid = t.pgid
             WHERE t.ticketid = <cfqueryparam value="#arguments.recid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -221,6 +227,7 @@
             SET ticketstatus = <cfqueryparam value="Tested - Success" cfsqltype="CF_SQL_VARCHAR">
             WHERE ticketid = <cfqueryparam value="#arguments.new_ticketid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 <cffunction output="false" name="UPDtickets_24077" access="public" returntype="void">
@@ -231,6 +238,7 @@
             SET ticketstatus = <cfqueryparam value="Tested - Bug" cfsqltype="CF_SQL_VARCHAR"> 
             WHERE ticketid = <cfqueryparam value="#arguments.new_ticketid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 <cffunction output="false" name="DETtickets_24109" access="public" returntype="query">
@@ -270,6 +278,7 @@
             INNER JOIN pgpages p ON p.pgid = t.pgid
             WHERE t.ticketid = <cfqueryparam value="#arguments.recid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -295,6 +304,7 @@
                 <cfqueryparam value="#arguments.qstring#" cfsqltype="cf_sql_varchar">
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 <cfreturn result.generatedKey>
 </cffunction>
 <cffunction output="false" name="DETtickets_24162" access="public" returntype="query">
@@ -339,6 +349,7 @@
             INNER JOIN pgpages p ON p.pgid = t.pgid
             WHERE t.ticketid = <cfqueryparam value="#arguments.recid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -381,6 +392,7 @@
             INNER JOIN pgpages p ON p.pgid = t.pgid
             WHERE t.ticketid = <cfqueryparam value="#arguments.recid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -418,6 +430,7 @@
             WHERE 
                 ticketid = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.ticketid#" />
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         <!--- Add any additional logic here if needed --->
 
 </cffunction>
@@ -461,6 +474,7 @@
             LEFT JOIN taoversions v ON v.verid = t.verid
             WHERE t.ticketid = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.ticketid#" />
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 
@@ -474,6 +488,7 @@
                 complete_email = <cfqueryparam value="1" cfsqltype="cf_sql_bit" />
             WHERE ticketid = <cfqueryparam value="#arguments.recid#" cfsqltype="cf_sql_integer" />
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 <cffunction output="false" name="REStickets" access="public" returntype="query">
@@ -517,6 +532,7 @@
             INNER JOIN pgpages p ON p.pgid = t.pgid
             WHERE t.ticketid = <cfqueryparam value="#arguments.recid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 
@@ -533,6 +549,7 @@
                 ticketresponse = <cfqueryparam value="Closed by #arguments.userFirstName# #arguments.userLastName#" cfsqltype="cf_sql_varchar">
             WHERE ticketid = <cfqueryparam value="#arguments.ticketId#" cfsqltype="cf_sql_integer">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 <cffunction output="false" name="UPDtickets_24337" access="public" returntype="void">
@@ -551,6 +568,7 @@
                 complete_email = 1
             WHERE ticketid = <cfqueryparam value="#arguments.recid#" cfsqltype="cf_sql_integer">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 <cffunction output="false" name="UPDtickets_24339" access="public" returntype="void">
@@ -562,6 +580,7 @@
             SET ticketstatus = <cfqueryparam value="#arguments.status#" cfsqltype="cf_sql_varchar" />
             WHERE ticketid = <cfqueryparam value="#arguments.ticketId#" cfsqltype="cf_sql_integer" />
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 <cffunction output="false" name="UPDtickets_24384" access="public" returntype="void">
@@ -579,6 +598,7 @@
             , ticketpriority = <cfqueryparam cfsqltype="cf_sql_varchar" value="#arguments.new_ticketpriority#" />
             WHERE ticketid = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.ticketid#" />
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 <cffunction output="false" name="DETtickets_24385" access="public" returntype="query">
@@ -589,6 +609,7 @@
             FROM tickets
             WHERE ticketid = <cfqueryparam value="#arguments.ticketid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -616,6 +637,7 @@
             ORDER BY 
                 v.major, v.minor, v.patch, v.build
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -655,6 +677,7 @@
                 v.verid = <cfqueryparam value="#arguments.verid#" cfsqltype="CF_SQL_INTEGER">
             ORDER BY major, minor, patch
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn resultQuery>
 
@@ -683,6 +706,7 @@
             ORDER BY 
                 v.major, v.minor, v.patch, v.build
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -724,6 +748,7 @@
             LEFT JOIN taoversions v ON v.verid = t.verid
             WHERE t.ticketid = <cfqueryparam value="#arguments.recID#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 
@@ -764,6 +789,7 @@
                 </cfloop>
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -794,6 +820,7 @@
             FROM taoversions v
             WHERE v.verid = <cfqueryparam value="#arguments.recid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -823,6 +850,7 @@
             FROM taoversions v
             WHERE v.verid = <cfqueryparam value="#arguments.recid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -865,6 +893,7 @@
             ORDER BY 
                 t.ticketid DESC
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -901,6 +930,7 @@
         FROM taoversions v
         ORDER BY v.major, v.minor, v.patch, v.version, v.build
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn results>
 </cffunction>

@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves headshot media information for a specific user from the database. --->
 
 <cfparam name="userid" default="0" />

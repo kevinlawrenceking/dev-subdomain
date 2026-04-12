@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves contact details and notes from the database based on a specific note ID. --->
 
 <cfquery name="notesContactDetails" maxrows="1">

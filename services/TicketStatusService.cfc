@@ -6,6 +6,7 @@
         FROM ticketstatuses 
         ORDER BY id
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <!--- Return the query result --->
     <cfreturn result>
@@ -36,6 +37,7 @@
             <cfqueryparam value="#param.value#" cfsqltype="#param.cfsqltype#">
         </cfloop>
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn queryResult>
 </cffunction>
@@ -58,6 +60,7 @@
             WHERE name = <cfqueryparam value="#arguments.status#" cfsqltype="CF_SQL_VARCHAR">
         </cfif>
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <cfreturn result>
 </cffunction>

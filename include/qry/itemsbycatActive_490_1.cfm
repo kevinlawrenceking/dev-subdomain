@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset contactItemService = request.svc("ContactItemService")>
 <cfset itemsbycatActive = contactItemService.SELcontactitems_24673(
     currentid = currentid,

@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page updates the audsubcategories table with new values for subcategory name, category ID, and deletion status. --->
 
 <cfparam name="new_audSubCatName" default="" />

@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset auditionStepService = createObject("component", "services.AuditionStepService")>
 <cfset auditionStepService.UPDaudsteps(
     new_audstep = new_audstep,

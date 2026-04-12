@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page queries the pgfields table to find records based on the provided pgid and a specific updatename. --->
 
 <cfquery name="FindKey">

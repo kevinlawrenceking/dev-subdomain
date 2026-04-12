@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page sets up variables and includes a user query template for processing audit projects. --->
 <cfset dbug = "Y" />
 

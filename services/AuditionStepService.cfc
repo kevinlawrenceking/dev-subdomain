@@ -10,6 +10,7 @@
                 AND stepinfo1 = <cfqueryparam value="#arguments.stepinfo1#" cfsqltype="CF_SQL_VARCHAR">
             </cfif>
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn result>
 </cffunction>
 <cffunction output="false" name="SELaudsteps_23784" access="public" returntype="query">
@@ -20,6 +21,7 @@
             FROM audsteps
             WHERE audstepid = <cfqueryparam value="#arguments.new_audstepid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn result>
 </cffunction>
 <cffunction output="false" name="SELaudsteps_23792" access="public" returntype="query">
@@ -36,6 +38,7 @@
             )
             ORDER BY audstep
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn result />
 </cffunction>
 <cffunction output="false" name="SELaudsteps_24083" access="public" returntype="query">
@@ -52,6 +55,7 @@
             ORDER BY 
                 audstep
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn result>
 </cffunction>
 <cffunction output="false" name="INSaudsteps" access="public" returntype="numeric">
@@ -64,6 +68,7 @@
                 <cfqueryparam cfsqltype="CF_SQL_BIT" value="#arguments.new_isDeleted#" null="#NOT len(trim(arguments.new_isDeleted))#">
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         <cfreturn result.generatedKey>
 </cffunction>
 <cffunction output="false" name="UPDaudsteps" access="public" returntype="void">
@@ -78,5 +83,6 @@
             WHERE 
                 audstepid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_audstepid#">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 </cfcomponent>

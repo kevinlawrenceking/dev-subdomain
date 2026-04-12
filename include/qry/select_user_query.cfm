@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves user data from a specified table and displays it in a formatted table if debugging is enabled. --->
 <cfparam name="new_userid" default="0" />
 

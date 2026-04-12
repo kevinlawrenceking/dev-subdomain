@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page updates the contact details in the database based on the provided contact ID. --->
 
 <cfquery name="updateContact">

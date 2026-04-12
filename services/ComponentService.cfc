@@ -8,6 +8,7 @@
     <cfquery name="fields">
         DESCRIBE <cfqueryparam value="#arguments.comptable#" cfsqltype="cf_sql_varchar">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <!--- Return the query result --->
     <cfreturn fields>
@@ -32,6 +33,7 @@ WHERE c.menuYN = 'Y'
 and   compOwner = 'U' and c.appid <> 3
 ORDER BY c.menuOrder
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 
@@ -54,6 +56,7 @@ WHERE c.menuYN = 'Y'
     and compOwner = 'A'  and c.appid <> 3
 ORDER BY c.menuOrder
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 
@@ -76,6 +79,7 @@ WHERE c.menuYN = 'Y'
     and compOwner = 'A' and c.appid = 3
 ORDER BY c.menuOrder
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 
@@ -104,6 +108,7 @@ ORDER BY c.menuOrder
                 ORDER BY 
                     c.menuOrder
             </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         <cfelse>
 
 </cfif>

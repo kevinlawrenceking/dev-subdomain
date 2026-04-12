@@ -6,6 +6,7 @@
             INSERT INTO exports (userid)
             VALUES (<cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">)
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result.generatedKey>
     </cffunction>
@@ -19,5 +20,6 @@
             SET exportstatus = <cfqueryparam value="#arguments.status#" cfsqltype="CF_SQL_VARCHAR">
             WHERE exportid = <cfqueryparam value="#arguments.exportID#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     </cffunction>
 </cfcomponent>

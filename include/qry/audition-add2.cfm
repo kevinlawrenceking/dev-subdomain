@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfoutput>
   <cfset new_userid=#cookie.userid#/>
 </cfoutput>

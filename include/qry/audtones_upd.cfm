@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page updates the audtones table with new tone information based on provided parameters. --->
 
 <cfparam name="new_tone" default="" />

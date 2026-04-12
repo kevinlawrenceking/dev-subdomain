@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page handles the insertion of data into a specified table based on dynamic fields and types. --->
 <cfquery name="#tname#_ins" result="result">
     INSERT INTO `#tname#` (

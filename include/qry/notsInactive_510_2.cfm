@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset notificationStatusService = createObject("component", "services.NotificationStatusService")>
 <cfset notsInactive = notificationStatusService.SELnotstatuses(
     currentid = currentid,

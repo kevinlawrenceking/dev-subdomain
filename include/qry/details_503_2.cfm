@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This page retrieves contact details based on a specific contact ID --->
 <cfquery name="details">
     <!--- Query to fetch contact details based on contact ID --->

@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfparam name="new_audtypeid" default="" />
 
 <cfparam name="new_audLocation" default="" />

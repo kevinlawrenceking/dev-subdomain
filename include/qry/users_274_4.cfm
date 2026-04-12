@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves the minimum user ID and user names from the taousers table, grouped by user name. --->
 
 <cfquery name="users">

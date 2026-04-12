@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page updates the event start time for events that currently have a NULL start time. --->
 
 <cfquery name="t">

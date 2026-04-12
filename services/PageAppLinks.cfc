@@ -27,6 +27,7 @@
             ORDER BY
                 l.link_no
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn FindLinksT>
     </cffunction>
@@ -50,6 +51,7 @@
               AND l.linktype <> 'css'
             ORDER BY l.link_no
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
     </cffunction>

@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset systemUserService = request.svc("SystemUserService")>
 <cfset oldSystemDetails = systemUserService.getOldSystemDetails(suid=suid)>
 

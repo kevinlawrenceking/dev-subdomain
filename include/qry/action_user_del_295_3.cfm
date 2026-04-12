@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset systemService = createObject("component", "services.SystemService")>
 
 <cfset action_user_del = systemService.SELfusystems_24322(

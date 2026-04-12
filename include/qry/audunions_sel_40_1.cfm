@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset var auditionUnionService = createObject("component", "services.AuditionUnionService")>
 <cfset var audunions_sel = auditionUnionService.SELaudunions(
     new_countryid = new_countryid,

@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset eventService = request.svc("EventService")>
 <cfset eventService.UPDevents_24540(
     new_eventLocation = trim(new_eventLocation),

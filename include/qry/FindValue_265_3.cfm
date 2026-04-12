@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves a specific value from the database based on the provided record ID. --->
 
 <cfquery name="FindValue">

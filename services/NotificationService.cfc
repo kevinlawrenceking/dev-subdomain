@@ -18,6 +18,7 @@
             </cfif>
         WHERE notid = <cfqueryparam value="#arguments.notid#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 
 
@@ -78,6 +79,7 @@
             a.actionNo, a.actionID
         LIMIT <cfqueryparam value="#arguments.maxrow#" cfsqltype="cf_sql_integer">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -104,6 +106,7 @@
             notstartdate IS NOT NULL AND
             isdeleted = 0
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <!--- Determine the final notstartdate value --->
     <cfif checkExistingPending.pendingCount GT 0>
@@ -128,6 +131,7 @@
             <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#arguments.notstatus#">
         )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <!--- Return the generated key for the inserted record --->
     <cfreturn result.generatedKey>
@@ -159,6 +163,7 @@
             <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="Pending">
         )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 
 <cffunction name="removenotdups" access="public" returntype="void" output="false">
@@ -177,6 +182,7 @@
         ORDER BY 
             actionid, userid, suid
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfloop query="findDuplicates">
         <cfquery>
@@ -184,6 +190,7 @@
             SET isdeleted = 1
             WHERE notid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#findDuplicates.new_notid#">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     </cfloop>
 </cffunction>
 
@@ -199,6 +206,7 @@
         </cfif>
         WHERE notid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.notid#">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 
 
@@ -214,6 +222,7 @@
         WHERE 
             notid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.notid#">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 
 <cffunction output="false" name="UPDfunotifications_24130" access="public" returntype="void">
@@ -223,6 +232,7 @@
         WHERE isdeleted = 0 
         AND suid NOT IN (SELECT suid FROM fusystemusers)
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 
 <cffunction output="false" name="UPDfunotifications_23823" access="public" returntype="void">
@@ -237,6 +247,7 @@
         WHERE 
             notid = <cfqueryparam value="#arguments.notid#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 
 
@@ -252,6 +263,7 @@
         WHERE 
             notid = <cfqueryparam value="#arguments.notid#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 
 <cffunction name="GetNotificationByID" access="public" output="false" returntype="query">
@@ -286,6 +298,7 @@
             n.notID = <cfqueryparam value="#arguments.notid#" cfsqltype="CF_SQL_INTEGER">
             AND n.isdeleted = 0
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 
@@ -309,6 +322,7 @@
                 <cfqueryparam value="#arguments.sunotes#" cfsqltype="CF_SQL_VARCHAR">
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result.generatedKey>
     </cffunction>
@@ -330,6 +344,7 @@
                 <cfqueryparam value="#arguments.sunotes#" cfsqltype="CF_SQL_VARCHAR">
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result.generatedKey>
     </cffunction>
@@ -353,6 +368,7 @@
                 <cfqueryparam value="Pending" cfsqltype="CF_SQL_VARCHAR">
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result.generatedKey>
     </cffunction>
@@ -365,6 +381,7 @@
         SET isdeleted = 1
         WHERE suid = <cfqueryparam value="#arguments.suid#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 
 <cffunction  output="false" name="delSystemNotifications" access="public" returntype="void" hint="Marks orphaned notifications as deleted.">
@@ -376,6 +393,7 @@
           AND userID = <cfqueryparam value="#arguments.userid#" cfsqltype="cf_sql_integer">
         AND suid NOT IN (SELECT suid FROM fusystemusers)
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 
 <cffunction output="false" name="SELfunotifications_24711" access="public" returntype="query">
@@ -391,6 +409,7 @@
             WHERE f.contactID = <cfqueryparam value="#arguments.currentid#" cfsqltype="cf_sql_integer">
               AND n.isdeleted = 0
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn notsall>
     </cffunction>
@@ -456,6 +475,7 @@
             </cfif>
             ORDER BY FIELD(n.notStatus, 'Pending', 'Completed', 'Skipped'), n.notEndDate
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn notsActive>
     </cffunction>
@@ -519,6 +539,7 @@
               AND n.isdeleted = 0
             ORDER BY n.notEndDate,n.notStartDate, n.notid
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn notsActive>
     </cffunction>
@@ -558,6 +579,7 @@ WHERE
 ORDER BY
     n.notstartdate;
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -586,6 +608,7 @@ ORDER BY
             <cfqueryparam value=0 cfsqltype="CF_SQL_BIT">
         )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
        <cfreturn result.generatedKey>
 </cffunction>
 <cffunction output="false" name="INSnotifications_23830" access="public" returntype="numeric">
@@ -611,6 +634,7 @@ ORDER BY
             <cfqueryparam value="0" cfsqltype="CF_SQL_BIT">
         )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
            <cfreturn result.generatedKey>
  </cffunction>
 
@@ -641,6 +665,7 @@ ORDER BY
             <cfqueryparam value="#arguments.sunotes#" cfsqltype="CF_SQL_LONGVARCHAR">
         )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
            <cfreturn result.generatedKey>
 </cffunction>
 <cffunction output="false" name="UPDnotifications" access="public" returntype="void">
@@ -651,6 +676,7 @@ ORDER BY
         SET `read` = 1 
         WHERE id = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.notificationId#">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 
 <cffunction output="false" name="UPDnotifications_24009" access="public" returntype="void">
@@ -662,6 +688,7 @@ ORDER BY
             WHERE userid = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.userid#"> 
             AND trash = 0
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 
@@ -687,6 +714,7 @@ ORDER BY
             AND n.notstatus = 'Pending'
             AND n.isdeleted = 0
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfset remindersTotal = reminders.reminderstotal>
 
@@ -713,6 +741,7 @@ ORDER BY
                 AND n.`read` = 0 
                 AND n.trash = 0
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -737,6 +766,7 @@ ORDER BY
             AND n.notstatus = <cfqueryparam value="Pending" cfsqltype="CF_SQL_VARCHAR">
             AND n.isdeleted = 0
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -766,6 +796,7 @@ ORDER BY
             ORDER BY 
                 n.notiftimestamp DESC
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -778,6 +809,7 @@ ORDER BY
             WHERE n.notid IN (<cfqueryparam value="#arguments.batchlist#" cfsqltype="CF_SQL_INTEGER" list="true">)
               AND n.isdeleted = 0
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn qNotifications>
     </cffunction>
@@ -820,6 +852,7 @@ ORDER BY
             n.notID IN (<cfqueryparam value="#arguments.notids#" cfsqltype="CF_SQL_INTEGER" list="true">)
             AND n.isdeleted = 0
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <cfreturn result>
 
@@ -892,6 +925,7 @@ ORDER BY
             </cfif>
             ORDER BY FIELD(n.notStatus, 'Pending', 'Completed', 'Skipped'), n.notEndDate
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn notsActive>
     </cffunction>

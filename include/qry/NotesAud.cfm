@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves notes and contact details based on project and note IDs. --->
 
 <cfparam name="audprojectid" default="0" />

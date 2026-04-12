@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset panelUserService = createObject("component", "services.PanelUserService")>
 <cfset panelUserService.INSpgpanels_user_24436(
     select_userid = select_userid,

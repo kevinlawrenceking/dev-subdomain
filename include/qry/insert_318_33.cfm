@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset itemTypesUserService = createObject("component", "services.ItemTypesUserService")>
 <cfset itemTypesUserService.INSitemtypes_user_24464(
     valuetype = x.valuetype,

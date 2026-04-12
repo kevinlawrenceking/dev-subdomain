@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset userService = createObject("component", "services.userService")>
 
 <!--- Example of variables for the function call --->

@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves a user's ID from the maintenance list based on the contact ID and user ID provided. --->
 
 <cfquery name="checkformaint" maxrows="1">

@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 
 <!---<CFINCLUDE template="/include/projdate_fix_user.cfm" /> --->
 

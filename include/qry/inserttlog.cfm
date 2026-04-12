@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page logs ticket details into the ticketslog_tbl database table. --->
 
 <cfoutput>

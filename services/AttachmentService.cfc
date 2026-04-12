@@ -15,6 +15,7 @@
                 <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.noteid#" />
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
          <cfreturn result.generatedKey>
     </cffunction>
 
@@ -27,6 +28,7 @@ FROM attachments a
     INNER JOIN noteslog n on n.noteid = a.noteid
 WHERE attachid = <cfqueryparam value="#arguments.attachid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 <cfreturn result>
     </cffunction>
 
@@ -38,6 +40,7 @@ WHERE attachid = <cfqueryparam value="#arguments.attachid#" cfsqltype="CF_SQL_IN
             SET isdeleted = 1
             WHERE attachid = <cfqueryparam value="#arguments.attachid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     </cffunction>
 
 <cffunction output="false" name="SELattachments" access="public" returntype="query">
@@ -48,6 +51,7 @@ WHERE attachid = <cfqueryparam value="#arguments.attachid#" cfsqltype="CF_SQL_IN
             FROM attachments
             WHERE noteid = <cfqueryparam value="#arguments.new_noteid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
     </cffunction>

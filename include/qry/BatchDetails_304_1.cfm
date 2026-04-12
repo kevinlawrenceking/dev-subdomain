@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset contactService = request.svc("ContactService")>
 <cfset BatchDetails = contactService.DETcontactdetails_24340(idList=idlist)>
 

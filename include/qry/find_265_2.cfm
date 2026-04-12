@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves a record name from the rpg_compTable based on a given record ID. --->
 
 <cfquery name="find">

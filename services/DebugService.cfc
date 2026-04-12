@@ -13,6 +13,7 @@
             <cfqueryparam value="#Now()#" cfsqltype="CF_SQL_TIMESTAMP">
         )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 
 

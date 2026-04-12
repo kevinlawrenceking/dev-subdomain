@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves ticket details based on user input and displays associated information. --->
 
 <cfset sel_search = "">

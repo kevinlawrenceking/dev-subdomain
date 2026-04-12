@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 
 <cfset audDialectsService = createObject("component", "services.AuditionDialectsUserService")>
 <cfif isNumeric(projectDetails.audcatid) and val(projectDetails.audcatid) gt 0>

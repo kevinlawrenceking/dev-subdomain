@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset siteLinkUserService = createObject("component", "services.SiteLinkUserService")>
 
 <cfset id = siteLinkUserService.INSsitelinks_user(

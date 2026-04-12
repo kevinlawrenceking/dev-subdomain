@@ -70,6 +70,7 @@
         GROUP BY r.audroleid, p.projname, s.audsource, rt.audroletype, r.iscallback, r.isredirect, r.ispin, r.isbooked
         ORDER BY p.projdate DESC
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <!--- Return the query result --->
     <cfreturn queryResult>
@@ -86,6 +87,7 @@
         WHERE g.audgenre = <cfqueryparam value="#arguments.audgenre#" cfsqltype="CF_SQL_VARCHAR">
         AND x.audroleid = <cfqueryparam value="#arguments.audroleid#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -97,6 +99,7 @@
         DELETE FROM audgenres_audition_xref
         WHERE audroleid = <cfqueryparam value="#arguments.new_audroleid#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 
 <cffunction output="false" name="INSaudgenres_audition_xref" access="public" returntype="numeric">
@@ -110,6 +113,7 @@
             <cfqueryparam value="#arguments.new_audroleid#" cfsqltype="CF_SQL_INTEGER">
         )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn result.generatedKey>
 </cffunction>
 
@@ -123,6 +127,7 @@
                 <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_audgenreID#" null="#NOT len(trim(arguments.new_audgenreID))#">
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         <cfreturn result.generatedKey>
 </cffunction>
 <cffunction output="false" name="UPDaudgenres_audition_xref" access="public" returntype="void">
@@ -137,6 +142,7 @@
                 audgenreID = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_audgenreID#" null="#NOT len(trim(arguments.new_audgenreID))#"> 
             WHERE someColumn = <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#arguments.conditionValue#">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 </cfcomponent>

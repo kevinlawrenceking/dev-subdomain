@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves the audplatformid for a specific user and platform from the database. --->
 
 <cfquery name="FIND" maxrows="1">

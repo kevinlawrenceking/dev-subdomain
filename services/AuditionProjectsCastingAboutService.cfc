@@ -35,6 +35,7 @@
             <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#arguments.new_audnetwork#" maxlength="500">
         )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn result.generatedKey>
 </cffunction>
 
@@ -72,5 +73,6 @@
             audnetwork = <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#arguments.new_audnetwork#" maxlength="500">
         WHERE ID = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_ID#">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 </cfcomponent>

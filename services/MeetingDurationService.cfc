@@ -7,6 +7,7 @@ ad<cfcomponent displayname="MeetingDurationService" hint="Handles operations for
         FROM mtgdurations
         WHERE durhours = <cfqueryparam value="#DecimalFormat(arguments.new_durhours)#" cfsqltype="CF_SQL_DOUBLE">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <cfreturn result>
 </cffunction>
@@ -20,6 +21,7 @@ ad<cfcomponent displayname="MeetingDurationService" hint="Handles operations for
         FROM mtgdurations
         WHERE durhours = <cfqueryparam value="#DecimalFormat(arguments.new_durhours)#" cfsqltype="CF_SQL_DOUBLE">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -34,6 +36,7 @@ ad<cfcomponent displayname="MeetingDurationService" hint="Handles operations for
     FROM mtgdurations
     WHERE durid = <cfqueryparam value="#arguments.new_durid#" cfsqltype="CF_SQL_INTEGER">
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 
 <cfreturn result>
@@ -68,6 +71,7 @@ ad<cfcomponent displayname="MeetingDurationService" hint="Handles operations for
             <cfqueryparam value="#param.value#" cfsqltype="#param.cfsqltype#">
         </cfloop>
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn queryResult>
 </cffunction>
@@ -78,6 +82,7 @@ ad<cfcomponent displayname="MeetingDurationService" hint="Handles operations for
         FROM mtgdurations 
         ORDER BY durid
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn durationsQuery>
 </cffunction>
 

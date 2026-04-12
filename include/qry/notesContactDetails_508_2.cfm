@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This page retrieves the details of a specific note from the noteslog table along with the contact's full name. --->
 
 <cfquery name="notesContactDetails" maxrows="1">

@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page sets parameters for database queries related to audience platforms. --->
 <cfparam name="dbug" default="N" />
 

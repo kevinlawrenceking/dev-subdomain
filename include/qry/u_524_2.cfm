@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves user information from the taousers table based on the provided userid. --->
 
 <cfquery name="u">

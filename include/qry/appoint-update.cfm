@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
  
 
 <cfinclude template="/include/qry/relationships_335_1.cfm" />

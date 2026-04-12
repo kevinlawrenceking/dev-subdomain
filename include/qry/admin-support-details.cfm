@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page fetches ticket details and ticket log information based on a given record ID. --->
 <cfset ticketService = request.svc("TicketService")>
 

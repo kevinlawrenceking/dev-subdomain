@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset userService = request.svc("UserService")>
 <cfset userService.UPDtaousers_23950(
     new_nletter_link = new_nletter_link,

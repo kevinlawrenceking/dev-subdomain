@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page handles the insertion of new audio tones into the database. --->
 
 <cfparam name="new_tone" default="" />

@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page inserts a new item type for a specific user into the itemtypes_user table. --->
 
 <cfquery name="insert" result="typeresult">

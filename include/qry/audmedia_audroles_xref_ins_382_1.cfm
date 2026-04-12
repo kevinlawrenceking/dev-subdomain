@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset service = createObject("component", "services.AuditionMediaAudRolesXRefService")>
 <cfset service.UPDaudmedia_audroles_xref(
     new_mediaid = new_mediaid,

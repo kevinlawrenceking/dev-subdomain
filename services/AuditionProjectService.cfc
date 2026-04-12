@@ -36,6 +36,7 @@
                 AND x.contactid = <cfqueryparam value="#arguments.contactid#" cfsqltype="CF_SQL_INTEGER">
          
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
         <!--- Return Query Result --->
         <cfreturn result>
@@ -102,6 +103,7 @@
 
     WHERE audprojectID = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_audprojectID#">
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <!--- Update audroles table with role-level booking fields (revised: remove invalid dynamic cfqueryparam usage) --->
 <cfquery>
@@ -137,6 +139,7 @@
         </cfif>
     WHERE audprojectID = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_audprojectID#">
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 
@@ -193,6 +196,7 @@
             WHERE ad.eventid = <cfqueryparam value="#arguments.eventId#" cfsqltype="CF_SQL_INTEGER">
          
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -215,6 +219,7 @@
                 c.contactfullname
          
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -231,6 +236,7 @@
             ORDER BY i.valueCompany
          
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -262,6 +268,7 @@
             WHERE a.audprojectid = <cfqueryparam value="#arguments.audprojectid#" cfsqltype="CF_SQL_INTEGER">
          
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 
@@ -276,6 +283,7 @@
             WHERE audprojectID = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_audprojectID#">
          
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 <cffunction output="false" name="SELaudprojects_23961" access="public" returntype="query">
@@ -289,6 +297,7 @@
             AND x.mediaid = <cfqueryparam value="#arguments.mediaid#" cfsqltype="CF_SQL_INTEGER">
          
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -311,6 +320,7 @@
         )
      
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 
 <cffunction output="false" name="UPDaudprojects_24013" access="public" returntype="void">
@@ -323,6 +333,7 @@
             WHERE audprojectid = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.audprojectID#"/>
          
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 <cffunction output="false" name="UPDaudprojects_24015" access="public" returntype="void">
@@ -335,6 +346,7 @@
             WHERE audprojectid = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.audprojectID#"/>
          
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 <cffunction output="false" name="SELaudprojects_24016" access="public" returntype="query">
@@ -352,6 +364,7 @@
                 AND p.userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
          
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -365,6 +378,7 @@
             WHERE audprojectid = <cfqueryparam value="#arguments.audprojectID#" cfsqltype="cf_sql_integer"/>
          
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 <cffunction output="false" name="UPDaudprojects_24019" access="public" returntype="void">
@@ -377,6 +391,7 @@
             WHERE STR_TO_DATE(i.projdate, '%Y-%m-%d') IS NOT NULL
          
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 <cffunction output="false" name="SELaudprojects_24062" access="public" returntype="query">
@@ -394,6 +409,7 @@
             AND p.isdeleted = 0
          
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -406,6 +422,7 @@
             WHERE audprojectid = <cfqueryparam value="#arguments.audprojectid#" cfsqltype="CF_SQL_INTEGER">
          
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -442,6 +459,7 @@
             WHERE proj.audprojectID = <cfqueryparam value="#arguments.audprojectID#" cfsqltype="CF_SQL_INTEGER">
          
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -506,6 +524,7 @@
             WHERE ad.eventid = <cfqueryparam value="#arguments.eventid#" cfsqltype="CF_SQL_INTEGER">
          
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -564,6 +583,7 @@
             WHERE ad.eventid = <cfqueryparam value="#arguments.new_eventid#" cfsqltype="CF_SQL_INTEGER">
          
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -599,6 +619,7 @@
             WHERE proj.audprojectID = <cfqueryparam value="#arguments.audprojectID#" cfsqltype="CF_SQL_INTEGER">
          
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 
@@ -612,6 +633,7 @@
             WHERE audprojectid = <cfqueryparam value="#arguments.audprojectid#" cfsqltype="CF_SQL_INTEGER">
          
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 <cffunction output="false" name="SELaudprojects_24230" access="public" returntype="query">
@@ -633,6 +655,7 @@
               AND p.projdate <= <cfqueryparam cfsqltype="cf_sql_date" value="#arguments.new_rangeend#" />
          
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 
@@ -660,6 +683,7 @@
                 AND p.projdate <= <cfqueryparam value="#arguments.rangeend#" cfsqltype="cf_sql_date">
          
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 
@@ -689,6 +713,7 @@
                 AND p.projdate <= <cfqueryparam value="#arguments.rangeend#" cfsqltype="cf_sql_date">
          
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 = #arguments.rangestart# AND p.projdate <= #arguments.rangeend#">
 
@@ -716,6 +741,7 @@
                 AND p.projdate <= <cfqueryparam value="#arguments.rangeend#" cfsqltype="CF_SQL_DATE">
          
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -742,6 +768,7 @@
                 AND p.projdate <= <cfqueryparam value="#arguments.rangeend#" cfsqltype="CF_SQL_DATE">
          
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 = #arguments.rangestart# AND p.projdate <= #arguments.rangeend#">
 
@@ -777,6 +804,7 @@
                 c.audcatname
          
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -810,6 +838,7 @@
                 e.essencename
          
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -841,6 +870,7 @@
                 label
          
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -876,6 +906,7 @@
                 label
          
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -908,6 +939,7 @@
             ORDER BY label
          
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -942,6 +974,7 @@
                 label
          
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -975,6 +1008,7 @@
             label
      
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -1022,6 +1056,7 @@ SELECT count(p.audprojectid) as totals, 'Union' as label, 'Auditions' as itemDat
 ORDER BY label
          
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         <cfreturn result>
 
 </cffunction>
@@ -1057,6 +1092,7 @@ ORDER BY label
                 a.rangename
          
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 
@@ -1095,6 +1131,7 @@ ORDER BY label
                 g.audgenre
          
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 
@@ -1110,6 +1147,7 @@ ORDER BY label
             AND isdeleted = <cfqueryparam value="0" cfsqltype="CF_SQL_BIT">
          
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -1145,6 +1183,7 @@ ORDER BY label
             )
          
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 <cfreturn result.generatedKey>
 </cffunction>
 <cffunction output="false" name="SELaudprojects_24500" access="public" returntype="query">
@@ -1179,6 +1218,7 @@ ORDER BY label
             WHERE ad.eventid = <cfqueryparam value="#arguments.eventid#" cfsqltype="CF_SQL_INTEGER">
          
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -1221,6 +1261,7 @@ ORDER BY label
             AND proj.isDeleted = 0
          
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -1241,6 +1282,7 @@ ORDER BY label
                 AND p.audprojectID = <cfqueryparam value="#arguments.audprojectID#" cfsqltype="cf_sql_integer">
          
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -1276,6 +1318,7 @@ ORDER BY label
             WHERE ad.eventid = <cfqueryparam value="#arguments.eventid#" cfsqltype="CF_SQL_INTEGER">
          
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -1316,6 +1359,7 @@ ORDER BY label
             WHERE a.audprojectid = <cfqueryparam value="#arguments.audprojectid#" cfsqltype="CF_SQL_INTEGER">
          
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 
@@ -1333,6 +1377,7 @@ ORDER BY label
             AND i.valueCompany = <cfqueryparam value="#arguments.sel_coname#" cfsqltype="CF_SQL_VARCHAR">
          
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -1466,6 +1511,7 @@ GROUP BY r.audroleid, p.projname, s.audsource, rt.audroletype, r.iscallback, r.i
 ORDER BY p.projdate DESC
          
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <!--- Return the query result --->
         <cfreturn result>
@@ -1519,6 +1565,7 @@ ORDER BY p.projdate DESC
             <cfif structKeyExists(arguments, "new_contactid") AND arguments.new_contactid NEQ 0>, <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_contactid#"></cfif>
         )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <!--- Return the generated key --->
     <cfreturn result.generatedKey>
@@ -1563,6 +1610,7 @@ ORDER BY p.projdate DESC
                 proj.audprojectID = <cfqueryparam value="#arguments.audprojectID#" cfsqltype="CF_SQL_INTEGER">
          
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 

@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves contact details for a specified contact ID --->
 <cfquery name="details">
     <!--- Retrieve contact details for the specified contact ID --->

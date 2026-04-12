@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves the latest version ID from the taoversions table. --->
 
 <cfquery name="find">

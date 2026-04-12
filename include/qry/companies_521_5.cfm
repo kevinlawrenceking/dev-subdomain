@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves distinct company values associated with a specific user from the database. --->
 
 <cfquery name="companies">

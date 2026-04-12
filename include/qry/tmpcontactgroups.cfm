@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves contact details based on a provided list of contact IDs. --->
 
 <cfparam name="idlist" default="0" />

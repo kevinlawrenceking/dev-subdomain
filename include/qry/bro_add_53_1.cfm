@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset bigBrotherService = createObject("component", "services.BigBrotherService")>
 <cfset bigBrotherService.INSbigbrother(
     pgid = cookie.pgid,

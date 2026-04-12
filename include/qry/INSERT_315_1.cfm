@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page handles the insertion of user uploads into the database. --->
 
 <cfquery name="INSERT" result="result">

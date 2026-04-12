@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page handles the insertion of contact details into the database. --->
 
 <cfset contactService = request.svc("ContactService")>

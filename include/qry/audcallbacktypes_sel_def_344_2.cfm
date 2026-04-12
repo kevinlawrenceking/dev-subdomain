@@ -1,2 +1,3 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset auditionCallbackTypeService = createObject("component", "services.AuditionCallbackTypeService")>
 <cfset audcallbacktypes_sel_def = auditionCallbackTypeService.SELaudcallbacktypes_24509(audcatid=audcatid)>

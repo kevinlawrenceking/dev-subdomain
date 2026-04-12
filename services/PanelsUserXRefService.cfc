@@ -6,6 +6,7 @@
             DELETE FROM pgpanels_user_xref 
             WHERE userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     </cffunction>
 
 <cffunction output="false" name="INSpgpanels_user_xref" access="public" returntype="numeric">
@@ -19,5 +20,6 @@
                 <cfqueryparam value="#arguments.newuserid#" cfsqltype="CF_SQL_INTEGER">
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     </cffunction>
 </cfcomponent>

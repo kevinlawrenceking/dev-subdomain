@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset updateLogService = createObject("component", "services.UpdateLogService")>
 <cfset updateLogService.INSupdatelog(
     oldvalue = "#oldvalue#",

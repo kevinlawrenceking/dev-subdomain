@@ -14,6 +14,7 @@
                 <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         <cfreturn result.generatedKey>
     </cffunction>
 </cfcomponent>

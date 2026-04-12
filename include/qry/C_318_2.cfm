@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset contactService = request.svc("ContactService")>
 <cfset C = contactService.SELcontactdetails_24433(
     userId = users.userid,

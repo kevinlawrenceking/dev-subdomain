@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page fetches ticket details, statuses, types, priorities, active pages, users, and versions from various services. --->
 
 <!--- Fetch ticket details using the Ticket_det function --->

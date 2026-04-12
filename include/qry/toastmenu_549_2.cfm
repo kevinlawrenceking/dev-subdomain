@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves notifications for the user, including read and trashed ones, ordered by timestamp --->
 
 <cfquery name="toastmenu">

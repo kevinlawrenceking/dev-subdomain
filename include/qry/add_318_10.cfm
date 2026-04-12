@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset objPanelUserService = createObject("component", "services.PanelUserService")>
 <cfset objPanelUserService.INSpgpanels_user_24441(
     new_pnTitle = new_pnTitle,

@@ -23,6 +23,7 @@
             <cfqueryparam value="#arguments.updatedetails#" cfsqltype="CF_SQL_VARCHAR">
         )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn result.generatedKey>
 </cffunction>
 <cffunction output="false" name="RESupdatelog" access="public" returntype="query">
@@ -57,6 +58,7 @@
         WHERE u.userid = <cfqueryparam value="#arguments.userId#" cfsqltype="CF_SQL_INTEGER">
         ORDER BY u.updateid DESC
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>

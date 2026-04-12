@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page updates the eventstop field in the events table where eventstop is NULL and eventstart is not NULL. --->
 
 <cfquery name="dd">

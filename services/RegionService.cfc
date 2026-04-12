@@ -13,6 +13,7 @@
             ORDER BY
                 regionname
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         <cfreturn regions>
     </cffunction>
 
@@ -24,6 +25,7 @@
             FROM regions 
             WHERE region_id = <cfqueryparam value="#arguments.region_id#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         <cfreturn result>
     </cffunction>
 
@@ -35,6 +37,7 @@
             FROM regions 
             WHERE regionname = <cfqueryparam value="#arguments.valueregion#" cfsqltype="CF_SQL_VARCHAR">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         <cfreturn result>
     </cffunction>
 
@@ -48,6 +51,7 @@
             WHERE region_id = <cfqueryparam value="#arguments.region_id#" cfsqltype="CF_SQL_INTEGER"> 
             AND countryid = <cfqueryparam value="#arguments.old_countryid#" cfsqltype="CF_SQL_VARCHAR">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         <cfreturn result>
     </cffunction>
 
@@ -76,6 +80,7 @@
                 <cfqueryparam value="#param.value#" cfsqltype="#param.cfsqltype#">
             </cfloop>
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         <cfreturn queryResult>
     </cffunction>
 
@@ -87,6 +92,7 @@
             FROM regions
             WHERE regionname = <cfqueryparam value="#arguments.regionName#" cfsqltype="CF_SQL_VARCHAR">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         <cfreturn result>
     </cffunction>
 

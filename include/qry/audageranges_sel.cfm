@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page sets up variables for database queries and includes a select query template. --->
 <cfset dbug = "Y" />
 

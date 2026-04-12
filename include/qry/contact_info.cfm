@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves contact details, referral details, active contacts, and user pronouns. It redirects if no contact details are found. --->
 
 

@@ -53,6 +53,7 @@
                 </cfloop>
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         
         <cfcatch type="any">
             <cflog file="contactService" text="Error in create(): #cfcatch.message#">
@@ -73,6 +74,7 @@
             FROM contactdetails
             WHERE contactid = <cfqueryparam value="#arguments.contactid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         
         <cfcatch type="any">
             <cflog file="contactService" text="Error in read(): #cfcatch.message#">
@@ -116,6 +118,7 @@
                 </cfloop>
             WHERE contactid = <cfqueryparam value="#arguments.contactid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         
         <cfcatch type="any">
             <cflog file="contactService" text="Error in update(): #cfcatch.message#">
@@ -162,6 +165,7 @@
                 <cfqueryparam value="#param.value#" cfsqltype="#param.cfsqltype#">
             </cfloop>
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         
         <cfcatch type="any">
             <cflog file="contactService" text="Error in list(): #cfcatch.message#">
@@ -186,6 +190,7 @@
                     = <cfqueryparam value="#arguments.contactid#" cfsqltype="CF_SQL_INTEGER">
                 </cfif>
             </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         <cfelse>
             <cfquery>
                 UPDATE contactdetails
@@ -196,6 +201,7 @@
                     = <cfqueryparam value="#arguments.contactid#" cfsqltype="CF_SQL_INTEGER">
                 </cfif>
             </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         </cfif>
         
         <cfcatch type="any">

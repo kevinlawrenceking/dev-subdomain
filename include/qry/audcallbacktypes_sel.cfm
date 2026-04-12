@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset dbug="n" />
 
 <cfinclude template="/include/qry/audcallbacktypes_sel_344_1.cfm" />

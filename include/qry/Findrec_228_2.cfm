@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves a record name from a specified table based on a given key and record ID. --->
 
 <cfquery name="Findrec">

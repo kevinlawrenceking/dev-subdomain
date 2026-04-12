@@ -11,6 +11,7 @@ FROM audquestions_user
 
 WHERE userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn result>
 </cffunction>
 
@@ -22,6 +23,7 @@ WHERE userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGE
 FROM audquestions_user
         WHERE userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn result>
 </cffunction>
 
@@ -53,6 +55,7 @@ FROM audquestions_user
         ORDER BY 
             q.qorder
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn result>
 </cffunction>
 
@@ -72,6 +75,7 @@ FROM audquestions_user
             <cfqueryparam cfsqltype="CF_SQL_BIT" value="#arguments.new_isDeleted#" null="#NOT len(trim(arguments.new_isDeleted))#">
         )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn result.generatedKey>
 </cffunction>
 
@@ -93,6 +97,7 @@ FROM audquestions_user
         WHERE 
             qID = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.new_qID#" />
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 
 </cfcomponent>

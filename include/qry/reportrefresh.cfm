@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset ReportsRefreshService = createObject("component", "services.ReportsRefreshService")>
 <cfparam name="new_audcatid" default="1">
 <cfparam name="new_audsourceid" default="0">

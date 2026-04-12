@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset contactItemService = createObject("component", "services.contactItemService")>
 
 <!--- Call the function and pass necessary arguments --->

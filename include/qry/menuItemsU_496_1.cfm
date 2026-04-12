@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset componentService = createObject("component", "services.ComponentService")>
 <cfset menuItemsAU = componentService.SELpgcomps(
     menuYN="Y",

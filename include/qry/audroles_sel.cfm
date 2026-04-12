@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page sets up variables for querying user roles and includes a user query template. --->
 <cfset dbug = "Y" />
 

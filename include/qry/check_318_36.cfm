@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset itemCategoryXRefUserService = createObject("component", "services.ItemCategoryXRefUserService")>
 <cfset check = itemCategoryXRefUserService.SELitemcatxref_user(
     select_userid = select_userid,

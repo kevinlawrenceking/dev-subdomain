@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset reportItemService = createObject("component", "services.ReportItemService")>
 <cfset new_itemid = reportItemService.INSreportitems_24233(
     newLabel = report_4_loop.new_label,

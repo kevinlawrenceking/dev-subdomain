@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page initializes parameters and includes a query for audplatforms --->
 <cfparam name="new_audplatform" default="" />
 <cfparam name="new_isDeleted" default="0" />

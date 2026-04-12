@@ -40,6 +40,7 @@
             ORDER BY 
                 g.audgenre
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <!--- Update summary with total selected --->
         <cfset resultSummary.totalSelected = report_2.recordcount>
@@ -53,6 +54,7 @@
                     r.userid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#">
                     AND r.reportid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#new_reportid#">
             </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfset new_id = 0>
             <cfif findid.recordcount EQ 1>
@@ -87,6 +89,7 @@
                     <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#">
                 )
             </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <!--- Increment insert counter --->
             <cfset insertCount = insertCount + 1>
@@ -131,6 +134,7 @@
             GROUP BY c.audcatname
             ORDER BY c.audcatname
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 
 <!--- Update summary with total selected --->
@@ -145,6 +149,7 @@
                     r.userid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#">
                     AND r.reportid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#new_reportid#">
             </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfset var new_id = 0>
             <cfif findid.recordcount EQ 1>
@@ -179,6 +184,7 @@
                     <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#">
                 )
             </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <!--- Track insertions --->
             <cfset totalInserted++>
@@ -217,6 +223,7 @@
             WHERE audstepid IN (1, 2)
             ORDER BY audtypes.audtype, audsteps.audstep
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <!--- Update total selected --->
         <cfset resultSummary.totalSelected = report_4_loop.recordCount>
@@ -228,6 +235,7 @@
                     r.userid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#">
                     AND r.reportid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#new_reportid#">
             </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfset var new_id = 0>
             <cfif findid.recordcount EQ 1>
@@ -256,6 +264,7 @@
                     <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#">
                 )
             </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
  <cfset new_itemid=insertResult.GENERATEDKEY />
             <!--- Track inserted records --->
             <cfset totalInserted++>
@@ -276,6 +285,7 @@
     AND p.projdate <= <cfqueryparam cfsqltype="cf_sql_date" value="#arguments.rangeend#" />
 AND p.userid=<cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#"> 
 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfif #findit.recordcount# is "0">
 
@@ -297,6 +307,7 @@ AND p.userid=<cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#"
                         where itemid =
                         <cfqueryparam cfsqltype="cf_sql_integer" value="#new_itemid#" />
                     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cfloop>
 
@@ -338,6 +349,7 @@ AND p.userid=<cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#"
             GROUP BY e.essencename
             ORDER BY e.essencename
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <!--- Update summary with total selected --->
         <cfset resultSummary.totalSelected = report_5.recordCount>
@@ -351,6 +363,7 @@ AND p.userid=<cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#"
                     r.userid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#">
                     AND r.reportid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#new_reportid#">
             </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfset var new_id = 0>
             <cfif findid.recordcount EQ 1>
@@ -385,6 +398,7 @@ AND p.userid=<cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#"
                     <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#">
                 )
             </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <!--- Track insertions --->
             <cfset totalInserted++>
@@ -450,6 +464,7 @@ AND p.userid=<cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#"
             GROUP BY label
             ORDER BY label
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <!--- Update summary with total selected --->
         <cfset resultSummary.totalSelected = report_6.recordcount>
@@ -463,6 +478,7 @@ AND p.userid=<cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#"
                     r.userid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#">
                     AND r.reportid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#new_reportid#">
             </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfset new_id = 0>
             <cfif findid.recordcount EQ 1>
@@ -497,6 +513,7 @@ AND p.userid=<cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#"
                     <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#">
                 )
             </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <!--- Increment insert counter --->
             <cfset insertCount = insertCount + 1>
@@ -548,6 +565,7 @@ AND p.userid=<cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#"
             ORDER BY
                 rt.audroletype
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <!--- Update summary with total selected --->
         <cfset resultSummary.totalSelected = report_7.recordCount>
@@ -561,6 +579,7 @@ AND p.userid=<cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#"
                     r.userid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#">
                     AND r.reportid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#new_reportid#">
             </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfset var new_id = 0>
             <cfif findid.recordcount EQ 1>
@@ -595,6 +614,7 @@ AND p.userid=<cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#"
                     <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#">
                 )
             </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <!--- Track insertions --->
             <cfset totalInserted++>
@@ -646,6 +666,7 @@ AND p.userid=<cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#"
             ORDER BY 
                 m.medianame
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <!--- Update summary with total selected --->
         <cfset resultSummary.totalSelected = report_8.recordCount>
@@ -659,6 +680,7 @@ AND p.userid=<cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#"
                     r.userid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#">
                     AND r.reportid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#new_reportid#">
             </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfset var new_id = 0>
             <cfif findid.recordcount EQ 1>
@@ -693,6 +715,7 @@ AND p.userid=<cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#"
                     <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#">
                 )
             </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <!--- Track insertions --->
             <cfset totalInserted++>
@@ -741,6 +764,7 @@ AND p.userid=<cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#"
             ORDER BY 
                 a.rangename
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <!--- Update summary with total selected --->
         <cfset resultSummary.totalSelected = report_9.recordcount>
@@ -754,6 +778,7 @@ AND p.userid=<cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#"
                     r.userid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#">
                     AND r.reportid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#new_reportid#">
             </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfset new_id = 0>
             <cfif findid.recordcount EQ 1>
@@ -788,6 +813,7 @@ AND p.userid=<cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#"
                     <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#">
                 )
             </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <!--- Increment insert counter --->
             <cfset insertCount = insertCount + 1>
@@ -827,6 +853,7 @@ AND p.userid=<cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#"
                 AND p.projdate >= <cfqueryparam cfsqltype="cf_sql_date" value="#arguments.new_rangestart#">
                 AND p.projdate <= <cfqueryparam cfsqltype="cf_sql_date" value="#arguments.new_rangeend#">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <!--- Update total selected --->
         <cfset totalSelected = reportQuery.recordCount>
@@ -840,6 +867,7 @@ AND p.userid=<cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#"
                     r.userid = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.userid#">
                     AND r.reportid = <cfqueryparam cfsqltype="cf_sql_integer" value="#new_reportid#">
             </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfset var new_id = 0>
             <cfif findIdQuery.recordCount EQ 1>
@@ -874,6 +902,7 @@ AND p.userid=<cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#"
                     <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.userid#">
                 )
             </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <!--- Update total inserted --->
             <cfset totalInserted++>
@@ -917,6 +946,7 @@ AND p.userid=<cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#"
                 AND p.projdate >= <cfqueryparam cfsqltype="CF_SQL_DATE" value="#arguments.rangestart#">
                 AND p.projdate <= <cfqueryparam cfsqltype="CF_SQL_DATE" value="#arguments.rangeend#">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <!--- Update totalSelected in the summary --->
         <cfset resultSummary.totalSelected = report_11.recordCount>
@@ -930,6 +960,7 @@ AND p.userid=<cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#"
                     r.userid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#">
                     AND r.reportid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#new_reportid#">
             </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfset var new_id = 0>
             <cfif findid.recordcount EQ 1>
@@ -961,6 +992,7 @@ AND p.userid=<cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#"
                     <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#">
                 )
             </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <!--- Track totalInserted and totalProcessed --->
             <cfset totalInserted++>
@@ -1003,6 +1035,7 @@ AND p.userid=<cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#"
                 AND p.projdate >= <cfqueryparam cfsqltype="CF_SQL_DATE" value="#arguments.rangestart#">
                 AND p.projdate <= <cfqueryparam cfsqltype="CF_SQL_DATE" value="#arguments.rangeend#">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <!--- Update summary with total selected --->
         <cfset resultSummary.totalSelected = report_12.recordCount>
@@ -1016,6 +1049,7 @@ AND p.userid=<cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#"
                     r.userid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#">
                     AND r.reportid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#new_reportid#">
             </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfset var new_id = 0>
             <cfif findid.recordcount EQ 1>
@@ -1050,6 +1084,7 @@ AND p.userid=<cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#"
                     <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#">
                 )
             </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <!--- Track insertions --->
             <cfset totalInserted++>
@@ -1090,6 +1125,7 @@ AND p.userid=<cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#"
                 AND p.projdate >= <cfqueryparam cfsqltype="CF_SQL_DATE" value="#arguments.rangestart#">
                 AND p.projdate <= <cfqueryparam cfsqltype="CF_SQL_DATE" value="#arguments.rangeend#">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <!--- Update summary with total selected --->
         <cfset resultSummary.totalSelected = report_13.recordCount>
@@ -1103,6 +1139,7 @@ AND p.userid=<cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#"
                     r.userid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#">
                     AND r.reportid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#new_reportid#">
             </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfset var new_id = 0>
             <cfif findid.recordcount EQ 1>
@@ -1137,6 +1174,7 @@ AND p.userid=<cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#"
                     <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#">
                 )
             </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <!--- Track insertions --->
             <cfset totalInserted++>
@@ -1176,6 +1214,7 @@ AND p.userid=<cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#"
                 AND p.projdate >= <cfqueryparam cfsqltype="CF_SQL_DATE" value="#arguments.rangestart#">
                 AND p.projdate <= <cfqueryparam cfsqltype="CF_SQL_DATE" value="#arguments.rangeend#">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <!--- Update summary with total selected --->
         <cfset resultSummary.totalSelected = report_17.recordCount>
@@ -1189,6 +1228,7 @@ AND p.userid=<cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#"
                     r.userid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#">
                     AND r.reportid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#new_reportid#">
             </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfset var new_id = 0>
             <cfif findid.recordcount EQ 1>
@@ -1226,6 +1266,7 @@ AND p.userid=<cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#"
                     <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#">
                 )
             </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <!--- Track insertions ---> 
             <cfset totalInserted++>
@@ -1308,6 +1349,7 @@ SELECT
                 itemDataset
             ORDER BY label
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <!--- Update summary with total selected --->
         <cfset resultSummary.totalSelected = report_18.recordCount>
@@ -1321,6 +1363,7 @@ SELECT
                     r.userid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#">
                     AND r.reportid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#new_reportid#">
             </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfset var new_id = 0>
             <cfif findid.recordcount EQ 1>
@@ -1354,6 +1397,7 @@ SELECT
                     <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userid#">
                 )
             </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <!--- Track insertions --->
             <cfset totalInserted++>

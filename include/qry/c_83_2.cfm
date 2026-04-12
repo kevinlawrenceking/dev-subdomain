@@ -1,2 +1,3 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset itemCategoryService = createObject("component", "services.ItemCategoryService")>
 <cfset c = itemCategoryService.SELitemcategory()>

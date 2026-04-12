@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset contactItemService = request.svc("ContactItemService")>
 <cfset new_systemscope = contactItemService.getContactTagStatus(contactid=contactid, userid=userid)>
 

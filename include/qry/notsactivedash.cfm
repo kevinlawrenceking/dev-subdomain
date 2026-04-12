@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves reminders and notifications for a specific user based on their status and start date. --->
 
 <Cfset currentStartDate="#DateFormat(Now(),'yyyy-mm-dd')#" />

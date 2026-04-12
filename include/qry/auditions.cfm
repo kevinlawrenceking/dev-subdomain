@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- ignore for now <CFINCLUDE template="/include/projdate_fix_user.cfm" /> --->
 <cfinclude template="/include/qry/updateEventData.cfm" />
 

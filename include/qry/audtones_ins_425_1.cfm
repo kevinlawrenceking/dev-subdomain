@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset auditionTonesService = createObject("component", "services.AuditionTonesService")>
 <cfset new_toneid = auditionTonesService.INSaudtones(
     new_tone = new_tone,

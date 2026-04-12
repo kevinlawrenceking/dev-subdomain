@@ -21,6 +21,7 @@
               AND s.userid = <cfqueryparam value="#arguments.userId#" cfsqltype="cf_sql_integer">
             ORDER BY s.sitename
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn mylinks_user>
     </cffunction>
@@ -37,6 +38,7 @@
               AND t.userid = <cfqueryparam value="#arguments.userId#" cfsqltype="cf_sql_integer">
               AND s.userid = <cfqueryparam value="#arguments.userId#" cfsqltype="cf_sql_integer">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn allUrls.siteurl_list>
     </cffunction>
@@ -59,6 +61,7 @@
             FROM sitelinks_user 
             WHERE id = <cfqueryparam value="#arguments.linkId#" cfsqltype="cf_sql_integer">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn linkdetails>
     </cffunction>
@@ -83,6 +86,7 @@
             AND sitename = <cfqueryparam value="#arguments.new_sitename#" cfsqltype="cf_sql_varchar">
             AND id <> <cfqueryparam value="#arguments.new_id#" cfsqltype="cf_sql_integer">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfquery result="result" name="updateSiteLink">
             UPDATE sitelinks_user
@@ -92,6 +96,7 @@
                 sitename = <cfqueryparam value="#new_sitename#" cfsqltype="cf_sql_varchar">
             WHERE id = <cfqueryparam value="#new_id#" cfsqltype="cf_sql_integer">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     </cffunction>
 
 <!--- Function to update sitelinks_user table dynamically based on passed variables --->
@@ -134,6 +139,7 @@
                 </cfif>
             WHERE id = <cfqueryparam value="#arguments.new_id#" cfsqltype="cf_sql_integer">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 
@@ -152,6 +158,7 @@
           AND p.userid = <cfqueryparam value="#arguments.userId#" cfsqltype="cf_sql_integer">
         LIMIT 1
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <!--- Create a structure to return both values --->
     <cfset var siteTypeDetails = structNew()>
@@ -186,6 +193,7 @@
         WHERE pnid = <cfqueryparam value="#arguments.panelId#" cfsqltype="cf_sql_integer">
           AND userid = <cfqueryparam value="#arguments.userId#" cfsqltype="cf_sql_integer">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <cfif local.panelDetails.recordCount>
         <cfset response.details = {
@@ -203,6 +211,7 @@
               AND isdeleted = 0
             ORDER BY sitename
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         <cfset response.links = local.links>
         <cfset response.urlList = valueList(local.links.siteurl, ", ")>
     <cfelse>

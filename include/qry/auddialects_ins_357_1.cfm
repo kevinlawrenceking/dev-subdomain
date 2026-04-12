@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset componentPath = "/services/AuditionDialectService">
 <cfset dialectService = createObject("component", componentPath)>
 

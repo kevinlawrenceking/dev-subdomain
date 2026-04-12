@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- Legacy query file: RESauditionsimport_23917 was removed when AuditionImportService was rebuilt for v3.
      This file is still triggered by import-auditions.cfm after an upload completes.
      Return a fallback query with column aliases matching the display code expectations:

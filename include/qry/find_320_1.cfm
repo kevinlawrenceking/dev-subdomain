@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset taoVersionService = createObject("component", "services.TaoVersionService")>
 <cfset find = taoVersionService.SELtaoversions_24469(
     new_major = new_major,

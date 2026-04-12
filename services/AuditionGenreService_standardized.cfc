@@ -22,6 +22,7 @@
                 <cfqueryparam cfsqltype="CF_SQL_BIT" value="#arguments.isDeleted#">
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         
         <cfreturn result.generatedKey>
     </cffunction>
@@ -45,6 +46,7 @@
             WHERE 
                 ag.audgenreid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.audgenreid#">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         
         <cfreturn qRead>
     </cffunction>
@@ -66,6 +68,7 @@
             WHERE 
                 audgenreid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.audgenreid#">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     </cffunction>
     
     <!--- Delete: Soft delete a genre --->
@@ -78,6 +81,7 @@
             SET isDeleted = <cfqueryparam cfsqltype="CF_SQL_BIT" value="true">
             WHERE audgenreid = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.audgenreid#">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     </cffunction>
     
     <!--- List: Get filtered list of genres --->
@@ -110,6 +114,7 @@
             ORDER BY 
                 #arguments.sortBy# #arguments.sortDir#
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         
         <cfreturn qList>
     </cffunction>

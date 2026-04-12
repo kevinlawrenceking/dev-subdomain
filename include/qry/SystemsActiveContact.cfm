@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves user information, checks for a specific contact item, and determines the system scope based on the user's tags. --->
 
 <cfinclude template="/include/qry/FindUser_539_1.cfm" />

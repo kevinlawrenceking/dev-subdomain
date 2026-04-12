@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfparam name="contacts_table" default="contacts" type="string">
 <cfparam name="userid" default="#userid#" type="numeric">
 <cfparam name="eventid" default="0" type="numeric">

@@ -93,6 +93,7 @@
         ORDER BY created_at DESC
         LIMIT 1
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <cfif qExisting.recordCount gt 0>
         <cfset result.isDuplicate = true>
@@ -164,6 +165,7 @@
                 NOW()
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
         <!--- Get generated key with fallback to LAST_INSERT_ID for MySQL --->
         <cfif structKeyExists(insertResult, "generatedKey") and len(insertResult.generatedKey)>
@@ -172,6 +174,7 @@
             <cfquery name="qLastId" >
                 SELECT LAST_INSERT_ID() AS lastid
             </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
             <cfset result.job_id = qLastId.lastid>
         </cfif>
         <cfset result.success = true>
@@ -203,6 +206,7 @@
         FROM import_jobs
         WHERE job_id = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.job_id#">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <cfif qJob.recordCount eq 0>
         <cfreturn {found: false}>
@@ -264,6 +268,7 @@
         ORDER BY created_at DESC
         LIMIT <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.limit#">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <cfreturn qJobs>
 </cffunction>
@@ -291,6 +296,7 @@
             updated_at = NOW()
         WHERE job_id = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.job_id#">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 
 
@@ -314,6 +320,7 @@
         WHERE job_id = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.job_id#">
           AND status NOT IN ('completed', 'importing', 'failed')
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <!--- Check affected rows using CFQUERY result.recordCount --->
     <cfif lockResult.recordCount gt 0>
@@ -327,6 +334,7 @@
             FROM import_jobs
             WHERE job_id = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.job_id#">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
         <cfif qStatus.recordCount gt 0>
             <cfset result.current_status = qStatus.status>
@@ -360,6 +368,7 @@
         DELETE FROM import_jobs
         WHERE job_id = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.job_id#">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 
 
@@ -427,6 +436,7 @@
                     NOW()
                 )
             </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         </cfloop>
 
         <!--- Update job counts --->
@@ -439,6 +449,7 @@
                 updated_at = NOW()
             WHERE job_id = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.job_id#">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
         <cfset logEvent(arguments.job_id, "parsing_completed", {
             totalRows: parseResult.totalRows,
@@ -493,6 +504,7 @@
                 NOW()
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     </cfloop>
 </cffunction>
 
@@ -516,6 +528,7 @@
         ORDER BY confidence DESC
         LIMIT 1
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <cfif qAlias.recordCount gt 0>
         <cfset result.field = qAlias.canonical_field>
@@ -542,6 +555,7 @@
         WHERE job_id = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.job_id#">
         ORDER BY source_column_index
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <cfreturn qColumns>
 </cffunction>
@@ -559,6 +573,7 @@
             user_confirmed = 1
         WHERE column_id = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.column_id#">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 
 
@@ -572,6 +587,7 @@
         SET user_confirmed = 1
         WHERE job_id = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.job_id#">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <!--- Update job status --->
     <cfset updateJobStatus(arguments.job_id, "mapping")>
@@ -613,6 +629,7 @@
           AND status = 'pending'
         ORDER BY row_num
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <cfloop query="qRows">
         <cfset var rawData = safeDeserializeJSON(qRows.raw_json, {})>
@@ -659,6 +676,7 @@
                 updated_at = NOW()
             WHERE row_id = <cfqueryparam cfsqltype="cf_sql_integer" value="#qRows.row_id#">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
         <cfset result.processed++>
     </cfloop>
@@ -667,6 +685,7 @@
     <cfquery >
         CALL sp_update_import_job_counts(<cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.job_id#">)
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <!--- Update job status --->
     <cfset updateJobStatus(arguments.job_id, "reviewing")>
@@ -714,6 +733,7 @@
             WHERE job_id = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.job_id#">
             AND row_id = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.row_id#">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         <cfset result.total = qRows.recordCount>
         <cfset result.pages = 1>
     <cfelse>
@@ -726,6 +746,7 @@
                 AND status = <cfqueryparam cfsqltype="cf_sql_varchar" value="#arguments.status#">
             </cfif>
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         <cfset result.total = qCount.cnt>
         <cfset result.pages = ceiling(result.total / arguments.limit)>
 
@@ -754,6 +775,7 @@
             LIMIT <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.limit#">
             OFFSET <cfqueryparam cfsqltype="cf_sql_integer" value="#offset#">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     </cfif>
 
     <cfloop query="qRows">
@@ -797,6 +819,7 @@
         FROM import_job_rows
         WHERE row_id = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.row_id#">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <cfif qRow.recordCount eq 0>
         <cfset result.message = "Row not found">
@@ -838,11 +861,13 @@
             updated_at = NOW()
         WHERE row_id = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.row_id#">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <!--- Update job counts --->
     <cfquery >
         CALL sp_update_import_job_counts(<cfqueryparam cfsqltype="cf_sql_integer" value="#qRow.job_id#">)
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <cfset logEvent(qRow.job_id, "row_updated", {row_id: arguments.row_id})>
 
@@ -863,6 +888,7 @@
         SELECT job_id FROM import_job_rows
         WHERE row_id = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.row_id#">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <cfquery >
         UPDATE import_job_rows
@@ -874,11 +900,13 @@
             updated_at = NOW()
         WHERE row_id = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.row_id#">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <cfif qRow.recordCount>
         <cfquery >
             CALL sp_update_import_job_counts(<cfqueryparam cfsqltype="cf_sql_integer" value="#qRow.job_id#">)
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         <cfset logEvent(qRow.job_id, "row_action_set", {row_id: arguments.row_id, action: arguments.action})>
     </cfif>
 </cffunction>
@@ -905,10 +933,12 @@
         WHERE job_id = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.job_id#">
           AND row_id IN (<cfqueryparam cfsqltype="cf_sql_integer" value="#arrayToList(arguments.row_ids)#" list="true">)
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <cfquery >
         CALL sp_update_import_job_counts(<cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.job_id#">)
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <cfset logEvent(arguments.job_id, "bulk_action_set", {count: arrayLen(arguments.row_ids), action: arguments.action})>
 </cffunction>
@@ -938,6 +968,7 @@
         WHERE job_id = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.job_id#">
         GROUP BY status, user_action
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <cfset var readyCount = 0>
     <cfset var problemCount = 0>
@@ -967,6 +998,7 @@
           AND status = 'dupe'
           AND (user_action IS NULL OR user_action = '')
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfif qDupeNoAction.cnt gt 0>
         <cfset arrayAppend(result.issues, qDupeNoAction.cnt & " duplicate rows need action selection")>
     </cfif>
@@ -1023,6 +1055,7 @@
           AND status != 'imported'
         ORDER BY row_num
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <cftransaction>
         <cftry>
@@ -1053,6 +1086,7 @@
                             updated_at = NOW()
                         WHERE row_id = <cfqueryparam cfsqltype="cf_sql_integer" value="#qRows.row_id#">
                     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
                     <cfset result.imported++>
                     <cfset arrayAppend(result.contacts, {contactid: contactid, action: importAction})>
@@ -1073,6 +1107,7 @@
                                 updated_at = NOW()
                             WHERE row_id = <cfqueryparam cfsqltype="cf_sql_integer" value="#qRows.row_id#">
                         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
                         <cfset result.failed++>
                         <cfset arrayAppend(result.errors, "Row " & qRows.row_num & ": " & cfcatch.message)>
@@ -1089,6 +1124,7 @@
             <cfquery >
                 CALL sp_update_import_job_counts(<cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.job_id#">)
             </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
             <cfset updateJobStatus(arguments.job_id, "completed")>
             <cfset logEvent(arguments.job_id, "import_completed", {
@@ -1317,6 +1353,7 @@
             <cfqueryparam cfsqltype="cf_sql_char" value="#arguments.isPrimary ? 'Y' : 'N'#">
         )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 
 
@@ -1340,6 +1377,7 @@
             'Y'
         )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 
 
@@ -1366,6 +1404,7 @@
             'Y'
         )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 
 
@@ -1384,6 +1423,7 @@
             NOW()
         )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 
 
@@ -1405,6 +1445,7 @@
           AND (isDeleted IS NULL OR isDeleted = 0)
         LIMIT 1
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <cfreturn qCheck.recordCount gt 0>
 </cffunction>
@@ -1451,6 +1492,7 @@
               AND (isDeleted IS NULL OR isDeleted = 0)
             LIMIT 1
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
         <cfif qFindScope.recordCount gt 0>
             <cfset var newSystemScope = "Casting Director">
@@ -1467,6 +1509,7 @@
               AND (isActive = 1 OR isActive IS NULL)
             LIMIT 1
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
         <cfif qFindSystem.recordCount eq 0>
             <cfset result.message = "No matching relationship system found for #newSystemType# / #newSystemScope#">
@@ -1486,6 +1529,7 @@
               AND (isdeleted IS NULL OR isdeleted = 0)
             LIMIT 1
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
         <cfif qCheckEnrollment.recordCount gt 0>
             <cfset result.success = true>
@@ -1514,6 +1558,7 @@
                 'Active'
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
         <!--- Get generated key with fallback to LAST_INSERT_ID for MySQL --->
         <cfif structKeyExists(insertResult, "generatedKey") and len(insertResult.generatedKey)>
@@ -1522,6 +1567,7 @@
             <cfquery name="qLastId" >
                 SELECT LAST_INSERT_ID() AS lastid
             </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
             <cfset var fusystemuserid = qLastId.lastid>
         </cfif>
         <cfset result.fusystemuserid = fusystemuserid>
@@ -1564,6 +1610,7 @@
               AND (a.isActive = 1 OR a.isActive IS NULL)
             ORDER BY a.actionDaysNo
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
         <cfloop query="qActions">
             <cfset var addAction = true>
@@ -1578,6 +1625,7 @@
                       AND userid = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.userid#">
                     LIMIT 1
                 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
                 <cfif qCheckUnique.recordCount gt 0>
                     <cfset addAction = false>
@@ -1608,6 +1656,7 @@
                         <cfqueryparam cfsqltype="cf_sql_varchar" value="#qActions.actiontext#" null="#not len(qActions.actiontext)#">
                     )
                 </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
             </cfif>
         </cfloop>
 
@@ -1717,6 +1766,7 @@
                 NOW()
             )
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         <cfcatch>
             <!--- Silently fail event logging --->
         </cfcatch>
@@ -1738,6 +1788,7 @@
         WHERE job_id = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.job_id#">
         ORDER BY created_at DESC
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <cfreturn qEvents>
 </cffunction>
@@ -1762,6 +1813,7 @@
         FROM import_field_mappings
         ORDER BY sort_order
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <cfreturn qFields>
 </cffunction>
@@ -1788,6 +1840,7 @@
         WHERE job_id = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.job_id#">
         GROUP BY status
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <cfloop query="qStats">
         <cfset stats.total += qStats.cnt>

@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page updates the order number for a specific user in the pgpanels_user table based on the provided new order details. --->
 
 <cfquery>

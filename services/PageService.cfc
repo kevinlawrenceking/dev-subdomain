@@ -19,6 +19,7 @@
               AND l.linkloc_tb = 't'
             ORDER BY l.link_no
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
         <cfreturn result>
     </cffunction>
@@ -42,6 +43,7 @@
               AND l.linktype <> 'css'
             ORDER BY l.link_no
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
         <cfreturn result>
     </cffunction>
@@ -62,6 +64,7 @@
               AND l.pluginname <> 'global'
             ORDER BY l.link_no
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
         <cfreturn result>
     </cffunction>
@@ -107,6 +110,7 @@
             INNER JOIN pgapps a ON a.appID = c.appid
             WHERE p.pgDir = 'share'
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
         <!--- Return Query Result --->
         <cfreturn result>
@@ -145,6 +149,7 @@
             AND f.results_yn = 'Y' 
             AND f.fkey <> ''
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <!--- Return the query result --->
     <cfreturn FindJoins>
@@ -162,6 +167,7 @@
             WHERE t.ticketactive = <cfqueryparam value="#arguments.ticketActive#" cfsqltype="CF_SQL_CHAR"> 
             ORDER BY p.pgname
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn queryResult>
 </cffunction>
@@ -176,6 +182,7 @@
             WHERE p.parentpgid = <cfqueryparam value="#arguments.pgid#" cfsqltype="CF_SQL_INTEGER">
             AND p.pgfilename = <cfqueryparam value="results.cfm" cfsqltype="CF_SQL_VARCHAR">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -191,6 +198,7 @@
             AND pgid <> <cfqueryparam value="#arguments.pgid#" cfsqltype="CF_SQL_INTEGER">
             AND pgfilename = <cfqueryparam value="results.cfm" cfsqltype="CF_SQL_VARCHAR">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <!---  #arguments.pgid# AND pgfilename = 'results.cfm'"> --->
     <cfreturn result>
@@ -205,6 +213,7 @@
             INNER JOIN pgapps a ON a.appID = c.appid 
             WHERE p.pgid = <cfqueryparam value="#arguments.rpgid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -226,6 +235,7 @@
             INNER JOIN pgapps a ON a.appID = c.appid
             WHERE p.pgid = <cfqueryparam value="#arguments.ref_pgid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 
@@ -239,6 +249,7 @@
             FROM pgpages 
             WHERE pgid = <cfqueryparam value="#arguments.pgid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -263,6 +274,7 @@
             AND f.results_yn = 'Y'
             ORDER BY f.displayOrder
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -287,6 +299,7 @@
             WHERE 
                 p.pgDir = <cfqueryparam value="#trim(arguments.thispage)#" cfsqltype="CF_SQL_VARCHAR">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -316,6 +329,7 @@
             WHERE 
                 p.pgDir = <cfqueryparam value="#trim(arguments.thispage)#" cfsqltype="CF_SQL_VARCHAR">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -345,6 +359,7 @@
             WHERE 
                 p.pgDir = <cfqueryparam value="#trim(arguments.thispage)#" cfsqltype="CF_SQL_VARCHAR">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -356,6 +371,7 @@
             FROM pgpages
             WHERE pgid = <cfqueryparam value="#arguments.details_pgid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -369,6 +385,7 @@
             WHERE c.compactive = <cfqueryparam value="#arguments.compactive#" cfsqltype="CF_SQL_CHAR">
             ORDER BY p.pgname
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -383,6 +400,7 @@
             AND pgid <> <cfqueryparam value="#arguments.pgid#" cfsqltype="CF_SQL_INTEGER"> 
             AND pgfilename = <cfqueryparam value="details.cfm" cfsqltype="CF_SQL_VARCHAR">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -407,6 +425,7 @@
             WHERE 
                 p.pgid = <cfqueryparam value="#arguments.rpgid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -432,6 +451,7 @@
             WHERE p.pgid = <cfqueryparam value="#arguments.rpgid#" cfsqltype="CF_SQL_INTEGER">
             AND f.update_yn = <cfqueryparam value="y" cfsqltype="CF_SQL_CHAR">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -464,6 +484,7 @@
             AND 
                 f.results_yn = <cfqueryparam value="y" cfsqltype="CF_SQL_CHAR">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -479,6 +500,7 @@
             WHERE p.pgid = <cfqueryparam value="#arguments.rpgid#" cfsqltype="CF_SQL_INTEGER"> 
               AND f.updatename = <cfqueryparam value="ID" cfsqltype="CF_SQL_VARCHAR">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -501,6 +523,7 @@
             WHERE p.pgid = <cfqueryparam value="#arguments.rpgid#" cfsqltype="CF_SQL_INTEGER"> 
             AND f.add_yn = <cfqueryparam value="y" cfsqltype="CF_SQL_CHAR">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -530,6 +553,7 @@
                 p.pgid = <cfqueryparam value="#arguments.rpgid#" cfsqltype="CF_SQL_INTEGER"> 
                 AND f.update_yn = <cfqueryparam value="y" cfsqltype="CF_SQL_CHAR">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -562,6 +586,7 @@
             ORDER BY 
                 f.displayOrder
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -596,6 +621,7 @@
                 AND f.details_yn = <cfqueryparam value="Y" cfsqltype="CF_SQL_CHAR"> 
                 AND f.fkey <> ''
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -637,6 +663,7 @@
             ORDER BY 
                 f.displayOrder
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 
@@ -673,6 +700,7 @@
                 AND f.results_yn = 'Y' 
                 AND f.fkey <> ''
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -706,6 +734,7 @@
             ORDER BY 
                 f.displayOrder
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -741,6 +770,7 @@
                 AND f.details_yn = <cfqueryparam value="Y" cfsqltype="CF_SQL_CHAR"> 
                 AND f.fkey <> ''
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -776,6 +806,7 @@
                 AND p.isdef = 1
             </cfif>
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfif qPageDetails.recordCount EQ 1>
             <cfset page = {
@@ -848,6 +879,7 @@
             AND l.IsDeleted = 0
             ORDER BY l.link_no ASC
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <!--- Loop through the query and add links to the appropriate section --->
         <cfloop query="qPageLinks">
@@ -883,6 +915,7 @@
             AND l.linktype = 'script_include'
             ORDER BY l.link_no ASC
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <!--- Loop through the query and populate the array --->
         <cfloop query="includeLinks">
@@ -904,6 +937,7 @@
             WHERE c.compactive = 'Y'
             ORDER BY p.pgname
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         <!--- Return the query result --->
         <cfreturn pages />
     </cffunction>

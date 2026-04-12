@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- don't add 
 
 <cfset eventService = request.svc("EventService")>

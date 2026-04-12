@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!---
     PURPOSE: Find duplicate contacts by name for current user
     AUTHOR: Kevin King

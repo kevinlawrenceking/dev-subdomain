@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves the title and company name for a specific page based on the page ID. --->
 <cfquery name="FindModalTitle">
     <!--- Query to select page title and company name based on page ID --->

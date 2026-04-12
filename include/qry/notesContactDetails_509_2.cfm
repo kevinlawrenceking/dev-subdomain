@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This page retrieves the details of a specific note from the noteslog table and joins it with contact details for display. --->
 <cfquery name="notesContactDetails" maxrows="1">
     <!--- Query to select note details along with contact information based on the note ID --->

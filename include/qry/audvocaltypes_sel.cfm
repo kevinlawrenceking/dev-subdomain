@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page initializes parameters and includes a select query for vocal types --->
 <cfparam name="dbug" default="N" />
 

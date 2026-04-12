@@ -7,6 +7,7 @@
         SET isdeleted = 1
         WHERE suid = <cfqueryparam value="#arguments.suid#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 
 
@@ -23,6 +24,7 @@
           AND s.systemscope = <cfqueryparam value="#arguments.systemscope#" cfsqltype="CF_SQL_VARCHAR">
         LIMIT 1
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <!--- If a record is found, assign the system ID --->
     <cfif findSystem.recordCount>
@@ -56,6 +58,7 @@
         INNER JOIN fusystems s ON s.systemID = fc.systemID
         WHERE fc.suid = <cfqueryparam value="#arguments.suid#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     
     <!--- Return the query result --->
     <cfreturn reldetails>
@@ -73,6 +76,7 @@
             SET suStatus = <cfqueryparam value="#arguments.sustatus#" cfsqltype="CF_SQL_VARCHAR">
             WHERE suid = <cfqueryparam value="#arguments.suid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     </cffunction>
 
 
@@ -94,6 +98,7 @@
           AND isdeleted = 0
         FOR UPDATE
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <cfif checkExisting.recordCount GT 0>
         <cfreturn checkExisting.suid>
@@ -109,6 +114,7 @@
             'Active'
         )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cftransaction>
 
 <cfreturn result.generatedKey>
@@ -132,6 +138,7 @@
             'Active'
         )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
     <cfreturn result.generatedKey>
 </cffunction>
 
@@ -149,6 +156,7 @@
         AND s.systemtype = <cfqueryparam value="Maintenance List" cfsqltype="CF_SQL_VARCHAR"> 
         AND fc.userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -164,6 +172,7 @@
         AND contactid IN (<cfqueryparam value="#arguments.idlist#" cfsqltype="CF_SQL_INTEGER" list="true">)
         AND systemid = <cfqueryparam value="#arguments.new_systemid#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -178,6 +187,7 @@
         WHERE contactid IN (<cfqueryparam value="#arguments.idList#" cfsqltype="CF_SQL_INTEGER" list="true">)
         AND systemid = <cfqueryparam value="#arguments.newSystemId#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 
 <cffunction output="false" name="INSfusystemusers_23934" access="public" returntype="numeric">
@@ -198,6 +208,7 @@
           AND isdeleted = 0
         FOR UPDATE
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <cfif checkExisting.recordCount GT 0>
         <cfreturn checkExisting.suid>
@@ -214,6 +225,7 @@
             'Active'
         )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cftransaction>
     <cfreturn result.generatedKey>
 </cffunction>
@@ -229,6 +241,7 @@
         AND systemid IN (5, 6) 
         AND contactid = <cfqueryparam value="#arguments.new_contactid#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
 
 <cffunction output="false" name="SELfusystemusers_24031" access="public" returntype="query">
@@ -262,6 +275,7 @@
             ORDER BY 
                 n.notid
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 
@@ -287,6 +301,7 @@
             INNER JOIN fusystems s ON s.systemID = fc.systemID
             WHERE fc.suid = <cfqueryparam value="#arguments.suid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 
@@ -299,6 +314,7 @@
             SET isdeleted = 1 
             WHERE suid = <cfqueryparam value="#arguments.suid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
 
@@ -311,6 +327,7 @@
             WHERE fc.contactID = <cfqueryparam value="#arguments.contactID#" cfsqltype="CF_SQL_INTEGER"> 
             AND fc.suStatus = <cfqueryparam value="Active" cfsqltype="CF_SQL_VARCHAR">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -326,6 +343,7 @@
               AND isdeleted = <cfqueryparam value="0" cfsqltype="CF_SQL_BIT">
               AND systemid = <cfqueryparam value="#arguments.new_systemid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -341,6 +359,7 @@
         AND suStatus = <cfqueryparam value="Active" cfsqltype="CF_SQL_VARCHAR">
         AND isdeleted = <cfqueryparam value="0" cfsqltype="CF_SQL_BIT">
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <!--- Return the RecordCount to indicate the number of rows affected --->
 
@@ -357,6 +376,7 @@
             WHERE contactid = <cfqueryparam value="#arguments.maint_contactid#" cfsqltype="CF_SQL_INTEGER">
             AND systemid = <cfqueryparam value="#arguments.maint_systemid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 </cffunction>
@@ -377,6 +397,7 @@
           AND isdeleted = 0
         FOR UPDATE
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     <cfif checkExisting.recordCount GT 0>
         <cfreturn checkExisting.suid>
@@ -392,6 +413,7 @@
             'Active'
         )
     </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cftransaction>
 <cfreturn result.generatedKey>
 
@@ -411,6 +433,7 @@
             AND fc.userID = <cfqueryparam value="#arguments.sessionUserId#" cfsqltype="CF_SQL_INTEGER">
             AND fc.sustatus = <cfqueryparam value="Active" cfsqltype="CF_SQL_VARCHAR">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 
@@ -447,6 +470,7 @@
             ORDER BY 
                 fc.suStatus
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
 

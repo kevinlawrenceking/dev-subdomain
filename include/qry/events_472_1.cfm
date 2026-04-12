@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <Cfif #isdefined('currentid')#>
 
 <cfset eventService = request.svc("EventService")>

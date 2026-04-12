@@ -50,6 +50,7 @@ LIMIT 100;
 
 
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
         <!--- Return Query Result --->
         <cfreturn result>
@@ -73,6 +74,7 @@ LIMIT 100;
             WHERE 
                 contactid = <cfqueryparam value="#arguments.contactid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
         <!--- Return Query Result --->
         <cfreturn result>
@@ -86,6 +88,7 @@ LIMIT 100;
             FROM shares
             WHERE userid = <cfqueryparam value="#arguments.userId#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
     </cffunction>
@@ -110,6 +113,7 @@ LIMIT 100;
             WHERE 
                 userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
         <cfreturn result>
     </cffunction>
 </cfcomponent>

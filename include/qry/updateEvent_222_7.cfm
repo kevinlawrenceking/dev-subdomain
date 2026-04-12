@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <cfset eventService = request.svc("EventService")>
 <cfset eventService.UPDevents_24108(
     eventId = findEvent.eventid,

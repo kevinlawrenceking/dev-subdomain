@@ -1,3 +1,4 @@
+<cfinclude template="/include/perfcount.cfm" />
 <!--- This ColdFusion page retrieves a parameter from the ftypexref_tbl based on the provided ftypefull value. --->
 
 <cfquery name="find">
