@@ -7,6 +7,7 @@
 
 <cfparam name="form.existingLinks" default="[]" />
 <cfparam name="form.customLinks" default="[]" />
+<cflog file="TAO_setup_wizard" text="Step 6 save: existingLinks=#form.existingLinks#">
 
 <cfset existingLinks = []>
 <cfset customLinks = []>

@@ -7,6 +7,7 @@
 <cfset userid = session.userid>
 
 <cfparam name="form.enrollments" default="[]" />
+<cflog file="TAO_setup_wizard" text="Step 5 raw enrollments: #form.enrollments#">
 <cfset enrollments = []>
 <cftry>
     <cfset enrollments = deserializeJSON(form.enrollments)>
