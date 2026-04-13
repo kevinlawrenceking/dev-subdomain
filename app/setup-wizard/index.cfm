@@ -70,16 +70,19 @@
 
 <body class="wizard-wrapper">
 
-    <!--- Header bar --->
-    <div class="wizard-header">
-        <div class="wizard-brand">
-            <div class="wizard-brand-title">The Actors Office</div>
-            <div class="wizard-brand-subtitle">Career Management Platform</div>
-        </div>
-    </div>
-
     <!--- Main wizard card --->
     <div class="wizard-card">
+
+        <!--- Header bar --->
+        <div class="wizard-header">
+            <div class="wizard-brand">
+                <img src="/app/assets/images/logo-light.png" alt="TAO" class="wizard-logo" />
+                <div>
+                    <div class="wizard-brand-title">The Actor's Office</div>
+                    <div class="wizard-brand-subtitle">Setup Wizard</div>
+                </div>
+            </div>
+        </div>
 
         <!--- Progress stepper --->
         <div class="wizard-stepper" id="wizard-stepper">
@@ -158,7 +161,8 @@
             csrfToken: document.querySelector('meta[name="csrf-token"]')
                        ? document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                        : '',
-            userId: #session.userid#
+            userId: #session.userid#,
+            mediaPath: '#application.dsn#'
         };
     </script>
     </cfoutput>

@@ -148,11 +148,17 @@
             var $el = $content.find('[name="' + key + '"], [data-field="' + key + '"]');
             if (!$el.length) return;
             $el.each(function() {
-                var $f = $(this);
-                if ($f.is(':checkbox') || $f.is(':radio')) {
-                    $f.prop('checked', $f.val() === val);
+                var $field = $(this);
+                if ($field.is('select')) {
+                    var serverVal = $field.val();
+                    if (serverVal && serverVal !== '' && serverVal !== '0') {
+                        return;
+                    }
+                }
+                if ($field.is(':checkbox') || $field.is(':radio')) {
+                    $field.prop('checked', $field.val() === val);
                 } else {
-                    $f.val(val);
+                    $field.val(val);
                 }
             });
         });

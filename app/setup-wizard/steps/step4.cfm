@@ -16,24 +16,30 @@
 
 <!--- Bootstrap default media types for this user if missing --->
 <cfif qMediaTypes.recordCount EQ 0>
-    <cfset defaultTypes = ["TV", "Film", "Theatre", "Commercial", "Voiceover", "New Media"]>
-    <cfloop array="#defaultTypes#" index="typeName">
-        <cfquery datasource="#application.datasource#">
-            INSERT INTO audmediatypes_user (userid, audmediatypename, isDeleted)
-            VALUES (
-                <cfqueryparam value="#userid#" cfsqltype="cf_sql_integer" />,
-                <cfqueryparam value="#typeName#" cfsqltype="cf_sql_varchar" />,
-                0
-            )
+    <cftry>
+        <cfset defaultTypes = ["TV", "Film", "Theatre", "Commercial", "Voiceover", "New Media"]>
+        <cfloop array="#defaultTypes#" index="typeName">
+            <cfquery datasource="#application.datasource#">
+                INSERT INTO audmediatypes_user (userid, audmediatypename, isDeleted)
+                VALUES (
+                    <cfqueryparam value="#userid#" cfsqltype="cf_sql_integer" />,
+                    <cfqueryparam value="#typeName#" cfsqltype="cf_sql_varchar" />,
+                    0
+                )
+            </cfquery>
+        </cfloop>
+        <cfquery name="qMediaTypes" datasource="#application.datasource#">
+            SELECT audmediatypeid, audmediatypename
+            FROM audmediatypes_user
+            WHERE userid = <cfqueryparam value="#userid#" cfsqltype="cf_sql_integer" />
+              AND isDeleted = 0
+            ORDER BY audmediatypename
         </cfquery>
-    </cfloop>
-    <cfquery name="qMediaTypes" datasource="#application.datasource#">
-        SELECT audmediatypeid, audmediatypename
-        FROM audmediatypes_user
-        WHERE userid = <cfqueryparam value="#userid#" cfsqltype="cf_sql_integer" />
-          AND isDeleted = 0
-        ORDER BY audmediatypename
-    </cfquery>
+    <cfcatch type="any">
+        <cflog file="TAO_setup_wizard" type="error"
+               text="Step 4 bootstrap media types failed for user #userid#: #cfcatch.message# | #cfcatch.detail#">
+    </cfcatch>
+    </cftry>
 </cfif>
 
 <cfoutput>

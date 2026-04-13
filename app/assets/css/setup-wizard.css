@@ -21,6 +21,18 @@
     letter-spacing: 0.5px;
 }
 
+.wizard-brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+}
+
+.wizard-logo {
+    height: 40px;
+    width: auto;
+}
+
 .wizard-brand-subtitle {
     color: #a8c8de;
     font-size: 12px;
@@ -29,7 +41,7 @@
 
 .wizard-card {
     max-width: 920px;
-    margin: 0 auto;
+    margin: 40px auto 0;
     background: #fff;
     border-radius: 16px;
     box-shadow: 0 4px 24px rgba(0,0,0,0.08);

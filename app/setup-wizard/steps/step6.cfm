@@ -112,13 +112,16 @@ window.wizardCollectStepData = function() {
     // Existing pre-populated links (respect toggle state)
     $('##links-list .link-row').each(function() {
         var $r = $(this);
+        var linkId = $r.data('link-id');
         var enabled = $r.find('.link-toggle').is(':checked');
         var url = enabled ? $r.find('[data-field="url"]').val().trim() : '';
+        console.log('Link:', linkId, 'enabled:', enabled, 'url:', url);
         existingLinks.push({
-            sitelinkId: $r.data('link-id'),
+            sitelinkId: linkId,
             siteurl: url
         });
     });
+    console.log('Collected links:', JSON.stringify(existingLinks));
 
     // Custom links
     $('##custom-links .custom-link-row').each(function() {

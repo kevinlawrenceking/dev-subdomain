@@ -51,12 +51,13 @@
 <!--- Resolve Pacific tzid for default --->
 <cfset pacificTzId = 0>
 <cfloop query="qTimezones">
-    <cfif qTimezones.tzname EQ "Pacific Standard Time">
+    <cfif findNoCase("Pacific Standard Time", qTimezones.tzname)>
         <cfset pacificTzId = qTimezones.tzid>
         <cfbreak>
     </cfif>
 </cfloop>
 <cfset currentTzId = val(qProfile.tzid) GT 0 ? val(qProfile.tzid) : pacificTzId>
+<cflog file="TAO_setup_wizard" text="Pacific TZ lookup: pacificTzId=#pacificTzId#, qProfile.tzid=#val(qProfile.tzid)#, currentTzId=#currentTzId#">
 
 <cfset avatarUrl = "/media-" & application.dsn & "/users/" & userid & "/avatar.jpg">
 
@@ -155,6 +156,9 @@
             <label class="form-label">Timezone <span class="text-danger">*</span></label>
             <cfset usTimezones = "Eastern Standard Time,Central Standard Time,Mountain Standard Time,Pacific Standard Time,Alaskan Standard Time,US Mountain Standard Time,Hawaiian Standard Time,Alaska Standard Time">
             <select class="form-select" name="timezoneId" required>
+                <cfif currentTzId EQ 0>
+                    <option value="" selected>-- Select your timezone --</option>
+                </cfif>
                 <optgroup label="United States">
                     <cfloop query="qTimezones">
                         <cfif listFindNoCase(usTimezones, qTimezones.tzname)>
@@ -274,7 +278,8 @@ $('##crop-save').on('click', function() {
             dataType: 'json',
             success: function(r) {
                 if (r.success) {
-                    $('##avatar-preview').attr('src', r.avatarUrl + '?t=' + Date.now());
+                    var avatarPath = '/media-' + TAO_WIZARD.mediaPath + '/users/' + TAO_WIZARD.userId + '/avatar.jpg';
+                    $('##avatar-preview').attr('src', avatarPath + '?t=' + Date.now());
                     taoToast('Photo uploaded');
                 } else {
                     taoToast(r.message || 'Upload failed', 'error');

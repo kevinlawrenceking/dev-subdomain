@@ -72,6 +72,10 @@
         <cfset maintSystemId = qSystems.systemid>
     </cfif>
 </cfloop>
+<cfif targetSystemId EQ 0 AND maintSystemId EQ 0>
+    <cflog file="TAO_setup_wizard" type="warning"
+           text="Step 5: No Target or Maintenance systems found in fusystems table.">
+</cfif>
 
 <cfoutput>
 
