@@ -119,6 +119,49 @@
         $btnNext.prop('disabled', false);
     }
 
+    // ---- Form persistence (sessionStorage) ----
+
+    function cacheKey(stepNum) { return 'wizard_step_' + stepNum; }
+
+    function cacheStepData(stepNum) {
+        var vals = {};
+        $content.find('input, select, textarea').each(function() {
+            var $el = $(this);
+            var key = $el.attr('name') || $el.attr('data-field');
+            if (!key) return;
+            if ($el.is(':checkbox') || $el.is(':radio')) {
+                if ($el.is(':checked')) vals[key] = $el.val();
+            } else {
+                vals[key] = $el.val();
+            }
+        });
+        try { sessionStorage.setItem(cacheKey(stepNum), JSON.stringify(vals)); } catch(e) {}
+    }
+
+    function restoreStepCache(stepNum) {
+        var raw;
+        try { raw = sessionStorage.getItem(cacheKey(stepNum)); } catch(e) {}
+        if (!raw) return;
+        var vals;
+        try { vals = JSON.parse(raw); } catch(e) { return; }
+        $.each(vals, function(key, val) {
+            var $el = $content.find('[name="' + key + '"], [data-field="' + key + '"]');
+            if (!$el.length) return;
+            $el.each(function() {
+                var $f = $(this);
+                if ($f.is(':checkbox') || $f.is(':radio')) {
+                    $f.prop('checked', $f.val() === val);
+                } else {
+                    $f.val(val);
+                }
+            });
+        });
+    }
+
+    function clearStepCache(stepNum) {
+        try { sessionStorage.removeItem(cacheKey(stepNum)); } catch(e) {}
+    }
+
     // ---- Step loading ----
 
     function loadStep(stepNum) {
@@ -140,12 +183,18 @@
                 $content.html(html);
                 // Initialize Parsley on any forms in the loaded content
                 $content.find('form[data-parsley-validate]').parsley();
+                // Restore cached form values (back-navigation persistence)
+                restoreStepCache(step);
+                // Auto-cache form changes
+                $content.on('input change', 'input, select, textarea', function() {
+                    cacheStepData(step);
+                });
                 // Push browser history state
                 history.pushState({ step: step }, '', '/app/setup-wizard/?step=' + step);
             },
             error: function(xhr) {
                 if (xhr.status === 401) {
-                    window.location.href = '/loginform.cfm';
+                    window.location.href = '/loginform.cfm?returnUrl=' + encodeURIComponent('/app/setup-wizard/?step=' + step);
                     return;
                 }
                 $content.html('<div class="text-center text-danger py-5">Failed to load step. <a href="javascript:void(0)" onclick="window.TAO_WIZARD_RELOAD()">Try again</a></div>');
@@ -198,6 +247,7 @@
         ajaxPost('/ajax/setup-wizard/save-step' + step + '.cfm', data)
             .done(function(resp) {
                 if (resp.success) {
+                    clearStepCache(step);
                     if (step === 7) {
                         // Wizard complete -- redirect to dashboard
                         sessionStorage.setItem('taoWizardComplete', 'true');
@@ -212,7 +262,7 @@
             })
             .fail(function(xhr) {
                 if (xhr.status === 401) {
-                    window.location.href = '/loginform.cfm';
+                    window.location.href = '/loginform.cfm?returnUrl=' + encodeURIComponent('/app/setup-wizard/?step=' + step);
                     return;
                 }
                 var msg = 'Save failed';
@@ -245,7 +295,11 @@
                     taoToast(resp.message || 'Skip failed', 'error');
                 }
             })
-            .fail(function() {
+            .fail(function(xhr) {
+                if (xhr.status === 401) {
+                    window.location.href = '/loginform.cfm?returnUrl=' + encodeURIComponent('/app/setup-wizard/?step=' + step);
+                    return;
+                }
                 taoToast('Skip failed', 'error');
             })
             .always(function() {

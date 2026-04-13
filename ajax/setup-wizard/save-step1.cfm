@@ -8,6 +8,7 @@
 <!--- Parse input (form-encoded) --->
 <cfparam name="form.firstName" default="" />
 <cfparam name="form.lastName" default="" />
+<cfparam name="form.email" default="" />
 <cfparam name="form.nickname" default="" />
 <cfparam name="form.pronouns" default="" />
 <cfparam name="form.phone" default="" />
@@ -16,6 +17,7 @@
 
 <cfset firstName = trim(form.firstName)>
 <cfset lastName = trim(form.lastName)>
+<cfset newEmail = trim(form.email)>
 <cfset nickname = trim(form.nickname)>
 <cfset pronouns = trim(form.pronouns)>
 <cfset phone = trim(form.phone)>
@@ -27,6 +29,31 @@
     <cfcontent type="application/json; charset=utf-8" reset="true">
     <cfoutput>#serializeJSON({"success": false, "message": "First and last name are required."})#</cfoutput>
     <cfabort>
+</cfif>
+
+<!--- Email update with uniqueness check (TECH-DEBT: no email verification flow yet) --->
+<cfif len(newEmail)>
+    <cfif NOT isValid("email", newEmail)>
+        <cfcontent type="application/json; charset=utf-8" reset="true">
+        <cfoutput>#serializeJSON({"success": false, "message": "Invalid email format."})#</cfoutput>
+        <cfabort>
+    </cfif>
+    <cfquery name="qCurrentEmail" datasource="#application.datasource#" maxrows="1">
+        SELECT userEmail FROM taousers_tbl
+        WHERE userid = <cfqueryparam value="#userid#" cfsqltype="cf_sql_integer" />
+    </cfquery>
+    <cfif newEmail NEQ qCurrentEmail.userEmail>
+        <cfquery name="qEmailCheck" datasource="#application.datasource#" maxrows="1">
+            SELECT userid FROM taousers_tbl
+            WHERE userEmail = <cfqueryparam value="#newEmail#" cfsqltype="cf_sql_varchar" />
+              AND userid != <cfqueryparam value="#userid#" cfsqltype="cf_sql_integer" />
+        </cfquery>
+        <cfif qEmailCheck.recordCount GT 0>
+            <cfcontent type="application/json; charset=utf-8" reset="true">
+            <cfoutput>#serializeJSON({"success": false, "message": "This email is already in use by another account."})#</cfoutput>
+            <cfabort>
+        </cfif>
+    </cfif>
 </cfif>
 
 <cftry>
@@ -41,6 +68,18 @@
             dateFormatID = <cfqueryparam value="#dateFormatId#" cfsqltype="cf_sql_integer" />
         WHERE userid = <cfqueryparam value="#userid#" cfsqltype="cf_sql_integer" />
     </cfquery>
+
+    <!--- 1b. Update email if changed --->
+    <cfif len(newEmail) AND (NOT isDefined("qCurrentEmail.userEmail") OR newEmail NEQ qCurrentEmail.userEmail)>
+        <cfquery datasource="#application.datasource#">
+            UPDATE taousers_tbl
+            SET userEmail = <cfqueryparam value="#newEmail#" cfsqltype="cf_sql_varchar" />
+            WHERE userid = <cfqueryparam value="#userid#" cfsqltype="cf_sql_integer" />
+        </cfquery>
+        <cfset session.userEmail = newEmail>
+        <cflog file="TAO_setup_wizard" type="information"
+               text="User #userid# changed email during wizard setup.">
+    </cfif>
 
     <!--- 2. Find self-contact --->
     <cfquery name="qSelf" datasource="#application.datasource#" maxrows="1">

@@ -15,14 +15,11 @@
 
 <cfset auditionsCreated = 0>
 
-<!--- TECH-DEBT: INSaudprojects() reads cookie.userid internally.
-      Set cookie to match session for this request. --->
-<cfcookie name="userid" value="#userid#" />
+<!--- TECH-DEBT: Inlined INSERT from INSaudprojects() to avoid cookie.userid. Main app still uses cookie path. --->
 
 <cftry>
 <cftransaction>
 
-    <cfset audProjService = request.svc("AuditionProjectService")>
     <cfset audRoleService = request.svc("AuditionRoleService")>
 
     <cfloop array="#auditions#" index="aud">
@@ -34,11 +31,16 @@
             <cfset audDate = now()>
         </cfif>
 
-        <!--- Create project --->
-        <cfset newProjId = audProjService.INSaudprojects(
-            new_projName = projName,
-            new_projdate = audDate
-        )>
+        <!--- Create project (inline to avoid cookie.userid dependency) --->
+        <cfquery result="projResult" datasource="#application.datasource#">
+            INSERT INTO audprojects (projName, userid, projdate)
+            VALUES (
+                <cfqueryparam cfsqltype="cf_sql_varchar" value="#projName#" maxlength="500" />,
+                <cfqueryparam cfsqltype="cf_sql_integer" value="#userid#" />,
+                <cfqueryparam cfsqltype="cf_sql_date" value="#audDate#" />
+            )
+        </cfquery>
+        <cfset newProjId = projResult.generatedKey>
 
         <!--- Create a default role entry --->
         <cfset audRoleService.INSaudroles(

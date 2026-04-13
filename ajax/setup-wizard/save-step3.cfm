@@ -26,12 +26,21 @@
         <cfset cCompany = trim(c.company ?: "")>
 
         <!--- Create contact --->
+        <cflog file="TAO_setup_wizard" text="Step 3: creating contact '#cName#' for user #userid#">
         <cfset contactService = request.svc("ContactService")>
-        <cfset newContactId = contactService.create({
-            userid: userid,
-            contactFullName: cName,
-            contactStatus: "Active"
-        })>
+        <cftry>
+            <cfset newContactId = contactService.create({
+                userid: userid,
+                contactFullName: cName,
+                contactStatus: "Active"
+            })>
+            <cflog file="TAO_setup_wizard" text="Step 3: created contactid #newContactId# for '#cName#'">
+        <cfcatch>
+            <cflog file="TAO_setup_wizard" type="error"
+                   text="Step 3: ContactService.create() failed for '#cName#': #cfcatch.message# | #cfcatch.detail#">
+            <cfrethrow>
+        </cfcatch>
+        </cftry>
 
         <!--- Detect email vs phone --->
         <cfif len(cEmailOrPhone)>

@@ -1,8 +1,7 @@
 <!---
     P11 Step 4: Import or Add Auditions
-    Only shown when isAuditionModule = 1 (conditional skip handled by wizard JS).
-    TECH-DEBT: AuditionProjectService.INSaudprojects() uses cookie.userid internally.
-    The save endpoint sets cookie.userid from session.userid before calling.
+    Audition module is universally enabled (TECH-DEBT: isauditionmodule gating removed 2026-04).
+    TECH-DEBT: save-step4 inlines INSERT to avoid cookie.userid in INSaudprojects(). Main app still uses cookie path.
 --->
 <cfset userid = session.userid>
 
@@ -14,6 +13,28 @@
       AND isDeleted = 0
     ORDER BY audmediatypename
 </cfquery>
+
+<!--- Bootstrap default media types for this user if missing --->
+<cfif qMediaTypes.recordCount EQ 0>
+    <cfset defaultTypes = ["TV", "Film", "Theatre", "Commercial", "Voiceover", "New Media"]>
+    <cfloop array="#defaultTypes#" index="typeName">
+        <cfquery datasource="#application.datasource#">
+            INSERT INTO audmediatypes_user (userid, audmediatypename, isDeleted)
+            VALUES (
+                <cfqueryparam value="#userid#" cfsqltype="cf_sql_integer" />,
+                <cfqueryparam value="#typeName#" cfsqltype="cf_sql_varchar" />,
+                0
+            )
+        </cfquery>
+    </cfloop>
+    <cfquery name="qMediaTypes" datasource="#application.datasource#">
+        SELECT audmediatypeid, audmediatypename
+        FROM audmediatypes_user
+        WHERE userid = <cfqueryparam value="#userid#" cfsqltype="cf_sql_integer" />
+          AND isDeleted = 0
+        ORDER BY audmediatypename
+    </cfquery>
+</cfif>
 
 <cfoutput>
 

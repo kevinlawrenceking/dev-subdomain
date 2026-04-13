@@ -4,33 +4,48 @@
 /* --- Layout --- */
 .wizard-wrapper {
     min-height: 100vh;
-    background: #f5f7fa;
+    background: #F1F5F9;
     padding-bottom: 40px;
 }
 
 .wizard-header {
+    background: #406E8E;
+    padding: 32px 30px 28px;
     text-align: center;
-    padding: 32px 0 16px;
 }
 
-.wizard-header .wizard-logo {
-    height: 48px;
-    margin-bottom: 8px;
+.wizard-brand-title {
+    color: #fff;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.wizard-brand-subtitle {
+    color: #a8c8de;
+    font-size: 12px;
+    margin-top: 4px;
 }
 
 .wizard-card {
-    max-width: 820px;
+    max-width: 920px;
     margin: 0 auto;
     background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0,0,0,.08);
-    padding: 32px 40px 24px;
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    overflow: hidden;
 }
 
 @media (max-width: 576px) {
     .wizard-card {
         margin: 0 12px;
-        padding: 20px 16px 16px;
+        border-radius: 12px;
+    }
+    .wizard-stepper,
+    .wizard-step-content,
+    .wizard-footer {
+        padding-left: 16px;
+        padding-right: 16px;
     }
 }
 
@@ -40,7 +55,7 @@
     align-items: center;
     justify-content: center;
     margin-bottom: 28px;
-    padding: 16px 0 8px;
+    padding: 24px 40px 8px;
 }
 
 .wizard-stepper .step-item {
@@ -109,6 +124,7 @@
 /* --- Step content area --- */
 .wizard-step-content {
     min-height: 300px;
+    padding: 0 40px;
 }
 
 .wizard-step-content h3 {
@@ -162,7 +178,7 @@
     align-items: center;
     justify-content: space-between;
     margin-top: 28px;
-    padding-top: 20px;
+    padding: 20px 40px;
     border-top: 1px solid #eee;
 }
 
@@ -374,6 +390,17 @@
 
 .link-row .form-control {
     font-size: 14px;
+}
+
+.link-row.link-disabled {
+    opacity: 0.5;
+}
+
+.link-type-heading {
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 /* --- Completion summary (Step 7) --- */

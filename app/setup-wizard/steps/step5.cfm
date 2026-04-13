@@ -27,7 +27,13 @@
 <cfset contactItemService = request.svc("ContactItemService")>
 <cfset contactList = []>
 <cfloop query="qContacts">
-    <cfset scope = contactItemService.getContactTagStatus(contactid=qContacts.contactid, userid=userid)>
+    <cftry>
+        <cfset scope = contactItemService.getContactTagStatus(contactid=qContacts.contactid, userid=userid)>
+        <cfcatch>
+            <cfset scope = "Industry">
+            <cflog file="TAO_setup_wizard" type="warning" text="getContactTagStatus failed for contact #qContacts.contactid#: #cfcatch.message#">
+        </cfcatch>
+    </cftry>
     <!--- Check if tagged as My Rep Team --->
     <cfquery name="qRepTag" datasource="#application.datasource#" maxrows="1">
         SELECT 1 FROM contactitems

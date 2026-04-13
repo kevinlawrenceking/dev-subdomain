@@ -19,12 +19,17 @@
     <cfset currentStep = 7>
 </cfif>
 
-<!--- Check audition module flag for conditional step 4 --->
-<cfparam name="isauditionmodule" default="0" />
-<cfset showAuditionStep = val(isauditionmodule) EQ 1>
+<!--- Allow url.step to resume after re-login (session timeout recovery) --->
+<cfparam name="url.step" default="0" />
+<cfif val(url.step) GTE 1 AND val(url.step) LTE 7>
+    <cfset currentStep = val(url.step)>
+</cfif>
+
+<!--- TECH-DEBT: isauditionmodule gating removed per product decision 2026-04. Audition module is universal. --->
+<cfset showAuditionStep = true>
 
 <!--- Build step list (conditionally exclude step 4) --->
-<cfset stepLabels = ["Account Info", "Representation", "Contacts", "Auditions", "Reminders", "My Links", "Complete"]>
+<cfset stepLabels = ["Account", "Reps", "Contacts", "Auditions", "Reminders", "Links", "Complete"]>
 <cfif NOT showAuditionStep>
     <!--- Visual steps exclude auditions: 1,2,3,5,6,7 mapped to visual 1-6 --->
     <cfset visibleSteps = [1,2,3,5,6,7]>
@@ -54,19 +59,23 @@
     <link href="/app/assets/css/app.min.css" rel="stylesheet" type="text/css" />
     <link href="/app/assets/css/icons.min.css" rel="stylesheet" type="text/css" />
     <link href="/app/assets/css/tao-components.css" rel="stylesheet" type="text/css" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.css" rel="stylesheet" />
     <link href="/app/assets/css/setup-wizard.css" rel="stylesheet" type="text/css" />
 
     <!--- Core JS --->
     <script src="/app/assets/js/jquery-3.6.0.min.js"></script>
+    <script src="/app/assets/js/bootstrap.bundle.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.js"></script>
 </head>
 
 <body class="wizard-wrapper">
 
-    <!--- Header with logo --->
+    <!--- Header bar --->
     <div class="wizard-header">
-        <cfoutput>
-        <img src="#IMAGESURL#/taowhite.png" alt="The Actors Office" class="wizard-logo" />
-        </cfoutput>
+        <div class="wizard-brand">
+            <div class="wizard-brand-title">The Actors Office</div>
+            <div class="wizard-brand-subtitle">Career Management Platform</div>
+        </div>
     </div>
 
     <!--- Main wizard card --->

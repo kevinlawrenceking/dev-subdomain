@@ -13,7 +13,7 @@
     LEFT JOIN sitetypes_user st ON st.sitetypeid = sl.sitetypeid AND st.userid = sl.userid
     WHERE sl.userid = <cfqueryparam value="#userid#" cfsqltype="cf_sql_integer" />
       AND sl.isdeleted = 0
-    ORDER BY sl.iscustom ASC, sl.sitename ASC
+    ORDER BY st.sitetypename ASC, sl.iscustom ASC, sl.sitename ASC
 </cfquery>
 
 <cfoutput>
@@ -34,8 +34,25 @@
 
 <div id="links-list">
     <cfif qLinks.recordCount>
+        <cfset lastType = "">
         <cfloop query="qLinks">
-            <div class="link-row" data-link-id="#qLinks.id#">
+            <cfif len(qLinks.sitetypename) AND qLinks.sitetypename NEQ lastType>
+                <cfif len(lastType)></div></cfif>
+                <h6 class="link-type-heading text-muted mt-3 mb-1">#encodeForHTML(qLinks.sitetypename)#</h6>
+                <cfif qLinks.sitetypename EQ "Casting Profiles">
+                    <p class="text-muted mb-2" style="font-size:13px;">Add profile URLs for casting platforms you actively use.</p>
+                <cfelseif qLinks.sitetypename EQ "Social Media">
+                    <p class="text-muted mb-2" style="font-size:13px;">Optional -- these appear on your dashboard for quick access.</p>
+                </cfif>
+                <div class="link-type-group">
+                <cfset lastType = qLinks.sitetypename>
+            </cfif>
+
+            <div class="link-row #NOT len(qLinks.siteurl) ? 'link-disabled' : ''#" data-link-id="#qLinks.id#">
+                <div class="form-check form-switch me-2" style="min-width:40px;">
+                    <input class="form-check-input link-toggle" type="checkbox"
+                           #len(qLinks.siteurl) ? 'checked' : ''# />
+                </div>
                 <div class="link-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
                 </div>
@@ -43,9 +60,11 @@
                 <input type="url" class="form-control form-control-sm"
                        placeholder="https://..."
                        value="#encodeForHTMLAttribute(len(qLinks.siteurl) ? qLinks.siteurl : '')#"
-                       data-field="url" />
+                       data-field="url"
+                       #NOT len(qLinks.siteurl) ? 'disabled' : ''# />
             </div>
         </cfloop>
+        <cfif len(lastType)></div></cfif>
     <cfelse>
         <p class="text-muted">No link templates found. Links will be available after setup completes.</p>
     </cfif>
@@ -61,6 +80,14 @@
 </a>
 
 <script>
+// Toggle enable/disable URL input
+$(document).on('change', '.link-toggle', function() {
+    var $row = $(this).closest('.link-row');
+    var enabled = $(this).is(':checked');
+    $row.find('input[data-field="url"]').prop('disabled', !enabled);
+    $row.toggleClass('link-disabled', !enabled);
+});
+
 $('##add-custom-link').on('click', function() {
     var html =
         '<div class="link-row custom-link-row">' +
@@ -82,10 +109,11 @@ window.wizardCollectStepData = function() {
     var existingLinks = [];
     var customLinks = [];
 
-    // Existing pre-populated links
+    // Existing pre-populated links (respect toggle state)
     $('##links-list .link-row').each(function() {
         var $r = $(this);
-        var url = $r.find('[data-field="url"]').val().trim();
+        var enabled = $r.find('.link-toggle').is(':checked');
+        var url = enabled ? $r.find('[data-field="url"]').val().trim() : '';
         existingLinks.push({
             sitelinkId: $r.data('link-id'),
             siteurl: url
