@@ -10,33 +10,27 @@
 
 .wizard-header {
     background: #406E8E;
-    padding: 32px 30px 28px;
+    padding: 20px 30px 18px;
     text-align: center;
-}
-
-.wizard-brand-title {
-    color: #fff;
-    font-size: 18px;
-    font-weight: 700;
-    letter-spacing: 0.5px;
 }
 
 .wizard-brand {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
-    gap: 16px;
+    gap: 6px;
 }
 
 .wizard-logo {
-    height: 40px;
+    height: 24px;
     width: auto;
 }
 
 .wizard-brand-subtitle {
     color: #a8c8de;
-    font-size: 12px;
-    margin-top: 4px;
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
 }
 
 .wizard-card {

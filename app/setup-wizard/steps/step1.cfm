@@ -51,7 +51,7 @@
 <!--- Resolve Pacific tzid for default --->
 <cfset pacificTzId = 0>
 <cfloop query="qTimezones">
-    <cfif findNoCase("Pacific Standard Time", qTimezones.tzname)>
+    <cfif qTimezones.tzname EQ "Pacific Standard Time">
         <cfset pacificTzId = qTimezones.tzid>
         <cfbreak>
     </cfif>

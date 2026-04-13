@@ -76,11 +76,8 @@
         <!--- Header bar --->
         <div class="wizard-header">
             <div class="wizard-brand">
-                <img src="/app/assets/images/logo-light.png" alt="TAO" class="wizard-logo" />
-                <div>
-                    <div class="wizard-brand-title">The Actor's Office</div>
-                    <div class="wizard-brand-subtitle">Setup Wizard</div>
-                </div>
+                <img src="/app/assets/images/logo-light.png" alt="The Actor's Office" class="wizard-logo" />
+                <div class="wizard-brand-subtitle">Setup Wizard</div>
             </div>
         </div>
 
