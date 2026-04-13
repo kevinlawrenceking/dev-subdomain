@@ -82,7 +82,7 @@
     <!--- Avatar upload --->
     <div class="avatar-upload-area">
         <img src="#avatarUrl#?t=#getTickCount()#" alt="Profile photo" class="avatar-preview" id="avatar-preview"
-             onerror="this.src='/media-#application.dsn#/images/default-avatar.png'" />
+             onerror="this.onerror=null;this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22 viewBox=%220 0 100 100%22%3E%3Crect fill=%22%23dee2e6%22 width=%22100%22 height=%22100%22/%3E%3Ccircle cx=%2250%22 cy=%2238%22 r=%2216%22 fill=%22%23adb5bd%22/%3E%3Cellipse cx=%2250%22 cy=%2280%22 rx=%2228%22 ry=%2220%22 fill=%22%23adb5bd%22/%3E%3C/svg%3E'" />
         <div>
             <label class="btn btn-outline-secondary btn-sm mb-1">
                 Upload Photo
