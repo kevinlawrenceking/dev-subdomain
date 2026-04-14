@@ -72,7 +72,8 @@
         <cfset maintSystemId = qSystems.systemid>
     </cfif>
 </cfloop>
-<cfif targetSystemId EQ 0 AND maintSystemId EQ 0>
+<cfset systemsMissing = (targetSystemId EQ 0 AND maintSystemId EQ 0)>
+<cfif systemsMissing>
     <cflog file="TAO_setup_wizard" type="warning"
            text="Step 5: No Target or Maintenance systems found in fusystems table.">
 </cfif>
@@ -113,7 +114,11 @@
     </div>
 </div>
 
-<cfif arrayLen(contactList) EQ 0>
+<cfif systemsMissing>
+    <div class="alert alert-warning" role="alert">
+        Relationship systems are not configured yet. You can skip this step and set up reminders later from the Contacts page.
+    </div>
+<cfelseif arrayLen(contactList) EQ 0>
     <div class="text-center py-4 text-muted">
         <p>You haven't added any contacts yet. You can set up reminders later from the Contacts page.</p>
         <a href="javascript:void(0)" onclick="$('##btn-back').trigger('click');" class="btn btn-outline-primary btn-sm">Back to Add Contacts</a>

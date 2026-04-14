@@ -30,6 +30,16 @@
     <cflocation url="/setup/?error=invalid" addtoken="false">
 </cfif>
 
+<!--- Validate critical fields before transaction --->
+<cfif NOT val(qSetup.id) GT 0>
+    <cflog file="TAO_setup" type="error" text="setup2: invalid thrivecart id (#qSetup.id#) for uuid #session.setupUUID#" />
+    <cflocation url="/setup/?error=invalid" addtoken="false">
+</cfif>
+<cfif NOT isNumeric(qSetup.customerid) OR val(qSetup.customerid) LTE 0>
+    <cflog file="TAO_setup" type="error" text="setup2: invalid customerid (#qSetup.customerid#) for uuid #session.setupUUID#" />
+    <cflocation url="/setup/?error=invalid" addtoken="false">
+</cfif>
+
 <!--- Name/email: accept user edits from form, fall back to DB values.
       id and customerid always come from DB (security-critical). --->
 <cfset setupFirst = len(trim(form.customerfirst)) ? trim(form.customerfirst) : qSetup.customerfirst>

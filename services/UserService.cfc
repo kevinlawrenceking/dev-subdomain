@@ -793,10 +793,10 @@
     <cfif qUserDetails.recordCount EQ 1>
        <cfloop list="#qUserDetails.columnList#" index="col">
     <!--- Check if the field is NULL and assign a default value --->
-    <cfif isNull(qUserDetails[col])>
-        <cfset user[col] = ""> <!--- Default empty string for NULL values --->
+    <cfif isNull(qUserDetails[col][1])>
+        <cfset user[col] = "">
     <cfelse>
-        <cfset user[col] = qUserDetails[col]>
+        <cfset user[col] = qUserDetails[col][1]>
     </cfif>
 </cfloop>
 

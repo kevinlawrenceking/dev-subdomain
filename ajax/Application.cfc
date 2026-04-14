@@ -44,6 +44,16 @@
       <cfset application.datasource = "abod">
     </cfif>
 
+    <!--- Ensure baseMediaPath exists (cold-start safety) --->
+    <cfif NOT structKeyExists(application, "baseMediaPath")>
+      <cfif application.datasource EQ "abo">
+        <cfset application.baseMediaPath = "C:\home\theactorsoffice.com\media-abo">
+      <cfelse>
+        <cfset application.baseMediaPath = expandPath("/media-" & application.datasource)>
+      </cfif>
+      <cfset application.baseMediaUrl = "/media-" & application.datasource>
+    </cfif>
+
     <!--- Require authenticated session for all AJAX endpoints --->
     <cfif NOT structKeyExists(session, "userid")>
       <cfheader statuscode="401">

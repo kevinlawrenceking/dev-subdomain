@@ -27,7 +27,7 @@
     <cfloop array="#existingLinks#" index="link">
         <cfset linkId = val(link.sitelinkId ?: 0)>
         <cfset linkUrl = trim(link.siteurl ?: "")>
-        <cfif linkId GT 0>
+        <cfif linkId GT 0 AND len(linkUrl)>
             <cfquery datasource="#application.datasource#">
                 UPDATE sitelinks_user_tbl
                 SET siteurl = <cfqueryparam value="#linkUrl#" cfsqltype="cf_sql_varchar" />

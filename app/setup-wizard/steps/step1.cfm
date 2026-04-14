@@ -48,10 +48,12 @@
     SELECT id AS dateFormatID, formatexample AS dateformatExample FROM dateformats ORDER BY id
 </cfquery>
 
-<!--- Resolve Pacific tzid for default --->
+<!--- Resolve Pacific tzid for default (case-insensitive, multiple name variants) --->
 <cfset pacificTzId = 0>
+<cfset pacificNames = "Pacific Standard Time,Pacific Time,Pacific Time (US & Canada),US/Pacific">
 <cfloop query="qTimezones">
-    <cfif qTimezones.tzname EQ "Pacific Standard Time">
+    <cfif listFindNoCase(pacificNames, qTimezones.tzname)
+          OR (len(qTimezones.tz_iana) AND qTimezones.tz_iana EQ "America/Los_Angeles")>
         <cfset pacificTzId = qTimezones.tzid>
         <cfbreak>
     </cfif>

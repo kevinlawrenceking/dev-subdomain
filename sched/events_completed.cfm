@@ -1,3 +1,4 @@
+<cfsetting requesttimeout="600" />
 <cftransaction>
 
     <!--- Debug variable - set to "Y" to show debug information --->

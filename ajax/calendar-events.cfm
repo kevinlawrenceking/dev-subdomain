@@ -107,7 +107,14 @@
 
     <!--- Fix missing or invalid stop time --->
     <cfif NOT isDate(eventStopTime)>
-        <cfset eventStopTime = createTime(hour(eventStartTime) + 1, minute(eventStartTime), 0)>
+        <cfset newHour = hour(eventStartTime) + 1>
+        <cfif newHour GTE 24>
+            <cfset newHour = 23>
+            <cfset newMinute = 59>
+        <cfelse>
+            <cfset newMinute = minute(eventStartTime)>
+        </cfif>
+        <cfset eventStopTime = createTime(newHour, newMinute, 0)>
     <cfelseif dateCompare(eventStopDate, eventStartDate) EQ 0>
         <cfset startMinutes = hour(eventStartTime) * 60 + minute(eventStartTime)>
         <cfset stopMinutes = hour(eventStopTime) * 60 + minute(eventStopTime)>
