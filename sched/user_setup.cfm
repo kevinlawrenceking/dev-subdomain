@@ -13,7 +13,6 @@
 <cfoutput>
     <cfset starttime = "#timeformat(NOw(),'HHMMSS')#" />
 
-<cfoutput>
 
 <cfset browser_media_root_user="#session.userMediaUrl#" />
 

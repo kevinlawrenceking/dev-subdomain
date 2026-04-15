@@ -1,9 +1,6 @@
 <cfsetting requesttimeout="600" />
-<cftransaction>
 
-    <!--- Debug variable - set to "Y" to show debug information --->
     <cfparam name="dbug" default="N" />
-    <cfset dbug="Y" />
 
 
     <cfif dbug eq "Y">
@@ -200,6 +197,7 @@
     </cfif>
 
                     <cfloop query="events">
+                    <cftransaction>
 
                         <cfif dbug eq "Y">
                             <cfoutput>
@@ -399,9 +397,11 @@
                                             WHERE eventid = <cfqueryparam value="#new_eventid#" cfsqltype="cf_sql_integer" />
                                         </cfquery>
 
+                                    </cftransaction>
                                     </cfloop>
 
-<!--- WO-4.4: Moved inside transaction (was outside, risking partial contact updates) --->
+<cftransaction>
+<!--- WO-4.4: Bulk contact updates in own transaction --->
 <cfquery datasource="#dsn#" result="result" name="uppdate_when">
 UPDATE contactdetails cd
 INNER JOIN (
@@ -427,7 +427,6 @@ INNER JOIN (
 SET cd.contactMeetingloc = sub.oldest_new_contactMeetingLoc
 WHERE cd.contactMeetingloc IS NULL;
 </cfquery>
-
 </cftransaction>
 
 <cfif dbug eq "Y">

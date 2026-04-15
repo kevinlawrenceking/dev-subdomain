@@ -61,15 +61,15 @@ Security: Requires admin session (add appropriate check)
 <cfset totalIssues = auditResults.A1 + auditResults.C1 + auditResults.D1 + auditResults.E1 />
 <cfif totalIssues EQ 0>
     <cfset healthStatus = "healthy" />
-    <cfset healthColor = "#28a745" />
+    <cfset healthColor = "##28a745" />
     <cfset healthIcon = "check-circle" />
 <cfelseif totalIssues LT 10>
     <cfset healthStatus = "warning" />
-    <cfset healthColor = "#ffc107" />
+    <cfset healthColor = "##ffc107" />
     <cfset healthIcon = "alert-triangle" />
 <cfelse>
     <cfset healthStatus = "critical" />
-    <cfset healthColor = "#dc3545" />
+    <cfset healthColor = "##dc3545" />
     <cfset healthIcon = "alert-circle" />
 </cfif>
 

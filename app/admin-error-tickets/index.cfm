@@ -432,7 +432,7 @@ Phase 2 of TAO-SPEC-2026-005 Centralized Error Management
                     + '<td>' + escHtml(t.error_type || '') + '</td>'
                     + '<td class="error-msg-cell" title="' + escAttr(t.error_message || '') + '">' + escHtml(truncate(t.error_message || '', 80)) + '</td>'
                     + '<td class="script-cell" title="' + escAttr(t.script_name || '') + '">' + escHtml(t.script_name || '') + '</td>'
-                    + '<td>' + escHtml(t.user_email || (t.user_id ? 'User #' + t.user_id : '')) + '</td>'
+                    + '<td>' + escHtml(t.user_email || (t.user_id ? 'User ##' + t.user_id : '')) + '</td>'
                     + '<td>' + escHtml(envLabel) + '</td>'
                     + '<td>' + statusBadge + '</td>'
                     + '<td>'
