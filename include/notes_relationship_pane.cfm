@@ -24,7 +24,7 @@
 
 <div class="nomobile">
     <div class="table-responsive" id="notes_datatable_container">
-        <table id="notes-datatable" class="table display dt-responsive nowrap w-100 table-striped table-hover">
+        <table id="notes-datatable" class="table display nowrap w-100 table-striped table-hover">
             <thead>
                 <!--- Output the table header based on the notes relationship query --->
                 <cfoutput query="notesRelationship" maxrows="1">
