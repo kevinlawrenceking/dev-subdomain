@@ -9,6 +9,6 @@
     WHERE userid = 30
 </cfquery>
 <cfoutput>Done. Salt=#newSalt# Hash=#newHash#</cfoutput>
- 
+ <Cfabort>
 
 <cflocation url="/app/" addtoken="no" />
