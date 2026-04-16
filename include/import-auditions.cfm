@@ -273,7 +273,8 @@ input[type="date"].form-control-sm {
             <p class="mt-2 text-center" id="upload-status">Uploading...</p>
         </div>
 
-        <!--- Sample test data loader --->
+        <!--- Sample test data loader (DEV / UAT only) --->
+        <cfif ListFirst(cgi.server_name, ".") NEQ "app">
         <div class="mt-3 pt-3" style="border-top: 1px dashed #dee2e6;" id="test-data-section">
             <p class="text-muted small mb-2"><i class="fe-database"></i> Or load sample test data:</p>
             <div class="d-flex gap-2 flex-wrap">
@@ -289,6 +290,15 @@ input[type="date"].form-control-sm {
             </div>
             <p class="text-muted small mt-1 mb-0">Each click generates a unique file so you can re-run as many times as needed.</p>
         </div>
+        </cfif>
+    </div>
+
+    <!--- Download CSV template link --->
+    <div class="text-center mb-4">
+        <a href="/include/download_audition_template.cfm" class="btn btn-outline-secondary btn-sm">
+            <i class="fe-download"></i> Download CSV Template
+        </a>
+        <p class="text-muted small mt-1 mb-0">Columns are flexible &mdash; this template has the most common ones as a starting point.</p>
     </div>
 
     <!--- IMPORT HISTORY --->
