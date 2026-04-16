@@ -252,6 +252,36 @@
                                     <input type="hidden" name="recid" value="#recid#" />
                                 </form>
                             </div>
+
+                            <!--- Developer Response + Resolution Email --->
+                            <div class="col-md-12 mt-3">
+                                <h5>Developer Response / Resolution Email</h5>
+                                <div class="form-group">
+                                    <label for="developerResponse">
+                                        <strong>Developer Response</strong><br>
+                                        <small class="text-muted">This text will appear verbatim in the email sent to the user.</small>
+                                    </label>
+                                    <textarea
+                                        id="developerResponse"
+                                        name="developerResponse"
+                                        class="form-control"
+                                        rows="6"
+                                        <cfif isDate(qTicketExtra.resolvedEmailSentAt)>readonly</cfif>
+                                    >#encodeForHtml(qTicketExtra.developerResponse)#</textarea>
+                                </div>
+
+                                <cfif isDate(qTicketExtra.resolvedEmailSentAt)>
+                                    <button type="button" class="btn btn-secondary mt-2" disabled>
+                                        &#10003; Resolution Sent -- #DateTimeFormat(qTicketExtra.resolvedEmailSentAt, "mmm d, yyyy h:mm tt")#
+                                    </button>
+                                <cfelse>
+                                    <button type="button" id="btnSendResolution" class="btn btn-primary mt-2">
+                                        Send Resolution Email to User
+                                    </button>
+                                </cfif>
+
+                                <div id="resolutionAlert" class="alert alert-success mt-2" style="display:none;"></div>
+                            </div>
                         </cfoutput>
                     </div>
                 </div>
@@ -302,6 +332,9 @@
     </div>
 </cfif>
 
+<!--- Generate CSRF token for AJAX calls --->
+<cfset csrfToken = CSRFGenerateToken() />
+
 <script>
     $(document).ready(function () {
         <cfoutput>
@@ -309,3 +342,65 @@
         </cfoutput>
     });
 </script>
+
+<cfoutput>
+<script>
+(function() {
+  var ticketID   = '#recid#';
+  var csrfToken  = '#csrfToken#';
+  var responseTA = document.getElementById('developerResponse');
+  var btnSend    = document.getElementById('btnSendResolution');
+
+  // Auto-save on blur
+  if (responseTA && !responseTA.readOnly) {
+    responseTA.addEventListener('blur', function() {
+      var formData = new FormData();
+      formData.append('ticketID', ticketID);
+      formData.append('developerResponse', this.value);
+      formData.append('csrfToken', csrfToken);
+      fetch('/ajax/admin-support/save-developer-response.cfm', {
+        method: 'POST',
+        body: formData
+      });
+    });
+  }
+
+  // Send resolution email
+  if (btnSend) {
+    btnSend.addEventListener('click', function() {
+      var btn = this;
+      btn.disabled = true;
+      btn.textContent = 'Sending\u2026';
+
+      var formData = new FormData();
+      formData.append('ticketID', ticketID);
+      formData.append('csrfToken', csrfToken);
+      fetch('/ajax/admin-support/send-resolution-email.cfm', {
+        method: 'POST',
+        body: formData
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.success) {
+          btn.textContent = '\u2713 Resolution Sent \u2014 ' + data.data.sentAt;
+          btn.className = 'btn btn-secondary mt-2';
+          var alertEl = document.getElementById('resolutionAlert');
+          alertEl.textContent = 'Resolution email sent to ' + data.data.sentTo + ' on ' + data.data.sentAt + '.';
+          alertEl.style.display = 'block';
+          if (responseTA) { responseTA.readOnly = true; }
+        } else {
+          btn.disabled = false;
+          btn.textContent = 'Send Resolution Email to User';
+          alert(data.message);
+        }
+      })
+      .catch(function() {
+        btn.disabled = false;
+        btn.textContent = 'Send Resolution Email to User';
+        alert('Request failed. Please try again.');
+      });
+    });
+  }
+})();
+</script>
+</cfoutput>

@@ -109,23 +109,36 @@
 
 
 
-    <cfmail from="support@theactorsoffice.com" 
-            to="add.task.swxn8hp4jz4m0x79@todoist.net" 
-            bcc="kevinking7135@gmail.com" 
-            subject="#details.recid# - #details.ticketdetails# !!1 @Programming" 
+    <cftry>
+    <cfmail from="support@theactorsoffice.com"
+            to="add.task.swxn8hp4jz4m0x79@todoist.net"
+            bcc="kevinking7135@gmail.com"
+            subject="#details.recid# - #details.ticketdetails# !!1 @Programming"
             type="HTML">
         <cfset emailBody = "<p>#details.ticketdetails#</p>">
         #emailBody#
     </cfmail>
+    <cfcatch type="any">
+        <cflog type="error" log="application"
+            text="TAO_ticket_errors: cfmail failed Todoist task — #cfcatch.message#">
+    </cfcatch>
+    </cftry>
 
 
 
 
 
 
+   <cftry>
    <cfmail from="support@theactorsoffice.com"   to="add.task.swxn8hp4jz4m0x79@todoist.net" bcc="kevinking7135@gmail.com" subject="#details.recid# - #details.ticketdetails# " type="HTML">
-      
+
 </cfmail>
+   <cfcatch type="any">
+       <cflog type="error" log="application"
+           text="TAO_ticket_errors: cfmail failed Todoist second — #cfcatch.message#">
+   </cfcatch>
+   </cftry>
+        <cftry>
         <cfmail from="support@theactorsoffice.com" failto="kking@theactorsoffice.com" replyto="support@theactorsoffice.com" to="#to_email#,Cansoff@gmail.com" bcc="kevinking7135@gmail.com,cansoff@gmail.com" usessl="true"  usetls="true" subject="TAO TICKET NO #details.recid#" type="HTML">
             <HTML>
 
@@ -299,9 +312,67 @@
 
             </HTML>
         </cfmail>
+        <cfcatch type="any">
+            <cflog type="error" log="application"
+                text="TAO_ticket_errors: cfmail failed user notification — #cfcatch.message#">
+        </cfcatch>
+        </cftry>
 </cfif>
 
+<!--- ACK EMAIL: Sent to user on every ticket submission --->
+<cftry>
+  <cfsavecontent variable="ackEmailBody">
+    <cfoutput>
+    <html><body style="font-family: Arial, sans-serif; color: ##333;">
+      <p>Hello #encodeForHtml(details.userfirstname)#,</p>
+      <p>We have received your support request. Here are the details:</p>
+      <table cellpadding="4" cellspacing="0" border="0">
+        <tr><td><strong>Ticket ID:</strong></td><td>##recid##</td></tr>
+        <tr><td><strong>Summary:</strong></td><td>#encodeForHtml(details.ticketdetails)#</td></tr>
+        <tr><td><strong>Reference ##:</strong></td><td>TAO-#encodeForHtml(recid)#</td></tr>
+      </table>
+      <p>We are aware of your issue and are actively working to resolve it.
+         You may reply to this email referencing <strong>TAO-#encodeForHtml(recid)#</strong>.</p>
+      <p>-- The Actors Office Support Team<br>support@theactorsoffice.com</p>
+    </body></html>
+    </cfoutput>
+  </cfsavecontent>
 
+  <cfmail
+    to="#to_email#"
+    from="support@theactorsoffice.com"
+    failto="kking@theactorsoffice.com"
+    replyto="support@theactorsoffice.com"
+    bcc="kking@theactorsoffice.com"
+    subject="We received your support request -- Ticket ###encodeForHtml(recid)#"
+    type="html"
+    usessl="true"
+    usetls="true">
+    #ackEmailBody#
+  </cfmail>
+
+  <cfquery datasource="#dsn#">
+    INSERT INTO ticketslog_tbl (tlogDetails, userID, ticketid, ticketstatus)
+    VALUES (
+      <cfqueryparam value="Ack email sent to #to_email#" cfsqltype="cf_sql_varchar">,
+      <cfqueryparam value="#session.userid#" cfsqltype="cf_sql_integer">,
+      <cfqueryparam value="#recid#" cfsqltype="cf_sql_integer">,
+      <cfqueryparam value="ack_email_sent" cfsqltype="cf_sql_varchar">
+    )
+  </cfquery>
+
+  <cfquery datasource="#dsn#">
+    UPDATE tickets
+    SET ackEmailSentAt = <cfqueryparam value="#now()#" cfsqltype="cf_sql_timestamp">
+    WHERE ticketID = <cfqueryparam value="#recid#" cfsqltype="cf_sql_integer">
+  </cfquery>
+
+  <cfcatch type="any">
+    <cflog type="error" log="application"
+      text="TAO_ticket_errors: ack email failed for ticket ###recid# -- #cfcatch.message#">
+    <!--- Silent fail -- ticket creation is not affected --->
+  </cfcatch>
+</cftry>
 
 
 
