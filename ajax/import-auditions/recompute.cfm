@@ -784,12 +784,12 @@
                             </cftry>
                         </cfcase>
 
-                        <!--- medium: whitelist check --->
+                        <!--- category (medium): whitelist check --->
                         <cfcase value="medium">
                             <cfset variables.normalizedValue = trim(variables.transformedValue)>
                             <cfif len(variables.normalizedValue) and not listFindNoCase("Film,Television,Theater,Commercial,Industrial,New Media,Voiceover,Print,Music Video,Web Series,Short Film,Student Film,Other", variables.normalizedValue)>
                                 <cfset variables.warningCount++>
-                                <cfset arrayAppend(variables.rowWarnings, { field: variables.effectiveFieldName, warning: "Unrecognized medium value; will import as-is" })>
+                                <cfset arrayAppend(variables.rowWarnings, { field: variables.effectiveFieldName, warning: "Unrecognized category value; will import as-is" })>
                             </cfif>
                         </cfcase>
 

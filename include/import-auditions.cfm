@@ -558,7 +558,7 @@ input[type="date"].form-control-sm {
                     <option value="audition_time">Audition Time</option>
                     <option value="location">Location</option>
                     <option value="status">Status</option>
-                    <option value="medium">Medium</option>
+                    <option value="medium">Category</option>
                     <option value="notes">Notes</option>
                 </select>
                 <input type="text" id="bulk-edit-value" class="form-control form-control-sm" placeholder="New value" style="width:auto;max-width:200px;display:none;">
@@ -752,7 +752,7 @@ input[type="date"].form-control-sm {
                                     <li>Set any column you don't need to <em>Ignore</em></li>
                                     <li>Click <strong>Confirm Mapping &amp; Continue</strong> when everything looks right</li>
                                 </ul>
-                                <p class="mb-0 text-muted small">Common fields: Project Name, Role, Casting Director, Audition Date, Medium (Film, TV, Commercial, Theater, Voiceover), Self-Tape (Yes/No), and Notes.</p>
+                                <p class="mb-0 text-muted small">Common fields: Project Name, Role, Casting Director, Audition Date, Category (Film, TV, Commercial, Theater, Voiceover), Self-Tape (Yes/No), and Notes.</p>
                             </div>
                         </div>
                     </div>

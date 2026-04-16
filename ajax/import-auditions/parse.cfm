@@ -667,8 +667,8 @@
     <cfset arrayAppend(rules, { keywords: ["time"], field: "audition_time" })>
     <!--- location --->
     <cfset arrayAppend(rules, { keywords: ["location", "address", "room", "studio"], field: "location" })>
-    <!--- medium --->
-    <cfset arrayAppend(rules, { keywords: ["medium", "type", "format"], field: "medium" })>
+    <!--- category (medium) --->
+    <cfset arrayAppend(rules, { keywords: ["medium", "category", "type", "format"], field: "medium" })>
     <!--- status --->
     <cfset arrayAppend(rules, { keywords: ["status", "result", "outcome"], field: "status" })>
     <!--- self_tape --->

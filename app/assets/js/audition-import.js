@@ -115,7 +115,7 @@
         callback_date: { type: 'date', label: 'Callback Date', group: 'schedule' },
         booking_date: { type: 'date', label: 'Booking Date', group: 'schedule' },
         location: { type: 'text', label: 'Location', group: 'details' },
-        medium: { type: 'select', label: 'Medium', group: 'details', options: [
+        medium: { type: 'select', label: 'Category', group: 'details', options: [
             { value: '', label: '(None)' },
             { value: 'film', label: 'Film' },
             { value: 'tv', label: 'TV' },

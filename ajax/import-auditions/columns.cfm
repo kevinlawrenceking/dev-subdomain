@@ -196,7 +196,7 @@
             { "field": "audition_date", "display_name": "Audition Date" },
             { "field": "audition_time", "display_name": "Audition Time" },
             { "field": "location", "display_name": "Location" },
-            { "field": "medium", "display_name": "Medium" },
+            { "field": "medium", "display_name": "Category" },
             { "field": "status", "display_name": "Status" },
             { "field": "callback_date", "display_name": "Callback Date" },
             { "field": "booking_date", "display_name": "Booking Date" },
