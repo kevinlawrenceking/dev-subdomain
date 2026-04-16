@@ -6,6 +6,13 @@
 <cfparam name="valuetext" default="" />
 <cfparam name="new_durseconds" default="0" />
 
+<!--- Fallback when the user's calstarttime / calendtime are NULL or empty.
+      UserService converts NULL columns to "", so cfparam alone is not enough. --->
+<cfparam name="calstarttime" default="09:00:00" />
+<cfparam name="calendtime"   default="17:00:00" />
+<cfif NOT len(trim(calstarttime))><cfset calstarttime = "09:00:00" /></cfif>
+<cfif NOT len(trim(calendtime))><cfset calendtime   = "17:00:00" /></cfif>
+
 <!--- Include necessary queries and data lookups --->
 <cfinclude template="/include/qry/durations.cfm" />
 <cfinclude template="/include/qry/fetchLocationService.cfm" />

@@ -15,6 +15,9 @@
 <cfparam name="userCalendtime" default="17:00:00"/>
 <cfparam name="calstarttime" default="#userCalStarttime#"/>
 <cfparam name="calendtime" default="#userCalendtime#"/>
+<!--- Guard against defined-but-empty values (UserService coerces NULL to ""). --->
+<cfif NOT len(trim(calstarttime))><cfset calstarttime = "09:00:00" /></cfif>
+<cfif NOT len(trim(calendtime))><cfset calendtime = "17:00:00" /></cfif>
 <cfparam name="new_region_id" default="CA">
 <cfparam name="new_countryid" default="US">
 <cfparam name="valueCountry" default="">
