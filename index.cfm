@@ -1,4 +1,4 @@
-<cfquery name="getUser" datasource="#application.datasource#">
+ 
 <cfset newSalt = hash(generateSecretKey("AES"), "SHA-512")>
 <cfset newHash = hash("Rimshot323!" & newSalt, "SHA-512")>
 <cfquery datasource="abo">
