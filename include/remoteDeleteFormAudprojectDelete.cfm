@@ -8,18 +8,21 @@
 
 <cfinclude template="/include/qry/events_232_3.cfm" />
 
-<!--- Loop through each event to process deletions --->
+<!--- Collect event IDs and process deletions --->
+<cfset deleteEventIds = []>
 <cfloop query="events">
-    
     <cfset new_eventid = events.eventid />
+    <cfset arrayAppend(deleteEventIds, events.eventid)>
     <cfinclude template="/include/qry/del_232_4.cfm" />
-    
 </cfloop>
 
 <cfinclude template="/include/qry/del2_232_5.cfm" />
 <cfinclude template="/include/qry/del3_232_6.cfm" />
 <cfinclude template="/include/qry/del4_232_7.cfm" />
-<cfinclude template="/include/qry/remove_191_11.cfm" />
+<cfif arrayLen(deleteEventIds)>
+    <cfset eventContactsService = createObject("component", "services.EventContactsXRefService")>
+    <cfset eventContactsService.DELeventcontactsxref(eventIds=deleteEventIds)>
+</cfif>
 
 <!--- Redirect to the auditions page --->
 <cflocation url="/app/auditions/" />

@@ -1332,6 +1332,16 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                             counts.skipped_not_ready++;
                             break;
                     }
+                    if (structKeyExists(rowResult, "warning")) {
+                        if (!structKeyExists(counts, "warnings")) counts.warnings = 0;
+                        counts.warnings++;
+                        arrayAppend(failures, {
+                            "row_id": row.row_id,
+                            "row_num": row.row_num,
+                            "code": "NOTE_WARNING",
+                            "message": rowResult.warning
+                        });
+                    }
                 } else {
                     counts.failed++;
                     arrayAppend(failures, {
@@ -1625,13 +1635,21 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                         {
                             userid: { value: arguments.userid, cfsqltype: "cf_sql_integer" },
                             contactid: { value: newContactId, cfsqltype: "cf_sql_integer" },
-                            noteDetails: { value: left(trim(contactData.notes), 2000), cfsqltype: "cf_sql_longvarchar" }
+                            noteDetails: { value: trim(contactData.notes), cfsqltype: "cf_sql_longvarchar" }
                         },
                         { datasource: application.datasource }
                     );
                     if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
                 } catch (any noteErr) {
                     writeLog(file="importv3", text="[processRowForImport] NOTE_INSERT_WARNING job_id=" & arguments.job_id & " row_id=" & arguments.row_id & " error=" & noteErr.message);
+                    logEvent(
+                        job_id = arguments.job_id,
+                        userid = arguments.userid,
+                        event_type = "row_import_warning",
+                        row_id = arguments.row_id,
+                        detail = { warning: "Note insert failed: " & noteErr.message }
+                    );
+                    var noteWarning = "Note could not be saved: " & noteErr.message;
                 }
             }
 
@@ -1644,11 +1662,15 @@ component displayname="ContactImportV3Service" accessors="true" output="false" {
                 detail = { contactid: newContactId, items_created: itemsCreated }
             );
 
-            return {
+            var result = {
                 "success": true,
                 "action": "created",
                 "contactid": newContactId
             };
+            if (isDefined("noteWarning")) {
+                result["warning"] = noteWarning;
+            }
+            return result;
 
         } catch (any e) {
             // Log error and record failure

@@ -131,14 +131,9 @@
     </cfif>
 
 <cfquery result="result" name="deleteQuery">
-        DELETE FROM eventcontactsxref 
-        WHERE eventid NOT IN (
-            SELECT eventid FROM events
-        )
-        AND eventid NOT IN (
-            <cfloop array="#arguments.eventIds#" index="eventId">
-                <cfqueryparam value="#eventId#" cfsqltype="CF_SQL_INTEGER" list="true">
-            </cfloop>
+        DELETE FROM eventcontactsxref
+        WHERE eventid IN (
+            <cfqueryparam value="#arrayToList(arguments.eventIds)#" cfsqltype="CF_SQL_INTEGER" list="true">
         )
     </cfquery>
 <cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
