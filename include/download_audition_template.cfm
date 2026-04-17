@@ -9,6 +9,6 @@
 
 <cfheader name="Content-Disposition" value="attachment; filename=audition_import_template.csv">
 <cfheader name="Content-Type" value="text/csv">
-<cfcontent type="text/csv" reset="true"><cfoutput>Project Name,Role,Casting Director,Audition Date,Audition Time,Location,Category,Status,Self-Tape,Contact Name,Contact Email,Notes
-,,,,,,,,,,,</cfoutput>
+<cfcontent type="text/csv" reset="true"><cfoutput>Project Name,Role,Casting Director,Audition Date,Audition Time,Location,Category,Contact Name,Contact Email,Notes
+,,,,,,,,,</cfoutput>
 <cfabort>
