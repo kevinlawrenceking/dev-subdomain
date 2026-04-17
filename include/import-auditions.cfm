@@ -27,6 +27,25 @@
 <cfif not hasActiveJob>
     <cfset auditionService = new services.AuditionImportService()>
     <cfset importHistory = auditionService.getUserJobHistory(session.userid, 20)>
+
+    <!--- Category list for the "Valid categories" hint shown under the CSV template button.
+          audcategories is a global, non-user-scoped table, so the same list applies to every user. --->
+    <cfset categoryNamesList = "">
+    <cftry>
+        <cfset categoryOptionsResult = auditionService.getCategoryOptions()>
+        <cfif categoryOptionsResult.success AND structKeyExists(categoryOptionsResult.data, "options")>
+            <cfset categoryNames = []>
+            <cfloop array="#categoryOptionsResult.data.options#" index="cat">
+                <cfif len(trim(cat.audcatname))>
+                    <cfset arrayAppend(categoryNames, cat.audcatname)>
+                </cfif>
+            </cfloop>
+            <cfset categoryNamesList = arrayToList(categoryNames, ", ")>
+        </cfif>
+        <cfcatch type="any">
+            <cfset categoryNamesList = "">
+        </cfcatch>
+    </cftry>
 </cfif>
 
 <!--- Ensure CSRF token exists --->
@@ -299,6 +318,9 @@ input[type="date"].form-control-sm {
             <i class="fe-download"></i> Download CSV Template
         </a>
         <p class="text-muted small mt-1 mb-0">Columns are flexible &mdash; this template has the most common ones as a starting point.</p>
+        <cfif len(categoryNamesList)>
+            <p class="text-muted small mt-1 mb-0"><strong>Valid Category values:</strong> <cfoutput>#encodeForHTML(categoryNamesList)#</cfoutput></p>
+        </cfif>
     </div>
 
     <!--- IMPORT HISTORY --->
