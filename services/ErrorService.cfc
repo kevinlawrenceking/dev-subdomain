@@ -244,19 +244,33 @@
           & chr(10) & "Detail: " & Left(arguments.diagnostics.errorDetail, 500) />
       <cfset var ticketUserId = (len(arguments.diagnostics.userId) AND isNumeric(arguments.diagnostics.userId)) ? val(arguments.diagnostics.userId) : 0 />
 
+      <!---
+        Resolve FK values inline so /app/admin-support-details/ INNER JOINs
+        on pgpages / taousers_tbl succeed. Without this the ticket lands with
+        pgid=0 / userid=0 and the details page throws (ERR-xxxxxxxx loop).
+        pgid: prefer the admin-error-tickets page; fall back to any page.
+        verid: latest active version (same query Application.cfc uses).
+        userid: session user if it resolves; else the lowest userid in taousers_tbl.
+      --->
       <cfquery datasource="#variables.dsn#">
         INSERT INTO tickets (
           pgid, verid, ticketName, ticketdetails, tickettype, userid, ticketactive, ticketstring
-        ) VALUES (
-          <cfqueryparam value="0" cfsqltype="cf_sql_integer" />,
-          <cfqueryparam value="0" cfsqltype="cf_sql_integer" />,
+        )
+        SELECT
+          COALESCE(
+            (SELECT pgid FROM pgpages WHERE pgDir = <cfqueryparam value="admin-error-tickets" cfsqltype="cf_sql_varchar" /> ORDER BY pgid LIMIT 1),
+            (SELECT pgid FROM pgpages ORDER BY pgid LIMIT 1)
+          ),
+          (SELECT verid FROM taoversions ORDER BY isactive DESC, verid DESC LIMIT 1),
           <cfqueryparam value="#Left(ticketName, 255)#" cfsqltype="cf_sql_varchar" />,
           <cfqueryparam value="#ticketDetails#" cfsqltype="cf_sql_longvarchar" />,
           <cfqueryparam value="Error" cfsqltype="cf_sql_varchar" />,
-          <cfqueryparam value="#ticketUserId#" cfsqltype="cf_sql_integer" />,
+          COALESCE(
+            (SELECT userid FROM taousers_tbl WHERE userid = <cfqueryparam value="#ticketUserId#" cfsqltype="cf_sql_integer" /> LIMIT 1),
+            (SELECT userid FROM taousers_tbl ORDER BY userid LIMIT 1)
+          ),
           <cfqueryparam value="Y" cfsqltype="cf_sql_varchar" />,
           <cfqueryparam value="#Left(arguments.diagnostics.scriptName & '?' & arguments.diagnostics.queryString, 500)#" cfsqltype="cf_sql_varchar" />
-        )
       </cfquery>
 <cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
