@@ -744,7 +744,7 @@
                 t.customtestpagename
             FROM tickets t
             INNER JOIN taousers_tbl u ON u.userid = t.userid
-            INNER JOIN pgpages p ON p.pgid = t.pgid
+            LEFT JOIN pgpages p ON p.pgid = t.pgid
             LEFT JOIN taoversions v ON v.verid = t.verid
             WHERE t.ticketid = <cfqueryparam value="#arguments.recID#" cfsqltype="CF_SQL_INTEGER">
         </cfquery>
@@ -780,7 +780,7 @@
                 p.pgdir
             FROM tickets t
             INNER JOIN taousers_tbl u ON u.userid = t.userid
-            INNER JOIN pgpages p ON p.pgid = t.pgid
+            LEFT JOIN pgpages p ON p.pgid = t.pgid
             INNER JOIN taoversions v ON v.verid = t.verid
             WHERE t.ticketstatus IN (
                 <cfloop array="#arguments.statusList#" index="status">
