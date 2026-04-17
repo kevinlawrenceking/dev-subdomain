@@ -153,6 +153,21 @@
                             <div id="emailActionResult" class="mt-2 small"></div>
                         </div>
                     </div>
+
+                    <!--- Impersonate --->
+                    <div class="card action-card mb-3" style="border-left-color:#d97706;">
+                        <div class="card-header"><h6 class="mb-0">Impersonate</h6></div>
+                        <div class="card-body">
+                            <div class="d-grid gap-2">
+                                <button id="btnImpersonate" class="btn btn-warning btn-sm">
+                                    Log In As This User
+                                </button>
+                            </div>
+                            <div class="small text-muted mt-2">
+                                Your session switches to this user until you click "Return to admin" in the top banner.
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -568,6 +583,13 @@
 
         $('#editForm').on('keydown', function(e) {
             if (e.key === 'Enter') { e.preventDefault(); saveEdit(); }
+        });
+
+        $('#btnImpersonate').on('click', function() {
+            if (!userData) return;
+            var name = ($('#pageTitle').text() || 'this user').trim();
+            if (!confirm('Log in as ' + name + '?\n\nYou will stay impersonating them until you click "Return to admin" in the top banner.')) return;
+            window.location.href = '/app/dashboard_new/?u=' + USER_ID;
         });
     });
 })();
