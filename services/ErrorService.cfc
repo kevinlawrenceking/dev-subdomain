@@ -76,6 +76,103 @@
     <cfreturn "ERR-" & Left(CreateUUID(), 8) />
   </cffunction>
 
+  <cffunction name="unwrapCauseChain" access="private" returntype="struct" output="false"
+              hint="Walks exception.rootCause / exception.cause chain up to depthCap. Returns { root, chain, chainCount, truncated }. Never throws.">
+    <cfargument name="exception" required="true" />
+    <cfargument name="depthCap" type="numeric" required="false" default="5" />
+
+    <cfscript>
+      var emptyRoot = { type = "", message = "", detail = "", file = "", line = 0 };
+      var result = { root = emptyRoot, chain = [], chainCount = 0, truncated = false };
+
+      try {
+        if (NOT isStruct(arguments.exception)) {
+          return result;
+        }
+
+        // Seed: pick first real cause off the outer exception.
+        var current = "";
+        if (structKeyExists(arguments.exception, "rootCause")
+            AND isStruct(arguments.exception.rootCause)) {
+          current = arguments.exception.rootCause;
+        } else if (structKeyExists(arguments.exception, "cause")
+                   AND isStruct(arguments.exception.cause)) {
+          current = arguments.exception.cause;
+        } else {
+          return result;
+        }
+
+        // Referential-identity cycle guard via System.identityHashCode.
+        var sys = createObject("java", "java.lang.System");
+        var visited = [];
+        var depth = 0;
+        var deepest = emptyRoot;
+
+        while (isStruct(current) AND depth LT arguments.depthCap) {
+          var hash = sys.identityHashCode(current);
+          if (arrayContains(visited, hash)) {
+            break;
+          }
+          arrayAppend(visited, hash);
+
+          var frame = {
+            depth   = depth,
+            type    = structKeyExists(current, "type")    ? toString(current.type)    : "",
+            message = structKeyExists(current, "message") ? Left(toString(current.message), 2000) : "",
+            detail  = structKeyExists(current, "detail")  ? Left(toString(current.detail),  2000) : "",
+            file    = "",
+            line    = 0
+          };
+
+          if (structKeyExists(current, "tagContext")
+              AND isArray(current.tagContext)
+              AND arrayLen(current.tagContext) GTE 1
+              AND isStruct(current.tagContext[1])) {
+            var tc = current.tagContext[1];
+            if (structKeyExists(tc, "template")) {
+              frame.file = Left(toString(tc.template), 500);
+            }
+            if (structKeyExists(tc, "line") AND isNumeric(tc.line)) {
+              frame.line = val(tc.line);
+            }
+          }
+
+          arrayAppend(result.chain, frame);
+          deepest = {
+            type    = frame.type,
+            message = frame.message,
+            detail  = frame.detail,
+            file    = frame.file,
+            line    = frame.line
+          };
+          depth = depth + 1;
+
+          // Descend: prefer rootCause, then cause, else stop.
+          if (structKeyExists(current, "rootCause")
+              AND isStruct(current.rootCause)) {
+            current = current.rootCause;
+          } else if (structKeyExists(current, "cause")
+                     AND isStruct(current.cause)) {
+            current = current.cause;
+          } else {
+            current = "";
+          }
+        }
+
+        result.chainCount = arrayLen(result.chain);
+        result.truncated  = (depth GTE arguments.depthCap AND isStruct(current));
+        result.root       = deepest;
+        return result;
+
+      } catch (any e) {
+        cflog(file = "TAO_error_fallback", type = "warning",
+              text = "unwrapCauseChain failed: " & e.message);
+        return { root = { type = "", message = "", detail = "", file = "", line = 0 },
+                 chain = [], chainCount = 0, truncated = false };
+      }
+    </cfscript>
+  </cffunction>
+
   <cffunction name="buildDiagnostics" access="private" returntype="struct" output="false"
               hint="Assembles full diagnostic struct from exception, CGI, session, server scopes.">
     <cfargument name="exception" required="true" />
@@ -108,6 +205,25 @@
       if (structKeyExists(arguments.exception, "sql") AND len(trim(arguments.exception.sql))) {
         diag.sqlStatement = sanitizeSql(arguments.exception.sql);
       }
+
+      // Root cause chain (TAO-SPEC-2026-005 Phase 2). Unwrap is best-effort;
+      // helper swallows its own errors so capture never breaks capture.
+      var causeData = unwrapCauseChain(arguments.exception);
+      diag.rootCauseType    = causeData.root.type;
+      diag.rootCauseMessage = causeData.root.message;
+      diag.rootCauseDetail  = causeData.root.detail;
+      diag.rootCauseFile    = causeData.root.file;
+      diag.rootCauseLine    = causeData.root.line;
+      diag.causeChain       = "";
+      if (causeData.chainCount GT 0) {
+        try {
+          diag.causeChain = serializeJSON(causeData.chain);
+        } catch (any e) {
+          diag.causeChain = "Error serializing cause chain: " & e.message;
+        }
+      }
+      diag.causeChainCount  = causeData.chainCount;
+      diag.causeTruncated   = causeData.truncated;
 
       // Request context from CGI scope
       diag.scriptName = cgi.SCRIPT_NAME;
@@ -175,6 +291,8 @@
       <cfquery datasource="#variables.dsn#">
         INSERT INTO error_tickets (
           ticket_id, error_type, error_message, error_detail,
+          root_cause_type, root_cause_message, root_cause_detail,
+          root_cause_file, root_cause_line, cause_chain,
           stack_trace, tag_context, sql_statement,
           script_name, query_string, http_method, http_referer,
           remote_ip, user_agent, form_data,
@@ -186,6 +304,12 @@
           <cfqueryparam value="#arguments.diagnostics.errorType#" cfsqltype="cf_sql_varchar" null="#NOT len(arguments.diagnostics.errorType)#" />,
           <cfqueryparam value="#arguments.diagnostics.errorMessage#" cfsqltype="cf_sql_longvarchar" null="#NOT len(arguments.diagnostics.errorMessage)#" />,
           <cfqueryparam value="#arguments.diagnostics.errorDetail#" cfsqltype="cf_sql_longvarchar" null="#NOT len(arguments.diagnostics.errorDetail)#" />,
+          <cfqueryparam value="#arguments.diagnostics.rootCauseType#" cfsqltype="cf_sql_varchar" null="#NOT len(arguments.diagnostics.rootCauseType)#" />,
+          <cfqueryparam value="#arguments.diagnostics.rootCauseMessage#" cfsqltype="cf_sql_longvarchar" null="#NOT len(arguments.diagnostics.rootCauseMessage)#" />,
+          <cfqueryparam value="#arguments.diagnostics.rootCauseDetail#" cfsqltype="cf_sql_longvarchar" null="#NOT len(arguments.diagnostics.rootCauseDetail)#" />,
+          <cfqueryparam value="#arguments.diagnostics.rootCauseFile#" cfsqltype="cf_sql_varchar" null="#NOT len(arguments.diagnostics.rootCauseFile)#" />,
+          <cfqueryparam value="#arguments.diagnostics.rootCauseLine#" cfsqltype="cf_sql_integer" null="#(NOT isNumeric(arguments.diagnostics.rootCauseLine)) OR (val(arguments.diagnostics.rootCauseLine) EQ 0)#" />,
+          <cfqueryparam value="#arguments.diagnostics.causeChain#" cfsqltype="cf_sql_longvarchar" null="#NOT len(arguments.diagnostics.causeChain)#" />,
           <cfqueryparam value="#arguments.diagnostics.stackTrace#" cfsqltype="cf_sql_longvarchar" null="#NOT len(arguments.diagnostics.stackTrace)#" />,
           <cfqueryparam value="#arguments.diagnostics.tagContext#" cfsqltype="cf_sql_longvarchar" null="#NOT len(arguments.diagnostics.tagContext)#" />,
           <cfqueryparam value="#arguments.diagnostics.sqlStatement#" cfsqltype="cf_sql_longvarchar" null="#NOT len(arguments.diagnostics.sqlStatement)#" />,
@@ -235,8 +359,22 @@
     <cfargument name="diagnostics" type="struct" required="true" />
 
     <cftry>
-      <cfset var ticketName = arguments.diagnostics.ticketId & " - " & Left(arguments.diagnostics.errorMessage, 200) />
-      <cfset var ticketDetails = "Error Ticket: " & arguments.diagnostics.ticketId
+      <cfset var ticketName = arguments.diagnostics.ticketId & " - "
+          & (len(arguments.diagnostics.rootCauseMessage)
+                ? ((len(arguments.diagnostics.rootCauseType) ? arguments.diagnostics.rootCauseType & ": " : "")
+                    & Left(arguments.diagnostics.rootCauseMessage, 200))
+                : Left(arguments.diagnostics.errorMessage, 200)) />
+      <cfset var ticketDetails = "Error Ticket: " & arguments.diagnostics.ticketId />
+      <cfif len(arguments.diagnostics.rootCauseMessage)>
+        <cfset ticketDetails = ticketDetails
+            & chr(10) & "Root Cause Type: "    & arguments.diagnostics.rootCauseType
+            & chr(10) & "Root Cause Message: " & Left(arguments.diagnostics.rootCauseMessage, 1000)
+            & chr(10) & "Root Cause Detail: "  & Left(arguments.diagnostics.rootCauseDetail, 500)
+            & chr(10) & "Root Cause File: "    & arguments.diagnostics.rootCauseFile
+            & chr(10) & "Root Cause Line: "    & arguments.diagnostics.rootCauseLine
+            & chr(10) & "--- Outer Exception ---" />
+      </cfif>
+      <cfset ticketDetails = ticketDetails
           & chr(10) & "Type: " & arguments.diagnostics.errorType
           & chr(10) & "Script: " & arguments.diagnostics.scriptName
           & chr(10) & "Query String: " & Left(arguments.diagnostics.queryString, 500)
