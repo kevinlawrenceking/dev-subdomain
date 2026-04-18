@@ -77,7 +77,7 @@
   </cffunction>
 
   <cffunction name="unwrapCauseChain" access="private" returntype="struct" output="false"
-              hint="Walks exception.rootCause / exception.cause chain up to depthCap. Returns { root, chain, chainCount, truncated }. Never throws.">
+              hint="Walks exception.rootCause / exception.cause chain up to depthCap. Handles both CF struct exceptions and raw java.lang.Throwable objects. Returns { root, chain, chainCount, truncated }. Never throws.">
     <cfargument name="exception" required="true" />
     <cfargument name="depthCap" type="numeric" required="false" default="5" />
 
@@ -86,19 +86,21 @@
       var result = { root = emptyRoot, chain = [], chainCount = 0, truncated = false };
 
       try {
-        if (NOT isStruct(arguments.exception)) {
-          return result;
+        // Seed: pick first real cause off the outer exception.
+        // Accept either a CF struct or a Java Throwable; isStruct() is false for Throwables.
+        var current = "";
+        try {
+          if (structKeyExists(arguments.exception, "rootCause")) {
+            current = arguments.exception.rootCause;
+          } else if (structKeyExists(arguments.exception, "cause")) {
+            current = arguments.exception.cause;
+          }
+        } catch (any eSeed) {
+          // Outer exception may not support structKeyExists — try direct Throwable getCause().
+          try { current = arguments.exception.getCause(); } catch (any eGet) {}
         }
 
-        // Seed: pick first real cause off the outer exception.
-        var current = "";
-        if (structKeyExists(arguments.exception, "rootCause")
-            AND isStruct(arguments.exception.rootCause)) {
-          current = arguments.exception.rootCause;
-        } else if (structKeyExists(arguments.exception, "cause")
-                   AND isStruct(arguments.exception.cause)) {
-          current = arguments.exception.cause;
-        } else {
+        if (isSimpleValue(current)) {
           return result;
         }
 
@@ -108,34 +110,64 @@
         var depth = 0;
         var deepest = emptyRoot;
 
-        while (isStruct(current) AND depth LT arguments.depthCap) {
-          var hash = sys.identityHashCode(current);
-          if (arrayContains(visited, hash)) {
-            break;
-          }
-          arrayAppend(visited, hash);
+        while (NOT isSimpleValue(current) AND depth LT arguments.depthCap) {
+          try {
+            var hash = sys.identityHashCode(current);
+            if (arrayContains(visited, hash)) { break; }
+            arrayAppend(visited, hash);
+          } catch (any eHash) { break; }
 
-          var frame = {
-            depth   = depth,
-            type    = structKeyExists(current, "type")    ? toString(current.type)    : "",
-            message = structKeyExists(current, "message") ? Left(toString(current.message), 2000) : "",
-            detail  = structKeyExists(current, "detail")  ? Left(toString(current.detail),  2000) : "",
-            file    = "",
-            line    = 0
-          };
+          var frame = { depth = depth, type = "", message = "", detail = "", file = "", line = 0 };
 
-          if (structKeyExists(current, "tagContext")
-              AND isArray(current.tagContext)
-              AND arrayLen(current.tagContext) GTE 1
-              AND isStruct(current.tagContext[1])) {
-            var tc = current.tagContext[1];
-            if (structKeyExists(tc, "template")) {
-              frame.file = Left(toString(tc.template), 500);
+          // Type: CF struct has .type; Throwable needs getClass().getName().
+          try {
+            if (structKeyExists(current, "type") AND len(toString(current.type))) {
+              frame.type = toString(current.type);
+            } else {
+              frame.type = current.getClass().getName();
             }
-            if (structKeyExists(tc, "line") AND isNumeric(tc.line)) {
-              frame.line = val(tc.line);
-            }
+          } catch (any eType) {
+            try { frame.type = current.getClass().getName(); } catch (any e2) {}
           }
+
+          // Message: try struct access first, then getMessage().
+          try {
+            if (structKeyExists(current, "message")) {
+              frame.message = Left(toString(current.message), 2000);
+            }
+          } catch (any eMsg) {}
+          if (NOT len(frame.message)) {
+            try {
+              var m = current.getMessage();
+              if (NOT isNull(m)) { frame.message = Left(toString(m), 2000); }
+            } catch (any eGetMsg) {}
+          }
+
+          // Detail: CF-specific; plain Throwables don't have it.
+          try {
+            if (structKeyExists(current, "detail")) {
+              frame.detail = Left(toString(current.detail), 2000);
+            }
+          } catch (any eDet) {}
+
+          // Tag context: prefer struct field; fall back to getTagContext() on CF exceptions.
+          var tcArr = "";
+          try {
+            if (structKeyExists(current, "tagContext")) { tcArr = current.tagContext; }
+          } catch (any eTc) {}
+          if (isSimpleValue(tcArr)) {
+            try { tcArr = current.getTagContext(); } catch (any eGetTc) {}
+          }
+          try {
+            if (isArray(tcArr) AND arrayLen(tcArr) GTE 1 AND isStruct(tcArr[1])) {
+              if (structKeyExists(tcArr[1], "template")) {
+                frame.file = Left(toString(tcArr[1].template), 500);
+              }
+              if (structKeyExists(tcArr[1], "line") AND isNumeric(tcArr[1].line)) {
+                frame.line = val(tcArr[1].line);
+              }
+            }
+          } catch (any eTcRead) {}
 
           arrayAppend(result.chain, frame);
           deepest = {
@@ -147,20 +179,24 @@
           };
           depth = depth + 1;
 
-          // Descend: prefer rootCause, then cause, else stop.
-          if (structKeyExists(current, "rootCause")
-              AND isStruct(current.rootCause)) {
-            current = current.rootCause;
-          } else if (structKeyExists(current, "cause")
-                     AND isStruct(current.cause)) {
-            current = current.cause;
-          } else {
-            current = "";
+          // Descend: try struct keys, then Throwable getCause().
+          var nextCause = "";
+          try {
+            if (structKeyExists(current, "rootCause")) {
+              nextCause = current.rootCause;
+            } else if (structKeyExists(current, "cause")) {
+              nextCause = current.cause;
+            }
+          } catch (any eDesc) {}
+          if (isSimpleValue(nextCause)) {
+            try { nextCause = current.getCause(); } catch (any eGetCause) {}
           }
+          if (isSimpleValue(nextCause)) { break; }
+          current = nextCause;
         }
 
         result.chainCount = arrayLen(result.chain);
-        result.truncated  = (depth GTE arguments.depthCap AND isStruct(current));
+        result.truncated  = (depth GTE arguments.depthCap AND NOT isSimpleValue(current));
         result.root       = deepest;
         return result;
 

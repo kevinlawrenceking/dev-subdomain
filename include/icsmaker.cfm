@@ -58,8 +58,8 @@ WHERE u.userid = <cfqueryparam value="#target_userid#" cfsqltype="cf_sql_integer
         ,'Type' as head5
         ,e.userid
         ,e.eventStartTime
-        ,DATE_FORMAT(e.eventStartTime, '%k') as starthours_h
-        ,DATE_FORMAT(e.eventStopTime, '%k') as stophours_h
+        ,DATE_FORMAT(COALESCE(e.eventStartTime, '09:00:00'), '%k') as starthours_h
+        ,DATE_FORMAT(COALESCE(e.eventStopTime, '17:00:00'), '%k') as stophours_h
         ,e.eventStopTime
         ,t.eventtypecolor
         FROM events e INNER JOIN eventtypes t on t.eventtypename = e.eventtypename
