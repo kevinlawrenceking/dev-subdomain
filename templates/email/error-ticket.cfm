@@ -48,6 +48,26 @@
   </tr>
 
   <!--- ============================================================
+        2b. ROOT CAUSE (wrapped inner cause, when present)
+        ============================================================ --->
+  <cfif len(d.rootCauseType) OR len(d.rootCauseMessage) OR len(d.rootCauseFile)>
+  <tr>
+    <td style="background-color:##FEF3C7; padding:20px 30px; border-left:4px solid ##D97706;">
+      <p style="color:##92400E; font-size:11px; text-transform:uppercase; font-weight:700; margin:0 0 8px 0; letter-spacing:1px;">Root Cause</p>
+      <cfif len(d.rootCauseType)>
+        <p style="color:##78350F; font-size:12px; margin:0 0 6px 0;"><strong>Type:</strong> #encodeForHtml(d.rootCauseType)#</p>
+      </cfif>
+      <cfif len(d.rootCauseMessage)>
+        <p style="color:##92400E; font-size:14px; margin:0 0 6px 0; word-break:break-word;"><strong>Message:</strong> #encodeForHtml(Left(d.rootCauseMessage, 500))#</p>
+      </cfif>
+      <cfif len(d.rootCauseFile)>
+        <p style="color:##78350F; font-size:12px; margin:0; word-break:break-all;"><strong>File:</strong> #encodeForHtml(d.rootCauseFile)#<cfif val(d.rootCauseLine) GT 0>:#val(d.rootCauseLine)#</cfif></p>
+      </cfif>
+    </td>
+  </tr>
+  </cfif>
+
+  <!--- ============================================================
         3. USER CONTEXT
         ============================================================ --->
   <tr>
@@ -126,9 +146,18 @@
   </cfif>
 
   <!--- ============================================================
-        6. TAG CONTEXT
+        6. TAG CONTEXT (resolve from exception direct; fall back to serialized JSON)
         ============================================================ --->
-  <cfif structKeyExists(d, "exception") AND structKeyExists(d.exception, "tagContext") AND isArray(d.exception.tagContext) AND arrayLen(d.exception.tagContext)>
+  <cfset tcArr = []>
+  <cfif structKeyExists(d, "exception") AND structKeyExists(d.exception, "tagContext") AND isArray(d.exception.tagContext)>
+    <cfset tcArr = d.exception.tagContext>
+  <cfelseif len(d.tagContext) AND d.tagContext NEQ "[]">
+    <cftry>
+      <cfset tcArr = deserializeJSON(d.tagContext)>
+      <cfcatch><cfset tcArr = []></cfcatch>
+    </cftry>
+  </cfif>
+  <cfif isArray(tcArr) AND arrayLen(tcArr)>
   <tr>
     <td style="padding:20px 30px; border-bottom:1px solid ##e5e7eb;">
       <p style="color:##374151; font-size:11px; text-transform:uppercase; font-weight:700; margin:0 0 10px 0; letter-spacing:1px;">Tag Context</p>
@@ -138,8 +167,8 @@
           <th style="text-align:left; padding:8px; border:1px solid ##d1d5db; font-weight:700; width:60px;">Line</th>
           <th style="text-align:left; padding:8px; border:1px solid ##d1d5db; font-weight:700; width:60px;">Column</th>
         </tr>
-        <cfloop from="1" to="#arrayLen(d.exception.tagContext)#" index="i">
-          <cfset tc = d.exception.tagContext[i] />
+        <cfloop from="1" to="#arrayLen(tcArr)#" index="i">
+          <cfset tc = tcArr[i] />
           <tr style="#(i EQ 1) ? 'background:##FFFBEB; font-weight:700;' : ''#">
             <td style="padding:6px 8px; border:1px solid ##d1d5db; word-break:break-all;">#encodeForHtml(structKeyExists(tc, "template") ? tc.template : "")#</td>
             <td style="padding:6px 8px; border:1px solid ##d1d5db;">#encodeForHtml(structKeyExists(tc, "line") ? tc.line : "")#</td>

@@ -34,7 +34,7 @@
         e.eventDescription,
         e.eventStart,
         e.eventStop,
-        e.eventStartTime,
+        COALESCE(e.eventStartTime, '09:00:00') AS eventStartTime,
         e.eventStopTime,
         e.eventTypeName,
         e.dow,

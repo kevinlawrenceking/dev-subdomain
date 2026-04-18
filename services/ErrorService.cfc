@@ -225,6 +225,33 @@
       diag.causeChainCount  = causeData.chainCount;
       diag.causeTruncated   = causeData.truncated;
 
+      // Synthesize a display message when raw is empty (e.g., java.lang.NullPointerException
+      // whose getMessage() returns null). Prefer root cause; else first tag-context frame.
+      if (NOT len(diag.errorMessage)) {
+        if (len(diag.rootCauseMessage)) {
+          diag.errorMessage = diag.rootCauseMessage;
+        } else {
+          var fbFile = "";
+          var fbLine = "";
+          if (len(diag.rootCauseFile) AND val(diag.rootCauseLine) GT 0) {
+            fbFile = listLast(diag.rootCauseFile, "/\");
+            fbLine = val(diag.rootCauseLine);
+          } else if (structKeyExists(arguments.exception, "tagContext")
+                     AND isArray(arguments.exception.tagContext)
+                     AND arrayLen(arguments.exception.tagContext) GTE 1
+                     AND isStruct(arguments.exception.tagContext[1])) {
+            var tf = arguments.exception.tagContext[1];
+            if (structKeyExists(tf, "template") AND len(tf.template)) fbFile = listLast(toString(tf.template), "/\");
+            if (structKeyExists(tf, "line")) fbLine = toString(tf.line);
+          }
+          if (len(fbFile)) {
+            diag.errorMessage = "(no message) at " & fbFile & (len(fbLine) AND fbLine NEQ "0" ? ":" & fbLine : "");
+          } else {
+            diag.errorMessage = "(no message - " & (len(diag.errorType) ? diag.errorType : "exception") & ")";
+          }
+        }
+      }
+
       // Request context from CGI scope
       diag.scriptName = cgi.SCRIPT_NAME;
       diag.queryString = cgi.QUERY_STRING;
