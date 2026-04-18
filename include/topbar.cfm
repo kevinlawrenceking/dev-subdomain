@@ -5,18 +5,6 @@
     DEPENDENCIES: Bootstrap 5, Feather Icons
 --->
 
-<cfif structKeyExists(session, "impersonating") AND session.impersonating
-      AND structKeyExists(session, "impersonatorUserid") AND val(session.impersonatorUserid) GT 0>
-    <cfoutput>
-    <div id="impersonateBanner" style="background:##d97706;color:##fff;padding:8px 16px;text-align:center;font-weight:600;font-size:0.9rem;">
-        Impersonating:
-        <strong><cfif isDefined("userFirstName")>#htmlEditFormat(userFirstName)# #htmlEditFormat(userLastName)#<cfelse>user ###session.userid#</cfif></strong>
-        (userid #session.userid#)
-        <a href="/app/stop-impersonating.cfm" style="background:##fff;color:##d97706;padding:4px 12px;border-radius:4px;text-decoration:none;font-weight:700;margin-left:12px;">Return to admin</a>
-    </div>
-    </cfoutput>
-</cfif>
-
 <div class="navbar-custom">
     <div class="container-fluid">
         <!--- Right Side Menu Items --->

@@ -329,10 +329,6 @@
         </cfif>
 
         <!--- Admin confirmed — impersonate target user --->
-        <!--- Stash the admin's real userid on the first hop so stop-impersonating.cfm can restore it. --->
-        <cfif NOT structKeyExists(session, "impersonatorUserid")>
-            <cfset session.impersonatorUserid = session.userid />
-        </cfif>
         <cfset session.userid = url.u />
         <cfset userid = session.userid />
         <!--- PERF: Force a fresh DB load for the impersonated user --->
@@ -478,7 +474,6 @@
             AND NOT findNoCase("/ajax/", cgi.SCRIPT_NAME)
             AND NOT findNoCase("/login", cgi.SCRIPT_NAME)
             AND NOT findNoCase("/logout", cgi.SCRIPT_NAME)
-            AND NOT findNoCase("/stop-impersonating", cgi.SCRIPT_NAME)
             AND NOT REFindNoCase("\.(css|js|png|jpg|gif|svg|woff|woff2|ttf|ico)$", cgi.SCRIPT_NAME)>
         <cflocation url="/app/setup-wizard/" addtoken="false" />
       </cfif>
