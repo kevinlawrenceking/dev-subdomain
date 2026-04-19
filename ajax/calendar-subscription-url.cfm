@@ -15,7 +15,7 @@
         <cfthrow message="no session">
     </cfif>
 
-    <cfset var uid = session.userid>
+    <cfset uid = session.userid>
 
     <!--- Regenerate synchronously so the file exists and matches current DB state. --->
     <cfset request.svc("IcsService").generateUserIcs(uid)>
