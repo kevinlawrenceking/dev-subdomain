@@ -217,6 +217,9 @@
                 <cfset result.message = "Contacts merged successfully" />
             </cftransaction>
 
+            <!--- TAO-CAL-01: merge rewrote events rows — rebuild user ICS. --->
+            <cfset request.svc("EventService").fireIcsRegen(arguments.userid) />
+
             <cfcatch type="any">
                 <cfset result.success = false />
                 <cfset result.message = "Error merging contacts: " & cfcatch.message />

@@ -246,6 +246,26 @@
     </cfscript>
   </cffunction>
 
+  <cffunction name="initServiceFactory" access="private" returntype="void" output="false"
+              hint="Set up per-request service factory. Shared with sched/Application.cfc via inheritance.">
+    <!--- PERF: Request-scoped service cache. Lazy — each CFC is instantiated once
+          on first access, then reused for the rest of the request.
+          Extracted from onRequestStart so sched/Application.cfc (which overrides
+          onRequestStart without super) can inherit and invoke directly.
+          MIGRATE: In Go, services are injected via constructor DI.
+          TECH-DEBT: concurrent-read race — two threads hitting request.svc("X")
+          for an uncached service can both call createObject. One write loses the
+          cache race; no data corruption, only a wasted allocation. Pre-existing,
+          not introduced by this extraction. --->
+    <cfset request.services = {} />
+    <cfset request.svc = function(required string name) {
+        if (!structKeyExists(request.services, arguments.name)) {
+            request.services[arguments.name] = createObject("component", "services." & arguments.name);
+        }
+        return request.services[arguments.name];
+    } />
+  </cffunction>
+
   <cffunction name="onRequestStart" returntype="boolean" output="false">
     <cfargument name="targetPage" type="string" required="true" />
 
@@ -256,16 +276,8 @@
     <cfset request.perfQueryCount = 0 />
     <cfset request.perfSvcQueryCount = 0 />
 
-    <!--- PERF: Request-scoped service cache. Lazy — each CFC is instantiated once
-          on first access, then reused for the rest of the request.
-          MIGRATE: In Go, services are injected via constructor DI. --->
-    <cfset request.services = {} />
-    <cfset request.svc = function(required string name) {
-        if (!structKeyExists(request.services, arguments.name)) {
-            request.services[arguments.name] = createObject("component", "services." & arguments.name);
-        }
-        return request.services[arguments.name];
-    } />
+    <!--- TAO-CAL-01d: extracted so sched/Application.cfc can reuse via inheritance. --->
+    <cfset initServiceFactory() />
 
     <!--- Per-request datasource: immune to application-scope race conditions --->
     <cfset request.dsn = application.dsn />

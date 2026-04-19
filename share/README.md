@@ -10,10 +10,9 @@ The Share Module runs as an independent application within the `/share` director
 
 ### Key Components
 
-1. **`Applicationx.cfc`**: Independent application component with mappings to main app resources
-2. **`remote_load.cfm`**: Validates share tokens and loads appropriate content
-3. **Content Templates**: Specialized templates for each share type (relationships, calendar)
-4. **Database Tables**: `shareTokens` and `shareViews` to manage and track shares
+1. **`remote_load.cfm`**: Validates share tokens and loads appropriate content
+2. **Content Templates**: Specialized templates for each share type (relationships, calendar)
+3. **Database Tables**: `shareTokens` and `shareViews` to manage and track shares
 
 ## URL Structure
 

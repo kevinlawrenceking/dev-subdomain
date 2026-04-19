@@ -5,6 +5,26 @@
     DESCRIPTION: Fixes events with invalid end dates/times that cause calendar display issues
 --->
 
+<!--- TAO-CAL-01: capture userids of events this cleanup will touch so we can
+     regenerate their ICS files once the updates finish. --->
+<cfquery name="qAffectedUserIds" datasource="#application.dsn#">
+    SELECT DISTINCT userid
+    FROM events
+    WHERE isdeleted = 0
+      AND (
+            CAST(eventstopTime  AS CHAR) >= '24:00:00'
+         OR CAST(eventstopTime  AS CHAR) LIKE '24:%'
+         OR CAST(eventstopTime  AS CHAR) LIKE '25:%'
+         OR CAST(eventStartTime AS CHAR) >= '24:00:00'
+         OR CAST(eventStartTime AS CHAR) LIKE '24:%'
+         OR CAST(eventStartTime AS CHAR) LIKE '25:%'
+         OR (eventstop < eventStart AND eventStart IS NOT NULL AND eventstop IS NOT NULL)
+         OR (eventstop IS NULL AND eventStart IS NOT NULL)
+         OR (eventstopTime IS NULL AND eventStartTime IS NOT NULL)
+         OR (eventStartTime IS NULL AND eventStart IS NOT NULL)
+      )
+</cfquery>
+
 <!--- CRITICAL: Fix existing invalid TIME values (24:00:00 or greater) --->
 <!--- Using string comparison since TIME() function may fail on invalid values --->
 <cfquery name="qFixInvalidStopTimes" datasource="#application.dsn#">
@@ -87,15 +107,28 @@
 </cfquery>
 
 <cfquery name="qGetFixedCount" datasource="#application.dsn#">
-    SELECT 
+    SELECT
         COUNT(*) as totalEvents,
         SUM(CASE WHEN eventstop IS NULL THEN 1 ELSE 0 END) as nullEndDates,
         SUM(CASE WHEN eventstopTime IS NULL THEN 1 ELSE 0 END) as nullEndTimes,
         SUM(CASE WHEN eventstop < eventStart THEN 1 ELSE 0 END) as invalidEndDates
-    FROM events 
-    WHERE isdeleted = 0 
+    FROM events
+    WHERE isdeleted = 0
       AND eventStart IS NOT NULL
 </cfquery>
+
+<!--- TAO-CAL-01: regenerate ICS for every user whose events were mutated above. --->
+<cftry>
+    <cfloop query="qAffectedUserIds">
+        <cfif isNumeric(qAffectedUserIds.userid) AND qAffectedUserIds.userid GT 0>
+            <cfset request.svc("EventService").fireIcsRegen(qAffectedUserIds.userid)>
+        </cfif>
+    </cfloop>
+    <cfcatch type="any">
+        <cflog file="ics_service" type="error"
+               text="admin-calendar-cleanup ics regen hook fail: #left(cfcatch.message,300)#" />
+    </cfcatch>
+</cftry>
 
 <h2>Calendar Event Data Cleanup Complete</h2>
 

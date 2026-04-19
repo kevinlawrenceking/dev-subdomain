@@ -2,6 +2,11 @@
   <cffunction name="onRequestStart" returntype="boolean" output="false">
     <cfargument name="targetPage" type="string" required="true">
 
+    <!--- TAO-CAL-01d: initialize request.svc factory before any branch so that
+          both localhost-bypass and auth-gated paths have services available.
+          Inherited from /app/Application. --->
+    <cfset initServiceFactory()>
+
     <!--- Allow localhost and same-server requests (ColdFusion scheduler) without auth --->
     <cfif CGI.REMOTE_ADDR EQ "127.0.0.1"
           OR CGI.REMOTE_ADDR EQ "::1"

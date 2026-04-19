@@ -18,25 +18,38 @@
     <cfargument name="new_iscustom" type="numeric" required="false" default="false">
     <cfargument name="new_eventtypename" type="string" required="false" default="">
 
+    <!--- TAO-CAL-01: look up owning userid before mutation so the ICS hook can fire. --->
+    <cfquery name="ownerLookup">
+        SELECT userid
+        FROM eventtypes_user
+        WHERE id = <cfqueryparam value="#arguments.eventtypeid#" cfsqltype="cf_sql_integer">
+    </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
+
     <!--- Execute the query --->
     <cfquery name="update">
         UPDATE eventtypes_user
-        SET 
+        SET
             eventtypecolor = <cfqueryparam value="#arguments.new_eventtypecolor#" cfsqltype="cf_sql_varchar">
-            
+
             <!--- Conditionally set isdeleted --->
             <cfif arguments.deletelink eq 1>
                 , isdeleted = 1
             </cfif>
-            
+
             <!--- Conditionally set eventtypename --->
             <cfif arguments.new_iscustom eq 1>
                 , eventtypename = <cfqueryparam value="#arguments.new_eventtypename#" cfsqltype="cf_sql_varchar">
             </cfif>
-            
+
         WHERE id = <cfqueryparam value="#arguments.eventtypeid#" cfsqltype="cf_sql_integer">
     </cfquery>
 <cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
+
+    <!--- TAO-CAL-01: rebuild user ICS off-thread after the type edit commits. --->
+    <cfif ownerLookup.recordCount GT 0 AND isNumeric(ownerLookup.userid) AND ownerLookup.userid GT 0>
+        <cfset request.svc("EventService").fireIcsRegen(ownerLookup.userid)>
+    </cfif>
 </cffunction>
 
 

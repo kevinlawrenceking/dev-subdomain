@@ -78,6 +78,9 @@
     <cfset response.message = "Event updated">
     <cflog file="tao_calendar" text="[event-update] eventid=#eventId# moved by user=#userid#">
 
+    <!--- TAO-CAL-01: rebuild user ICS off-thread after successful commit --->
+    <cfset request.svc("EventService").fireIcsRegen(userid)>
+
 <cfcatch type="any">
     <cfif NOT len(response.message)>
         <cfset response.message = "Update failed">

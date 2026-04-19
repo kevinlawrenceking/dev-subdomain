@@ -1569,4 +1569,47 @@ audzip = <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#trim(arguments.new_aud
 <cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 <cfreturn result>
-</cffunction> </cfcomponent>>
+</cffunction>
+
+<!---
+    TAO-CAL-01: fire-and-forget ICS regen.
+    Spawns a detached thread that calls the application-scoped IcsService singleton.
+    Caller's request returns immediately; the ICS write happens off the request thread.
+    Never rethrows — a thread failure is logged by IcsService and cannot break the caller.
+
+    NOTE: the 25 event-mutating functions in this service are intentionally NOT
+    auto-hooked in CAL-01 Phase B (surface exceeded the ~5-entry-point budget in
+    the authorization). Hooks live at outer request / scheduled-task boundaries
+    instead — see /ajax/calendar-event-update.cfm, ContactDuplicateService,
+    EventTypesUserService, AuditionImportService, sched/admin-calendar-cleanup,
+    sched/events_completed. Drift on direct EventService mutations is covered
+    by sched/ics-reconcile-nightly.cfm (missing-file sweep) and is slated for
+    full coverage in a follow-up ticket.
+--->
+<cffunction name="fireIcsRegen" access="public" returntype="void" output="false">
+    <cfargument name="userid" type="numeric" required="true" />
+
+    <cfif NOT isNumeric(arguments.userid) OR arguments.userid LTE 0>
+        <cfreturn />
+    </cfif>
+
+    <cftry>
+        <cfthread action="run"
+                  name="icsRegen_#arguments.userid#_#getTickCount()#"
+                  userid="#arguments.userid#">
+            <cftry>
+                <cfset request.svc("IcsService").generateUserIcs(attributes.userid) />
+                <cfcatch type="any">
+                    <cflog file="ics_service" type="error"
+                           text="fireIcsRegen thread fail: userid=#attributes.userid# msg=#left(cfcatch.message,300)#" />
+                </cfcatch>
+            </cftry>
+        </cfthread>
+        <cfcatch type="any">
+            <cflog file="ics_service" type="error"
+                   text="fireIcsRegen spawn fail: userid=#arguments.userid# msg=#left(cfcatch.message,300)#" />
+        </cfcatch>
+    </cftry>
+</cffunction>
+
+</cfcomponent>>

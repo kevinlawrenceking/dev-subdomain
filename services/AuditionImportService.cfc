@@ -1470,6 +1470,16 @@ component displayname="AuditionImportService" accessors="true" output="false" {
             logEvent(job_id = arguments.job_id, userid = arguments.userid, event_type = "finalize_completed", detail = { counts: counts, elapsed_ms: elapsedMs, failure_count: arrayLen(failures) });
             writeLog(file="import_auditions", text="[finalizeJob] COMPLETED job_id=" & arguments.job_id & " imported=" & counts.imported_new & " failed=" & counts.failed & " skipped=" & counts.skipped_already_imported & " elapsed_ms=" & elapsedMs);
 
+            // TAO-CAL-01: finalize inserts rows into events_tbl; rebuild user ICS.
+            if (counts.imported_new gt 0) {
+                try {
+                    request.svc("EventService").fireIcsRegen(arguments.userid);
+                } catch (any icsErr) {
+                    writeLog(file="ics_service", type="error",
+                        text="finalizeJob ics regen hook fail: userid=" & arguments.userid & " msg=" & left(icsErr.message, 200));
+                }
+            }
+
             var message = "Finalize completed. " & counts.imported_new & " auditions created.";
             if (counts.skipped_already_imported gt 0) { message &= " " & counts.skipped_already_imported & " already imported."; }
             if (counts.failed gt 0) { message &= " " & counts.failed & " failed."; }
@@ -2291,6 +2301,16 @@ component displayname="AuditionImportService" accessors="true" output="false" {
 
             logEvent(job_id = jobId, userid = arguments.userid, event_type = "row_undone", row_id = arguments.row_id, detail = { event_id: eventId, role_id: roleId, project_id: projectId });
             writeLog(file="import_auditions", text="[undoImportedRow] SUCCESS row_id=" & arguments.row_id);
+
+            // TAO-CAL-01: undo deletes the event; rebuild user ICS.
+            if (eventId gt 0) {
+                try {
+                    request.svc("EventService").fireIcsRegen(arguments.userid);
+                } catch (any icsErr) {
+                    writeLog(file="ics_service", type="error",
+                        text="undoImportedRow ics regen hook fail: userid=" & arguments.userid & " msg=" & left(icsErr.message, 200));
+                }
+            }
 
             return ok(data = { "row_id": arguments.row_id }, message = "Import undone successfully. Row returned to ready status.");
 
