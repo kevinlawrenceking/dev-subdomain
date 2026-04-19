@@ -24,7 +24,7 @@
 <cfset failed     = 0 />
 
 <cftry>
-    <cfset var calDir = application.baseMediaPath & "\calendar" />
+    <cfset calDir = application.baseMediaPath & "\calendar" />
     <cfif NOT directoryExists(calDir)>
         <!--- ACF 2021 rejects the second (createPath) arg here; default is createPath=true anyway. --->
         <cfset directoryCreate(calDir) />
@@ -51,7 +51,7 @@
             <cfcontinue />
         </cfif>
 
-        <cfset var icsPath = calDir & "\" & qUsers.calendarName & ".ics" />
+        <cfset icsPath = calDir & "\" & qUsers.calendarName & ".ics" />
 
         <cfif fileExists(icsPath)>
             <cfset skipped++ />
@@ -59,7 +59,7 @@
         </cfif>
 
         <cftry>
-            <cfset var ok = request.svc("IcsService").generateUserIcs(qUsers.userid) />
+            <cfset ok = request.svc("IcsService").generateUserIcs(qUsers.userid) />
             <cfif ok>
                 <cfset regenerated++ />
             <cfelse>
@@ -73,7 +73,7 @@
         </cftry>
     </cfloop>
 
-    <cfset var elapsed = getTickCount() - startTick />
+    <cfset elapsed = getTickCount() - startTick />
     <cflog file="ics_service" type="information"
            text="reconcile done scanned=#scanned# regenerated=#regenerated# skipped=#skipped# failed=#failed# elapsed_ms=#elapsed#" />
 
