@@ -30,6 +30,25 @@ component displayname="IcsService" output="false" {
     variables.CALSCALE = "Gregorian";
     variables.CRLF     = chr(13) & chr(10);
 
+    /**
+     * Resolve the on-disk calendar directory for this environment.
+     * Prefers application.baseMediaPath when the caller's Application.cfc has
+     * set it. Falls back to deriving the path from dsn so the service works
+     * when invoked from a scope whose Application.cfc did not populate it
+     * (observed on prod: services/ resolves to a different app scope than
+     * the invoking page; applicationCFCSearchLimit drift).
+     */
+    public string function getCalendarDir() {
+        if (structKeyExists(application, "baseMediaPath") AND len(application.baseMediaPath)) {
+            return application.baseMediaPath & "\calendar";
+        }
+        var dsnLocal = (structKeyExists(application, "dsn") AND len(application.dsn)) ? application.dsn : "abod";
+        if (dsnLocal EQ "abo") {
+            return "C:\home\theactorsoffice.com\media-abo\calendar";
+        }
+        return expandPath("/media-" & dsnLocal & "/calendar");
+    }
+
     public boolean function generateUserIcs(required numeric userid) {
         try {
             var dsn = application.dsn;
@@ -168,7 +187,7 @@ component displayname="IcsService" output="false" {
 
             ics &= "END:VCALENDAR";
 
-            var calendarDir  = application.baseMediaPath & "\calendar";
+            var calendarDir  = getCalendarDir();
             var calendarPath = calendarDir & "\" & calendarName & ".ics";
 
             if (NOT directoryExists(calendarDir)) {

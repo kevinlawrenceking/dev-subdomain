@@ -24,7 +24,10 @@
 <cfset failed     = 0 />
 
 <cftry>
-    <cfset calDir = application.baseMediaPath & "\calendar" />
+    <!--- Delegate path resolution to IcsService.getCalendarDir() so both layers
+         agree even when application.baseMediaPath is missing from the current
+         scope (observed on prod, see service doc). --->
+    <cfset calDir = request.svc("IcsService").getCalendarDir() />
     <cfif NOT directoryExists(calDir)>
         <!--- ACF 2021 rejects the second (createPath) arg here; default is createPath=true anyway. --->
         <cfset directoryCreate(calDir) />
