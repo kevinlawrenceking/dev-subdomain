@@ -26,7 +26,8 @@
 <cftry>
     <cfset var calDir = application.baseMediaPath & "\calendar" />
     <cfif NOT directoryExists(calDir)>
-        <cfset directoryCreate(calDir, true) />
+        <!--- ACF 2021 rejects the second (createPath) arg here; default is createPath=true anyway. --->
+        <cfset directoryCreate(calDir) />
     </cfif>
 
     <cfquery name="qUsers" datasource="#application.dsn#">

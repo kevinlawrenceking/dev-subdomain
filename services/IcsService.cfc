@@ -172,7 +172,8 @@ component displayname="IcsService" output="false" {
             var calendarPath = calendarDir & "\" & calendarName & ".ics";
 
             if (NOT directoryExists(calendarDir)) {
-                directoryCreate(calendarDir, true);
+                // ACF 2021 rejects the second (createPath) arg here; default is createPath=true anyway.
+                directoryCreate(calendarDir);
             }
 
             fileWrite(calendarPath, trim(ics));

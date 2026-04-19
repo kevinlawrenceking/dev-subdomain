@@ -422,7 +422,9 @@
                                                     )
                                                 </cfquery>
 
-                                                <cfset NewSUID = numberformat(result.generatedkey) />
+                                                <!--- numberformat() applied a thousands-separator mask, so suids >= 1000
+                                                     became "3,541" and blew up as cf_sql_integer downstream. --->
+                                                <cfset NewSUID = val(result.generatedkey) />
 
                                                 <!---
                                                     Update the in-memory enrollment map so a
@@ -486,7 +488,7 @@
 <cfset add_action = "Y" />
 
                                                         <cfset new_actionid = actionSched.actionid />
-                                                        <cfset actiondaysno = numberformat(actionSched.actionDaysNo) />
+                                                        <cfset actiondaysno = val(actionSched.actionDaysNo) />
                                                         <cfif actionSched.isunique is "1">
 
                                                             <!---
