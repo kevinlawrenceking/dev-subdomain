@@ -272,7 +272,7 @@
 
                                 <cfif isDate(qTicketExtra.resolvedEmailSentAt)>
                                     <button type="button" class="btn btn-secondary mt-2" disabled>
-                                        &#10003; Resolution Sent -- #DateTimeFormat(qTicketExtra.resolvedEmailSentAt, "mmm d, yyyy h:mm tt")#
+                                        &##10003; Resolution Sent -- #DateTimeFormat(qTicketExtra.resolvedEmailSentAt, "mmm d, yyyy h:mm tt")#
                                     </button>
                                 <cfelse>
                                     <button type="button" id="btnSendResolution" class="btn btn-primary mt-2">
