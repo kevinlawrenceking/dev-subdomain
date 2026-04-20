@@ -245,6 +245,26 @@ x</button>
                                 </cfoutput>
                             </cfloop>
                         </thead>
+                        <!--- PERF: Batch-fetch tickettestusers for ALL tickets on this page in one query,
+                              instead of 2 per-row includes (ticketusers_323_3 + ticketme_323_4). --->
+                        <cfset myTests = {} />
+                        <cfset otherTests = {} />
+                        <cfif results.recordCount GT 0>
+                            <cfset ticketIdList = valueList(results.recid) />
+                            <cfset allTestsSvc = createObject("component", "services.TicketTestUserService") />
+                            <cfset allTests = allTestsSvc.SELtickettestusers_byTicketIds(ticketIds=ticketIdList) />
+                            <cfloop query="allTests">
+                                <cfif allTests.userid EQ userid>
+                                    <cfset myTests[allTests.ticketid] = { teststatus: allTests.teststatus, rejectnotes: allTests.rejectnotes, recordname: allTests.recordname } />
+                                <cfelse>
+                                    <cfif NOT structKeyExists(otherTests, allTests.ticketid)>
+                                        <cfset otherTests[allTests.ticketid] = [] />
+                                    </cfif>
+                                    <cfset arrayAppend(otherTests[allTests.ticketid], { userid: allTests.userid, recordname: allTests.recordname, teststatus: allTests.teststatus, rejectnotes: allTests.rejectnotes }) />
+                                </cfif>
+                            </cfloop>
+                        </cfif>
+
                         <tbody>
                             <cfloop query="results">
                                 <!--- Include query for ticket details --->
@@ -337,32 +357,31 @@ x</button>
                                         </form>
                                         
                                         <td>
-                                            <cfinclude template="/include/qry/ticketusers_323_3.cfm" /> 
-                                            <cfinclude template="/include/qry/ticketme_323_4.cfm" />        
-                                            
-                                            <cfif #ticketme.recordcount# is "1">
+                                            <!--- PERF: myTests/otherTests are pre-built above from a single batch query. --->
+                                            <cfif structKeyExists(myTests, results.recid)>
+                                                <cfset mt = myTests[results.recid] />
                                                 <cfoutput>
-                                                    <cfif #ticketme.teststatus# is "Approved">
-                                                        <a href="" title="#ticketme.recordname#"> <i class="mdi mdi-thumb-up" style="color:green;"></i></a>
+                                                    <cfif mt.teststatus is "Approved">
+                                                        <a href="" title="#mt.recordname#"> <i class="mdi mdi-thumb-up" style="color:green;"></i></a>
                                                     <cfelse>
-                                                        <a href="##" title="#ticketme.recordname#<cfif #ticketme.rejectnotes# is not "">#ticketme.rejectnotes#</cfif>"> <i class="mdi mdi-thumb-down" style="color: red;"></i></a>
+                                                        <a href="##" title="#mt.recordname#<cfif mt.rejectnotes is not "">#mt.rejectnotes#</cfif>"> <i class="mdi mdi-thumb-down" style="color: red;"></i></a>
                                                     </cfif>
                                                 </cfoutput>
-                                            </cfif>
-                                            
-                                            <cfif #ticketme.recordcount# is "0">
+                                            <cfelse>
                                                 <a href="" title="Me"> <i class="mdi mdi-thumb-up" style="color:lightgrey;"></i></a>
                                             </cfif>
-                                            
-                                            <Cfloop query="ticketusers">
-                                                <cfoutput>
-                                                    <cfif #ticketusers.teststatus# is "Approved">
-                                                        <a href="##" title="#ticketusers.recordname#"> <i class="mdi mdi-thumb-up" style="color:darkseagreen;"></i></a>
-                                                    <cfelse>
-                                                        <a href="##" title="#ticketusers.recordname#<cfif #ticketusers.rejectnotes# is not "">#ticketusers.rejectnotes#</cfif>"> <i class="mdi mdi-thumb-down" style="color: darkred;"></i></a>
-                                                    </cfif>
-                                                </cfoutput>
-                                            </Cfloop>  
+
+                                            <cfif structKeyExists(otherTests, results.recid)>
+                                                <cfloop array="#otherTests[results.recid]#" index="ou">
+                                                    <cfoutput>
+                                                        <cfif ou.teststatus is "Approved">
+                                                            <a href="##" title="#ou.recordname#"> <i class="mdi mdi-thumb-up" style="color:darkseagreen;"></i></a>
+                                                        <cfelse>
+                                                            <a href="##" title="#ou.recordname#<cfif ou.rejectnotes is not "">#ou.rejectnotes#</cfif>"> <i class="mdi mdi-thumb-down" style="color: darkred;"></i></a>
+                                                        </cfif>
+                                                    </cfoutput>
+                                                </cfloop>
+                                            </cfif>
                                         </td>
                                     </tr>
                                     <cfoutput> 

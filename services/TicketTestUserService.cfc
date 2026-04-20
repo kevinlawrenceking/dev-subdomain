@@ -94,4 +94,27 @@
 
 <cfreturn result>
 </cffunction>
+
+<cffunction output="false" name="SELtickettestusers_byTicketIds" access="public" returntype="query"
+    hint="Batched fetch of tickettestusers for a list of ticketids. Used to eliminate the N+1 pattern on /app/version/.">
+    <cfargument name="ticketIds" type="string" required="true" hint="Comma-separated list of ticketids">
+
+    <cfquery name="result">
+        SELECT
+            tu.id,
+            tu.ticketid,
+            tu.userid,
+            u.recordname,
+            tu.teststatus,
+            tu.rejectnotes
+        FROM tickettestusers tu
+        INNER JOIN taousers u ON u.userid = tu.userid
+        WHERE tu.ticketid IN (
+            <cfqueryparam value="#arguments.ticketIds#" cfsqltype="CF_SQL_INTEGER" list="true">
+        )
+    </cfquery>
+    <cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
+
+    <cfreturn result>
+</cffunction>
 </cfcomponent>
