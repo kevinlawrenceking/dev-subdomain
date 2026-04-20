@@ -705,7 +705,8 @@ Key Features:
                             <!--- Standard card variables --->
                             <cfset card_view_icon_yn = "N">
                             <cfset card_delete_msg = ""/>
-                            <cfset card_delete = ""/>
+                            <cfset card_delete = "Y"/>
+                            <cfset card_delete_value = results.recid/>
                             <cfset card_details = "/app/audition/?audprojectid=" & results.recid/>
                             <cfset card_email = ""/>
                             <cfset card_name = ""/>
@@ -761,7 +762,6 @@ Key Features:
                                     </cfif>
                                     
                                     <cfset card_ribbon2 = ""/>
-                                    <cfset card_delete = ""/>
                                     <cfset card_icon = results.aud_cat_icon/>
                                     
                                     <cfif results.isbooked eq "1">
@@ -882,9 +882,17 @@ Key Features:
                                         
                                         <!--- Table row --->
                                         <tr>
-                                            <td>
-                                                <a href="/app/audition/?audprojectid=#results.recid#" class="btn btn-xs btn-primary waves-effect waves-light">
+                                            <td class="text-nowrap">
+                                                <a href="/app/audition/?audprojectid=#results.recid#" class="btn btn-xs btn-primary waves-effect waves-light" title="View">
                                                     <i class="mdi mdi-eye-outline"></i>
+                                                </a>
+                                                <a href="javascript:void(0);"
+                                                   class="btn btn-xs btn-danger waves-effect waves-light ms-1"
+                                                   data-bs-toggle="modal"
+                                                   data-bs-target="##projectdelete"
+                                                   data-audprojectid="#results.recid#"
+                                                   title="Delete Project">
+                                                    <i class="mdi mdi-trash-can-outline"></i>
                                                 </a>
                                             </td>
                                             <td style="word-break: break-all;">
@@ -1004,3 +1012,30 @@ Key Features:
 </script>
 
 <cfinclude template="/include/email_options_modal.cfm" />
+
+<!--- Delete audition project confirmation modal (shared by gallery + table views) --->
+<div id="projectdelete" class="modal fade" tabindex="-1" aria-labelledby="projectDeleteLabel">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color:#c0392b;color:#fff;">
+                <h4 class="modal-title" id="projectDeleteLabel">Delete Audition Project</h4>
+                <button type="button" class="close" data-bs-dismiss="modal">
+                    <i class="mdi mdi-close-thick" style="color:#fff;"></i>
+                </button>
+            </div>
+            <div class="modal-body"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        $("#projectdelete").on("show.bs.modal", function (event) {
+            var trigger = event.relatedTarget;
+            var audprojectid = $(trigger).data("audprojectid");
+            $(this).find(".modal-body")
+                .html('<div class="text-center p-4"><i class="mdi mdi-loading mdi-spin"></i> Loading...</div>')
+                .load("/include/remoteDeleteFormAudproject.cfm?audprojectid=" + encodeURIComponent(audprojectid));
+        });
+    });
+</script>

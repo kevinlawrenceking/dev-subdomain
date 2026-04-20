@@ -1,29 +1,50 @@
-<!--- This ColdFusion page processes project details, retrieves related role and event information, and performs deletions before redirecting to the auditions page. --->
+<!--- Soft-deletes an audition project along with all its roles, appointments, and contact xrefs. --->
 
-<cfinclude template="/include/qry/projectDetails_232_1.cfm" />
+<cfparam name="audprojectid" default="0" />
 
-<cfset audroleid = projectDetails.audroleid />
+<!--- Ownership guard: only allow the owning user to delete the project --->
+<cfquery name="ownerCheck" datasource="#application.dsn#">
+    SELECT audprojectid
+    FROM audprojects
+    WHERE audprojectid = <cfqueryparam value="#audprojectid#" cfsqltype="CF_SQL_INTEGER">
+      AND userid = <cfqueryparam value="#session.userid#" cfsqltype="CF_SQL_INTEGER">
+      AND isdeleted = 0
+</cfquery>
 
-<cfinclude template="/include/qry/roleDetails_232_2.cfm" />
+<cfif ownerCheck.recordcount EQ 0>
+    <cflocation url="/app/auditions/" addtoken="false" />
+</cfif>
 
-<cfinclude template="/include/qry/events_232_3.cfm" />
+<!--- A project can have multiple roles; fetch all of them. --->
+<cfquery name="projectRoles" datasource="#application.dsn#">
+    SELECT audroleid
+    FROM audroles
+    WHERE audprojectid = <cfqueryparam value="#audprojectid#" cfsqltype="CF_SQL_INTEGER">
+</cfquery>
 
-<!--- Collect event IDs and process deletions --->
+<cfset eventService           = request.svc("EventService")>
+<cfset auditionRoleService    = createObject("component", "services.AuditionRoleService")>
+<cfset auditionProjectService = request.svc("AuditionProjectService")>
+<cfset contactAuditionService = createObject("component", "services.ContactAuditionService")>
+<cfset eventContactsService   = createObject("component", "services.EventContactsXRefService")>
+
 <cfset deleteEventIds = []>
-<cfloop query="events">
-    <cfset new_eventid = events.eventid />
-    <cfset arrayAppend(deleteEventIds, events.eventid)>
-    <cfinclude template="/include/qry/del_232_4.cfm" />
+
+<cfloop query="projectRoles">
+    <cfset roleEvents = eventService.SELevents_24123(audroleid=projectRoles.audroleid)>
+    <cfloop query="roleEvents">
+        <cfset arrayAppend(deleteEventIds, roleEvents.eventid)>
+        <cfset eventService.UPDevents_24118(eventid=roleEvents.eventid)>
+        <cfset eventService.UPDevents_24119(eventid=roleEvents.eventid)>
+    </cfloop>
+    <cfset auditionRoleService.UPDaudroles_24126(audroleid=projectRoles.audroleid)>
 </cfloop>
 
-<cfinclude template="/include/qry/del2_232_5.cfm" />
-<cfinclude template="/include/qry/del3_232_6.cfm" />
-<cfinclude template="/include/qry/del4_232_7.cfm" />
+<cfset auditionProjectService.UPDaudprojects_24125(audprojectid=audprojectid)>
+<cfset contactAuditionService.DELaudcontacts_auditions_xref_24127(audprojectid=audprojectid)>
+
 <cfif arrayLen(deleteEventIds)>
-    <cfset eventContactsService = createObject("component", "services.EventContactsXRefService")>
     <cfset eventContactsService.DELeventcontactsxref(eventIds=deleteEventIds)>
 </cfif>
 
-<!--- Redirect to the auditions page --->
-<cflocation url="/app/auditions/" />
-
+<cflocation url="/app/auditions/" addtoken="false" />
