@@ -1,12 +1,13 @@
 <!--- This ColdFusion page sends an email notification regarding a ticket with the specified details. --->
 <cfset new_ticketid = ticketid />
 
-<cfmail from="support@theactorsoffice.com" 
-        to="#emailto#" 
-        subject="TICKET NO #new_ticketid# - #emailsubject#" 
-        type="HTML" 
-        bcc="kevinking7135@gmail.com"  
-        cc="#emailcc#">
+<cfmail from="support@theactorsoffice.com"
+        to="#emailto#"
+        subject="TICKET NO #new_ticketid# - #emailsubject#"
+        type="HTML"
+        bcc="kevinking7135@gmail.com"
+        cc="#emailcc#"
+        spoolenable="true">
 
     <HTML>
         <head>
