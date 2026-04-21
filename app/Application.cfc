@@ -19,7 +19,7 @@
     application.dsn                = _dsn;
     application.information_schema = _schema;
     application.suffix             = _suffix;
-    application.dbug               = "Y";
+    application.dbug               = "N";   // ALWAYS "N" (prod and dev). Only flip to "Y" temporarily in DEV while actively debugging, then reset. Never "Y" in prod.
   </cfscript>
 
   <!--- version --->
