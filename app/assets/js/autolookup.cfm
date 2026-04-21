@@ -3,6 +3,7 @@
  * Navigate directly to the selected search result.
  * Replaces the old form-POST-to-process.cfm pattern which broke
  * when CSRF validation was added to all POST requests.
+ * CACHE-BUSTER-MARKER: autolookup.cfm rev 2026-04-20b
  */
 function taoSearchNavigate(id, category) {
     var eid = encodeURIComponent(id);
