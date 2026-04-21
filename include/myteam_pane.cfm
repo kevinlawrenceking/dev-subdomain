@@ -1,6 +1,37 @@
 <!--- /include/myteam_pane.cfm --->
 <cfinclude template="/include/qry/getMyTeam.cfm" />
 
+<!--- Autocomplete binding for #autocomplete2 (Add Existing Contact). Kept local to this pane
+     because the legacy autolookupbackup.cfm script is malformed and breaks inline parsing. --->
+<script>
+$(function() {
+    if (!$("#autocomplete2").length || typeof $.fn.autocomplete !== 'function') return;
+    $("#autocomplete2").autocomplete({
+        source: function(request, response) {
+            $.ajax({
+                url: '/app/autolookup2.cfm',
+                dataType: 'json',
+                data: {
+                    userid: '<cfoutput>#jsStringFormat(userid)#</cfoutput>',
+                    searchTerm: request.term
+                },
+                success: function(data) {
+                    response($.map(data.suggestions || [], function(item) {
+                        return { label: item.value, value: item.value, id: item.id };
+                    }));
+                }
+            });
+        },
+        minLength: 2,
+        select: function(event, ui) {
+            $("#autocomplete2").val(ui.item.value);
+            $("#autocomplete2").closest("form.sel_client").trigger("submit");
+            return false;
+        }
+    });
+});
+</script>
+
 <link href="https://cdn.materialdesignicons.com/6.5.95/css/materialdesignicons.min.css" rel="stylesheet">
 <style>
     .tao-card-row .col {
