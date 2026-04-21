@@ -456,19 +456,19 @@
 <!--- Perform a single query to find and optionally insert the record --->
     <cfquery name="addTeamMember">
         INSERT INTO contactitems (contactid, valuetype, valuecategory, valuetext, itemstatus, primary_yn)
-        SELECT 
-            contactid, 
-            'Tags', 
-            'Tag', 
-            'My Team', 
-            'Active', 
+        SELECT
+            contactid,
+            'Tags',
+            'Tag',
+            'My Team',
+            'Active',
             'Y'
         FROM contacts_ss
         WHERE userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
           AND col1 = <cfqueryparam value="#arguments.topsearch_myteam#" cfsqltype="CF_SQL_VARCHAR">
           AND NOT EXISTS (
-              SELECT 1 
-              FROM contactitems 
+              SELECT 1
+              FROM contactitems
               WHERE contactid = contacts_ss.contactid
                 AND valuetext = 'My Team'
           )
@@ -476,6 +476,36 @@
 <cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 
+</cffunction>
+
+<cffunction name="addMemberById" access="public" returntype="boolean" output="false"
+            hint="Adds a contact to the user's My Team tag by contactid. Idempotent. Returns true if a row was inserted, false if already present or not owned.">
+    <cfargument name="userid"    type="numeric" required="true">
+    <cfargument name="contactid" type="numeric" required="true">
+
+    <cfquery name="ins" result="insResult">
+        INSERT INTO contactitems (contactid, valuetype, valuecategory, valuetext, itemstatus, primary_yn)
+        SELECT
+            d.contactid,
+            <cfqueryparam value="Tags"    cfsqltype="CF_SQL_VARCHAR">,
+            <cfqueryparam value="Tag"     cfsqltype="CF_SQL_VARCHAR">,
+            <cfqueryparam value="My Team" cfsqltype="CF_SQL_VARCHAR">,
+            <cfqueryparam value="Active"  cfsqltype="CF_SQL_VARCHAR">,
+            <cfqueryparam value="Y"       cfsqltype="CF_SQL_VARCHAR">
+        FROM contactdetails d
+        WHERE d.contactid = <cfqueryparam value="#arguments.contactid#" cfsqltype="CF_SQL_INTEGER">
+          AND d.userid    = <cfqueryparam value="#arguments.userid#"    cfsqltype="CF_SQL_INTEGER">
+          AND NOT EXISTS (
+              SELECT 1
+              FROM contactitems ci
+              WHERE ci.contactid     = d.contactid
+                AND ci.valuetext     = <cfqueryparam value="My Team" cfsqltype="CF_SQL_VARCHAR">
+                AND ci.valuecategory = <cfqueryparam value="Tag"     cfsqltype="CF_SQL_VARCHAR">
+          )
+    </cfquery>
+    <cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
+
+    <cfreturn (structKeyExists(insResult, "recordcount") AND insResult.recordcount GT 0)>
 </cffunction>
 
 <cffunction name="getSystemIdBasedOnTag" access="public" returntype="numeric" output="false">

@@ -1,15 +1,52 @@
 <!--- /include/myteam_pane.cfm --->
 <cfinclude template="/include/qry/getMyTeam.cfm" />
 
-<!--- Autocomplete binding for #autocomplete2 (Add Existing Contact).
-     jQuery UI's autocomplete widget is what owns $.fn.autocomplete at runtime
-     on this page (confirmed via console error trace to jquery-ui.js). --->
+<!--- Add-to-Team flow: AJAX POST with X-CSRF-Token header.
+     Replaces the form-POST-to-myaccount pattern which was unreliable under CSRF
+     (same class of bug the top-bar search hit — see include/autocomplete.cfm:1-6).
+     jQuery UI owns $.fn.autocomplete on this page; we capture ui.item.id and send
+     the contactid directly so name-collision ambiguity is also gone. --->
 <cfoutput>
 <script>
 $(function() {
     var $input = $("##autocomplete2");
     if (!$input.length || typeof $input.autocomplete !== 'function') return;
+    var $form = $input.closest('form.sel_client');
     var taoUserId = '#jsStringFormat(userid)#';
+    var selectedContactId = null;
+
+    function addTeamMember(contactid) {
+        var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+        var csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+        fetch('/ajax/myteam/add.cfm', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRF-Token': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            },
+            body: 'contactid=' + encodeURIComponent(contactid)
+        })
+        .then(function(r) {
+            return r.json().then(function(body){ return { ok: r.ok, body: body }; });
+        })
+        .then(function(res) {
+            if (res.ok && res.body && res.body.success) {
+                showTeamToast(res.body.message || 'Team member added.', 'success');
+                setTimeout(function() {
+                    window.location.href = '/app/myaccount/?new_pgid=122&t2=1';
+                }, 500);
+            } else {
+                showTeamToast((res.body && res.body.message) || 'Unable to add team member.', 'error');
+            }
+        })
+        .catch(function() {
+            showTeamToast('Network error. Please try again.', 'error');
+        });
+    }
+
     $input.autocomplete({
         minLength: 2,
         source: function(request, response) {
@@ -27,25 +64,22 @@ $(function() {
         },
         select: function(event, ui) {
             $input.val(ui.item.value);
-            var form = $input.closest('form.sel_client')[0];
-            if (!form) return false;
-            // Proactively inject csrfToken so the POST passes Application.cfc
-            // validation regardless of whether the document-level submit hook
-            // in core.cfm runs (race-safe, works with form.submit() fallback).
-            var csrfMeta = document.querySelector('meta[name="csrf-token"]');
-            if (csrfMeta && !form.querySelector('input[name="csrfToken"]')) {
-                var hidden = document.createElement('input');
-                hidden.type = 'hidden';
-                hidden.name = 'csrfToken';
-                hidden.value = csrfMeta.getAttribute('content');
-                form.appendChild(hidden);
-            }
-            if (typeof form.requestSubmit === 'function') {
-                form.requestSubmit();
-            } else {
-                form.submit();
-            }
+            selectedContactId = ui.item.id;
+            addTeamMember(selectedContactId);
             return false;
+        },
+        change: function(event, ui) {
+            if (!ui.item) selectedContactId = null;
+        }
+    });
+
+    // Button click / Enter fallback: never let the form POST natively.
+    $form.on('submit', function(e) {
+        e.preventDefault();
+        if (selectedContactId) {
+            addTeamMember(selectedContactId);
+        } else {
+            showTeamToast('Please select a contact from the dropdown.', 'info');
         }
     });
 });
