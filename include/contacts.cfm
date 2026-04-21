@@ -715,6 +715,33 @@ Tables: contactdetails, contactitems, contactsimport, tags_user, fusystemusers
     });
 </script>
 
+<!--- Delete contact confirmation modal (shared by gallery + table views) --->
+<div id="contactdelete" class="modal fade" tabindex="-1" aria-labelledby="contactDeleteLabel">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color:#c0392b;color:#fff;">
+                <h4 class="modal-title" id="contactDeleteLabel">Delete Relationship</h4>
+                <button type="button" class="close" data-bs-dismiss="modal">
+                    <i class="mdi mdi-close-thick" style="color:#fff;"></i>
+                </button>
+            </div>
+            <div class="modal-body"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        $("#contactdelete").on("show.bs.modal", function (event) {
+            var trigger = event.relatedTarget;
+            var contactid = $(trigger).data("deleteId");
+            $(this).find(".modal-body")
+                .html('<div class="text-center p-4"><i class="mdi mdi-loading mdi-spin"></i> Loading...</div>')
+                .load("/include/remoteDeleteFormContact.cfm?contactid=" + encodeURIComponent(contactid));
+        });
+    });
+</script>
+
 <!--- Include Footer Scripts --->
 <cfset script_name_include = "/include/#ListLast(GetCurrentTemplatePath(), '\')#" />
 <cfinclude template="/include/bigbrotherinclude.cfm" />

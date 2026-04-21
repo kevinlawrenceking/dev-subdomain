@@ -890,7 +890,7 @@ Key Features:
                                                    class="btn btn-xs btn-danger waves-effect waves-light ms-1"
                                                    data-bs-toggle="modal"
                                                    data-bs-target="##projectdelete"
-                                                   data-audprojectid="#results.recid#"
+                                                   data-delete-id="#results.recid#"
                                                    title="Delete Project">
                                                     <i class="mdi mdi-trash-can-outline"></i>
                                                 </a>
@@ -1032,7 +1032,7 @@ Key Features:
     $(document).ready(function () {
         $("#projectdelete").on("show.bs.modal", function (event) {
             var trigger = event.relatedTarget;
-            var audprojectid = $(trigger).data("audprojectid");
+            var audprojectid = $(trigger).data("deleteId");
             $(this).find(".modal-body")
                 .html('<div class="text-center p-4"><i class="mdi mdi-loading mdi-spin"></i> Loading...</div>')
                 .load("/include/remoteDeleteFormAudproject.cfm?audprojectid=" + encodeURIComponent(audprojectid));

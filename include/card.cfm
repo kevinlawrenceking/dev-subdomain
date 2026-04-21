@@ -2,12 +2,15 @@
   <div class="col" id="card-#card_id#" style="position:relative;">
 
     <cfif card_delete neq "" and isDefined("card_delete_value") and card_delete_value neq "">
+      <cfif not isDefined("card_delete_target") or card_delete_target eq "">
+        <cfset card_delete_target = "##projectdelete" />
+      </cfif>
       <a href="javascript:void(0);"
          class="card-delete-icon"
          title="Delete"
          data-bs-toggle="modal"
-         data-bs-target="##projectdelete"
-         data-audprojectid="#card_delete_value#"
+         data-bs-target="#card_delete_target#"
+         data-delete-id="#card_delete_value#"
          style="position:absolute;top:8px;right:8px;z-index:10;color:##c0392b;background:rgba(255,255,255,0.85);border-radius:4px;padding:2px 6px;line-height:1;">
         <i class="mdi mdi-trash-can-outline"></i>
       </a>

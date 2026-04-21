@@ -149,7 +149,9 @@ Uses card.cfm for rendering (same pattern as auditions gallery + team contact da
                     <cfset card_badge_yn        = "N" />
                     <cfset card_casting         = "" />
                     <cfset card_company         = galleryContacts.col5 />
-                    <cfset card_delete          = "" />
+                    <cfset card_delete          = "Y" />
+                    <cfset card_delete_value    = galleryContacts.contactid />
+                    <cfset card_delete_target   = "##contactdelete" />
                     <cfset card_delete_msg      = "" />
                     <cfset card_remove          = "" />
                     <cfset card_remove_msg      = "" />
