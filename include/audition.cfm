@@ -812,9 +812,8 @@ Status Workflow:
 
 <span class="ms-auto">
 
-                          <a href="javascript:;" data-bs-remote="true" data-bs-toggle="modal" data-bs-target="##projectupdate" data-bs-placement="top" title="Update Project" data-bs-original-title="Update Project">   <i class="mdi mdi-square-edit-outline"></i> </a>
-                          &nbsp;
-                          <a href="javascript:;" data-bs-remote="true" data-bs-toggle="modal" data-bs-target="##projectdelete" data-bs-placement="top" title="Delete Project" data-bs-original-title="Delete Project" style="color:##c0392b;">   <i class="mdi mdi-trash-can-outline"></i> </a>
+                          <a href="javascript:;" data-bs-remote="true" data-bs-toggle="modal" data-bs-target="##projectupdate" data-bs-placement="top" title="Update Project" data-bs-original-title="Update Project" style="font-size:1.35rem;"><i class="mdi mdi-square-edit-outline"></i></a>
+                          <a href="javascript:;" data-bs-remote="true" data-bs-toggle="modal" data-bs-target="##projectdelete" data-bs-placement="top" title="Delete Project" data-bs-original-title="Delete Project" style="color:##c0392b;font-size:1.35rem;margin-left:10px;"><i class="mdi mdi-trash-can-outline"></i></a>
 
 </span>
 
