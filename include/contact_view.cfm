@@ -154,8 +154,8 @@
                                 });
                             </script>
 
-                            <a class="text-reset font-18 py-1 px-2 d-inline-block" href="javascript:;" data-bs-toggle="modal" data-bs-target="##remoteDeleteForm#recid#" title="Delete Relationship">
-                                <i class="fe-trash-2"></i>
+                            <a href="javascript:;" data-bs-toggle="modal" data-bs-target="##remoteDeleteForm#recid#" title="Delete Relationship" style="color:##c0392b;font-size:1.35rem;margin-left:6px;">
+                                <i class="mdi mdi-trash-can-outline"></i>
                             </a>
                         </cfoutput>
                     </div>

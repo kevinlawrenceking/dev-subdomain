@@ -111,6 +111,7 @@ $(function() {
             window.location.href = "/app/contacts/";
         }
     });
+});
 
 </script>
 
