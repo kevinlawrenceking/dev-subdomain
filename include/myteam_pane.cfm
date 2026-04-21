@@ -1,5 +1,5 @@
 <!--- /include/myteam_pane.cfm --->
-<!-- tao-myteam-build: 2026-04-21-ajax-v1 -->
+<!-- tao-myteam-build: 2026-04-21-ajax-v2 -->
 <cfinclude template="/include/qry/getMyTeam.cfm" />
 
 <!--- Add-to-Team flow: AJAX POST with X-CSRF-Token header.
@@ -323,34 +323,51 @@ function showTeamToast(message, type) {
 }
 
 function confirmRemove(contactId) {
-    if (confirm("Are you sure you want to remove this person from your team?")) {
-        fetch('/include/delete_team.cfm', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            body: 'contactid=' + encodeURIComponent(contactId)
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                let cardEl = document.getElementById('card-' + contactId);
-                if (cardEl) {
-                    cardEl.classList.add('removing');
-                    setTimeout(() => {
-                        cardEl.remove();
-                    }, 300);
-                }
-                showTeamToast('Team member removed successfully.', 'success');
-            } else {
-                showTeamToast('Error: ' + data.message, 'error');
-            }
-        })
-        .catch(function(error) {
-            console.error('Error:', error);
-            showTeamToast('An error occurred. Please try again.', 'error');
+    if (!confirm("Are you sure you want to remove this person from your team?")) return;
+
+    // CSRF: /include/delete_team.cfm runs under include/Application.cfc, which
+    // rejects POSTs without a valid token and emits a 403 HTML page. Without
+    // this header we used to hit .catch() and show a generic red toast.
+    var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+    var csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+
+    fetch('/include/delete_team.cfm', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRF-Token': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+        },
+        body: 'contactid=' + encodeURIComponent(contactId)
+    })
+    .then(function(r) {
+        // Read as text first so a non-JSON error body (e.g. 403 HTML) doesn't throw.
+        return r.text().then(function(txt) {
+            var body = null;
+            try { body = JSON.parse(txt); } catch (e) { /* non-JSON */ }
+            return { ok: r.ok, status: r.status, body: body };
         });
-    }
+    })
+    .then(function(res) {
+        if (res.ok && res.body && res.body.success) {
+            var cardEl = document.getElementById('card-' + contactId);
+            if (cardEl) {
+                cardEl.classList.add('removing');
+                setTimeout(function() { cardEl.remove(); }, 300);
+            }
+            showTeamToast('Team member removed successfully.', 'success');
+        } else {
+            var msg = (res.body && res.body.message)
+                || (res.status === 403 ? 'Your session expired. Please reload and try again.' : 'Unable to remove team member.');
+            showTeamToast(msg, 'error');
+        }
+    })
+    .catch(function(error) {
+        console.error('Error:', error);
+        showTeamToast('Network error. Please try again.', 'error');
+    });
 }
 
 function copyToClipboard(text, buttonElement) {
