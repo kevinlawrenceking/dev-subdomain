@@ -2,23 +2,33 @@
 <cfinclude template="/include/qry/getMyTeam.cfm" />
 
 <!--- Autocomplete binding for #autocomplete2 (Add Existing Contact).
-     Uses devbridge autocomplete API (loaded globally by core.cfm) directly to
-     avoid depending on which library owns $.fn.autocomplete at runtime. --->
+     jQuery UI's autocomplete widget is what owns $.fn.autocomplete at runtime
+     on this page (confirmed via console error trace to jquery-ui.js). --->
 <cfoutput>
 <script>
 $(function() {
     var $input = $("##autocomplete2");
     if (!$input.length || typeof $input.autocomplete !== 'function') return;
+    var taoUserId = '#jsStringFormat(userid)#';
     $input.autocomplete({
-        serviceUrl: '/app/autolookup2.cfm',
-        paramName: 'searchTerm',
-        params: { userid: '#jsStringFormat(userid)#' },
-        minChars: 2,
-        dataType: 'json',
-        deferRequestBy: 150,
-        onSelect: function(suggestion) {
-            $input.val(suggestion.value);
+        minLength: 2,
+        source: function(request, response) {
+            $.ajax({
+                url: '/app/autolookup2.cfm',
+                dataType: 'json',
+                data: { userid: taoUserId, searchTerm: request.term },
+                success: function(data) {
+                    response($.map((data && data.suggestions) || [], function(item) {
+                        return { label: item.value, value: item.value, id: item.id };
+                    }));
+                },
+                error: function() { response([]); }
+            });
+        },
+        select: function(event, ui) {
+            $input.val(ui.item.value);
             $input.closest('form.sel_client').trigger('submit');
+            return false;
         }
     });
 });
