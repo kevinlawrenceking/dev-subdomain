@@ -29,20 +29,20 @@ $(function() {
             $input.val(ui.item.value);
             var form = $input.closest('form.sel_client')[0];
             if (!form) return false;
-            // Use requestSubmit() so a native bubbling submit event fires —
-            // the document-level CSRF hook in core.cfm needs that to inject
-            // csrfToken. jQuery .trigger('submit') / form.submit() skip it.
+            // Proactively inject csrfToken so the POST passes Application.cfc
+            // validation regardless of whether the document-level submit hook
+            // in core.cfm runs (race-safe, works with form.submit() fallback).
+            var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+            if (csrfMeta && !form.querySelector('input[name="csrfToken"]')) {
+                var hidden = document.createElement('input');
+                hidden.type = 'hidden';
+                hidden.name = 'csrfToken';
+                hidden.value = csrfMeta.getAttribute('content');
+                form.appendChild(hidden);
+            }
             if (typeof form.requestSubmit === 'function') {
                 form.requestSubmit();
             } else {
-                var csrfMeta = document.querySelector('meta[name="csrf-token"]');
-                if (csrfMeta && !form.querySelector('input[name="csrfToken"]')) {
-                    var hidden = document.createElement('input');
-                    hidden.type = 'hidden';
-                    hidden.name = 'csrfToken';
-                    hidden.value = csrfMeta.getAttribute('content');
-                    form.appendChild(hidden);
-                }
                 form.submit();
             }
             return false;
