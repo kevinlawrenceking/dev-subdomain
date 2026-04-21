@@ -4,8 +4,17 @@
   Auth + CSRF are enforced by /ajax/Application.cfc (X-CSRF-Token header).
   Request body (application/x-www-form-urlencoded):
     contactid = numeric
-  Response: JSON { success, message, contactid, added }
+  Response: JSON { success, message, contactid, added, _build }
 --->
+<cfset buildTag = "myteam-add-2026-04-21-v1">
+
+<cfif cgi.REQUEST_METHOD EQ "GET">
+    <!--- GET probe for deploy verification; does not write anything. --->
+    <cfcontent type="application/json" reset="true">
+    <cfoutput>#serializeJSON({"success":true,"probe":true,"_build":buildTag})#</cfoutput>
+    <cfabort>
+</cfif>
+
 <cfcontent type="application/json" reset="true">
 <cfparam name="form.contactid" type="integer">
 
@@ -18,7 +27,7 @@
 
 <cfif qOwn.recordcount EQ 0>
     <cfheader statuscode="404">
-    <cfoutput>#serializeJSON({"success":false,"message":"Contact not found."})#</cfoutput>
+    <cfoutput>#serializeJSON({"success":false,"message":"Contact not found.","_build":buildTag})#</cfoutput>
     <cfabort>
 </cfif>
 
@@ -29,5 +38,6 @@
     "success": true,
     "contactid": form.contactid,
     "added": added,
-    "message": added ? "Team member added." : "Contact is already on your team."
+    "message": added ? "Team member added." : "Contact is already on your team.",
+    "_build": buildTag
 })#</cfoutput>
