@@ -49,13 +49,20 @@
 </cfswitch>
 
 <cfcatch type="any">
+    <cfset ctxFile = "">
+    <cfset ctxLine = "">
+    <cfif isArray(cfcatch.tagContext) AND arrayLen(cfcatch.tagContext)>
+        <cfset ctxFile = cfcatch.tagContext[1].template>
+        <cfset ctxLine = cfcatch.tagContext[1].line>
+    </cfif>
+    <cflog file="TAO_setup_wizard" type="error"
+           text="load-step failed step=#stepNum# user=#session.userid# type=#cfcatch.type# msg=#cfcatch.message# detail=#cfcatch.detail# at=#ctxFile#:#ctxLine#">
     <cfoutput>
     <div class="text-danger p-3" style="font-size:13px;">
         <strong>Step #stepNum# Error:</strong> #encodeForHTML(cfcatch.message)#<br/>
         <strong>Detail:</strong> #encodeForHTML(cfcatch.detail)#<br/>
-        <cfif len(cfcatch.tagContext) AND isArray(cfcatch.tagContext) AND arrayLen(cfcatch.tagContext)>
-            <strong>File:</strong> #encodeForHTML(cfcatch.tagContext[1].template)#
-            line #cfcatch.tagContext[1].line#
+        <cfif len(ctxFile)>
+            <strong>File:</strong> #encodeForHTML(ctxFile)# line #encodeForHTML(ctxLine)#
         </cfif>
     </div>
     </cfoutput>

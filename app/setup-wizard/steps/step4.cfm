@@ -5,42 +5,14 @@
 --->
 <cfset userid = session.userid>
 
-<!--- Audition type picklist --->
+<!--- Audition media-type picklist (global reference table, excludes Headshot per Auditions UI convention). --->
 <cfquery name="qMediaTypes" datasource="#application.datasource#">
-    SELECT audmediatypeid, audmediatypename
-    FROM audmediatypes_user
-    WHERE userid = <cfqueryparam value="#userid#" cfsqltype="cf_sql_integer" />
-      AND isDeleted = 0
-    ORDER BY audmediatypename
+    SELECT mediatypeid, mediatype
+    FROM audmediatypes
+    WHERE isDeleted = 0
+      AND mediatype <> 'Headshot'
+    ORDER BY mediatype
 </cfquery>
-
-<!--- Bootstrap default media types for this user if missing --->
-<cfif qMediaTypes.recordCount EQ 0>
-    <cftry>
-        <cfset defaultTypes = ["TV", "Film", "Theatre", "Commercial", "Voiceover", "New Media"]>
-        <cfloop array="#defaultTypes#" index="typeName">
-            <cfquery datasource="#application.datasource#">
-                INSERT INTO audmediatypes_user (userid, audmediatypename, isDeleted)
-                VALUES (
-                    <cfqueryparam value="#userid#" cfsqltype="cf_sql_integer" />,
-                    <cfqueryparam value="#typeName#" cfsqltype="cf_sql_varchar" />,
-                    0
-                )
-            </cfquery>
-        </cfloop>
-        <cfquery name="qMediaTypes" datasource="#application.datasource#">
-            SELECT audmediatypeid, audmediatypename
-            FROM audmediatypes_user
-            WHERE userid = <cfqueryparam value="#userid#" cfsqltype="cf_sql_integer" />
-              AND isDeleted = 0
-            ORDER BY audmediatypename
-        </cfquery>
-    <cfcatch type="any">
-        <cflog file="TAO_setup_wizard" type="error"
-               text="Step 4 bootstrap media types failed for user #userid#: #cfcatch.message# | #cfcatch.detail#">
-    </cfcatch>
-    </cftry>
-</cfif>
 
 <cfoutput>
 
@@ -85,7 +57,7 @@
                         <select class="form-select form-select-sm" data-field="mediaType">
                             <option value="">-- Media type --</option>
                             <cfloop query="qMediaTypes">
-                                <option value="#qMediaTypes.audmediatypeid#">#encodeForHTML(qMediaTypes.audmediatypename)#</option>
+                                <option value="#qMediaTypes.mediatypeid#">#encodeForHTML(qMediaTypes.mediatype)#</option>
                             </cfloop>
                         </select>
                     </div>
@@ -111,7 +83,7 @@
 <script>
 // Pre-build media type options for dynamic rows
 var mediaTypeOptions = '<option value="">-- Media type --</option>' +
-    <cfloop query="qMediaTypes">'<option value="#qMediaTypes.audmediatypeid#">#encodeForJavaScript(qMediaTypes.audmediatypename)#</option>' +
+    <cfloop query="qMediaTypes">'<option value="#qMediaTypes.mediatypeid#">#encodeForJavaScript(qMediaTypes.mediatype)#</option>' +
     </cfloop>'';
 
 $('##add-audition-entry').on('click', function() {

@@ -3,7 +3,10 @@
 
 <cfset rowsDeleted = contactAuditionService.DELaudcontacts_auditions_xref_24545(audprojectid=audprojectid)>
 
-<Cfif application.dbug eq "Y" and userid eq 30 >
+<!--- Dev-only debug logger. Bare `userid` is NOT in CF's default scope search,
+     and `application.dbug` may not be initialized on cold app start. Guard both. --->
+<cfif structKeyExists(application, "dbug") AND application.dbug eq "Y"
+      AND structKeyExists(session, "userid") AND session.userid eq 30>
 <cfif rowsDeleted gt 0>
     <cfoutput>
         <Cfset msg="Successfully deleted #rowsDeleted# record(s) for Project ID #audprojectid#." />
