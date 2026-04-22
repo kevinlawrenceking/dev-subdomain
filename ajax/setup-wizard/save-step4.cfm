@@ -20,8 +20,6 @@
 <cftry>
 <cftransaction>
 
-    <cfset audRoleService = request.svc("AuditionRoleService")>
-
     <cfloop array="#auditions#" index="aud">
         <cfset projName = trim(aud.projectName ?: "")>
         <cfif NOT len(projName)><cfcontinue></cfif>
@@ -76,13 +74,32 @@
         </cfquery>
         <cfset newProjId = projResult.generatedKey>
 
-        <!--- Default role, keyed to the chosen category's role type set. --->
-        <cfset audRoleService.INSaudroles(
-            new_audRoleName = projName,
-            new_audprojectID = newProjId,
-            new_audRoleTypeID = audRoleTypeID,
-            new_userid = userid
-        )>
+        <!--- Default role, keyed to the chosen category's role type set.
+              TECH-DEBT: Inlined INSERT instead of AuditionRoleService.INSaudroles()
+              because that function declares new_holdStartDate/new_holdEndDate/
+              new_audDialectID/new_audSourceID as required=false with NO default,
+              then dereferences arguments.<name> unconditionally -- so any caller
+              that omits them hits "element is undefined in arguments".
+              Column set mirrors the service so table defaults/nullability match. --->
+        <cfquery datasource="#application.datasource#">
+            INSERT INTO audroles (
+                audRoleName, audprojectID, audRoleTypeID, charDescription,
+                holdStartDate, holdEndDate, audDialectID, audSourceID,
+                userid, isDeleted, isBooked
+            ) VALUES (
+                <cfqueryparam cfsqltype="cf_sql_varchar"     value="#projName#" maxlength="500" />,
+                <cfqueryparam cfsqltype="cf_sql_integer"     value="#newProjId#" />,
+                <cfqueryparam cfsqltype="cf_sql_integer"     value="#audRoleTypeID#" />,
+                <cfqueryparam cfsqltype="cf_sql_longvarchar" value="" null="true" />,
+                <cfqueryparam cfsqltype="cf_sql_date"        value="" null="true" />,
+                <cfqueryparam cfsqltype="cf_sql_date"        value="" null="true" />,
+                <cfqueryparam cfsqltype="cf_sql_integer"     value="0" null="true" />,
+                <cfqueryparam cfsqltype="cf_sql_integer"     value="0" null="true" />,
+                <cfqueryparam cfsqltype="cf_sql_integer"     value="#userid#" />,
+                <cfqueryparam cfsqltype="cf_sql_bit"         value="0" />,
+                <cfqueryparam cfsqltype="cf_sql_bit"         value="0" />
+            )
+        </cfquery>
 
         <cfset auditionsCreated++>
     </cfloop>
