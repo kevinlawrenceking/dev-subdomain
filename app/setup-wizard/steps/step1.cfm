@@ -268,21 +268,18 @@ $('##crop-save').on('click', function() {
     var $btn = $(this);
     $btn.prop('disabled', true).text('Saving...');
 
+    // Match /include/image-upload.cfm pattern: post a base64 data URL as
+    // `picturebase`, server decodes via imageReadBase64().
     uploadCrop.croppie('result', {
-        type: 'blob',
-        size: { width: 300, height: 300 },
-        format: 'jpeg',
-        quality: 0.85
-    }).then(function(blob) {
-        var fd = new FormData();
-        fd.append('avatar', blob, 'avatar.jpg');
+        type: 'canvas',
+        size: 'viewport',
+        quality: 0.9
+    }).then(function(dataUrl) {
         var csrf = document.querySelector('meta[name="csrf-token"]');
         $.ajax({
             url: '/ajax/setup-wizard/upload-avatar.cfm',
             type: 'POST',
-            data: fd,
-            processData: false,
-            contentType: false,
+            data: { picturebase: dataUrl },
             headers: csrf ? { 'X-CSRF-Token': csrf.getAttribute('content') } : {},
             dataType: 'json',
             success: function(r) {
