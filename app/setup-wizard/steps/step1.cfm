@@ -48,16 +48,23 @@
     SELECT id AS dateFormatID, formatexample AS dateformatExample FROM dateformats ORDER BY id
 </cfquery>
 
-<!--- Resolve Pacific tzid for default (case-insensitive, multiple name variants) --->
-<cfset pacificTzId = 0>
-<cfset pacificNames = "Pacific Standard Time,Pacific Time,Pacific Time (US & Canada),US/Pacific">
-<cfloop query="qTimezones">
-    <cfif listFindNoCase(pacificNames, qTimezones.tzname)
-          OR (len(qTimezones.tz_iana) AND qTimezones.tz_iana EQ "America/Los_Angeles")>
-        <cfset pacificTzId = qTimezones.tzid>
-        <cfbreak>
-    </cfif>
-</cfloop>
+<!--- Resolve Pacific tzid for default. Prefer IANA match, then name patterns.
+      SQL-side lookup is more robust than walking qTimezones -- avoids brittleness
+      when tzname values don't match a hardcoded list. --->
+<cfquery name="qPacific" datasource="#application.datasource#" maxrows="1">
+    SELECT tzid FROM timezones
+    WHERE tz_iana = <cfqueryparam value="America/Los_Angeles" cfsqltype="cf_sql_varchar" />
+       OR tzname LIKE <cfqueryparam value="Pacific%" cfsqltype="cf_sql_varchar" />
+       OR tzname LIKE <cfqueryparam value="%Los Angeles%" cfsqltype="cf_sql_varchar" />
+    ORDER BY
+      CASE
+        WHEN tz_iana = 'America/Los_Angeles' THEN 1
+        WHEN tzname LIKE 'Pacific Standard Time%' THEN 2
+        WHEN tzname LIKE 'Pacific%' THEN 3
+        ELSE 4
+      END
+</cfquery>
+<cfset pacificTzId = qPacific.recordCount ? qPacific.tzid : 0>
 <cfset currentTzId = val(qProfile.tzid) GT 0 ? val(qProfile.tzid) : pacificTzId>
 <cflog file="TAO_setup_wizard" text="Pacific TZ lookup: pacificTzId=#pacificTzId#, qProfile.tzid=#val(qProfile.tzid)#, currentTzId=#currentTzId#">
 

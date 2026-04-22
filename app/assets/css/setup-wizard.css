@@ -1,6 +1,16 @@
 /* P11: Onboarding Wizard Styles
    Minimal additions on top of Bootstrap + TAO component styles. */
 
+/* --- Select option fix: some OS/browser combos render <option> text
+       transparent/white when the parent select has a light background,
+       because native controls inherit from system theme rather than CSS.
+       Force explicit colors so the picklist text is always readable. --- */
+.wizard-step-content select option,
+.wizard-step-content .form-select option {
+    color: #212529;
+    background: #fff;
+}
+
 /* --- Layout --- */
 .wizard-wrapper {
     min-height: 100vh;

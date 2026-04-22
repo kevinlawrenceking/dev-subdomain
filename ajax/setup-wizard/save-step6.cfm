@@ -37,18 +37,25 @@
         </cfif>
     </cfloop>
 
-    <!--- Insert new custom links --->
+    <!--- Insert new custom links.
+          Column set mirrors setup/user_setup_core.cfm and include/user_setup.cfm
+          so MySQL strict mode accepts the row (sitetypeid / siteicon / isdeleted
+          are likely NOT NULL or NOT NULL-no-default on this table). --->
     <cfloop array="#customLinks#" index="clink">
         <cfset cName = trim(clink.sitename ?: "")>
         <cfset cUrl = trim(clink.siteurl ?: "")>
         <cfif len(cName) AND len(cUrl)>
             <cfquery datasource="#application.datasource#">
-                INSERT INTO sitelinks_user_tbl (userid, sitename, siteurl, iscustom)
-                VALUES (
+                INSERT INTO sitelinks_user_tbl (
+                    userid, sitename, siteurl, siteicon, sitetypeid, iscustom, isdeleted
+                ) VALUES (
                     <cfqueryparam value="#userid#" cfsqltype="cf_sql_integer" />,
                     <cfqueryparam value="#cName#" cfsqltype="cf_sql_varchar" />,
                     <cfqueryparam value="#cUrl#" cfsqltype="cf_sql_varchar" />,
-                    1
+                    <cfqueryparam value="" cfsqltype="cf_sql_varchar" null="true" />,
+                    <cfqueryparam value="0" cfsqltype="cf_sql_integer" null="true" />,
+                    <cfqueryparam value="1" cfsqltype="cf_sql_bit" />,
+                    <cfqueryparam value="0" cfsqltype="cf_sql_bit" />
                 )
             </cfquery>
         </cfif>
@@ -67,9 +74,22 @@
     <cfoutput>#serializeJSON({"success": true, "message": "Links saved."})#</cfoutput>
 
 <cfcatch type="any">
+    <cfset ctxFile = "">
+    <cfset ctxLine = "">
+    <cfif isArray(cfcatch.tagContext) AND arrayLen(cfcatch.tagContext)>
+        <cfset ctxFile = cfcatch.tagContext[1].template>
+        <cfset ctxLine = cfcatch.tagContext[1].line>
+    </cfif>
     <cflog file="TAO_setup_wizard" type="error"
-           text="Step 6 save failed for user #userid#: #cfcatch.message#" />
+           text="Step 6 save failed for user #userid# type=#cfcatch.type# msg=#cfcatch.message# detail=#cfcatch.detail# at=#ctxFile#:#ctxLine#" />
     <cfcontent type="application/json; charset=utf-8" reset="true">
-    <cfoutput>#serializeJSON({"success": false, "message": "Failed to save links."})#</cfoutput>
+    <cfoutput>#serializeJSON({
+        "success": false,
+        "message": "Failed to save links.",
+        "errorType": cfcatch.type,
+        "errorMessage": cfcatch.message,
+        "errorDetail": cfcatch.detail,
+        "errorAt": ctxFile & ":" & ctxLine
+    })#</cfoutput>
 </cfcatch>
 </cftry>
