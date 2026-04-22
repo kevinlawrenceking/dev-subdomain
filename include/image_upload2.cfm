@@ -2,10 +2,22 @@
 
 <cfset pictureImg = imageReadBase64(form.picturebase)>
 
+<!--- Delete existing file first so the new write inherits fresh ACLs from
+      the parent directory. Without this, cfimage overwrite preserves the
+      destination's existing NTFS ACL -- if it's restrictive, IIS returns
+      401.3 when the browser later tries to display the image (upload
+      "succeeds" but displays as empty). --->
+<cftry>
+    <cfif fileExists(cookie.uploadDir)>
+        <cffile action="delete" file="#cookie.uploadDir#" />
+    </cfif>
+    <cfcatch type="any"></cfcatch>
+</cftry>
+
 <!--- Save the image to the specified directory --->
-<cfimage 
+<cfimage
     source="#pictureImg#"
-    destination="#cookie.uploadDir#" 
+    destination="#cookie.uploadDir#"
     overwrite="true"
     action="write">
 

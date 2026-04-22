@@ -62,6 +62,22 @@
 
     <cfset destFile = userMediaPath & "\avatar.jpg">
 
+    <!--- IMPORTANT: cffile action="move" with overwrite PRESERVES the
+          destination's existing NTFS ACL on Windows. If a prior write put
+          a restrictive ACL on avatar.jpg, IIS anonymous user gets 401.3
+          when the browser later requests the image (upload "succeeds" but
+          displays as empty). Deleting first forces the new file to inherit
+          fresh ACLs from the parent directory, which is what we want. --->
+    <cftry>
+        <cfif fileExists(destFile)>
+            <cffile action="delete" file="#destFile#" />
+        </cfif>
+        <cfcatch type="any">
+            <cflog file="TAO_setup_wizard" type="warning"
+                   text="Could not delete existing avatar for user #userid#: #cfcatch.message# (continuing with move)" />
+        </cfcatch>
+    </cftry>
+
     <!--- Move uploaded file to user media directory as avatar.jpg --->
     <cffile action="move"
             source="#uploadResult.serverDirectory#/#uploadResult.serverFile#"
