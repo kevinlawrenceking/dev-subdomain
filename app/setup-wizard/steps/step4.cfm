@@ -5,13 +5,15 @@
 --->
 <cfset userid = session.userid>
 
-<!--- Audition media-type picklist (global reference table, excludes Headshot per Auditions UI convention). --->
-<cfquery name="qMediaTypes" datasource="#application.datasource#">
-    SELECT mediatypeid, mediatype
-    FROM audmediatypes
-    WHERE isDeleted = 0
-      AND mediatype <> 'Headshot'
-    ORDER BY mediatype
+<!--- Audition category picklist. Wizard shows 7 categories; value is the
+      "Other" subcategory's audsubcatid so one field captures both category
+      (derivable via JOIN) and a valid, generic subcategory. --->
+<cfquery name="qCatOptions" datasource="#application.datasource#">
+    SELECT s.audsubcatid, c.audcatname
+    FROM audcategories c
+    INNER JOIN audsubcategories s ON s.audcatid = c.audcatid
+    WHERE s.audSubCatName = <cfqueryparam value="Other" cfsqltype="cf_sql_varchar" />
+    ORDER BY c.audcatname
 </cfquery>
 
 <cfoutput>
@@ -54,10 +56,10 @@
                         <input type="text" class="form-control form-control-sm" placeholder="Project name" data-field="projectName" />
                     </div>
                     <div class="col-md-6">
-                        <select class="form-select form-select-sm" data-field="mediaType">
-                            <option value="">-- Media type --</option>
-                            <cfloop query="qMediaTypes">
-                                <option value="#qMediaTypes.mediatypeid#">#encodeForHTML(qMediaTypes.mediatype)#</option>
+                        <select class="form-select form-select-sm" data-field="audsubcatid">
+                            <option value="">-- Category --</option>
+                            <cfloop query="qCatOptions">
+                                <option value="#qCatOptions.audsubcatid#">#encodeForHTML(qCatOptions.audcatname)#</option>
                             </cfloop>
                         </select>
                     </div>
@@ -81,9 +83,10 @@
 </div>
 
 <script>
-// Pre-build media type options for dynamic rows
-var mediaTypeOptions = '<option value="">-- Media type --</option>' +
-    <cfloop query="qMediaTypes">'<option value="#qMediaTypes.mediatypeid#">#encodeForJavaScript(qMediaTypes.mediatype)#</option>' +
+// Pre-build category options for dynamic rows. Value is audsubcatid ("Other"
+// subcategory); visible label is the category name.
+var categoryOptions = '<option value="">-- Category --</option>' +
+    <cfloop query="qCatOptions">'<option value="#qCatOptions.audsubcatid#">#encodeForJavaScript(qCatOptions.audcatname)#</option>' +
     </cfloop>'';
 
 $('##add-audition-entry').on('click', function() {
@@ -96,7 +99,7 @@ $('##add-audition-entry').on('click', function() {
         '<div class="audition-entry border rounded p-3 mb-2">' +
         '<div class="row g-2">' +
         '<div class="col-md-6"><input type="text" class="form-control form-control-sm" placeholder="Project name" data-field="projectName" /></div>' +
-        '<div class="col-md-6"><select class="form-select form-select-sm" data-field="mediaType">' + mediaTypeOptions + '</select></div>' +
+        '<div class="col-md-6"><select class="form-select form-select-sm" data-field="audsubcatid">' + categoryOptions + '</select></div>' +
         '<div class="col-md-6"><input type="text" class="form-control form-control-sm" placeholder="Casting director" data-field="castingDirector" /></div>' +
         '<div class="col-md-6"><input type="date" class="form-control form-control-sm" data-field="audDate" /></div>' +
         '<div class="col-12"><textarea class="form-control form-control-sm" placeholder="Notes (optional)" data-field="notes" rows="2" maxlength="500"></textarea></div>' +
@@ -112,7 +115,7 @@ window.wizardCollectStepData = function() {
         if (!name) return;
         auditions.push({
             projectName: name,
-            mediaTypeId: $e.find('[data-field="mediaType"]').val(),
+            audsubcatid: $e.find('[data-field="audsubcatid"]').val(),
             castingDirector: $e.find('[data-field="castingDirector"]').val().trim(),
             audDate: $e.find('[data-field="audDate"]').val(),
             notes: $e.find('[data-field="notes"]').val().trim()
