@@ -108,8 +108,16 @@
           <cfabort>
         </cfif>
 
-        <!--- Reject if token invalid --->
-        <cfif NOT CSRFVerifyToken(csrfHeader)>
+        <!--- Verify: direct session comparison first (reliable even when ACF
+              has rotated/evicted the token from its internal CSRF store),
+              fall back to CF CSRF engine. Mirrors /app/Application.cfc line 404. --->
+        <cfset var csrfValid = false>
+        <cfif structKeyExists(session, "csrfToken") AND csrfHeader EQ session.csrfToken>
+          <cfset csrfValid = true>
+        <cfelseif CSRFVerifyToken(csrfHeader)>
+          <cfset csrfValid = true>
+        </cfif>
+        <cfif NOT csrfValid>
           <cflog file="tao_csrf" type="warning" text="CSRF token invalid: #cgi.SCRIPT_NAME# [#cgi.REQUEST_METHOD#] user=#session.userid#">
           <cfheader statuscode="403">
           <cfcontent type="application/json" reset="true">
