@@ -23,14 +23,43 @@
 <cftry>
 <cftransaction>
 
-    <!--- Update existing link URLs --->
+    <!--- Snapshot current URLs so we can tell "toggled off an existing link"
+          (soft-delete) from "left an empty template row alone" (no-op). --->
+    <cfquery name="qCurrent" datasource="#application.datasource#">
+        SELECT id, siteurl
+        FROM sitelinks_user_tbl
+        WHERE userid = <cfqueryparam value="#userid#" cfsqltype="cf_sql_integer" />
+          AND isdeleted = 0
+    </cfquery>
+    <cfset currentUrls = {}>
+    <cfloop query="qCurrent">
+        <cfset currentUrls[qCurrent.id] = qCurrent.siteurl ?: "">
+    </cfloop>
+
+    <!--- Reconcile existing link rows:
+          - toggled on + url present  -> update url (and un-delete defensively)
+          - toggled off + had url     -> soft-delete
+          - toggled off + never had   -> no-op (preserve the template row) --->
     <cfloop array="#existingLinks#" index="link">
         <cfset linkId = val(link.sitelinkId ?: 0)>
         <cfset linkUrl = trim(link.siteurl ?: "")>
-        <cfif linkId GT 0 AND len(linkUrl)>
+        <cfif linkId LTE 0><cfcontinue></cfif>
+
+        <cfset hadUrl = structKeyExists(currentUrls, linkId) AND len(currentUrls[linkId])>
+
+        <cfif len(linkUrl)>
             <cfquery datasource="#application.datasource#">
                 UPDATE sitelinks_user_tbl
-                SET siteurl = <cfqueryparam value="#linkUrl#" cfsqltype="cf_sql_varchar" />
+                SET siteurl = <cfqueryparam value="#linkUrl#" cfsqltype="cf_sql_varchar" />,
+                    isdeleted = 0
+                WHERE id = <cfqueryparam value="#linkId#" cfsqltype="cf_sql_integer" />
+                  AND userid = <cfqueryparam value="#userid#" cfsqltype="cf_sql_integer" />
+            </cfquery>
+        <cfelseif hadUrl>
+            <cfquery datasource="#application.datasource#">
+                UPDATE sitelinks_user_tbl
+                SET isdeleted = 1,
+                    siteurl = <cfqueryparam value="" cfsqltype="cf_sql_varchar" />
                 WHERE id = <cfqueryparam value="#linkId#" cfsqltype="cf_sql_integer" />
                   AND userid = <cfqueryparam value="#userid#" cfsqltype="cf_sql_integer" />
             </cfquery>
