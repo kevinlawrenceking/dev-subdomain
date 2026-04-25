@@ -54,6 +54,10 @@
 <cfset tzName           = userData.tzname>
 <cfset tzGeneral        = userData.tzgeneral>
 
+<!--- Newsletter preferences (consumed bare-scope by include/prefs_pane.cfm) --->
+<cfset nletter_yn       = userData.nletter_yn>
+<cfset nletter_link     = userData.nletter_link>
+
 <!--- Date format / region --->
 <cfset dateFormatID     = userData.dateFormatID>
 <cfset datePrefID       = userData.datePrefID>

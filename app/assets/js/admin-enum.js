@@ -278,6 +278,12 @@
         cancelBtn.textContent = 'Cancel';
         inputRow.appendChild(cancelBtn);
 
+        var deleteBtn = document.createElement('button');
+        deleteBtn.className = 'btn btn-sm btn-link p-0 text-danger ms-2';
+        deleteBtn.title = 'Delete';
+        deleteBtn.innerHTML = '<i class="mdi mdi-trash-can-outline"></i>';
+        inputRow.appendChild(deleteBtn);
+
         row.style.display = 'none';
         row.parentNode.insertBefore(inputRow, row);
         nameInput.focus();
@@ -325,6 +331,12 @@
         cancelBtn.addEventListener('click', function () {
             inputRow.remove();
             row.style.display = '';
+        });
+
+        deleteBtn.addEventListener('click', function () {
+            inputRow.remove();
+            row.style.display = '';
+            startDelete(row);
         });
     }
 

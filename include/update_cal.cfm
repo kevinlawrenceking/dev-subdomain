@@ -4,7 +4,12 @@
 
     </cfif>
 
-    
+    <!--- Reject end-before-start so we don't poison the appointment slot dropdowns. --->
+    <cfif structKeyExists(form, "calstarttime") AND structKeyExists(form, "calendtime")
+          AND len(trim(form.calendtime)) AND len(trim(form.calstarttime))
+          AND form.calendtime LTE form.calstarttime>
+        <cflocation url="/app/myaccount/?new_pgid=124&t4=1&prefError=time" addtoken="false" />
+    </cfif>
 
 <cfinclude template="/include/qry/update_cal.cfm" />
 

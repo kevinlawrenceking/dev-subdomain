@@ -3,7 +3,8 @@
 
 <cfoutput>
     <!--- Set the return URL for redirection based on parameters --->
-    <cfset returnurl = "/app/audition/?audprojectid=#audprojectid#&eventid=#eventid#&secid=#secid#" />
+    <!--- booked=1 signals audition.cfm to fire the one-shot confetti animation. --->
+    <cfset returnurl = "/app/audition/?audprojectid=#audprojectid#&eventid=#eventid#&secid=#secid#&booked=1" />
 </cfoutput>
 
 <!--- Redirect to the specified return URL --->

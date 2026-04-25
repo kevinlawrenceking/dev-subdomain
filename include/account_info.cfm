@@ -211,15 +211,18 @@ Last Updated: 2025
                 </div>
                 <div class="modal-body">
                     <p>Update your default settings.</p>
-                    <form action="/include/update_cal.cfm" method="post" class="parsley-examples" 
-                          data-parsley-excluded="input[type=button], input[type=submit], input[type=reset], input[type=hidden], [disabled], :hidden" 
-                          data-parsley-trigger="keyup" data-parsley-validate="data-parsley-validate" id="preferences">
-                        
+                    <form action="/include/update_cal.cfm" method="post" class="parsley-examples"
+                          data-parsley-excluded="input[type=button], input[type=submit], input[type=reset], input[type=hidden], [disabled], :hidden"
+                          data-parsley-trigger="keyup" data-parsley-validate="data-parsley-validate" id="preferences"
+                          onsubmit="return validatePrefTimes(this);">
+
                         <cfoutput>
                             <input type="hidden" name="userid" value="#userid#"/>
                             <input type="hidden" name="ctaction" value="update_cal"/>
                             <input type="hidden" name="t4" value="1"/>
                         </cfoutput>
+
+                        <div id="prefTimesError" class="alert alert-danger d-none col-md-12" role="alert"></div>
                         
                         <!--- Time selection configuration --->
                         <cfset startTime = createTime(5, 0, 0)>
@@ -298,6 +301,25 @@ Last Updated: 2025
             </div>
         </div>
     </div>
+
+    <script>
+        function validatePrefTimes(form) {
+            var startSel = form.querySelector('select[name="calstarttime"]');
+            var endSel   = form.querySelector('select[name="calendtime"]');
+            var errorBox = document.getElementById('prefTimesError');
+            if (!startSel || !endSel) return true;
+            if (endSel.value <= startSel.value) {
+                if (errorBox) {
+                    errorBox.textContent = 'End time must be after start time.';
+                    errorBox.classList.remove('d-none');
+                }
+                endSel.focus();
+                return false;
+            }
+            if (errorBox) errorBox.classList.add('d-none');
+            return true;
+        }
+    </script>
 
     <!--- Main content area with tabbed interface --->
     <div class="card mb-3">

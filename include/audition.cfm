@@ -1102,11 +1102,11 @@ Status Workflow:
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         var bookedCheckbox = document.getElementById('new_isBooked');
-        
+
         bookedCheckbox.addEventListener('click', function(event) {
             var isBooked = <cfoutput>#rolecheck.isBooked#</cfoutput>;
             var bookedCheckRecordCount = <cfoutput>#Booked_check.recordcount#</cfoutput>;
-            
+
             if (isBooked === "1" && bookedCheckRecordCount !== 0 && !this.checked) {
                 event.preventDefault(); // Prevent unchecking
                 $('#RemoveBook').modal('show'); // Show the modal
@@ -1114,3 +1114,26 @@ Status Workflow:
         });
     });
 </script>
+
+<!--- Booked celebration: fires once per transition. include/booked.cfm appends ?booked=1 on redirect; we strip it from the URL after firing so refresh doesn't replay. --->
+<cfif structKeyExists(url, "booked") AND url.booked EQ "1">
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        if (typeof confetti !== 'function') return;
+        var duration = 1500;
+        var end = Date.now() + duration;
+        (function frame() {
+            confetti({ particleCount: 5, angle: 60,  spread: 55, origin: { x: 0 } });
+            confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 } });
+            if (Date.now() < end) requestAnimationFrame(frame);
+        })();
+        if (window.history && window.history.replaceState) {
+            var clean = window.location.pathname + window.location.search.replace(/([&?])booked=1(&|$)/, function (m, p1, p2) {
+                return p2 === '&' ? p1 : '';
+            }).replace(/\?$/, '');
+            window.history.replaceState({}, document.title, clean);
+        }
+    });
+</script>
+</cfif>

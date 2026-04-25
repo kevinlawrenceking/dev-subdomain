@@ -705,8 +705,8 @@ Key Features:
                             <!--- Standard card variables --->
                             <cfset card_view_icon_yn = "N">
                             <cfset card_delete_msg = ""/>
-                            <cfset card_delete = "Y"/>
-                            <cfset card_delete_value = results.recid/>
+                            <cfset card_delete = ""/>
+                            <cfset card_delete_value = ""/>
                             <cfset card_details = "/app/audition/?audprojectid=" & results.recid/>
                             <cfset card_email = ""/>
                             <cfset card_name = ""/>
@@ -885,14 +885,6 @@ Key Features:
                                             <td class="text-nowrap">
                                                 <a href="/app/audition/?audprojectid=#results.recid#" class="btn btn-xs btn-primary waves-effect waves-light" title="View">
                                                     <i class="mdi mdi-eye-outline"></i>
-                                                </a>
-                                                <a href="javascript:void(0);"
-                                                   class="btn btn-xs btn-danger waves-effect waves-light ms-1"
-                                                   data-bs-toggle="modal"
-                                                   data-bs-target="##projectdelete"
-                                                   data-delete-id="#results.recid#"
-                                                   title="Delete Project">
-                                                    <i class="mdi mdi-trash-can-outline"></i>
                                                 </a>
                                             </td>
                                             <td style="word-break: break-all;">

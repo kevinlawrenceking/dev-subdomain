@@ -105,11 +105,8 @@
                                             <span class="admin-enum-parent text-muted small me-2">#encodeForHTML(qRows.parent_name)#</span>
                                         </cfif>
                                         <cfif NOT readOnly>
-                                            <button class="btn btn-sm btn-link p-0 me-1" data-action="edit" title="Edit">
+                                            <button class="btn btn-sm btn-link p-0" data-action="edit" title="Edit">
                                                 <i class="mdi mdi-square-edit-outline"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-link p-0 text-danger" data-action="delete" title="Delete">
-                                                <i class="mdi mdi-trash-can-outline"></i>
                                             </button>
                                         </cfif>
                                     </div>
