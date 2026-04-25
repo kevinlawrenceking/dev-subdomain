@@ -222,7 +222,8 @@ Last Updated: 2025
                             <input type="hidden" name="t4" value="1"/>
                         </cfoutput>
 
-                        <div id="prefTimesError" class="alert alert-danger d-none col-md-12" role="alert"></div>
+                        <div id="prefTimesError" class="d-none" role="alert"
+                             style="background-color:#f8d7da;color:#721c24;border:1px solid #f5c6cb;padding:.75rem 1.25rem;border-radius:.25rem;margin:0 0 1rem 0;width:100%;box-sizing:border-box;font-weight:500;"></div>
                         
                         <!--- Time selection configuration --->
                         <cfset startTime = createTime(5, 0, 0)>
