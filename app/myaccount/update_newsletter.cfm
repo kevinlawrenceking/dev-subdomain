@@ -10,5 +10,8 @@
         where userid = #userid#
     </cfquery>
 
+<!--- Bust the fetchUsers session cache so the next page render picks up the new values. --->
+<cfset session.bustUserCache = true />
+
 <Cflocation url="/app/myaccount/?new_pgid=124&t4=1" />
  
