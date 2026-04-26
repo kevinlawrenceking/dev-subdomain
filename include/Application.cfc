@@ -26,7 +26,19 @@
       <cfelseif len(trim(cgi.HTTP_X_CSRF_TOKEN))>
         <cfset submittedToken = cgi.HTTP_X_CSRF_TOKEN>
       </cfif>
-      <cfif NOT len(trim(submittedToken)) OR NOT CSRFVerifyToken(submittedToken)>
+      <!--- Two-tier verify: direct session compare first (reliable even when ACF
+            has rotated/evicted the token from its internal CSRF store), fall back
+            to CF CSRF engine. Mirrors /app/Application.cfc:402-408 and
+            /ajax/Application.cfc:111-119. --->
+      <cfset var csrfValid = false>
+      <cfif len(trim(submittedToken))>
+        <cfif submittedToken EQ session.csrfToken>
+          <cfset csrfValid = true>
+        <cfelseif CSRFVerifyToken(submittedToken)>
+          <cfset csrfValid = true>
+        </cfif>
+      </cfif>
+      <cfif NOT csrfValid>
         <cflog file="tao_csrf" type="warning"
                text="CSRF form POST rejected: #cgi.SCRIPT_NAME# | userid=#structKeyExists(session,'userid') ? session.userid : 'none'#">
         <cfheader statuscode="403">
