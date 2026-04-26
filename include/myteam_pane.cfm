@@ -323,8 +323,12 @@ function showTeamToast(message, type) {
 }
 
 function confirmRemove(contactId) {
-    if (!confirm("Are you sure you want to remove this person from your team?")) return;
+    window.taoConfirmDelete("Are you sure you want to remove this person from your team?", function() {
+        removeTeamMember(contactId);
+    });
+}
 
+function removeTeamMember(contactId) {
     // CSRF: /include/delete_team.cfm runs under include/Application.cfc, which
     // rejects POSTs without a valid token and emits a 403 HTML page. Without
     // this header we used to hit .catch() and show a generic red toast.

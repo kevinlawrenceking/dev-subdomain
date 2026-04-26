@@ -172,7 +172,7 @@
 <!--- JavaScript for deleting a team member via fetch() and copy functionality --->
 <script>
 function confirmRemove(contactId) {
-    if (confirm("Are you sure you want to remove this person from your team?")) {
+    window.taoConfirmDelete("Are you sure you want to remove this person from your team?", function() {
         fetch('/include/delete_team.cfm', {
             method: 'POST',
             headers: {
@@ -185,17 +185,17 @@ function confirmRemove(contactId) {
             if (data.success) {
                 let cardEl = document.getElementById('card-' + contactId);
                 if (cardEl) {
-                    cardEl.classList.add('removing'); // Start animation
+                    cardEl.classList.add('removing');
                     setTimeout(() => {
-                        cardEl.remove(); // Fully remove after animation
-                    }, 300); // Wait for CSS transition to finish
+                        cardEl.remove();
+                    }, 300);
                 }
             } else {
                 alert("Error: " + data.message);
             }
         })
         .catch(error => console.error('Error:', error));
-    }
+    });
 }
 
 function copyToClipboard(text) {

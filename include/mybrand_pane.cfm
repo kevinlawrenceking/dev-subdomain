@@ -110,9 +110,9 @@
 
 <script>
     function deleteEssence(id) {
-        if(confirm("Are you sure you want to delete this essence?")) {
+        window.taoConfirmDelete("Are you sure you want to delete this essence?", function() {
             window.location.href = "/app/myaccount/?ctaction=deleteessence&essenceid=" + id;
-        }
+        });
     }
 </script>
 

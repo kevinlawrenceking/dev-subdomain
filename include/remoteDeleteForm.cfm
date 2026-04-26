@@ -25,12 +25,6 @@
 </cfif>
 <cfset recid = val(recid) />
 
-<!--- Display confirmation message for deletion --->
-<cfoutput>
-    <center>Are you sure you want to delete?</center>
-</cfoutput>
-<p></p>
-
 <!--- Prepare the SQL update query for deletion --->
 <cfsavecontent variable="dqry">
     <cfoutput>
@@ -38,8 +32,9 @@
     </cfoutput>
 </cfsavecontent>
 
-<!--- Form for submitting the deletion request --->
 <form action="/include/remoteDeleteFormDelete.cfm" method="post" class="needs-validation" novalidate>
+    <p class="mb-3">Are you sure you want to delete?</p>
+
     <cfoutput>
         <input type="hidden" name="rpgid" value="#val(rpgid)#" />
         <input type="hidden" name="t1" value="#val(t1)#" />
@@ -50,19 +45,17 @@
         <input type="hidden" name="pgdir" value="#htmlEditFormat(pgdir)#" />
         <input type="hidden" name="recid" value="#val(recid)#" />
 
-        <!--- Include contact ID if defined --->
         <cfif isdefined('contactid')>
             <input type="hidden" name="contactid" value="#contactid#" />
         </cfif>
 
-        <!--- Include user ID if defined --->
         <cfif isdefined('userid')>
             <input type="hidden" name="userid" value="#userid#" />
         </cfif>
     </cfoutput>
 
-    <p>&nbsp;</p>
-    <div class="form-group text-center col-md-12">
-        <button class="btn btn-xs btn-primary waves-effect mb-2 waves-light" style="background-color: red; border: red" type="submit">Delete</button>
+    <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-danger">Delete</button>
     </div>
 </form>

@@ -502,29 +502,26 @@ Tables: contactdetails, contactitems, contactsimport, tags_user, fusystemusers
 
 <!--- Delete Contacts Modal --->
 <div id="batchDeleteModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="batchDeleteModalLabel">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header" style="background-color: red">
+            <div class="modal-header">
                 <h4 class="modal-title" id="batchDeleteModalLabel">Delete Contacts</h4>
                 <button type="button" class="close" data-bs-dismiss="modal">
                     <i class="mdi mdi-close-thick"></i>
                 </button>
             </div>
             <div class="modal-body">
-                <form method="post" class="parsley-examples demo-default selectize-close-btn" 
-                      data-parsley-excluded="input[type=button], input[type=submit], input[type=reset], input[type=hidden], [disabled], :hidden" 
-                      data-parsley-trigger="keyup" data-parsley-validate="" novalidate="" 
+                <form method="post" class="parsley-examples demo-default selectize-close-btn"
+                      data-parsley-excluded="input[type=button], input[type=submit], input[type=reset], input[type=hidden], [disabled], :hidden"
+                      data-parsley-trigger="keyup" data-parsley-validate="" novalidate=""
                       id="myformdelete" name="myformdelete" action="/include/deletecontacts.cfm">
-                    <div class="form-group col-md-12">
-                        <label for="valuetext">Delete all selected relationships</label>
-                    </div>
-                    <div class="form-group text-center col-md-12">
-                        <button class="btn btn-red editable-submit btn-sm waves-effect waves-light" 
-                                type="submit" style="background-color: red; border: #406e8e;">
-                            Delete
-                        </button>
-                    </div>
+                    <p class="mb-3">Delete all selected relationships?</p>
                     <input type="hidden" name="idlist" value="">
+
+                    <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-danger">Delete</button>
+                    </div>
                 </form>
             </div>
         </div>

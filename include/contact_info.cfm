@@ -307,9 +307,9 @@ x</button>
 
         <div id="remoteDeleteForm#sysActive.suid#" class="modal fade" tabindex="-1" role="dialog" >
 
-            <div class="modal-dialog">
+            <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
-                    <div class="modal-header" style="background-color: red;">
+                    <div class="modal-header">
                         <h4 class="modal-title">Follow Up System</h4>
                         <button type="button" class="close" data-bs-dismiss="modal" >
 <i class="mdi mdi-close-thick"></i></button>
@@ -414,9 +414,9 @@ x</button>
 
     <div id="remoteDeleteForm#currentid#" class="modal fade" tabindex="-1" role="dialog" >
 
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <div class="modal-header" style="background-color: red;">
+                <div class="modal-header">
                     <h4 class="modal-title">#compname#</h4>
                     <button type="button" class="close" data-bs-dismiss="modal" >
 <i class="mdi mdi-close-thick"></i></button>

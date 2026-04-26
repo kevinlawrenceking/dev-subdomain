@@ -156,7 +156,10 @@
                                             </a>
                                             &nbsp;
                                         </cfif>
-                                        <a href="/include/deleteticket.cfm?recid=#results.recid#" class="delete-ticket" data-ticket-id="#results.recid#">
+                                        <a href="/include/deleteticket.cfm?recid=#results.recid#"
+                                           class="delete-ticket tao-confirm-delete"
+                                           data-ticket-id="#results.recid#"
+                                           data-confirm-message="Are you sure you want to delete this ticket?">
                                             <i class="mdi mdi-trash-can-outline mr-1"></i>
                                         </a>
                                     </td>
@@ -303,13 +306,10 @@
         
         // Setup modal handler for new form
         setupModalHandlers("##remoteNewForm", "/include/RemoteNewForm.cfm?rpgid=36");
-        
-        // Add confirmation dialog for delete actions
-        $(".delete-ticket").on("click", function(e) {
-            if (!confirm("Are you sure you want to delete this ticket?")) {
-                e.preventDefault();
-            }
-        });
+
+        // Delete confirmation handled by global tao-confirm-delete handler in
+        // /include/_taoConfirmDeleteModal.cfm. Anchors carry the trigger class
+        // and data-confirm-message; no per-page wiring needed.
     });
 </script>
 

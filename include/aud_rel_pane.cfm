@@ -179,13 +179,13 @@
 <!--- JavaScript for deleting a contact via fetch() --->
 <script>
 function confirmRemove(contactId, audProjectId) {
-    if (confirm("Are you sure you want to remove this contact from your project?")) {
+    window.taoConfirmDelete("Are you sure you want to remove this contact from your project?", function() {
         fetch('/include/delete_audcontact.cfm', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded'
             },
-            body: 'contactid=' + encodeURIComponent(contactId) + 
+            body: 'contactid=' + encodeURIComponent(contactId) +
                   '&audprojectid=' + encodeURIComponent(audProjectId)
         })
         .then(response => response.json())
@@ -203,7 +203,7 @@ function confirmRemove(contactId, audProjectId) {
             }
         })
         .catch(error => console.error('Error:', error));
-    }
+    });
 }
 </script>
 

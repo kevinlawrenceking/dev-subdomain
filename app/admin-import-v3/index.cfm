@@ -388,9 +388,9 @@
             // Click handler for remove buttons
             $('.btn-remove-user').on('click', function() {
                 const userid = $(this).data('userid');
-                if (confirm('Remove this user from allowlist?')) {
+                window.taoConfirmDelete('Remove this user from allowlist?', function() {
                     removeUser(userid);
-                }
+                });
             });
         }
 

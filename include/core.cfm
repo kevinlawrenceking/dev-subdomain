@@ -129,6 +129,8 @@
           </div>
         </div>
 
+        <cfinclude template="/include/_taoConfirmDeleteModal.cfm" />
+
         <script>
           window.onerror = function (message, source, lineno, colno, error) {
             // Filter out errors from browser extensions and third-party scripts

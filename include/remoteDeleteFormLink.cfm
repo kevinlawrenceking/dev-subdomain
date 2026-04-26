@@ -2,21 +2,17 @@
 <cfset siteLinksService = createObject("component", "services.SiteLinksService")>
 <cfset linkDetails = siteLinksService.getLinkDetailsById(new_id)>
 
-<cfoutput>
-    <center>Are you sure you want to delete your #linkDetails.sitename# link?</center>
-</cfoutput>
-<p></p>
-
-<!--- Form for deleting the site link --->
 <form action="/include/excludelink.cfm" method="post" class="needs-validation" novalidate="novalidate">
     <cfoutput>
+        <p class="mb-3">Are you sure you want to delete your #linkDetails.sitename# link?</p>
+
         <input type="hidden" name="dd" value="1"/>
         <input type="hidden" name="new_id" value="#linkDetails.id#"/>
         <input type="hidden" name="target_id" value="#linkDetails.sitetypeid#"/>
     </cfoutput>
 
-    <p>&nbsp;</p>
-    <div class="form-group text-center col-md-12">
-        <button class="btn btn-xs btn-primary waves-effect mb-2 waves-light" style="background-color: red; border: red" type="submit">Delete</button>
+    <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-danger">Delete</button>
     </div>
 </form>

@@ -2,22 +2,18 @@
 
 <cfinclude template="/include/qry/audlink_details_237_1.cfm" />
 
-<cfoutput>
-    <center>Are you sure you want<BR>to delete <strong>#audlink_details.linkname#</strong>?</center>
-</cfoutput>
-<p></p>
-
-<!--- Form for deleting the link --->
 <form action="/include/remoteDeletelink2.cfm" method="post" class="needs-validation" novalidate>
     <cfoutput>
+        <p class="mb-3">Are you sure you want to delete <strong>#audlink_details.linkname#</strong>?</p>
+
         <input type="hidden" name="eventid" value="#eventid#" />
         <input type="hidden" name="audprojectid" value="#audprojectid#" />
         <input type="hidden" name="linkid" value="#linkid#" />
         <input type="hidden" name="secid" value="177" />
     </cfoutput>
 
-    <p>&nbsp;</p>
-    <div class="form-group text-center col-md-12">
-        <button class="btn btn-xs btn-primary waves-effect mb-2 waves-light" style="background-color: red; border: red" type="submit">Delete</button>
+    <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-danger">Delete</button>
     </div>
 </form>

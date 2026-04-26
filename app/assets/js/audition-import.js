@@ -1915,10 +1915,12 @@
     // ========================================
 
     function undoImportedRow(rowId) {
-        if (!confirm('Undo this import? The created audition project, role, and event will be deleted.')) {
-            return;
-        }
+        window.taoConfirmDelete('Undo this import? The created audition project, role, and event will be deleted.', function() {
+            performUndoImportedRow(rowId);
+        });
+    }
 
+    function performUndoImportedRow(rowId) {
         console.log('[AUD] Undoing imported row:', rowId);
 
         var csrfToken = $j('#csrf-token').val() || '';

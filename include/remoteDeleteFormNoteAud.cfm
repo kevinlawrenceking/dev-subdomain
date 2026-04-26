@@ -1,21 +1,16 @@
 <!--- This ColdFusion page confirms the deletion of a note and provides a form to submit the deletion request. --->
 
-<cfoutput>
-    <center>Are you sure you want to delete this note?</center>
-</cfoutput>
-<p></p>
-
-<!--- Form to handle note deletion --->
 <form action="/include/deletenote.cfm" method="post" class="needs-validation" novalidate>
+    <p class="mb-3">Are you sure you want to delete this note?</p>
+
     <cfoutput>
         <input type="hidden" name="recid" value="#recid#" />
         <input type="hidden" name="audprojectid" value="#audprojectid#" />
         <input type="hidden" name="returnurl" value="audition" />
     </cfoutput>
 
-    <p>&nbsp;</p>
-    <div class="form-group text-center col-md-12">
-        <!--- Submit button for deletion confirmation --->
-        <button class="btn btn-xs btn-primary waves-effect mb-2 waves-light" style="background-color: red; border: red" type="submit">Delete</button>
+    <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-danger">Delete</button>
     </div>
 </form>

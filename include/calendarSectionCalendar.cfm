@@ -146,10 +146,11 @@ Last Updated: 2025
             </cfif>
         <cfelse>
             <!--- Already linked: show Unlink button --->
-            <button class="btn btn-xs btn-outline-primary" type="button"
-                    onclick="if(confirm('Unlink your Google Calendar?')) window.location.href='/ajax/google-unlink.cfm';">
+            <a class="btn btn-xs btn-outline-primary tao-confirm-delete" role="button"
+               href="/ajax/google-unlink.cfm"
+               data-confirm-message="Unlink your Google Calendar?">
                 <i class="mdi mdi-link-off"></i> Unlink Google
-            </button>
+            </a>
         </cfif>
         </cfoutput>
 

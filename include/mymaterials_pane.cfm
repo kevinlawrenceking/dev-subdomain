@@ -171,9 +171,9 @@ Last Updated: 2025
 
                     <!--- Delete Material Modal --->
                     <div id="remoteDeleteaudmedia#materials_sel.mediaid#" class="modal fade" tabindex="-1" role="dialog">
-                        <div class="modal-dialog">
+                        <div class="modal-dialog modal-dialog-centered">
                             <div class="modal-content">
-                                <div class="modal-header" style="background-color: red;">
+                                <div class="modal-header">
                                     <h4 class="modal-title">Delete Material</h4>
                                     <button type="button" class="close" data-bs-dismiss="modal">
                                         <i class="mdi mdi-close-thick"></i>

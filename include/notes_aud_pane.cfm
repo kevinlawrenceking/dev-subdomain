@@ -81,9 +81,9 @@
                         <!--- Modal for delete confirmation --->
                         <div id="remoteDeleteFormNoteAud#notesaud.noteid#" class="modal fade" tabindex="-1" role="dialog" >
 
-                            <div class="modal-dialog">
+                            <div class="modal-dialog modal-dialog-centered">
                                 <div class="modal-content">
-                                    <div class="modal-header" style="background-color: red;">
+                                    <div class="modal-header">
                                         <h4 class="modal-title">Delete Note Confirmation</h4>
                                         <button type="button" class="close" data-bs-dismiss="modal" >
 <i class="mdi mdi-close-thick"></i></button>
