@@ -75,8 +75,15 @@
         });
     }
 
-    $(document).on('show.bs.tab', '[data-bs-toggle="tab"]', function (e) {
-        var targetSel = this.getAttribute('data-bs-target') || this.getAttribute('href');
+    // Bootstrap 5 dispatches show.bs.tab as a NATIVE CustomEvent. jQuery's
+    // $(document).on('show.bs.tab', ...) parses the name as type=show + ns=.bs.tab
+    // and binds addEventListener('show', ...), which never matches BS5's literal
+    // 'show.bs.tab' event type. Use a native listener instead.
+    document.addEventListener('show.bs.tab', function (e) {
+        var trigger = e.target;
+        if (!trigger || trigger.nodeType !== 1) return;
+        if (!(trigger.matches && trigger.matches('[data-bs-toggle="tab"]'))) return;
+        var targetSel = trigger.getAttribute('data-bs-target') || trigger.getAttribute('href');
         if (!targetSel) return;
         var paneEl = document.querySelector(targetSel);
         if (paneEl && paneEl.hasAttribute('data-tab-url')) {
