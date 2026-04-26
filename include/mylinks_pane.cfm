@@ -336,36 +336,48 @@
     </div><!--- end col-xl-12 --->
 </div><!--- end row --->
 
+<!--- Confirm-Delete modal. Uses Bootstrap 5 (already loaded site-wide via
+      vendor.min.js) for styling, positioning, and backdrop. SweetAlert2's JS
+      is loaded but its CSS is not deployed, so Swal.fire renders unstyled —
+      using BS5 instead matches the rest of TAO's modal vocabulary and needs
+      no extra CSS. --->
+<div id="taoConfirmDeleteModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="taoConfirmDeleteLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="taoConfirmDeleteLabel">Confirm Delete</h4>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <i class="mdi mdi-close-thick"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p id="taoConfirmDeleteMessage" class="mb-0">Are you sure?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <a href="##" id="taoConfirmDeleteAction" class="btn btn-danger">Delete</a>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
-    // Confirm-on-delete for panel headings and site links. Intercepts click on
-    // any <a class="tao-confirm-delete">, shows a SweetAlert2 confirm using the
-    // per-link data-confirm-message text. Falls back to native confirm() if
-    // Swal is not loaded yet. Delegated on document so it works for content
-    // re-rendered into the pane.
+    // Click on any <a class="tao-confirm-delete"> intercepts navigation,
+    // populates the BS5 confirm modal with the per-link data-confirm-message
+    // and the link's href, and opens the modal. The modal's Delete button is
+    // itself an <a> with the original href, so confirm = navigate.
+    // Delegated on document so it works for content re-rendered into the pane.
     $(document).on('click', '.tao-confirm-delete', function(e) {
         e.preventDefault();
         var url = this.getAttribute('href');
-        var message = this.getAttribute('data-confirm-message') || 'Are you sure you want to delete this?';
-        if (typeof Swal !== 'undefined') {
-            Swal.fire({
-                title: 'Confirm Delete',
-                text: message,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Delete',
-                cancelButtonText: 'Cancel',
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#6c757d',
-                reverseButtons: true
-            }).then(function(result) {
-                if (result.isConfirmed) {
-                    window.location.href = url;
-                }
-            });
-        } else {
-            if (window.confirm(message)) {
-                window.location.href = url;
-            }
+        var message = this.getAttribute('data-confirm-message') || 'Are you sure?';
+        document.getElementById('taoConfirmDeleteMessage').textContent = message;
+        document.getElementById('taoConfirmDeleteAction').setAttribute('href', url);
+        var modalEl = document.getElementById('taoConfirmDeleteModal');
+        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            bootstrap.Modal.getOrCreateInstance(modalEl).show();
+        } else if (window.confirm(message)) {
+            window.location.href = url;
         }
     });
 </script>
