@@ -442,5 +442,5 @@ Last Updated: 2025
 
 </div>
 
-<script src="/app/assets/js/account_tabs.js?v=<cfoutput>#rev#</cfoutput>"></script>
+<script src="/app/assets/js/account_tabs.js?v=<cfoutput>#rev#</cfoutput>-bs5"></script>
 </cfif>

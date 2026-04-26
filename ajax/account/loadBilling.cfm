@@ -10,13 +10,16 @@
 <cfset contactid = 0>
 <cfparam name="shareid" default="">
 
-<!--- userid is set by /ajax/Application.cfc:77; fetchUsers.cfm provides userEmail. --->
-<cfinclude template="/include/qry/fetchUsers.cfm">
+<!--- Page-scope userid. See loadTeam.cfm comment. fetchUsers.cfm sets
+      userEmail which mybilling_pane.cfm passes to PayKickstart. --->
+<cfparam name="userid" default="#session.userid#">
 
 <cftry>
+    <cfinclude template="/include/qry/fetchUsers.cfm">
     <cfinclude template="/include/mybilling_pane.cfm">
 <cfcatch type="any">
-    <cflog file="tao_account_tabs" type="error" text="loadBilling failed: #cfcatch.message# / #cfcatch.detail#">
+    <cflog file="tao_account_tabs" type="error"
+           text="loadBilling failed for userid=#session.userid#: #cfcatch.type# - #cfcatch.message# | detail=#cfcatch.detail# | tagContext=#cfcatch.tagContext[1].template#:#cfcatch.tagContext[1].line#">
     <cfheader statuscode="500">
     <cfoutput>
     <div class="alert alert-danger" data-tab-error="1">

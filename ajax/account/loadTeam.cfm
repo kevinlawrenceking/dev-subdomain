@@ -8,13 +8,18 @@
 <cfset contactid = 0>
 <cfparam name="shareid" default="">
 
-<!--- userid is set by /ajax/Application.cfc:77; fetchUsers.cfm consumes it. --->
-<cfinclude template="/include/qry/fetchUsers.cfm">
+<!--- Page-scope userid. /ajax/Application.cfc:77 sets variables.userid in the CFC,
+      not the requested page. Main MyAccount gets it from /include/pgload.cfm:9
+      cfparam; this AJAX endpoint must do the same. fetchUsers.cfm and
+      getMyTeam.cfm both reference unscoped userid. --->
+<cfparam name="userid" default="#session.userid#">
 
 <cftry>
+    <cfinclude template="/include/qry/fetchUsers.cfm">
     <cfinclude template="/include/myteam_pane.cfm">
 <cfcatch type="any">
-    <cflog file="tao_account_tabs" type="error" text="loadTeam failed: #cfcatch.message# / #cfcatch.detail#">
+    <cflog file="tao_account_tabs" type="error"
+           text="loadTeam failed for userid=#session.userid#: #cfcatch.type# - #cfcatch.message# | detail=#cfcatch.detail# | tagContext=#cfcatch.tagContext[1].template#:#cfcatch.tagContext[1].line#">
     <cfheader statuscode="500">
     <cfoutput>
     <div class="alert alert-danger" data-tab-error="1">
