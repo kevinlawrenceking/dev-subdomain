@@ -14,6 +14,16 @@
       getMyTeam.cfm both reference unscoped userid. --->
 <cfparam name="userid" default="#session.userid#">
 
+<!--- App-scope drift guard. /app/Application.cfc:84-97 populates the avatar URL
+      chain in its pseudo-constructor on every /app/* request; /ajax/Application.cfc
+      ensures only baseMediaPath/baseMediaUrl. myteam_pane.cfm:225 reads
+      application.defaultAvatarUrl unconditionally. Same shape as the existing
+      cold-start guard at /ajax/Application.cfc:47-55. Mirrors the documented
+      "Defensive resolver pattern required" — see baseMediaPath drift incident. --->
+<cfif NOT structKeyExists(application, "defaultAvatarUrl")>
+    <cfset application.defaultAvatarUrl = application.baseMediaUrl & "/images/defaults/avatar.jpg">
+</cfif>
+
 <cftry>
     <cfinclude template="/include/qry/fetchUsers.cfm">
     <cfinclude template="/include/myteam_pane.cfm">
