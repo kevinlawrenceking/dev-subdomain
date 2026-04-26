@@ -204,7 +204,8 @@
 
                                     <!--- Delete button (if allowed) --->
                                     <cfif mylinks_user.recordcount is 0 and deletable is "y">
-                                        <a title="Remove #current_sitetypename#" class="pl-1" style="color:red;" 
+                                        <a title="Remove #current_sitetypename#" class="pl-1 tao-confirm-delete" style="color:red;"
+                                           data-confirm-message="Remove panel '#current_sitetypename#'?"
                                            href="/include/excludesitetype.cfm?current_sitetypeid=#current_sitetypeid#&target_id=#current_sitetypeid#">
                                             <i class="mdi mdi-trash-can-outline"></i>
                                         </a>
@@ -244,7 +245,8 @@
 
                                     <!--- Delete button (if allowed) --->
                                     <cfif mylinks_user.recordcount is 0 and deletable is "y">
-                                        <a title="Remove #current_sitetypename#" class="pl-1" style="color:red;" 
+                                        <a title="Remove #current_sitetypename#" class="pl-1 tao-confirm-delete" style="color:red;"
+                                           data-confirm-message="Remove panel '#current_sitetypename#'?"
                                            href="/include/excludesitetype.cfm?current_sitetypeid=#current_sitetypeid#&target_id=#current_sitetypeid#">
                                             <i class="mdi mdi-trash-can-outline"></i>
                                         </a>
@@ -296,7 +298,8 @@
                                         </a>
                                         
                                         <!--- Delete link --->
-                                        <a title="Remove #mylinks_user.sitename#" class="pl-1" style="color:red;" 
+                                        <a title="Remove #mylinks_user.sitename#" class="pl-1 tao-confirm-delete" style="color:red;"
+                                           data-confirm-message="Remove link '#mylinks_user.sitename#'?"
                                            href="/include/excludelink.cfm?new_id=#mylinks_user.id#&target_id=#sitetypes.sitetypeid#">
                                             <i class="mdi mdi-trash-can-outline"></i>
                                         </a>
@@ -332,4 +335,38 @@
         </div><!--- end accordion --->
     </div><!--- end col-xl-12 --->
 </div><!--- end row --->
+
+<script>
+    // Confirm-on-delete for panel headings and site links. Intercepts click on
+    // any <a class="tao-confirm-delete">, shows a SweetAlert2 confirm using the
+    // per-link data-confirm-message text. Falls back to native confirm() if
+    // Swal is not loaded yet. Delegated on document so it works for content
+    // re-rendered into the pane.
+    $(document).on('click', '.tao-confirm-delete', function(e) {
+        e.preventDefault();
+        var url = this.getAttribute('href');
+        var message = this.getAttribute('data-confirm-message') || 'Are you sure you want to delete this?';
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                title: 'Confirm Delete',
+                text: message,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Delete',
+                cancelButtonText: 'Cancel',
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                reverseButtons: true
+            }).then(function(result) {
+                if (result.isConfirmed) {
+                    window.location.href = url;
+                }
+            });
+        } else {
+            if (window.confirm(message)) {
+                window.location.href = url;
+            }
+        }
+    });
+</script>
 
