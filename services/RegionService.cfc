@@ -20,7 +20,8 @@
 <cffunction output="false" name="SELregions" access="public" returntype="query">
         <cfargument name="region_id" type="numeric" required="true">
 
-<cfquery name="result">
+<!--- PERF: Single-region lookup; regions rarely change, cache for 24 hours. --->
+<cfquery name="result" cachedwithin="#createTimeSpan(1,0,0,0)#">
             SELECT regionname 
             FROM regions 
             WHERE region_id = <cfqueryparam value="#arguments.region_id#" cfsqltype="CF_SQL_INTEGER">

@@ -390,9 +390,12 @@ Last Updated: 2025
 
     </div>
 
-    <div class="tab-pane<cfif #tab2_expand# is 'true'> show active</cfif>" id="myteam">
+    <div class="tab-pane<cfif #tab2_expand# is 'true'> show active</cfif>" id="myteam"
+         data-tab-url="/ajax/account/loadTeam.cfm" data-loaded="0">
 
-      <cfinclude template="/include/myteam_pane.cfm"/>
+      <div class="tao-tab-skeleton text-center py-4">
+        <div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div>
+      </div>
 
     </div>
 
@@ -426,13 +429,18 @@ Last Updated: 2025
 
     </div>
 
-    <div class="tab-pane<cfif #tab10_expand# is 'true'> show active</cfif>" id="billing">
+    <div class="tab-pane<cfif #tab10_expand# is 'true'> show active</cfif>" id="billing"
+         data-tab-url="/ajax/account/loadBilling.cfm" data-loaded="0">
 
-      <cfinclude template="/include/mybilling_pane.cfm"/>
+      <div class="tao-tab-skeleton text-center py-4">
+        <div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div>
+      </div>
 
     </div>
 
   </div>
 
 </div>
+
+<script src="/assets/js/account_tabs.js?v=20260425"></script>
 </cfif>
