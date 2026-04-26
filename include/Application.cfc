@@ -40,7 +40,7 @@
       </cfif>
       <cfif NOT csrfValid>
         <cflog file="tao_csrf" type="warning"
-               text="CSRF form POST rejected: #cgi.SCRIPT_NAME# | userid=#structKeyExists(session,'userid') ? session.userid : 'none'#">
+               text="CSRF form POST rejected: #cgi.SCRIPT_NAME# | userid=#structKeyExists(session,'userid') ? session.userid : 'none'# | hasFormToken=#structKeyExists(form,'csrfToken')# | hasHeaderToken=#len(trim(cgi.HTTP_X_CSRF_TOKEN)) GT 0# | submittedLen=#len(trim(submittedToken))# | sessionTokenLen=#len(trim(session.csrfToken))# | matchesSession=#submittedToken EQ session.csrfToken#">
         <cfheader statuscode="403">
         <cfcontent type="text/html" reset="true">
         <cfoutput>

@@ -27,6 +27,11 @@
  <form action="/include/remoteUserUpdated.cfm" method="post" class="parsley-examples" id="update" data-parsley-excluded="input[type=button], input[type=submit], input[type=reset], input[type=hidden], [disabled], :hidden" data-parsley-trigger="keyup" data-parsley-validate="data-parsley-validate">
 
         <cfoutput>
+          <!--- CSRF: inject server-side so form is reliable regardless of JS state.
+                Page-level auto-injector at account_info.cfm CSRF script can be
+                bypassed by Parsley/programmatic form.submit() calls which don't
+                fire the submit event the injector listens for. --->
+          <input type="hidden" name="csrfToken" value="#session.csrfToken#"/>
           <input type="hidden" name="t3" value="1"/>
 
           <div class="row">
