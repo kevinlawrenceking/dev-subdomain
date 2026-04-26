@@ -201,31 +201,76 @@
         <script src="/app/assets/js/tao-toast.js?v=<cfoutput>#rev#</cfoutput>"></script>
 
         <script>
+          // CSRF auto-injector. Pre-injects csrfToken hidden input into POST
+          // forms at three layered moments so coverage is complete:
+          //   1. Initial DOM scan       — forms present at page load.
+          //   2. MutationObserver       — forms added later (.load(), .html(),
+          //                                AJAX-rendered modals). REQUIRED:
+          //                                Parsley/programmatic form.submit()
+          //                                does NOT fire a bubbling submit
+          //                                event, so the listener below would
+          //                                miss those.
+          //   3. submit-event fallback  — catches anything the observer missed.
+          // jQuery $.ajax non-GET still gets the X-CSRF-Token header.
           (function(){
-            var token = document.querySelector('meta[name="csrf-token"]');
-            if (token && typeof jQuery !== 'undefined') {
+            var meta = document.querySelector('meta[name="csrf-token"]');
+            if (!meta) return;
+            var tokenValue = meta.getAttribute('content');
+
+            if (typeof jQuery !== 'undefined') {
               jQuery.ajaxSetup({
                 beforeSend: function(xhr, settings) {
                   if (settings.type && settings.type !== 'GET') {
-                    xhr.setRequestHeader('X-CSRF-Token', token.getAttribute('content'));
+                    xhr.setRequestHeader('X-CSRF-Token', tokenValue);
                   }
                 }
               });
             }
-            if (token) {
-              document.addEventListener('submit', function(e) {
-                var form = e.target;
-                if (form.tagName === 'FORM' && form.method && form.method.toLowerCase() === 'post') {
-                  if (!form.querySelector('input[name="csrfToken"]')) {
-                    var input = document.createElement('input');
-                    input.type = 'hidden';
-                    input.name = 'csrfToken';
-                    input.value = token.getAttribute('content');
-                    form.appendChild(input);
+
+            function injectIntoForm(form) {
+              if (!form || form.tagName !== 'FORM') return;
+              if (!form.method || form.method.toLowerCase() !== 'post') return;
+              if (form.querySelector('input[name="csrfToken"]')) return;
+              var input = document.createElement('input');
+              input.type = 'hidden';
+              input.name = 'csrfToken';
+              input.value = tokenValue;
+              form.appendChild(input);
+            }
+
+            function scanAndInject(root) {
+              if (!root) return;
+              if (root.tagName === 'FORM') injectIntoForm(root);
+              if (root.querySelectorAll) {
+                var forms = root.querySelectorAll('form');
+                for (var i = 0; i < forms.length; i++) injectIntoForm(forms[i]);
+              }
+            }
+
+            function initialScan() { scanAndInject(document); }
+            if (document.readyState === 'loading') {
+              document.addEventListener('DOMContentLoaded', initialScan);
+            } else {
+              initialScan();
+            }
+
+            if (typeof MutationObserver !== 'undefined') {
+              var mo = new MutationObserver(function(records) {
+                for (var i = 0; i < records.length; i++) {
+                  var added = records[i].addedNodes;
+                  for (var j = 0; j < added.length; j++) {
+                    if (added[j].nodeType === 1) scanAndInject(added[j]);
                   }
                 }
               });
+              var attach = function() {
+                if (document.body) mo.observe(document.body, { childList: true, subtree: true });
+              };
+              if (document.body) attach();
+              else document.addEventListener('DOMContentLoaded', attach);
             }
+
+            document.addEventListener('submit', function(e) { injectIntoForm(e.target); });
           })();
         </script>
 
