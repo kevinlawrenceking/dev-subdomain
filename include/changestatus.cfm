@@ -15,12 +15,10 @@
 
 <cfparam name="focusid" default="" />
 
+<!--- booked=1 signals audition.cfm to fire the one-shot confetti animation.
+      Only append it when transitioning TO booked, not on cancel. --->
+<cfset bookedFlag = (statusfield eq "isBooked" and pgaction neq "cancel") ? "&booked=1" : "" />
+
 <cfoutput>
-    <cfif #focusid# is "">
-        <!--- If no focus ID is provided, redirect to the audition page --->
-        <cflocation url="/app/audition/?audprojectid=#audprojectid#" />
-    <cfelse>
-        <!--- If a focus ID is provided, redirect to the audition page as well --->
-        <cflocation url="/app/audition/?audprojectid=#audprojectid#" />
-    </cfif>
+    <cflocation url="/app/audition/?audprojectid=#audprojectid##bookedFlag#" />
 </cfoutput>
