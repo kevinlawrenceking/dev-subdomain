@@ -488,44 +488,46 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         </script>
     </div>
-    <cfinclude template="/include/qry/findit_286_12.cfm" />
-    <Cfset new_subcatid = projectDetails.audsubcatid />
+    <cfif isNumeric(new_audcatid)>
+        <cfinclude template="/include/qry/findit_286_12.cfm" />
+        <Cfset new_subcatid = projectDetails.audsubcatid />
 
-    <cfif #int(findit.recordcount)# is not "0">
-        <cfif #new_audcatid# is not "5" or #new_audcatid# is "5" and #new_subcatid# is "34" >
-            <div class="col-md-12">
-                <cfinclude template="/include/qry/genres_286_13.cfm" />
-                <div class="form-group">
-                    <label for="select-tag">Click in the box to select a Genre OR type a new one:</label>
-                    <select id="select-genre" name="Genre" multiple class="demo-default selectize-close-btn w-100" placeholder="Select a genre...">
-                        <option value="">Select a genre...</option>
-                        <cfloop query="genres">
-                            <cfinclude template="/include/qry/findge_286_14.cfm" />
-                            <cfif #findge.recordcount# is "1">
-                                <cfset new_select_genre="selected" />
-                            <cfelse>
-                                <cfset new_select_genre="" />
-                            </cfif>
-                            <cfoutput>
-                                <option value="#genres.audgenre#" #new_select_genre#>#genres.audgenre#</option>
-                            </cfoutput>
-                        </cfloop>
-                    </select>
+        <cfif #int(findit.recordcount)# is not "0">
+            <cfif #new_audcatid# is not "5" or #new_audcatid# is "5" and #new_subcatid# is "34" >
+                <div class="col-md-12">
+                    <cfinclude template="/include/qry/genres_286_13.cfm" />
+                    <div class="form-group">
+                        <label for="select-tag">Click in the box to select a Genre OR type a new one:</label>
+                        <select id="select-genre" name="Genre" multiple class="demo-default selectize-close-btn w-100" placeholder="Select a genre...">
+                            <option value="">Select a genre...</option>
+                            <cfloop query="genres">
+                                <cfinclude template="/include/qry/findge_286_14.cfm" />
+                                <cfif #findge.recordcount# is "1">
+                                    <cfset new_select_genre="selected" />
+                                <cfelse>
+                                    <cfset new_select_genre="" />
+                                </cfif>
+                                <cfoutput>
+                                    <option value="#genres.audgenre#" #new_select_genre#>#genres.audgenre#</option>
+                                </cfoutput>
+                            </cfloop>
+                        </select>
+                    </div>
+
+                    <script>
+                        $("#select-genre").selectize({
+                            persist: !1,
+                            createOnBlur: !0,
+                            plugins: ["remove-button"],
+                            delimiter: ",",
+                            persist: false,
+                            create: true
+                        });
+                    </script>
                 </div>
-
-                <script>
-                    $("#select-genre").selectize({
-                        persist: !1,
-                        createOnBlur: !0,
-                        plugins: ["remove-button"],
-                        delimiter: ",",
-                        persist: false,
-                        create: true
-                    });
-                </script>
-            </div>
-        <cfelse>
-            <input type="hidden" name="" value="" />
+            <cfelse>
+                <input type="hidden" name="" value="" />
+            </cfif>
         </cfif>
     </cfif>
 
