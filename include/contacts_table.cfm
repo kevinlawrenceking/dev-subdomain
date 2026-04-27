@@ -168,17 +168,7 @@ $(document).ready(function() {
             },
             {
                 targets: 1, // Name
-                responsivePriority: 2,
-                render: function(data, type, row) {
-                    if (type !== 'display') return data;
-                    var id = row[0];
-                    var trashBtn = ' <a href="javascript:void(0);" class="btn btn-xs btn-danger ms-1" ' +
-                                   'data-bs-toggle="modal" data-bs-target="#contactdelete" ' +
-                                   'data-delete-id="' + id + '" title="Delete Relationship" ' +
-                                   'onclick="event.stopPropagation();">' +
-                                   '<i class="mdi mdi-trash-can-outline"></i></a>';
-                    return (data == null ? '' : data) + trashBtn;
-                }
+                responsivePriority: 2
             },
             {
                 targets: 5, // Email
