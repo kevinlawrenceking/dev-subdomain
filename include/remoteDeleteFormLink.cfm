@@ -11,7 +11,7 @@
         <input type="hidden" name="target_id" value="#linkDetails.sitetypeid#"/>
     </cfoutput>
 
-    <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+    <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
         <button type="submit" class="btn btn-danger">Delete</button>
     </div>
