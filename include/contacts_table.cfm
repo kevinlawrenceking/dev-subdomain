@@ -1,7 +1,7 @@
 <!--- Contacts DataTable: display and interactions, including importing, exporting, and managing tags and systems. --->
 
 <div class="table-responsive" id="<cfoutput>#contacts_table#_container</cfoutput>">
-    <table id="<cfoutput>#contacts_table#</cfoutput>" class="table display table-striped dataTable dt-checkboxes-select" style="width:100%;border-collapse: separate !important;">
+    <table id="<cfoutput>#contacts_table#</cfoutput>" class="table display table-striped dataTable dt-checkboxes-select" style="width:100%;border-collapse: separate !important;font-size:0.85rem;">
         <thead>
             <tr>
                 <th></th>
