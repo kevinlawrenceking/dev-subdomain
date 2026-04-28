@@ -90,12 +90,20 @@ body {
 }
 
 /* --------------------------------------------------------------------------
-   Footer — align with sidebar width (280px)
+   Footer — full viewport width (WO-LAYOUT-01, Option 1)
    --------------------------------------------------------------------------
-   Base rule in app.min.css sets left: 240px which is 40px short of the
-   actual .left-side-menu width.  This override wins by source order.
-   Media-query and condensed/compact overrides use !important and still win.
+   Base rule in app.min.css sets .footer { left: 240px }, positioning
+   the footer to start at the right edge of the Hyper-default 240px
+   leftbar. This override pulls the footer to the viewport's left edge
+   so it spans the full bottom of the page — under the leftbar as well
+   as under the content column.
+
+   This rule wins over the base compact-leftbar rule
+   (app.min.css:7623 .footer { left: 160px }, no !important) by source
+   order. The prior override had the same precedence quirk; behavior is
+   uniform full-viewport across default and compact modes. Condensed
+   mode (left: 70px !important) is unaffected.
    -------------------------------------------------------------------------- */
 .footer {
-    left: 280px;
+    left: 0;
 }
