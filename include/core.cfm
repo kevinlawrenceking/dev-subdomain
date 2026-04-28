@@ -28,7 +28,7 @@
 
         <cfinclude template="/include/qry/FindLinksT.cfm"/>
         <cfinclude template="/include/qry/FindLinksB.cfm"/>
-        <cfset rev="15"/>
+        <cfset rev="16"/>
 
 <cfloop query="FindLinksT">
             <cfif findlinkst.linktype IS "script">
@@ -43,7 +43,7 @@
             </cfif>
         </cfloop>
 
-        <link rel="stylesheet" href="/app/assets/css/tao-components.css" />
+        <cfoutput><link rel="stylesheet" href="/app/assets/css/tao-components.css?v=#rev#" /></cfoutput>
         <style>
           body.authentication-bg {
             background-color: <cfoutput>#hostcolor#</cfoutput>;
