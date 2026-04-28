@@ -47,8 +47,8 @@
 
         <div id="userContent" class="d-none">
             <div class="row">
-                <!--- Left: Profile Info --->
-                <div class="col-lg-8">
+                <!--- Profile Info --->
+                <div class="col-12">
                     <div class="card mb-3">
                         <div class="card-header"><h5 class="mb-0">Profile</h5></div>
                         <div class="card-body">
@@ -126,10 +126,11 @@
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!--- Right: Actions --->
-                <div class="col-lg-4">
-                    <!--- Status Actions --->
+            <div class="row">
+                <!--- Status Actions --->
+                <div class="col-md-6">
                     <div class="card action-card mb-3">
                         <div class="card-header"><h6 class="mb-0">Status Actions</h6></div>
                         <div class="card-body">
@@ -137,8 +138,10 @@
                             <div id="statusActionResult" class="mt-2 small"></div>
                         </div>
                     </div>
+                </div>
 
-                    <!--- Email Actions --->
+                <!--- Email Actions --->
+                <div class="col-md-6">
                     <div class="card action-card mb-3">
                         <div class="card-header"><h6 class="mb-0">Send Email</h6></div>
                         <div class="card-body">
