@@ -83,7 +83,7 @@
               </div>
             </div>
 
-            <cfinclude template="/include/footer.cfm"/>
+            <!--- cfinclude template="/include/footer.cfm" --->
           </div>
         </div>
 
