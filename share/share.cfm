@@ -314,6 +314,7 @@ SELECT DISTINCT
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
+  white-space: nowrap;
 }
 
 .status-callback {
