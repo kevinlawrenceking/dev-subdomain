@@ -18,7 +18,8 @@
     <link rel="stylesheet" href="#application.cssPath#/app.min.css">
     <link rel="stylesheet" href="#application.cssPath#/icons.min.css">
     <link rel="stylesheet" href="#application.cssPath#/datatables.min.css">
-    
+    <link rel="stylesheet" href="#application.cssPath#/tao-datatables.css">
+
     <style>
         .shared-header {
             background-color: #f8f9fa;
@@ -104,6 +105,7 @@
 <script src="#application.jsPath#/app.min.js"></script>
 <script src="#application.jsPath#/jquery.dataTables.min.js"></script>
 <script src="#application.jsPath#/dataTables.bootstrap5.min.js"></script>
+<script src="#application.jsPath#/tao-datatables-defaults.js"></script>
 
 <script>
     $(document).ready(function() {

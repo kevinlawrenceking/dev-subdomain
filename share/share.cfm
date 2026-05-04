@@ -53,6 +53,9 @@ SELECT DISTINCT
   </cfquery>
 </cfif>
 
+<!--- Defaults loaded by share/index.cfm; included here as belt-and-suspenders for any standalone include of share.cfm. IIFE guard makes duplicate loads harmless. --->
+<script src="/share/assets/tao-datatables-defaults.js"></script>
+
 <!--- Bootstrap 4.6 compliant layout --->
 <div class="container-fluid">
   <div class="row">
@@ -360,6 +363,9 @@ SELECT DISTINCT
 }
 
 </style>
+
+<cfoutput><link rel="stylesheet" href="#assetBase#/tao-datatables.css?v=#cacheBuster#" type="text/css"></cfoutput>
+<cfoutput><script src="#assetBase#/tao-datatables-defaults.js?v=#cacheBuster#"></script></cfoutput>
 
 <script>
 $(document).ready(function() {

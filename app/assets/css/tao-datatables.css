@@ -1,0 +1,20 @@
+/* TAO DataTables overflow + scrollX header alignment.
+ *
+ * Targets every observed TAO container pattern (.card, .card-body, .table-responsive).
+ * Verified against actual class chains in admin-support, auditions, version,
+ * share/share, share/relationships_shared, contacts_table, contact-duplicates.
+ *
+ * MIGRATE: in Go/Flutter rebuild, table overflow handling lives in widget styles. */
+
+.card .dataTables_wrapper,
+.card-body .dataTables_wrapper,
+.table-responsive .dataTables_wrapper {
+    max-width: 100%;
+}
+
+/* Bootstrap's .table { margin-bottom: 1rem } breaks scrollX header/body alignment by
+ * inserting a gap between the scrollHead table and the scrollBody table. Strip it. */
+.dataTables_scrollHead table,
+.dataTables_scrollBody table {
+    margin-bottom: 0 !important;
+}

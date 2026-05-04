@@ -89,10 +89,12 @@
         <link href="#assetBase#/datatables.min.css?v=#cacheBuster#" rel="stylesheet" type="text/css">
         <link href="#assetBase#/dataTables.checkboxes.css?v=#cacheBuster#" rel="stylesheet" type="text/css">
         <link href="#assetBase#/utilityclasses.css?v=#cacheBuster#" rel="stylesheet" type="text/css">
+        <link href="#assetBase#/tao-datatables.css?v=#cacheBuster#" rel="stylesheet" type="text/css">
         <script src="#assetBase#/jquery-3.6.0.min.js?v=#cacheBuster#"></script>
         <script src="#assetBase#/bootstrap.bundle.js?v=#cacheBuster#"></script>
         <script src="#assetBase#/datatables.min.js?v=#cacheBuster#"></script>
         <script src="#assetBase#/dataTables.checkboxes.min.js?v=#cacheBuster#"></script>
+        <script src="#assetBase#/tao-datatables-defaults.js?v=#cacheBuster#"></script>
         <script src="#assetBase#/app.min.js?v=#cacheBuster#"></script>
     </cfoutput>
     <style>

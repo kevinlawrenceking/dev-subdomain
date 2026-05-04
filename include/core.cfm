@@ -44,6 +44,7 @@
         </cfloop>
 
         <cfoutput><link rel="stylesheet" href="/app/assets/css/tao-components.css?v=#rev#" /></cfoutput>
+        <cfoutput><link rel="stylesheet" href="/app/assets/css/tao-datatables.css?v=#rev#" /></cfoutput>
         <style>
           body.authentication-bg {
             background-color: <cfoutput>#hostcolor#</cfoutput>;
@@ -201,6 +202,7 @@
         <script src="/app/assets/js/libs/devbridge-autocomplete/jquery.autocomplete.min.js?v=<cfoutput>#rev#</cfoutput>"></script>
         <cfinclude template="/include/autocomplete.cfm"/>
         <script src="/app/assets/js/tao-toast.js?v=<cfoutput>#rev#</cfoutput>"></script>
+        <script src="/app/assets/js/tao-datatables-defaults.js?v=<cfoutput>#rev#</cfoutput>"></script>
 
         <script>
           // CSRF auto-injector. Pre-injects csrfToken hidden input into POST

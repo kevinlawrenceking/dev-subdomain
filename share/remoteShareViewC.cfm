@@ -1,4 +1,6 @@
 <CFINCLUDE template="remote_load_common.cfm" />
+<!--- Defaults loaded by parent share entry; included here as belt-and-suspenders. IIFE guard makes duplicate loads harmless. --->
+<script src="/share/assets/tao-datatables-defaults.js"></script>
 
  
 <cfquery name="details" datasource="#dsn#">
@@ -116,6 +118,9 @@ GROUP BY r.audroleid, p.projname,s.audsource,rt.audroletype,r.iscallback,r.isred
   <cfif #events.recordcount# is not "0">
 <hr>
       <p>Audition History</p>
+
+      <link rel="stylesheet" href="/share/assets/tao-datatables.css" type="text/css">
+      <script src="/share/assets/tao-datatables-defaults.js"></script>
 
       <table id="contactview<cfoutput>#contactid#</cfoutput>" class="table dt-responsive nowrap w-100 table-striped" role="grid">
                 <thead>
