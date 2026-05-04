@@ -292,7 +292,6 @@
         $(document).ready(function() {
             // Initialize DataTable
             const table = $('#verificationTable').DataTable({
-                responsive: false, // Disable green icon 
                 pageLength: 25,
                 order: [[4, 'desc'], [0, 'asc']], // Sort by issues first, then by name
                 columnDefs: [

@@ -100,7 +100,6 @@
         emptyTable: showInactive ? "No notifications found" : "No unread notifications"
       },
       pageLength: 25,
-      responsive: false, // Disable green icon 
       order: [[0, 'desc']] // Order by Date Received descending
     });
   }

@@ -291,7 +291,6 @@ Last Updated: 2025
             
             // Initialize DataTable with responsive settings
             var table = $('##materials_tbl').DataTable({
-                responsive: false, // Disable green icon 
                 ordering: true,
                 searching: true
             });

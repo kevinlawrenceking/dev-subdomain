@@ -111,7 +111,6 @@
     $(document).ready(function() {
         // Initialize DataTable
         $('#relationshipsTable').DataTable({
-            responsive: false, // Disable green icon 
             pageLength: 25,
             order: [[0, 'asc']]
         });

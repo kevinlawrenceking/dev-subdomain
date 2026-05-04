@@ -37,11 +37,11 @@ $(document).ready(function() {
 
 });
 
+// TECH-DEBT: this file and datatable.contact.init.js both initialize #contacts-datatable; consolidate.
 $(document).ready(function() {
     $("#events-datatable").DataTable({
        scrollY: "350px",
            paging: false,
-        responsive: true,
         scrollCollapse: !0,
         language: {
             paginate: {

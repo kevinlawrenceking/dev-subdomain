@@ -39,7 +39,6 @@
 $(document).ready(function() {
     $("#birthday-datatable").DataTable({
           paging: false,
-        responsive: true,
         searching: false,
         ordering: false,
         stateSave: !0,
@@ -82,7 +81,6 @@ $(document).ready(function() {
 $(document).ready(function() {
     $("#updates-datatable").DataTable({
         paging: false,
-        responsive: true,
         searching: false,
         ordering: false,
         stateSave: !0,

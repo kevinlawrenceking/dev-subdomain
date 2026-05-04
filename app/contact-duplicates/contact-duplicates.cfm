@@ -159,7 +159,6 @@ document.addEventListener("DOMContentLoaded", function() {
     // Initialize DataTable
     if (document.getElementById('duplicatesTable')) {
         $('#duplicatesTable').DataTable({
-            responsive: false, // Disable green icon 
             pageLength: 25,
             order: [[2, 'desc']], // Sort by duplicate count
             columnDefs: [

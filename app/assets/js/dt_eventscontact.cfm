@@ -1,9 +1,5 @@
   <script>
 $(document).ready(function() {
-    $('#contacts_attendees').DataTable({
-    
-     responsive: true
-
-});
+    $('#contacts_attendees').DataTable({});
 } );
 </script>

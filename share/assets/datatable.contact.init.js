@@ -1,4 +1,4 @@
-
+// TECH-DEBT: this file and datatables.contact.init.js both initialize #contacts-datatable; consolidate.
 
 $(document).ready(function() {
     $("#contacts-datatable").DataTable({
@@ -6,7 +6,6 @@ $(document).ready(function() {
         scrollCollapse: true,
         paging:         false,
 
-        responsive: true,
         searching: true,
         language: {
               search: "_INPUT_",

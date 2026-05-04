@@ -184,7 +184,6 @@
         $(document).ready(function() {
             $("#basic-datatable").DataTable({
                 "pageLength": 100,
-                responsive: false, // Disable green icon 
                 language: {
                     paginate: {
                         previous: "<i class='mdi mdi-chevron-left'>",

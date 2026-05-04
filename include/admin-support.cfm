@@ -201,7 +201,6 @@
 <script>
   $(document).ready(function () {
     $('#basic-datatable').DataTable({
-      responsive: false, <!--- disables the green plus icon --->
       pageLength: 100,
       language: {
         paginate: {

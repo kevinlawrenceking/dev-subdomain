@@ -105,7 +105,6 @@
           $(document).ready(function () {
             // Initialize DataTable
             $('#thrivecart-datatable').DataTable({
-              responsive: false,
               pageLength: 25,
               order: [[1, 'desc']], // Sort by order date descending
               language: {
