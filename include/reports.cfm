@@ -205,7 +205,7 @@
                         datasets: [#dataset_data#],
                     },
                     options: {
-                        responsive: true,
+                        responsive: false, // Disable green icon 
                         <cfif reports.reportid EQ 4>
                             scales: {
                                 x: { stacked: true },

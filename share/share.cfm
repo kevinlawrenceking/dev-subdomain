@@ -384,7 +384,7 @@ $(document).ready(function() {
   
   // Initialize DataTable with optimized settings
   var table = $('#contactsTable').DataTable({
-    responsive: true,
+    responsive: false, // Disable green icon 
     searching: true,
     autoWidth: false,
     pageLength: 10,

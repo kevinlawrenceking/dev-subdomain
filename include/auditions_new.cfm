@@ -449,7 +449,7 @@
                                     "bFilter": false,
                                     "dom": 'rtip',
                                     "pageLength": 100,
-                                    responsive: true,
+                                    responsive: false, // Disable green icon 
                                     language: {
                                         paginate: {
                                             previous: "<i class='mdi mdi-chevron-left'>",

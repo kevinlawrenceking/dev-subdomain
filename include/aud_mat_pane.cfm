@@ -254,7 +254,7 @@
 <script>
 $(document).ready(function(){
     var table = $('#materials_tbl').DataTable({
-         responsive: true,
+         responsive: false, // Disable green icon 
          ordering: true,
          searching: true
     });
