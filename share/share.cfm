@@ -391,7 +391,6 @@ $(document).ready(function() {
   // Initialize DataTable with optimized settings
   var table = $('#contactsTable').DataTable({
     searching: true,
-    autoWidth: false,
     pageLength: 10,
     lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
     dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +

@@ -19,7 +19,6 @@
 
     jQuery.extend(true, jQuery.fn.dataTable.defaults, {
         scrollX: true,
-        autoWidth: false,
         responsive: false,
         pageLength: 25,
         lengthMenu: [[25, 50, 100, -1], [25, 50, 100, 'All']]
