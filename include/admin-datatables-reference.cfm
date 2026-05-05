@@ -295,12 +295,13 @@ $('#dt-badge-stress').DataTable({
     SELECT
         ap.audprojectid,
         IFNULL(ap.projname, '')         AS projname,
-        IFNULL(ap.castingfullname, '')  AS castingname,
-        IFNULL(ap.companyname, '')      AS companyname,
         DATE_FORMAT(ap.projdate, '%Y-%m-%d') AS projdate,
-        IFNULL(ap.audroletype, '')      AS roletype,
+        IFNULL(ap.projdescription, '')  AS projdescription,
+        ap.isDirect,
+        ap.contactid,
         ap.userid
     FROM audprojects ap
+    WHERE ap.isDeleted = <cfqueryparam value="0" cfsqltype="cf_sql_bit">
     ORDER BY ap.audprojectid DESC
     LIMIT 100
 </cfquery>
@@ -330,7 +331,6 @@ $('#dt-badge-stress').DataTable({
         t.ticketID, t.ticketName, t.tickettype, t.ticketstatus,
         t.ticketpriority, t.esthours,
         DATE_FORMAT(t.ticketCreatedDate, '%Y-%m-%d') AS createdDate,
-        DATE_FORMAT(t.ticketDueDate, '%Y-%m-%d')     AS dueDate,
         IFNULL(u.recordname, '') AS userName,
         IFNULL(v.major, 0)       AS verMajor,
         IFNULL(v.minor, 0)       AS verMinor,
@@ -453,8 +453,8 @@ $('#dt-badge-stress').DataTable({
         <table id="dt-medium-static" class="table dt-responsive nowrap w-100 table-striped">
           <thead>
             <tr>
-              <th>ID</th><th>Project</th><th>Casting</th><th>Company</th>
-              <th>Date</th><th>Role Type</th><th>User</th>
+              <th>ID</th><th>Project</th><th>Date</th><th>Description</th>
+              <th>Direct?</th><th>Contact ID</th><th>User</th>
             </tr>
           </thead>
           <tbody>
@@ -462,10 +462,10 @@ $('#dt-badge-stress').DataTable({
               <tr>
                 <td>#qMedium.audprojectid#</td>
                 <td>#left(qMedium.projname, 50)#</td>
-                <td>#qMedium.castingname#</td>
-                <td>#qMedium.companyname#</td>
                 <td>#qMedium.projdate#</td>
-                <td>#qMedium.roletype#</td>
+                <td>#left(qMedium.projdescription, 60)#</td>
+                <td>#qMedium.isDirect#</td>
+                <td>#qMedium.contactid#</td>
                 <td>#qMedium.userid#</td>
               </tr>
             </cfoutput>
@@ -496,8 +496,8 @@ $('#dt-badge-stress').DataTable({
         <table id="dt-form-driven" class="table dt-responsive nowrap w-100 table-striped">
           <thead>
             <tr>
-              <th>ID</th><th>Project</th><th>Casting</th><th>Company</th>
-              <th>Date</th><th>Role Type</th><th>User</th>
+              <th>ID</th><th>Project</th><th>Date</th><th>Description</th>
+              <th>Direct?</th><th>Contact ID</th><th>User</th>
             </tr>
           </thead>
           <tbody>
@@ -505,10 +505,10 @@ $('#dt-badge-stress').DataTable({
               <tr>
                 <td>#qMedium.audprojectid#</td>
                 <td>#left(qMedium.projname, 50)#</td>
-                <td>#qMedium.castingname#</td>
-                <td>#qMedium.companyname#</td>
                 <td>#qMedium.projdate#</td>
-                <td>#qMedium.roletype#</td>
+                <td>#left(qMedium.projdescription, 60)#</td>
+                <td>#qMedium.isDirect#</td>
+                <td>#qMedium.contactid#</td>
                 <td>#qMedium.userid#</td>
               </tr>
             </cfoutput>
@@ -676,7 +676,7 @@ $('#dt-badge-stress').DataTable({
           <thead>
             <tr>
               <th>ID</th><th>Title</th><th>Type</th><th>Status</th><th>Priority</th>
-              <th>Hours</th><th>Created</th><th>Due</th>
+              <th>Hours</th><th>Created</th>
               <th>User</th><th>Major</th><th>Minor</th><th>Page</th>
             </tr>
           </thead>
@@ -690,7 +690,6 @@ $('#dt-badge-stress').DataTable({
                 <td>#qScroll.ticketpriority#</td>
                 <td>#qScroll.esthours#</td>
                 <td>#qScroll.createdDate#</td>
-                <td>#qScroll.dueDate#</td>
                 <td>#qScroll.userName#</td>
                 <td>#qScroll.verMajor#</td>
                 <td>#qScroll.verMinor#</td>
