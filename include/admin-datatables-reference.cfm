@@ -317,7 +317,7 @@ $('#dt-badge-stress').DataTable({
 <cfquery name="qVersions" datasource="#application.dsn#">
     SELECT
         verid,
-        IFNULL(vername, '')       AS vername,
+        CONCAT(IFNULL(major,0), '.', IFNULL(minor,0), '.', IFNULL(patch,0)) AS vername,
         IFNULL(versiontype, '')   AS versiontype,
         IFNULL(versionstatus, '') AS versionstatus,
         DATE_FORMAT(releasedate, '%Y-%m-%d') AS releasedate
