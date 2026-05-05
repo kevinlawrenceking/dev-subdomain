@@ -314,7 +314,7 @@ $('#dt-badge-stress').DataTable({
     LIMIT 200
 </cfquery>
 
-<cfquery name="qVersions" datasource="#application.dsn#">
+<cfquery name="qVersionsList" datasource="#application.dsn#">
     SELECT
         verid,
         CONCAT(IFNULL(major,0), '.', IFNULL(minor,0), '.', IFNULL(patch,0)) AS vername,
@@ -839,12 +839,12 @@ $('#dt-badge-stress').DataTable({
             </tr>
           </thead>
           <tbody>
-            <cfoutput query="qVersions">
+            <cfoutput query="qVersionsList">
               <tr>
-                <td>#qVersions.verid#</td>
-                <td>#qVersions.vername#</td>
-                <td>#qVersions.versiontype#</td>
-                <td>#qVersions.versionstatus#</td>
+                <td>#qVersionsList.verid#</td>
+                <td>#qVersionsList.vername#</td>
+                <td>#qVersionsList.versiontype#</td>
+                <td>#qVersionsList.versionstatus#</td>
               </tr>
             </cfoutput>
           </tbody>
