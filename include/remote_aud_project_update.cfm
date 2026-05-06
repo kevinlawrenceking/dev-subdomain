@@ -169,10 +169,11 @@
                 <select class="form-control" name="new_unionID" id="new_unionID">
                     <option value="">--</option>
                     <cfoutput query="audunions_sel">
+                        <cfset chainedCats = replace(audunions_sel.audCatIDList, ",", " ", "all")>
                         <cfif #auditionprojectDetails.unionID# is "#audunions_sel.id#">
-                            <option value="#audunions_sel.id#" Selected data-chained="#audunions_sel.audcatid#">#audunions_sel.name#</option>
+                            <option value="#audunions_sel.id#" Selected data-chained="#chainedCats#">#audunions_sel.name#</option>
                         <cfelse>
-                            <option value="#audunions_sel.id#" data-chained="#audunions_sel.audcatid#">#audunions_sel.name#</option>
+                            <option value="#audunions_sel.id#" data-chained="#chainedCats#">#audunions_sel.name#</option>
                         </cfif>
                     </cfoutput>
                 </select>
