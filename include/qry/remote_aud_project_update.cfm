@@ -56,16 +56,19 @@
         </div>
     </div>
 
-    <!--- Union Selection --->
+    <!--- Union Selection
+         data-chained accepts space-separated values; audCatIDList is CSV
+         so we substitute commas -> spaces for jQuery Chained. --->
     <div class="form-group col-md-6">
         <label for="unionID">Union</label>
         <select class="form-control" name="new_unionID" id="unionID">
             <option value="">--</option>
             <cfoutput query="audunions_sel">
+                <cfset chainedCats = replace(audunions_sel.audCatIDList, ",", " ", "all")>
                 <cfif #auditionrojectDetails.unionID# is "#audunions_sel.id#">
-                    <option value="#audunions_sel.id#" Selected data-chained="#audunions_sel.audcatid#">#audunions_sel.name#</option>
+                    <option value="#audunions_sel.id#" Selected data-chained="#chainedCats#">#audunions_sel.name#</option>
                 <cfelse>
-                    <option value="#audunions_sel.id#" data-chained="#audunions_sel.audcatid#">#audunions_sel.name#</option>
+                    <option value="#audunions_sel.id#" data-chained="#chainedCats#">#audunions_sel.name#</option>
                 </cfif>
             </cfoutput>
         </select>
