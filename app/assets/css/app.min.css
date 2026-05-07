@@ -8498,9 +8498,7 @@ left: auto;
     max-width: 100% !important;  /* Ensure table wrapper does not exceed page width */
 }
 
-.dataTables_scrollBody {
-    overflow-x: hidden !important;
-}
+
 
 .dataTables_filter {
     display: block !important;  /* Ensure visibility */
