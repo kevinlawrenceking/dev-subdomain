@@ -170,8 +170,11 @@
                     <option value="">--</option>
                     <!--- When the user's pref spans multiple countries, suffix every
                           option with its country name so US vs CA vs UK unions are
-                          unambiguous. Single-country prefs render bare names. --->
-                    <cfset showCountrySuffix = listLen(prefCountryIDList) gt 1 />
+                          unambiguous. Single-country prefs render bare names.
+                          new_countryid is set by include/qry/audunions_sel.cfm and
+                          mirrors the user's prefCountryIDList (or 'US' fallback). --->
+                    <cfparam name="new_countryid" default="US" />
+                    <cfset showCountrySuffix = listLen(new_countryid) gt 1 />
                     <cfoutput query="audunions_sel">
                         <cfset chainedCats = replace(audunions_sel.audCatIDList, ",", " ", "all")>
                         <cfset optLabel = audunions_sel.name />
