@@ -843,7 +843,7 @@ Key Features:
                         </cfif>
 
                         <!--- Data table --->
-                        <table id="basic-datatable" class="table dt-responsive nowrap w-100 table-striped" role="grid">
+                        <table id="basic-datatable" class="table w-100 table-striped" role="grid">
                             <thead>
                                 <cfloop query="results" endrow="1">
                                     <cfoutput>
