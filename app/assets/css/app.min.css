@@ -8490,7 +8490,9 @@ left: auto;
     }
 }
 
-
+.table-responsive {
+    overflow-x: hidden !important; /* Prevent horizontal scroll */
+}
 
 .dataTables_wrapper {
     max-width: 100% !important;  /* Ensure table wrapper does not exceed page width */
