@@ -11,6 +11,7 @@
         u.unionid       AS ID,
         u.unionName     AS NAME,
         c.countryid,
+        c.countryname,
         u.audCatIDList
     FROM
         audunions u

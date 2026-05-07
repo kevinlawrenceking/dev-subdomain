@@ -168,12 +168,20 @@
                 <label for="unionID">Union</label>
                 <select class="form-control" name="new_unionID" id="new_unionID">
                     <option value="">--</option>
+                    <!--- When the user's pref spans multiple countries, suffix every
+                          option with its country name so US vs CA vs UK unions are
+                          unambiguous. Single-country prefs render bare names. --->
+                    <cfset showCountrySuffix = listLen(prefCountryIDList) gt 1 />
                     <cfoutput query="audunions_sel">
                         <cfset chainedCats = replace(audunions_sel.audCatIDList, ",", " ", "all")>
+                        <cfset optLabel = audunions_sel.name />
+                        <cfif showCountrySuffix>
+                            <cfset optLabel = audunions_sel.name & " (" & audunions_sel.countryname & ")" />
+                        </cfif>
                         <cfif #auditionprojectDetails.unionID# is "#audunions_sel.id#">
-                            <option value="#audunions_sel.id#" Selected data-chained="#chainedCats#">#audunions_sel.name#</option>
+                            <option value="#audunions_sel.id#" Selected data-chained="#chainedCats#">#optLabel#</option>
                         <cfelse>
-                            <option value="#audunions_sel.id#" data-chained="#chainedCats#">#audunions_sel.name#</option>
+                            <option value="#audunions_sel.id#" data-chained="#chainedCats#">#optLabel#</option>
                         </cfif>
                     </cfoutput>
                 </select>
