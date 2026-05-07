@@ -58,6 +58,12 @@
 <cfset nletter_yn       = userData.nletter_yn>
 <cfset nletter_link     = userData.nletter_link>
 
+<!--- Audition union country preferences (CSV of countryids, e.g. "US,CA").
+      Drives the per-user filter in include/qry/audunions_sel.cfm. --->
+<cfset prefCountryIDList = structKeyExists(userData, "prefCountryIDList") AND len(trim(userData.prefCountryIDList))
+                           ? userData.prefCountryIDList
+                           : "US">
+
 <!--- Date format / region --->
 <cfset dateFormatID     = userData.dateFormatID>
 <cfset datePrefID       = userData.datePrefID>
