@@ -173,6 +173,8 @@ $(document).ready(function() {
             {
                 targets: 5, // Email
                 responsivePriority: 3,
+                width: '180px',
+                className: 'text-truncate',
                 render: truncRender(25)
             },
             {
