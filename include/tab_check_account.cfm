@@ -106,3 +106,42 @@
         T4: #t4#<BR>
     </cfoutput>
 </cfsavecontent>
+
+<!--- ================================================================
+     Audition tab consolidation (2026-05-06).
+     Derives two flags consumed by include/account_info.cfm and
+     include/audition_pane.cfm:
+       auditionExpand  = "true"|"false"  -- whether the Audition top-level
+                          tab should render with show/active classes.
+       auditionSubpill = "essence"|"headshots"|"materials"|
+                          "submitsites"|"unions" -- which sub-pill
+                          inside the Audition tab is active.
+     Legacy t3/t8/t9 flags from internal redirects remain valid: each
+     opens the Audition tab and selects the corresponding sub-pill.
+     Optional ?audsub=<pill> overrides; the value is whitelisted.
+     ================================================================ --->
+<cfparam name="audsub" default="" />
+<cfset auditionExpand  = "false" />
+<cfset auditionSubpill = "essence" />
+
+<cfif t3 eq 1>
+    <cfset auditionExpand  = "true" />
+    <cfset auditionSubpill = "essence" />
+<cfelseif t8 eq 1>
+    <cfset auditionExpand  = "true" />
+    <cfset auditionSubpill = "headshots" />
+<cfelseif t9 eq 1>
+    <cfset auditionExpand  = "true" />
+    <cfset auditionSubpill = "materials" />
+</cfif>
+
+<!--- Optional explicit override. Reflected URL value is whitelisted
+      against the five known sub-pill IDs; anything else silently
+      falls through to the legacy t-flag mapping above. --->
+<cfif len(trim(audsub))>
+    <cfset audsubClean = lcase(trim(audsub)) />
+    <cfif listFindNoCase("essence,headshots,materials,submitsites,unions", audsubClean)>
+        <cfset auditionExpand  = "true" />
+        <cfset auditionSubpill = audsubClean />
+    </cfif>
+</cfif>

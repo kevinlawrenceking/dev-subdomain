@@ -155,10 +155,12 @@ Last Updated: 2025
     <cfparam name="tab9_expand" default="false"/>
     <cfparam name="tab10_expand" default="false"/>
     
-    <!--- Default to Info tab if none selected --->
-    <cfif tab0_expand is "false" and tab1_expand is "false" and tab2_expand is "false" 
-          and tab3_expand is "false" and tab4_expand is "false" and tab7_expand is "false" 
-          and tab8_expand is "false" and tab9_expand is "false" and tab10_expand is "false">
+    <!--- Default to Info tab if none selected. tab3/tab8/tab9 are now
+          consolidated under auditionExpand; their per-tab flags are no
+          longer rendered, so they are dropped from this fallback check. --->
+    <cfif tab0_expand is "false" and tab1_expand is "false" and tab2_expand is "false"
+          and auditionExpand is "false" and tab4_expand is "false" and tab7_expand is "false"
+          and tab10_expand is "false">
         <cfset tab0_expand = "true"/>
         <cfset t0 = 1/>
     </cfif>
@@ -345,15 +347,7 @@ Last Updated: 2025
       </li>
 
       <li class="nav-item">
-        <a href="##mybrand" data-bs-toggle="tab" aria-expanded="#tab3_expand#" class="nav-link<cfif #tab3_expand# is 'true'> active</cfif>">Essence</a>
-      </li>
-
-      <li class="nav-item">
-        <a href="##myheadshots" data-bs-toggle="tab" aria-expanded="#tab8_expand#" class="nav-link<cfif #tab8_expand# is 'true'> active</cfif>">Headshots</a>
-      </li>
-
-      <li class="nav-item">
-        <a href="##mymaterials" data-bs-toggle="tab" aria-expanded="#tab9_expand#" class="nav-link<cfif #tab9_expand# is 'true'> active</cfif>">Materials</a>
+        <a href="##audition" data-bs-toggle="tab" aria-expanded="#auditionExpand#" class="nav-link<cfif #auditionExpand# is 'true'> active</cfif>">Audition</a>
       </li>
 
       <li class="nav-item">
@@ -399,21 +393,9 @@ Last Updated: 2025
 
     </div>
 
-    <div class="tab-pane<cfif #tab3_expand# is 'true'> show active</cfif>" id="mybrand">
+    <div class="tab-pane<cfif auditionExpand is 'true'> show active</cfif>" id="audition" role="tabpanel">
 
-      <cfinclude template="/include/mybrand_pane.cfm"/>
-
-    </div>
-
-    <div class="tab-pane<cfif #tab8_expand# is 'true'> show active</cfif>" id="myheadshots">
-
-      <cfinclude template="/include/myheadshots_pane.cfm"/>
-
-    </div>
-
-    <div class="tab-pane<cfif #tab9_expand# is 'true'> show active</cfif>" id="mymaterials">
-
-      <cfinclude template="/include/mymaterials_pane.cfm"/>
+      <cfinclude template="/include/audition_pane.cfm"/>
 
     </div>
 
