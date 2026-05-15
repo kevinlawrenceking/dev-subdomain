@@ -9,7 +9,7 @@
     <li class="nav-item" role="presentation">
         <a class="nav-link<cfif auditionSubpill eq 'essence'> active</cfif>"
            id="audition-essence-tab"
-           href="##audition-essence"
+           href="#audition-essence"
            data-bs-toggle="pill"
            role="tab"
            aria-controls="audition-essence"
@@ -20,7 +20,7 @@
     <li class="nav-item" role="presentation">
         <a class="nav-link<cfif auditionSubpill eq 'headshots'> active</cfif>"
            id="audition-headshots-tab"
-           href="##audition-headshots"
+           href="#audition-headshots"
            data-bs-toggle="pill"
            role="tab"
            aria-controls="audition-headshots"
@@ -31,7 +31,7 @@
     <li class="nav-item" role="presentation">
         <a class="nav-link<cfif auditionSubpill eq 'materials'> active</cfif>"
            id="audition-materials-tab"
-           href="##audition-materials"
+           href="#audition-materials"
            data-bs-toggle="pill"
            role="tab"
            aria-controls="audition-materials"
@@ -42,7 +42,7 @@
     <li class="nav-item" role="presentation">
         <a class="nav-link<cfif auditionSubpill eq 'submitsites'> active</cfif>"
            id="audition-submitsites-tab"
-           href="##audition-submitsites"
+           href="#audition-submitsites"
            data-bs-toggle="pill"
            role="tab"
            aria-controls="audition-submitsites"
@@ -53,7 +53,7 @@
     <li class="nav-item" role="presentation">
         <a class="nav-link<cfif auditionSubpill eq 'unions'> active</cfif>"
            id="audition-unions-tab"
-           href="##audition-unions"
+           href="#audition-unions"
            data-bs-toggle="pill"
            role="tab"
            aria-controls="audition-unions"
