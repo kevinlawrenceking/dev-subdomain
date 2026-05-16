@@ -34,6 +34,13 @@
       ============================================================ --->
 <cfset debugLogin = false />
 
+<!--- TAO-EXLOG-01 item 6: tolerate direct/empty POST (no j_username/j_password) instead of throwing "J_USERNAME is undefined in FORM" --->
+<cfparam name="form.j_username" default="">
+<cfparam name="form.j_password" default="">
+<cfif NOT len(trim(form.j_username)) OR NOT len(form.j_password)>
+    <cflocation url="/loginform.cfm?pwrong=Y" addtoken="false">
+</cfif>
+
 <!--- 1) Main login query (with userstatuses join) --->
 <cfquery name="loginQuery" datasource="#dsn#" maxrows="1">
     SELECT
