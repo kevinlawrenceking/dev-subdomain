@@ -81,8 +81,8 @@
     <cfset emailBody = emailBody & "<li><strong>Query String:</strong> " & htmlEditFormat(cgi.query_string) & "</li>">
     <cfset emailBody = emailBody & "</ul>">
     
-    <!--- Configure your email address here --->
-    <cfset debugEmail = "kevin@theactorsoffice.com"> <!--- CHANGE THIS TO YOUR EMAIL --->
+    <!--- TAO-EXLOG-01 item 4: kevin@theactorsoffice.com is SMTP-rejected (Invalid Addresses); use the dev-notification address used by ErrorService (app/Application.cfc:67/141/557) --->
+    <cfset debugEmail = "kevinking7135@gmail.com">
     
     <!--- Send email notification --->
     <cfmail 
