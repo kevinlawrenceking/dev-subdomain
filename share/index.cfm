@@ -14,15 +14,16 @@
 <cfelse>
     <cfset dsn = "abod"/>
 </cfif>
+<!--- TAO-EXLOG-01 item 1: url.shareID may be absent on a bare /share/ hit; param before deref --->
+<cfparam name="url.shareID" default="">
 <cfset shareID = trim(url.shareID)>
 <cfset baseMediaUrl  = "/media-" & dsn>
 <cfset assetBase     = "/share/assets">
 <cfset cacheBuster   = RandRange(1, 1000000)>
 
-<!--- Basic guard: require a shareID value --->
+<!--- TAO-EXLOG-01 item 1: no shareID -> redirect to login, do not throw or render a blank stub --->
 <cfif NOT len(shareID)>
-    <cfoutput><p>Missing shareID.</p></cfoutput>
-    <cfabort>
+    <cflocation url="/loginform.cfm" addtoken="false">
 </cfif>
 
 <!--- Fetch the user tied to this shareID --->
@@ -40,17 +41,7 @@
 
 <!--- Straightforward handling when no record exists --->
 <cfif qShareUser.recordCount EQ 0>
-
-
-    <cfoutput>    SELECT
-        tu.userID,
-        tu.shareID,
-        tu.userFirstName,
-        tu.userLastName,
-        tu.recordname
-    FROM taousers tu
-    WHERE tu.shareID = <cfqueryparam value="#shareID#" cfsqltype="cf_sql_varchar" maxlength="36">
-    LIMIT 1</cfoutput>
+    <!--- TAO-EXLOG-01 item 2: removed debug echo block that leaked SQL and threw cfqueryparam-outside-cfquery on the no-record path --->
     <cfoutput><p>No shared data found.</p></cfoutput>
     <cfabort>
 </cfif>
