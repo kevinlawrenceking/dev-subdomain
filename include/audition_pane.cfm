@@ -5,6 +5,31 @@
       one of: essence | headshots | materials | submitsites | unions.
       Any other value is treated as essence by the cfif chain below. --->
 
+<!--- Give the sub-pills a defined chip look (white fill, light grey
+      border) so inactive tabs no longer read as floating text. The
+      active pill keeps the theme green from --ct-component-active-bg. --->
+<style>
+#audition-subnav .nav-link {
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+    color: #6c757d;
+    margin: 0 5px;
+}
+#audition-subnav .nav-item:first-child .nav-link {
+    margin-left: 0;
+}
+#audition-subnav .nav-link:hover {
+    background-color: #f8f9fa;
+    border-color: #ced4da;
+}
+#audition-subnav .nav-link.active,
+#audition-subnav .show > .nav-link {
+    background-color: var(--ct-component-active-bg);
+    border-color: var(--ct-component-active-bg);
+    color: var(--ct-component-active-color);
+}
+</style>
+
 <ul class="nav nav-pills mb-3" id="audition-subnav" role="tablist">
     <li class="nav-item" role="presentation">
         <a class="nav-link<cfif auditionSubpill eq 'essence'> active</cfif>"
