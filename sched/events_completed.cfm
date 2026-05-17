@@ -50,46 +50,41 @@
 
     <cfset todayDate = dateFormat(now(), 'yyyy-MM-dd') />
 
-    <!---
-        JOB A -- notstatus repair (part 1 of 2)
-        Audit select: future-dated notifications whose status is NOT 'Future'.
-        NOTE: query result is used only for the debug panel; it drives no
-        update. Candidate for removal. Kept for visibility today.
-    --->
-    <cfquery datasource="#dsn#" result="result" name="future">
-        SELECT * FROM funotifications
-        WHERE notstartdate > <cfqueryparam cfsqltype="cf_sql_date" value="#todayDate#" />
-        AND notstatus <> <cfqueryparam cfsqltype="cf_sql_varchar" value="Future" />
-    </cfquery>
+    <!--- PERF: run timer + counters for the end-of-run audit cflog. --->
+    <cfset runStartTick = getTickCount() />
+    <cfset runStats = { eventsProcessed = 0, eventsFailed = 0, enrollments = 0 } />
+    <cflog file="events_completed" text="START events_completed run (#todayDate#)" />
 
+    <!---
+        JOB A -- notstatus repair.
+        PERF: the prior `future` / `activefix` SELECT * queries scanned and
+        fully materialized the unbounded funotifications table into CF heap
+        on EVERY run, yet the result was only read as .recordCount inside a
+        dbug=Y panel. Replaced with COUNT(*) and gated behind dbug so the
+        production run does zero wasted work here. The state change is the
+        `upactive` UPDATE below, which is unaffected.
+    --->
     <cfif dbug eq "Y">
+        <cfquery datasource="#dsn#" name="future">
+            SELECT COUNT(*) AS cnt FROM funotifications
+            WHERE notstartdate > <cfqueryparam cfsqltype="cf_sql_date" value="#todayDate#" />
+            AND notstatus <> <cfqueryparam cfsqltype="cf_sql_varchar" value="Future" />
+        </cfquery>
+        <cfquery datasource="#dsn#" name="activefix">
+            SELECT COUNT(*) AS cnt FROM funotifications
+            WHERE notstartdate < <cfqueryparam cfsqltype="cf_sql_date" value="#todayDate#" />
+            AND notstatus = <cfqueryparam cfsqltype="cf_sql_varchar" value="Future" />
+        </cfquery>
         <cfoutput>
             <div style="background-color: ##e6f3ff; padding: 10px; margin: 5px; border: 1px solid ##ccc;">
                 <strong>DEBUG: Future notifications query</strong><br>
-                Records found: #future.recordCount#
+                Records found: #future.cnt#
+            </div>
+            <div style="background-color: ##e6f3ff; padding: 10px; margin: 5px; border: 1px solid ##ccc;">
+                <strong>DEBUG: Active fix query</strong><br>
+                Records found: #activefix.cnt#
             </div>
         </cfoutput>
-    </cfif>
-
-    <!---
-        JOB A -- notstatus repair (part 2 of 2)
-        Audit select: past-dated notifications still sitting in 'Future'.
-        Same note as `future` above -- result is only read for the debug panel.
-        The actual state change happens in the UPDATE below.
-    --->
-    <cfquery datasource="#dsn#" result="result" name="activefix">
-        SELECT * FROM funotifications
-        WHERE notstartdate < <cfqueryparam cfsqltype="cf_sql_date" value="#todayDate#" />
-        AND notstatus = <cfqueryparam cfsqltype="cf_sql_varchar" value="Future" />
-    </cfquery>
-
-        <cfif dbug eq "Y">
-            <cfoutput>
-                <div style="background-color: ##e6f3ff; padding: 10px; margin: 5px; border: 1px solid ##ccc;">
-                    <strong>DEBUG: Active fix query</strong><br>
-                    Records found: #activefix.recordCount#
-                </div>
-            </cfoutput>
         </cfif>
 
             <!---
@@ -142,13 +137,27 @@
                 needs to be completed and its tagged contacts enrolled in
                 follow-up. Joined through the `taousers` view so we skip events
                 owned by already-soft-deleted users.
+
+                PERF/safety: bounded by ?maxEvents (default 1500). This job has
+                a history of timing out; once it does, events stay Active and
+                the backlog grows every night, so the first recovery run could
+                still be unbounded even with the new indexes. ORDER BY eventstop
+                ASC drains oldest-first, so a capped run is deterministic and
+                self-healing: the remainder is picked up on the next nightly
+                run. JOB A/B/D are unaffected by the cap (A/B run before this;
+                D is idempotent and backfills from Completed events globally).
+                Operators can force a full drain in a maintenance window with
+                ?maxEvents=100000, or a gentle catch-up with ?maxEvents=200.
             --->
+            <cfparam name="maxEvents" default="1500" />
+            <cfset maxEvents = max(1, int(val(maxEvents))) />
             <cfquery datasource="#dsn#" result="result" name="events">
                 SELECT e.eventid, e.eventtitle, e.eventstop, u.recordname, u.userid
                 FROM events e
                 INNER JOIN taousers u ON e.userid = u.userid
                 WHERE e.eventstatus = 'Active' AND e.eventstop < CURDATE()
                 ORDER BY e.eventstop
+                LIMIT <cfqueryparam cfsqltype="cf_sql_integer" value="#maxEvents#" />
             </cfquery>
 
                 <cfif dbug eq "Y">
@@ -243,20 +252,9 @@
             <cfset enrollmentSets[eKey] = listAppend(enrollmentSets[eKey], allEnrollments.systemid) />
         </cfloop>
 
-        <!---
-            Pre-load system definitions. Historical: this replaced a per-contact
-            `sudetails` SELECT. The resulting `systemInfoMap` is currently unused
-            downstream -- kept for parity with the older flow and in case the
-            system name is needed for a future notification subject line.
-        --->
-        <cfquery datasource="#dsn#" name="allSystemInfo">
-            SELECT systemid, systemName, systemType, systemScope, systemDescript, systemTriggerNote
-            FROM fusystems
-        </cfquery>
-        <cfset systemInfoMap = structNew() />
-        <cfloop query="allSystemInfo">
-            <cfset systemInfoMap[allSystemInfo.systemid] = allSystemInfo.systemName />
-        </cfloop>
+        <!--- PERF: removed the `allSystemInfo` / `systemInfoMap` preload.
+            It scanned all of fusystems and built a map that no downstream
+            code ever read (review issue #3). Dead work eliminated. --->
 
         <!---
             allActionSchedules -- the full action roster per (system, user),
@@ -319,6 +317,13 @@
 
                     <cfloop query="events">
                     <cftransaction>
+                    <!--- PERF/reliability: isolate each event. Before this, a
+                         single failing event aborted the whole run, leaving
+                         the rest Active and growing the backlog every night
+                         until the job could no longer finish inside the
+                         request timeout. Now a bad event rolls back alone,
+                         is logged, and the run continues. --->
+                    <cftry>
 
                         <cfif dbug eq "Y">
                             <cfoutput>
@@ -600,6 +605,15 @@
                                             <cfset affectedIcsUserIds[new_userid] = true />
                                         </cfif>
 
+                                        <cfset runStats.eventsProcessed = runStats.eventsProcessed + 1 />
+
+                                        <cfcatch type="any">
+                                            <cftransaction action="rollback" />
+                                            <cfset runStats.eventsFailed = runStats.eventsFailed + 1 />
+                                            <cflog file="events_completed" type="error"
+                                                   text="EVENT FAILED eventid=#new_eventid# userid=#new_userid# -- #left(cfcatch.message,250)# | #left(cfcatch.detail,250)#" />
+                                        </cfcatch>
+                                    </cftry>
                                     </cftransaction>
                                     </cfloop>
 
@@ -611,6 +625,16 @@
     the first time the actor met the contact, not the most recent.
     Runs once, globally, after every event has been processed.
 --->
+<!--- PERF: the derived tables now JOIN contactdetails and filter on the
+     NULL column INSIDE the subquery. Functionally identical to the outer
+     `WHERE cd.<col> IS NULL` (same table, same predicate) but it prunes the
+     GROUP BY input from "every contact with any completed event" down to
+     just the contacts that still need a value -- a population that only
+     shrinks over time. The outer NULL filter is kept as an idempotent guard.
+     NOTE: `eventtitle` in update_where is still taken from an arbitrary row
+     in each contactid group (not necessarily the MIN(eventstop) row). That
+     pre-existing nondeterminism is intentionally left unchanged here to keep
+     this a pure performance fix; flag it for a separate correctness pass. --->
 <cftransaction>
 <cfquery datasource="#dsn#" result="result" name="uppdate_when">
 UPDATE contactdetails cd
@@ -618,6 +642,7 @@ INNER JOIN (
   SELECT x.contactid, MIN(e.eventstop) AS oldest_new_contactmeetingdate
   FROM eventcontactsxref x
   INNER JOIN events e ON e.eventid = x.eventid
+  INNER JOIN contactdetails cdf ON cdf.contactid = x.contactid AND cdf.contactmeetingdate IS NULL
   WHERE e.eventstatus = 'Completed' AND e.eventstop < CURDATE()
   GROUP BY x.contactid
 ) sub ON cd.contactid = sub.contactid
@@ -631,6 +656,7 @@ INNER JOIN (
   SELECT x.contactid, e.eventtitle AS oldest_new_contactMeetingLoc, MIN(e.eventstop) AS oldest_new_contactmeetingdate
   FROM eventcontactsxref x
   INNER JOIN events e ON e.eventid = x.eventid
+  INNER JOIN contactdetails cdf ON cdf.contactid = x.contactid AND cdf.contactMeetingloc IS NULL
   WHERE e.eventstatus = 'Completed' AND e.eventstop < CURDATE()
   GROUP BY x.contactid
 ) sub ON cd.contactid = sub.contactid
@@ -651,10 +677,19 @@ WHERE cd.contactMeetingloc IS NULL;
     </cfcatch>
 </cftry>
 
+<!--- PERF: end-of-run audit line. Makes "did the cron finish, how long,
+     how much work" answerable from the log after the fact -- essential for
+     diagnosing timeouts. --->
+<cfset runElapsedSec = int((getTickCount() - runStartTick) / 1000) />
+<cfset batchCapped = (events.recordCount GTE maxEvents) />
+<cflog file="events_completed"
+       text="END events_completed run -- elapsedSec=#runElapsedSec# eventsFound=#events.recordCount# eventsProcessed=#runStats.eventsProcessed# eventsFailed=#runStats.eventsFailed# maxEvents=#maxEvents# batchCapped=#batchCapped# (backlog likely remains; next run continues)" />
+
 <cfif dbug eq "Y">
     <cfoutput>
         <div style="background-color: ##d4edda; padding: 10px; margin: 5px; border: 1px solid ##c3e6cb;">
             <strong>DEBUG: Process completed successfully</strong><br>
+            Elapsed: #runElapsedSec#s | Processed: #runStats.eventsProcessed# | Failed: #runStats.eventsFailed#<br>
             End Time: #timeFormat(now(), "HH:mm:ss")#<br>
             Total events processed: #events.recordCount#<br>
         </div>

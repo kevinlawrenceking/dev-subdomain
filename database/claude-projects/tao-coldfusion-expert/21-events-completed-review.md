@@ -125,8 +125,25 @@ Verified via codebase search. None of the four jobs has a real-time counterpart 
 | 8 | Low     | `uppdate_when` / `uppdate_where` -- typo'd query names. Cosmetic. | lines 511, 527 |
 | 9 | Low     | Empty `<cfelse>` branch on the `alreadyEnrolled` guard. No-op; remove for clarity. | line ~460 |
 | 10 | Low     | `SYSDATE()` on line 104 vs `CURDATE()` used elsewhere. `SYSDATE()` includes time; if a canceldate is midnight today it will be caught; functionally fine but inconsistent. | line 104 |
+| 11 | Medium  | JOB D `uppdate_where` selects `e.eventtitle` alongside `MIN(e.eventstop)` while grouping only by `contactid`. The title is taken from an **arbitrary** row in the group, not the oldest event, so `contactMeetingloc` can be backfilled from the wrong event (and the query may be rejected outright under `ONLY_FULL_GROUP_BY`). Pre-existing; deliberately left unchanged by the 2026-05-16 perf pass to keep that change behavior-neutral. Needs a correctness fix (correlated subquery, or a window function picking the row at `MIN(eventstop)`). | JOB D `uppdate_where` |
 
-None of these are currently breaking production, but #4-#6 are the ones to fix first because they affect reliability.
+None of these are currently breaking production, but #4-#6 and #11 are the ones to fix first (#4-#6 reliability, #11 data correctness).
+
+---
+
+### Update 2026-05-16: performance remediation applied
+
+The "performance posture is good" note in section 2 no longer held -- the job was exceeding `requesttimeout=600`. Root cause: the hot queries had **no supporting indexes** (verified against `database/audit/verify-indexes.sql`) and scanned tables that grow unbounded. Applied:
+
+- Issues #1, #2, #3, #5, #6 from the table above are now **fixed in code**.
+- JOB A's two `SELECT *` audit scans are gated behind `dbug=Y` and reduced to `COUNT(*)`.
+- Each event's transaction is wrapped in `cftry` (per-event isolation; ends the timeout spiral).
+- JOB D's two full-history aggregations are bounded to the NULL backfill population via an in-subquery join to `contactdetails`.
+- JOB C driver is bounded by `?maxEvents` (default 1500, oldest-first, self-healing).
+- Run-summary `cflog` (`START` / `END` with elapsed, counts, `batchCapped`).
+- New index migration: `database/migrations/2026-05-16_events_completed_perf_indexes.sql` (+ `_ROLLBACK`) adding `funotifications_tbl(notstatus,notstartdate)`, `events_tbl(eventstatus,eventstop)`, `eventcontactsxref(contactid,eventid)`. **Must be run by a DBA on dev then prod** -- this is the root multiplier; the code changes alone reduce wasted work but the indexes are what bring the scans back under the timeout.
+
+Issue #11 (above) and the uncapped→capped tradeoff are the remaining known follow-ups.
 
 ---
 
