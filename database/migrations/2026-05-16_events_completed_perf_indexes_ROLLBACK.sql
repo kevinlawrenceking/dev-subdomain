@@ -37,7 +37,8 @@ DELIMITER ;
 
 CALL DropIndexIfExists('funotifications_tbl', 'idx_funot_status_startdate');
 CALL DropIndexIfExists('events_tbl', 'idx_ev_status_stop');
-CALL DropIndexIfExists('eventcontactsxref', 'idx_ecx_contact_event');
+-- CORRECTION (2026-05-17): base table is eventcontactsxref_tbl, not the view.
+CALL DropIndexIfExists('eventcontactsxref_tbl', 'idx_ecx_contact_event');
 
 DROP PROCEDURE IF EXISTS DropIndexIfExists;
 

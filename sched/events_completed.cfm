@@ -138,18 +138,29 @@
                 follow-up. Joined through the `taousers` view so we skip events
                 owned by already-soft-deleted users.
 
-                PERF/safety: bounded by ?maxEvents (default 1500). This job has
-                a history of timing out; once it does, events stay Active and
-                the backlog grows every night, so the first recovery run could
-                still be unbounded even with the new indexes. ORDER BY eventstop
-                ASC drains oldest-first, so a capped run is deterministic and
-                self-healing: the remainder is picked up on the next nightly
-                run. JOB A/B/D are unaffected by the cap (A/B run before this;
-                D is idempotent and backfills from Completed events globally).
-                Operators can force a full drain in a maintenance window with
-                ?maxEvents=100000, or a gentle catch-up with ?maxEvents=200.
+                PERF/safety: bounded by ?maxEvents (default 300). MEASURED
+                2026-05-17 against prod: the real timeout cause is NOT slow SQL
+                or missing indexes (all tables are small: events_tbl ~5.3k rows,
+                funotifications ~34k live; JOB A/D workloads are negligible).
+                It is a ~952-event JOB C BACKLOG processed serially -- one
+                cftransaction per event, several DB round-trips per tagged
+                contact, against a remote DB -- i.e. latency-bound, and self-
+                amplifying (a run that doesn't finish leaves events Active, so
+                the backlog grows and the next run is longer: the spiral that
+                produced 952).
+
+                The default MUST be below the backlog or the cap does nothing.
+                300 is a conservative estimate for "completes well inside the
+                600s timeout"; ORDER BY eventstop ASC drains oldest-first so
+                successive nightly runs converge. TUNE IT from the new END
+                cflog: it reports elapsedSec and eventsProcessed -- if a run
+                finishes in e.g. 120s for 300 events, the box can safely take
+                ~1200-1500; if it runs long, lower it. JOB A/B/D are unaffected
+                by the cap (A/B run before this; D is idempotent). To clear the
+                current 952 backlog, run repeatedly with a small batch
+                (?maxEvents=200) and watch elapsedSec before raising it.
             --->
-            <cfparam name="maxEvents" default="1500" />
+            <cfparam name="maxEvents" default="300" />
             <cfset maxEvents = max(1, int(val(maxEvents))) />
             <cfquery datasource="#dsn#" result="result" name="events">
                 SELECT e.eventid, e.eventtitle, e.eventstop, u.recordname, u.userid

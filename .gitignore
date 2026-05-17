@@ -1,4 +1,7 @@
 
+# MCP config holds a plaintext DB credential -- never commit
+.mcp.json
+
 .codegpt
 /cfusion/
 /lucee/

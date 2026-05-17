@@ -133,17 +133,39 @@ None of these are currently breaking production, but #4-#6 and #11 are the ones 
 
 ### Update 2026-05-16: performance remediation applied
 
-The "performance posture is good" note in section 2 no longer held -- the job was exceeding `requesttimeout=600`. Root cause: the hot queries had **no supporting indexes** (verified against `database/audit/verify-indexes.sql`) and scanned tables that grow unbounded. Applied:
+The "performance posture is good" note in section 2 no longer held -- the job was exceeding `requesttimeout=600`.
 
-- Issues #1, #2, #3, #5, #6 from the table above are now **fixed in code**.
-- JOB A's two `SELECT *` audit scans are gated behind `dbug=Y` and reduced to `COUNT(*)`.
-- Each event's transaction is wrapped in `cftry` (per-event isolation; ends the timeout spiral).
-- JOB D's two full-history aggregations are bounded to the NULL backfill population via an in-subquery join to `contactdetails`.
-- JOB C driver is bounded by `?maxEvents` (default 1500, oldest-first, self-healing).
-- Run-summary `cflog` (`START` / `END` with elapsed, counts, `batchCapped`).
-- New index migration: `database/migrations/2026-05-16_events_completed_perf_indexes.sql` (+ `_ROLLBACK`) adding `funotifications_tbl(notstatus,notstartdate)`, `events_tbl(eventstatus,eventstop)`, `eventcontactsxref(contactid,eventid)`. **Must be run by a DBA on dev then prod** -- this is the root multiplier; the code changes alone reduce wasted work but the indexes are what bring the scans back under the timeout.
+**ROOT CAUSE -- established by live prod measurement 2026-05-17 (`actorsbusinessoffice`, MySQL 8.0.41):**
 
-Issue #11 (above) and the uncapped→capped tradeoff are the remaining known follow-ups.
+The cause is **not** SQL cost, table size, missing indexes, or the JOB A `SELECT *`. Every relevant table is tiny and fully indexed in prod, and the data the "expensive" queries touch is trivial:
+
+| Signal | Prod value | Implication |
+|---|---|---|
+| funotifications_tbl rows | 81,207 (5.5 MB) | sub-second even on a full scan |
+| events_tbl rows | 5,327 (2.5 MB) | trivial |
+| eventcontactsxref_tbl rows | 6,841 | trivial |
+| all 3 "missing" indexes | **present in prod** | index hypothesis dead |
+| JOB A rows to flip | **0** | JOB A does nothing |
+| JOB A `SELECT *` set | **65 rows** | the "fix" was hygiene, not the cause |
+| **JOB C backlog (Active, past-due)** | **952 events, all >7 days old** | **the actual problem** |
+
+The real cause: the cron times out, so it completes few/no events, so past-due Active events **accumulate** (now 952). Each event runs a `cftransaction` with an inner per-contact loop of ~4-5 sequential round-trip queries (`addSystem`, `CompleteTargetSystems`, `notifications` insert, `checkUnique`, `addNotification`), plus per-event begin/commit. Against a **remote** MySQL (`46.31.66.114`), 952 events ≈ 10,000+ sequential network round trips + 952 remote InnoDB commits. This is **latency-bound chattiness amplified by a self-reinforcing backlog**, and it lands right at the 600 s wall. Without per-event isolation, one failing event in the 952 aborts the whole run and completes nothing -- the spiral that built the 952.
+
+**What the applied code changes are actually worth, re-judged against this:**
+
+- **Per-event `cftry` isolation -- the real fix.** Breaks the spiral: a bad event no longer wastes the whole 600 s; the run drains what it can.
+- **`?maxEvents` backlog cap -- default corrected 1500 -> 300 (2026-05-17).** The original 1500 exceeded the 952 backlog and so would **not engage**; 300 is below it, so each run now makes bounded forward progress and drains oldest-first. 300 is a conservative estimate -- calibrate from the new `END` cflog `elapsedSec`/`eventsProcessed`. For the initial catch-up, drain in chunks with `?maxEvents=200` over successive runs. Once the 952 is cleared, daily volume is tiny and the job finishes fast even over remote latency.
+- **Run-summary `cflog` -- the critical instrument.** It is how drain progress and per-run cost get measured. Deploy this first.
+- JOB A `SELECT *`→`COUNT(*)` and JOB D bounding: harmless hygiene, **not** the cause (65 rows / tiny tables). Keep, but do not credit them with fixing the timeout.
+
+**Index migration `2026-05-16_events_completed_perf_indexes.sql` -- DO NOT SHIP expecting effect.** Confirmed a **no-op on both dev and prod** (all three indexes already exist in both). A real bug in it was fixed (it targeted the `eventcontactsxref` view instead of `eventcontactsxref_tbl`), but its remediation value is zero. Recommend discarding it, or keeping only as a documented idempotent guard. `verify-indexes.sql` is a *recommendations* doc, not live state -- trusting it produced the wrong initial diagnosis.
+
+**The durable structural fix (follow-up, larger):** eliminate the per-row chattiness -- batch the inner-loop writes (multi-row INSERT, set-based `CompleteTargetSystems`), or move the whole job server-side / co-locate the cron with the DB to kill the network round-trip tax. The current changes drain and stabilize; they do not remove the O(events × contacts) round-trip design.
+
+Other open follow-ups:
+- Redundant indexes in **both** dev and prod (`idx_funotifications_notstatus`, `idx_funotifications_notstartdate` on funotifications_tbl) add write overhead on a table this job hammers -- candidate for a cleanup migration like `2026-04-03_drop_redundant_single_column_indexes.sql`.
+- Issue #11 (JOB D `eventtitle` nondeterminism).
+- Investigate *why* the backlog first formed (initial timeout trigger): event volume spike, a poison event, or an earlier deploy.
 
 ---
 

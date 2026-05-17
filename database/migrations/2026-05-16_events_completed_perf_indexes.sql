@@ -1,12 +1,25 @@
 -- =============================================================================
 -- TAO Performance: events_completed.cfm supporting indexes
 --
--- Purpose: sched/events_completed.cfm kept exceeding requesttimeout=600.
---          Its hot queries had NO supporting indexes and scanned tables that
---          grow unbounded. Verified against database/audit/verify-indexes.sql:
---          funotifications_tbl had no notstartdate index; events_tbl had no
---          (eventstatus, eventstop) index; eventcontactsxref was unindexed
---          beyond its PK.
+-- Purpose: ensure the indexes that support sched/events_completed.cfm's hot
+--          queries exist. IMPORTANT CORRECTION (2026-05-17): a live check of
+--          dev (new_development) found ALL THREE indexes below ALREADY PRESENT
+--          (idx_funot_status_startdate, idx_ev_status_stop,
+--          idx_ecx_contact_event). The earlier "missing indexes" claim came
+--          from trusting database/audit/verify-indexes.sql, which is a
+--          RECOMMENDATIONS doc, not a live snapshot -- it was wrong for dev.
+--
+--          This migration is therefore an IDEMPOTENT ENSURE-EXISTS, kept only
+--          to close a possible dev->prod schema-drift gap (prod index state
+--          was NOT verifiable from the read-only dev MCP connection). On any
+--          environment where the indexes already exist it is a safe no-op
+--          (AddIndexIfNotExists prints "EXISTS: ... skipped").
+--
+--          It is NOT the root fix for the timeout. The code changes in
+--          sched/events_completed.cfm (kill JOB A SELECT *, per-event
+--          isolation, bounded JOB D, backlog cap) stand on their own.
+--          Confirm prod's actual index state before assuming this does
+--          anything there -- see verification note at end of file.
 --
 -- Queries fixed:
 --   JOB A  UPDATE funotifications WHERE notstatus='Future'
@@ -64,11 +77,28 @@ CALL AddIndexIfNotExists('funotifications_tbl', 'idx_funot_status_startdate', '(
 CALL AddIndexIfNotExists('events_tbl', 'idx_ev_status_stop', '(eventstatus, eventstop)');
 
 -- JOB D: eventcontactsxref joined to events on eventid, grouped by contactid.
--- Composite serves both the GROUP BY contactid and the eventid join probe,
--- and leftmost (contactid) serves contactid-only lookups elsewhere.
--- NOTE: eventcontactsxref is a plain xref table (no view/_tbl split).
-CALL AddIndexIfNotExists('eventcontactsxref', 'idx_ecx_contact_event', '(contactid, eventid)');
+-- Composite serves both the GROUP BY contactid and the eventid join probe.
+-- CORRECTION (2026-05-17): `eventcontactsxref` is a VIEW; the base table is
+-- `eventcontactsxref_tbl`. Targeting the view name would error
+-- ("not BASE TABLE"). Fixed to the base table. On dev this index, and an
+-- exact duplicate `idx_eventcontactsxref_contact`, already exist.
+CALL AddIndexIfNotExists('eventcontactsxref_tbl', 'idx_ecx_contact_event', '(contactid, eventid)');
 
 DROP PROCEDURE IF EXISTS AddIndexIfNotExists;
 
 SELECT 'events_completed perf index migration complete' AS status;
+
+-- =============================================================================
+-- VERIFY PROD INDEX STATE BEFORE ASSUMING THIS MIGRATION DOES ANYTHING.
+-- Run this read-only check against actorsbusinessoffice; if all three rows
+-- come back, prod already has them and this migration is a no-op there too:
+--
+--   SELECT TABLE_NAME, INDEX_NAME,
+--          GROUP_CONCAT(COLUMN_NAME ORDER BY SEQ_IN_INDEX) AS cols
+--   FROM information_schema.STATISTICS
+--   WHERE TABLE_SCHEMA = DATABASE()
+--     AND ( (TABLE_NAME='funotifications_tbl' AND INDEX_NAME='idx_funot_status_startdate')
+--        OR (TABLE_NAME='events_tbl'          AND INDEX_NAME='idx_ev_status_stop')
+--        OR (TABLE_NAME='eventcontactsxref_tbl' AND INDEX_NAME='idx_ecx_contact_event') )
+--   GROUP BY TABLE_NAME, INDEX_NAME;
+-- =============================================================================
