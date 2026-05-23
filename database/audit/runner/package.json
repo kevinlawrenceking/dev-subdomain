@@ -1,0 +1,9 @@
+{
+  "name": "tao-audit-runner",
+  "version": "1.0.0",
+  "private": true,
+  "description": "One-off SQL migration runner for the TAO 2026-05 prod-DB-audit scripts. Writable mysql2 session (the read-only MCP cannot run DDL). Auditable, dry-runnable, handles DELIMITER for stored procedures.",
+  "dependencies": {
+    "mysql2": "^3.11.0"
+  }
+}

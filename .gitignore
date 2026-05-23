@@ -2,6 +2,12 @@
 # MCP config holds a plaintext DB credential -- never commit
 .mcp.json
 
+# One-off audit SQL runner (local-only, contains npm install + scratch files)
+database/audit/runner/node_modules/
+database/audit/runner/package-lock.json
+database/audit/runner/_*.sql
+database/audit/runner/inspect_*.cjs
+
 .codegpt
 /cfusion/
 /lucee/
