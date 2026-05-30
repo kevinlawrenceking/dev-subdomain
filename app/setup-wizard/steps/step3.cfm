@@ -1,6 +1,7 @@
 <!---
-    P11 Step 3: Import or Add Contacts
-    Two paths: import from file (modal) or manual quick-add.
+    P11 Step 3: Add Contacts (manual quick-add only).
+    Bulk import removed from setup 2026-05-30; it now lives on the post-setup
+    Contacts page. Save path: ajax/setup-wizard/save-step3.cfm.
 --->
 <cfset userid = session.userid>
 
@@ -22,25 +23,17 @@
 </div>
 <div class="collapse" id="tutorial3">
     <div class="wizard-tutorial">
-        Contacts are the foundation of your network in TAO. You can import a spreadsheet of existing contacts or add a few key people manually. Don't worry about getting everyone in now -- you can always import more later.
+        Contacts are the foundation of your network in TAO. Add a few key people manually here. Don't worry about getting everyone in now -- you can always add more later.
     </div>
 </div>
 
 <h3>Add a few industry contacts</h3>
 <p class="step-subtitle">
     You already have <strong>#qCount.cnt#</strong> contact(s).
-    Add more below or import from a file.
+    Add a few key people below.
 </p>
 
-<!--- Mode toggle --->
-<div class="wizard-mode-toggle btn-group btn-group-sm mb-3" role="group">
-    <input type="radio" class="btn-check" name="contactMode" id="mode-manual" value="manual" checked>
-    <label class="btn btn-outline-primary" for="mode-manual">Add Manually</label>
-    <input type="radio" class="btn-check" name="contactMode" id="mode-upload" value="upload">
-    <label class="btn btn-outline-primary" for="mode-upload">Import from File</label>
-</div>
-
-<!--- Manual quick-add panel --->
+<!--- Manual quick-add panel (bulk import lives on the Contacts page, post-setup) --->
 <div id="panel-manual" class="wizard-panel-content">
     <div id="manual-contacts">
         <div class="quick-add-row">
@@ -95,58 +88,12 @@
     <span class="text-muted ms-2" style="font-size:12px;">(max 10)</span>
 </div>
 
-<!--- Import panel --->
-<div id="panel-upload" class="wizard-panel-content" style="display:none;">
-    <div class="wizard-dropzone" id="import-dropzone">
-        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        <div>Click to open the import wizard</div>
-        <div class="file-types">
-            <span class="file-type-badge">CSV</span>
-            <span class="file-type-badge">XLS</span>
-            <span class="file-type-badge">XLSX</span>
-            <span class="file-type-badge">VCF</span>
-        </div>
-    </div>
-    <p class="text-muted mt-2" style="font-size:12px;">
-        Opens the full import wizard where you can map columns, review duplicates, and finalize your import.
-    </p>
-</div>
-
-<!--- Import modal (iframe) --->
-<div class="modal fade" id="importModal" tabindex="-1">
-    <div class="modal-dialog modal-xl modal-dialog-scrollable" style="max-width:95vw; height:90vh;">
-        <div class="modal-content" style="height:90vh;">
-            <div class="modal-header py-2">
-                <h6 class="modal-title">Import Contacts</h6>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body p-0">
-                <iframe id="import-iframe" src="" style="width:100%; height:100%; border:none;"></iframe>
-            </div>
-        </div>
-    </div>
-</div>
+<!--- Bulk import is available from the Contacts page after setup. --->
+<p class="text-muted mt-3" style="font-size:13px;">
+    Have a spreadsheet or phone contacts to bring in? You'll be able to bulk-import them from the Contacts page once setup is finished.
+</p>
 
 <script>
-// Mode toggle
-$('input[name="contactMode"]').on('change', function() {
-    var mode = $(this).val();
-    $('##panel-upload').toggle(mode === 'upload');
-    $('##panel-manual').toggle(mode === 'manual');
-});
-
-// Import dropzone -> open modal iframe
-$('##import-dropzone').on('click', function() {
-    $('##import-iframe').attr('src', '/include/import-contacts-v3.cfm?embedded=1');
-    var modal = new bootstrap.Modal(document.getElementById('importModal'));
-    modal.show();
-});
-
-$('##importModal').on('hidden.bs.modal', function() {
-    $('##import-iframe').attr('src', '');
-    // MIGRATE: In Go/Flutter, replace with a proper callback from the import flow
-});
-
 // Add manual contact row
 $('##add-contact-row').on('click', function() {
     var rows = $('##manual-contacts .quick-add-row');

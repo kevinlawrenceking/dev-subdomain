@@ -1,5 +1,6 @@
 <!---
-    P11 Step 4 Save: Import or Add Auditions
+    P11 Step 4 Save: Add Auditions (manual quick-add only)
+    Bulk import removed from setup 2026-05-30.
     Creates audition projects/roles via AuditionProjectService.
     Auth + CSRF handled by ajax/Application.cfc.
     TECH-DEBT: INSaudprojects() uses cookie.userid, so we set it here.

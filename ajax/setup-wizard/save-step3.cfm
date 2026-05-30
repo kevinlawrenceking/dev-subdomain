@@ -1,6 +1,6 @@
 <!---
-    P11 Step 3 Save: Import or Add Contacts (manual path)
-    Creates contacts from quick-add rows.
+    P11 Step 3 Save: Add Contacts (manual quick-add only)
+    Creates contacts from quick-add rows. Bulk import removed from setup 2026-05-30.
     Auth + CSRF handled by ajax/Application.cfc.
 --->
 <cfset userid = session.userid>

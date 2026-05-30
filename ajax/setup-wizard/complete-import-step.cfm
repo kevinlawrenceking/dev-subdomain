@@ -3,6 +3,11 @@
     Called after import modal closes to advance setup_step.
     Used by Steps 3 and 4 when the import (not manual) path is taken.
     Auth + CSRF handled by ajax/Application.cfc.
+
+    UNUSED as of 2026-05-30: bulk import was removed from the setup wizard.
+    Steps 3 (Contacts) and 4 (Auditions) are now manual-add only; bulk import
+    moved to the post-setup Contacts/Auditions pages. No caller remains.
+    Kept intentionally for now; safe to delete in a future cleanup pass.
 --->
 <cfset userid = session.userid>
 <cfparam name="form.step" default="3" />

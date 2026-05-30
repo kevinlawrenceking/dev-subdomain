@@ -1,5 +1,7 @@
 <!---
-    P11 Step 4: Import or Add Auditions
+    P11 Step 4: Add Auditions (manual quick-add only).
+    Bulk import removed from setup 2026-05-30; audition import lives on the
+    post-setup Auditions page.
     Audition module is universally enabled (TECH-DEBT: isauditionmodule gating removed 2026-04).
     TECH-DEBT: save-step4 inlines INSERT to avoid cookie.userid in INSaudprojects(). Main app still uses cookie path.
 --->
@@ -30,25 +32,10 @@
 </div>
 
 <h3>Log a few recent auditions</h3>
-<p class="step-subtitle">Add auditions you've had recently, or import from a spreadsheet.</p>
+<p class="step-subtitle">Add a few auditions you've had recently.</p>
 
-<div class="wizard-two-panel">
-
-    <!--- Import panel --->
-    <div class="panel-import">
-        <h6 class="text-muted mb-2">Import from file</h6>
-        <div class="wizard-dropzone" id="aud-import-dropzone" style="opacity:0.6;cursor:default;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            <div>Coming soon</div>
-            <div class="text-muted" style="font-size:12px;">Import auditions from the Auditions page after setup.</div>
-        </div>
-    </div>
-
-    <div class="panel-divider">or</div>
-
-    <!--- Manual quick-add --->
-    <div class="panel-manual">
-        <h6 class="text-muted mb-2">Add manually</h6>
+<!--- Manual quick-add (bulk import lives on the Auditions page, post-setup) --->
+<div class="panel-manual">
         <div id="manual-auditions">
             <div class="audition-entry border rounded p-3 mb-2">
                 <div class="row g-2">
@@ -80,7 +67,9 @@
         </a>
     </div>
 
-</div>
+    <p class="text-muted mt-3" style="font-size:13px;">
+        Have a stack of auditions to bring in? You'll be able to bulk-import them from the Auditions page once setup is finished.
+    </p>
 
 <script>
 // Pre-build category options for dynamic rows. Value is audsubcatid ("Other"
