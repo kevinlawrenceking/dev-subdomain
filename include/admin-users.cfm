@@ -34,6 +34,12 @@
                 <button id="btnCreateUser" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#userModal">
                     + New User
                 </button>
+                <!--- TAO-SETUP-TEST-HARNESS-01 D2: dev-only setup-test provisioner --->
+                <cfif structKeyExists(application, "dsn") AND application.dsn EQ "abod">
+                    <button id="btnOpenTestSetup" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#testSetupModal" title="Provision a setup-test user (dev only)">
+                        Create Test Setup User
+                    </button>
+                </cfif>
             </div>
         </div>
 
@@ -192,6 +198,50 @@
     </div>
 </div>
 
+<!--- TAO-SETUP-TEST-HARNESS-01 D2: dev-only setup-test provisioner modal --->
+<cfif structKeyExists(application, "dsn") AND application.dsn EQ "abod">
+<div class="modal fade" id="testSetupModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create Test Setup User <span class="badge bg-secondary">dev only</span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="testSetupAlert" class="alert d-none"></div>
+                <p class="text-muted small mb-3">
+                    Provisions a user in pre-setup state (userstatus=Setup, is_setup_test=1) and runs full
+                    provisioning. This user's setup email redirects to the test admin's inbox.
+                </p>
+                <div class="mb-3">
+                    <label class="form-label">Contact Name *</label>
+                    <input type="text" id="tsContactName" class="form-control form-control-sm" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Email</label>
+                    <input type="email" id="tsEmail" class="form-control form-control-sm" placeholder="blank = auto-generate setup-test+{epoch}@theactorsoffice.com">
+                </div>
+                <div class="row">
+                    <div class="col-6 mb-3">
+                        <label class="form-label">Test Admin User ID</label>
+                        <input type="number" id="tsAdminUserid" class="form-control form-control-sm" value="<cfoutput>#val(session.userid)#</cfoutput>">
+                        <div class="form-text">Inbox that receives this user's setup email.</div>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <label class="form-label">Password</label>
+                        <input type="text" id="tsPassword" class="form-control form-control-sm" placeholder="blank = default dev password">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" id="btnRunTestSetup" class="btn btn-primary btn-sm">Create Test User</button>
+            </div>
+        </div>
+    </div>
+</div>
+</cfif>
+
 <script>
 (function() {
     var $ = jQuery;
@@ -207,6 +257,36 @@
             type: 'POST',
             data: data,
             headers: { 'X-CSRF-Token': csrfToken }
+        });
+    }
+
+    // TAO-SETUP-TEST-HARNESS-01 D2: dev-only setup-test provisioner. Routes through
+    // adminPost() so it uses the same central-CSRF path as every other admin action.
+    function tsSetupAlert(msg, ok) {
+        $('#testSetupAlert').removeClass('d-none alert-success alert-danger')
+            .addClass(ok ? 'alert-success' : 'alert-danger').text(msg);
+    }
+
+    function provisionTestSetup() {
+        var name = $.trim($('#tsContactName').val());
+        if (!name) { tsSetupAlert('Contact name is required.', false); return; }
+        $('#btnRunTestSetup').prop('disabled', true).text('Creating...');
+        adminPost(AJAX_BASE + 'create-test-setup.cfm', {
+            contactName: name,
+            email: $.trim($('#tsEmail').val()),
+            testAdminUserid: $.trim($('#tsAdminUserid').val()),
+            password: $('#tsPassword').val()
+        }).done(function(r) {
+            if (r && r.success) {
+                tsSetupAlert('Created userid ' + r.data.userid + ' (' + r.data.email + '). Reloading...', true);
+                setTimeout(function() { location.reload(); }, 1300);
+            } else {
+                tsSetupAlert((r && r.message) ? r.message : 'Provision failed.', false);
+            }
+        }).fail(function(xhr) {
+            tsSetupAlert('Request failed (' + xhr.status + '). ' + (xhr.responseText || ''), false);
+        }).always(function() {
+            $('#btnRunTestSetup').prop('disabled', false).text('Create Test User');
         });
     }
 
@@ -565,6 +645,14 @@
         $('#btnSaveUser').on('click', function() {
             saveUser();
         });
+
+        // TAO-SETUP-TEST-HARNESS-01 D2: dev-only. Explicit presence guard so the handler
+        // never binds on prod, where the button/modal are not rendered (application.dsn gate).
+        if (document.getElementById('btnRunTestSetup')) {
+            $('#btnRunTestSetup').on('click', function() {
+                provisionTestSetup();
+            });
+        }
 
         $('#userForm').on('keydown', function(e) {
             if (e.key === 'Enter') {
