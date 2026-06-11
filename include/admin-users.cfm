@@ -219,7 +219,7 @@
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Email</label>
-                    <input type="email" id="tsEmail" class="form-control form-control-sm" placeholder="blank = auto-generate setup-test+{epoch}@theactorsoffice.com">
+                    <input type="email" id="tsEmail" class="form-control form-control-sm" autocomplete="off" placeholder="blank = auto-generate setup-test+{epoch}@theactorsoffice.com">
                 </div>
                 <div class="row">
                     <div class="col-6 mb-3">
@@ -229,7 +229,7 @@
                     </div>
                     <div class="col-6 mb-3">
                         <label class="form-label">Password</label>
-                        <input type="text" id="tsPassword" class="form-control form-control-sm" placeholder="blank = default dev password">
+                        <input type="text" id="tsPassword" class="form-control form-control-sm" autocomplete="off" placeholder="blank = default dev password">
                     </div>
                 </div>
             </div>
@@ -278,8 +278,8 @@
             password: $('#tsPassword').val()
         }).done(function(r) {
             if (r && r.success) {
-                tsSetupAlert('Created userid ' + r.data.userid + ' (' + r.data.email + '). Reloading...', true);
-                setTimeout(function() { location.reload(); }, 1300);
+                // Show the exact login creds (incl. the real password used) so autofill can't hide them.
+                tsSetupAlert('Created userid ' + r.data.userid + ' — login: ' + r.data.email + '  /  ' + r.data.password, true);
             } else {
                 tsSetupAlert((r && r.message) ? r.message : 'Provision failed.', false);
             }

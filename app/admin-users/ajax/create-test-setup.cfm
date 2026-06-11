@@ -178,7 +178,9 @@
     <cfelse>
         <cfset variables.response.success = true>
         <cfset variables.response.message = "Test setup user " & variables.newUserId & " created (" & variables.email & ").">
-        <cfset variables.response.data = { "userid": variables.newUserId, "email": variables.email }>
+        <!--- Return the actual password used so the operator always has working creds,
+              even if the field was autofilled/non-empty (dev-only endpoint, throwaway user). --->
+        <cfset variables.response.data = { "userid": variables.newUserId, "email": variables.email, "password": variables.password }>
         <cflog file="TAO_setup_test_harness"
                text="provision: COMMITTED test userid=#variables.newUserId# contactid=#variables.qChk.user_contactid# by admin=#session.userid#">
     </cfif>
