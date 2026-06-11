@@ -1,10 +1,35 @@
 <!---
     P11 Step 6: My Links
-    Pre-populated link rows from sitelinks_user_tbl (bootstrapped during setup).
-    User fills in URLs for their casting profiles and social media.
+    TEMPORARILY shown as an informational page (request 2026-06-11).
+    The functional links editor is preserved below, disabled via <cfif false>
+    (hidden, NOT deleted). To restore: change the <cfif false> to <cfif true>
+    and remove the informational panel + wizardCollectStepData override below.
 --->
 <cfset userid = session.userid>
 
+<!--- Informational placeholder shown while the Links editor is hidden. --->
+<cfoutput>
+<h3>Your casting profiles and links</h3>
+<p class="step-subtitle">Almost done.</p>
+<div class="wizard-tutorial" style="margin-top:8px;">
+    You'll be able to add your casting profiles and social media links after setup is
+    complete -- they'll live on your dashboard, ready to fill in whenever you like.
+    Nothing to do here for now; just click <strong>Next</strong> to continue.
+</div>
+</cfoutput>
+
+<script>
+// Links step is informational for now -- nothing to collect; Next advances cleanly.
+window.wizardCollectStepData = function() {
+    return { existingLinks: '[]', customLinks: '[]' };
+};
+</script>
+
+<!--- ============================================================
+      HIDDEN (not deleted): original My Links editor. Flip the cfif
+      below to true to restore it (and remove the panel/script above).
+      ============================================================ --->
+<cfif false>
 <!--- Fetch existing site links for this user --->
 <cfquery name="qLinks" datasource="#application.datasource#">
     SELECT sl.id, sl.sitename, sl.siteurl, sl.siteicon, sl.iscustom,
@@ -141,3 +166,4 @@ window.wizardCollectStepData = function() {
 </script>
 
 </cfoutput>
+</cfif>
