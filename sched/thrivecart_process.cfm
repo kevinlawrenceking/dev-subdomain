@@ -54,12 +54,53 @@
             WHERE id = <cfqueryparam cfsqltype="cf_sql_integer" value="#new_id#" />
         </cfquery>
 
+        <!--- TAO-SETUP-TEST-HARNESS-01 (D3): setup-test email redirect.
+              A test thrivecart row is flagged IsDemo=1 and carries the admin userid in
+              thrivecart_tbl.userid. For those rows, send the setup email to that admin
+              (with a [TEST] subject) instead of the customer. Real rows (IsDemo=0) are
+              unchanged. Fail-safe: IsDemo=1 with no resolvable admin email -> suppress +
+              log, never fall through to the synthetic customer address. --->
+        <cfset mailTo = new_customerEmail />
+        <cfset subjectPrefix = "" />
+        <cfset suppressSend = false />
+        <cfquery name="qTestFlag" datasource="#application.dsn#">
+            SELECT IsDemo, userid AS test_admin_userid
+            FROM thrivecart_tbl
+            WHERE id = <cfqueryparam value="#new_id#" cfsqltype="cf_sql_integer" />
+        </cfquery>
+        <cfif qTestFlag.recordCount AND val(qTestFlag.IsDemo) EQ 1>
+            <cfif isNumeric(qTestFlag.test_admin_userid) AND val(qTestFlag.test_admin_userid) GT 0>
+                <cfquery name="qTestAdmin" datasource="#application.dsn#">
+                    SELECT userEmail FROM taousers
+                    WHERE userid = <cfqueryparam value="#val(qTestFlag.test_admin_userid)#" cfsqltype="cf_sql_integer" />
+                </cfquery>
+                <cfif qTestAdmin.recordCount AND len(trim(qTestAdmin.userEmail))>
+                    <cfset mailTo = trim(qTestAdmin.userEmail) />
+                    <cfset subjectPrefix = "[TEST] " />
+                    <cflog file="TAO_setup_test_harness"
+                           text="thrivecart_process: test row id=#new_id# -> redirecting setup email to admin #qTestFlag.test_admin_userid# (#mailTo#).">
+                <cfelse>
+                    <cfset suppressSend = true />
+                    <cflog file="TAO_setup_test_harness" type="warning"
+                           text="thrivecart_process: test row id=#new_id# IsDemo=1 but admin userid=#qTestFlag.test_admin_userid# has no email; suppressing (fail-safe).">
+                </cfif>
+            <cfelse>
+                <cfset suppressSend = true />
+                <cflog file="TAO_setup_test_harness" type="warning"
+                       text="thrivecart_process: test row id=#new_id# IsDemo=1 but no admin userid; suppressing (fail-safe).">
+            </cfif>
+        </cfif>
+
         <cftry>
-            <cfmail 
-                from="support@theactorsoffice.com" 
-                to="#new_customerEmail#"  
+            <cfif suppressSend>
+                <cflog file="TAO_setup_test_harness" type="warning"
+                       text="thrivecart_process: test row id=#new_id# send suppressed; marking Emailed without sending.">
+            <cfelse>
+            <cfmail
+                from="support@theactorsoffice.com"
+                to="#mailTo#"
                 bcc="kevinking7135@gmail.com"
-                subject="#new_customerfirst#, set up your profile for The Actor's Office!" 
+                subject="#subjectPrefix##new_customerfirst#, set up your profile for The Actor's Office!"
                 type="HTML">
             <HTML>
 
@@ -99,7 +140,8 @@
 
             </HTML>
             </cfmail>
-            
+            </cfif>
+
             <cfcatch type="any">
                 <cflog file="TAO_thrivecart_mail_errors" 
                        text="Mail error for ThriveCart ID #new_id# (#new_customerEmail#): #cfcatch.message# - #cfcatch.detail#" 

@@ -1,52 +1,37 @@
 <cfsilent>
 <!---
-    TAO-SETUP-TEST-HARNESS-01 (D2) - Provision a setup-test user (Option A)
+    TAO-SETUP-TEST-HARNESS-01 (D3) - Provision a TEST setup purchase (thrivecart-driven)
     POST /app/admin-users/ajax/create-test-setup.cfm
 
-    Creates a taousers_tbl row directly in pre-setup state (NO setup2.cfm,
-    NO thrivecart row), then runs standard provisioning (self-contact +
-    *_user lookups + media dirs) via setup/user_setup_core.cfm.
+    Inserts a TEST row into thrivecart_tbl: cloned product codes, status='Pending',
+    IsDemo=1, linked to an admin via thrivecart_tbl.userid. The standard scheduled
+    task (sched/thrivecart_process.cfm) then generates the uuid and sends the setup
+    email -- redirected to that admin (resolver lives in thrivecart_process.cfm).
+    The admin clicks GET STARTED -> /setup/ -> setup2.cfm creates the real test user.
 
-    SCOPE CONTRACT (verified by read):
-      setup2.cfm sets select_userid (:110), includes user_setup_core (:148),
-      THEN sets session.userid (:151) -- include runs before session.userid exists.
-      user_setup_core.cfm reads select_userid (:15-17,35,41), and a grep proves it
-      reads NO session.userid/uid/uuid and includes no sub-files. So we set
-      variables.select_userid and never touch session.userid (no admin-session hijack).
+    NOTE: no taousers row is created here -- setup2 creates it when the link is clicked.
+    CustomerID is set to a unique numeric value because setup2.cfm:38 requires
+    customerid numeric > 0.
 
-    TRANSACTION STRUCTURE (Architect ruling):
-      1. INSERT taousers_tbl in its OWN short transaction; commit; capture newUserId.
-      2. Run user_setup_core.cfm OUTSIDE any transaction (mirrors prod setup2: txn
-         closes :118, include runs :148 outside it). user_setup_core issues no DDL
-         (grep-confirmed) and swallows its own per-table errors, so a wrapping txn
-         never delivered atomicity anyway, and wrapping would hold write locks across
-         cfdirectory I/O on shared hosting.
-      3. Post-condition guard: re-query base tables for taousers_tbl.contactid set AND
-         a user_yn='Y' row in contactdetails_tbl.
-      4. On post-condition failure: soft-delete the user (IsDeleted=1) and mangle the
-         email to free the unique slot. Orphaned lookup rows/dirs are D5/reset's job.
+    Product codes cloned from a real row (BaseProductLabel/ID + BasePaymentPlanID that
+    the thrivecart_process paymentplans JOIN requires).
 
-    Ruling 2: snapshot the 12 session.user* keys user_setup_core.cfm overwrites
-      (:77-88) and restore them in cffinally so the admin's session is not corrupted.
-
-    DEV/UAT ONLY (allow-list: application.dsn EQ 'abod'). Prod (abo) hard-aborts.
-    Auth + role enforced by admin-guard.cfm; CSRF by app/Application.cfc.
-
+    DEV/UAT ONLY (allow-list: application.dsn EQ 'abod'). Auth+role via admin-guard.
     Form params: contactName (required), email (blank -> auto-generate),
-                 testAdminUserid (default session.userid), password (blank -> default dev pw)
-    Returns JSON: { success, message, data:{ userid, email } }
+                 testAdminUserid (admin to receive the redirected setup email; default session.userid)
+    Returns JSON: { success, message, data:{ thrivecartId, customerEmail, adminUserid, adminEmail } }
 --->
 <cfset variables.isAjax = true>
 <cfinclude template="../admin-guard.cfm">
 
 <cfset variables.response = { "success": false, "message": "", "data": {} }>
 
-<!--- Allow-list env gate: permit ONLY the dev/UAT datasource; prod 'abo' denied. --->
+<!--- Allow-list env gate: dev/UAT only. --->
 <cfset variables.allowedDsns = "abod">
 <cfif NOT structKeyExists(application, "dsn") OR NOT listFindNoCase(variables.allowedDsns, application.dsn)>
     <cfset variables.response.message = "Test setup provisioning is available on the dev environment only.">
     <cflog file="TAO_setup_test_harness" type="warning"
-           text="provision BLOCKED on non-allowed dsn=#structKeyExists(application,'dsn') ? application.dsn : '(unset)'# by admin=#session.userid#">
+           text="provision BLOCKED on dsn=#structKeyExists(application,'dsn') ? application.dsn : '(unset)'# by admin=#session.userid#">
     <cfheader statuscode="403">
     <cfcontent type="application/json; charset=utf-8" reset="true"><cfoutput>#serializeJSON(variables.response)#</cfoutput><cfabort>
 </cfif>
@@ -55,141 +40,80 @@
     <cfparam name="form.contactName" default="">
     <cfparam name="form.email" default="">
     <cfparam name="form.testAdminUserid" default="#session.userid#">
-    <cfparam name="form.password" default="">
 
     <cfset variables.contactName = trim(form.contactName)>
     <cfif NOT len(variables.contactName)>
         <cfset variables.response.message = "Contact name is required.">
         <cfcontent type="application/json; charset=utf-8" reset="true"><cfoutput>#serializeJSON(variables.response)#</cfoutput><cfabort>
     </cfif>
-
-    <!--- Best-effort first/last split; last falls back to 'Test'. --->
     <cfset variables.firstName = trim(listFirst(variables.contactName, " "))>
     <cfset variables.lastName = trim(listRest(variables.contactName, " "))>
     <cfif NOT len(variables.lastName)><cfset variables.lastName = "Test"></cfif>
 
-    <!--- C4: auto-unique email with sub-second entropy (ms tick + short uuid) so two
-          provisions in the same second cannot collide. --->
+    <!--- Auto-unique customer email (the would-be user's email). --->
     <cfset variables.email = trim(form.email)>
     <cfif NOT len(variables.email)>
         <cfset variables.email = "setup-test+" & getTickCount() & "-" & left(lCase(replace(createUUID(), "-", "", "all")), 6) & "@theactorsoffice.com">
     </cfif>
 
-    <!--- Default dev test password (reachable ONLY behind the env gate above). --->
-    <cfset variables.password = len(trim(form.password)) ? trim(form.password) : "TestSetup123!">
+    <cfset variables.adminUserid = val(form.testAdminUserid)>
+    <cfif variables.adminUserid LTE 0><cfset variables.adminUserid = val(session.userid)></cfif>
 
-    <cfset variables.testAdminUserid = val(form.testAdminUserid)>
-    <cfif variables.testAdminUserid LTE 0><cfset variables.testAdminUserid = val(session.userid)></cfif>
+    <!--- Unique numeric customerid (setup2.cfm:38 requires numeric > 0) + unique test invoice id. --->
+    <cfset variables.testCustomerId = getTickCount()>
+    <cfset variables.testInvoiceId = "TEST-" & getTickCount() & "-" & left(lCase(replace(createUUID(), "-", "", "all")), 6)>
 
-    <!--- C3: hashing mirrors setup2.cfm:50,104 so login2.cfm:389 reproduces the hash.
-          login compares Hash(password & salt, "SHA-512") to stored passwordHash. --->
-    <cfset variables.passwordSalt = hash(generateSecretKey("AES"), "SHA-512")>
-    <cfset variables.passwordHash = hash(variables.password & variables.passwordSalt, "SHA-512")>
-
-    <!--- (1) INSERT the user row in its OWN short transaction (mirrors setup2.cfm:96-108
-          column set; avatarname=firstName per setup2:103) into the BASE table. --->
+    <!--- Insert the test thrivecart row (Pending so the scheduled task picks it up). --->
     <cftransaction>
-        <cfquery name="variables.qIns" result="variables.insResult" datasource="#application.dsn#">
-            INSERT INTO taousers_tbl (
-                customerid, userfirstName, userLastName, userEmail, avatarname,
-                passwordHash, passwordSalt, userstatus, setup_step, setup_completed_at,
-                is_setup_test, test_email_redirect_userid
+        <cfquery result="variables.insResult" datasource="#application.dsn#">
+            INSERT INTO thrivecart_tbl (
+                CustomerFirst, CustomerLast, CustomerFullName, CustomerEmail,
+                BaseProductLabel, BaseProductID, BasePaymentPlanID,
+                CustomerID, InvoiceID, OrderDate, status, IsDemo, IsDeleted, userid
             ) VALUES (
-                NULL,
                 <cfqueryparam value="#variables.firstName#" cfsqltype="cf_sql_varchar">,
                 <cfqueryparam value="#variables.lastName#" cfsqltype="cf_sql_varchar">,
+                <cfqueryparam value="#variables.firstName# #variables.lastName#" cfsqltype="cf_sql_varchar">,
                 <cfqueryparam value="#variables.email#" cfsqltype="cf_sql_varchar">,
-                <cfqueryparam value="#variables.firstName#" cfsqltype="cf_sql_varchar">,
-                <cfqueryparam value="#variables.passwordHash#" cfsqltype="cf_sql_char">,
-                <cfqueryparam value="#variables.passwordSalt#" cfsqltype="cf_sql_char">,
-                <cfqueryparam value="Setup" cfsqltype="cf_sql_varchar">,
-                <cfqueryparam value="0" cfsqltype="cf_sql_tinyint">,
-                NULL,
+                <cfqueryparam value="The Actor's Office" cfsqltype="cf_sql_varchar">,
+                <cfqueryparam value="24201" cfsqltype="cf_sql_varchar">,
+                <cfqueryparam value="95048" cfsqltype="cf_sql_varchar">,
+                <cfqueryparam value="#variables.testCustomerId#" cfsqltype="cf_sql_varchar">,
+                <cfqueryparam value="#variables.testInvoiceId#" cfsqltype="cf_sql_varchar">,
+                <cfqueryparam value="#now()#" cfsqltype="cf_sql_timestamp">,
+                <cfqueryparam value="Pending" cfsqltype="cf_sql_varchar">,
                 <cfqueryparam value="1" cfsqltype="cf_sql_tinyint">,
-                <cfqueryparam value="#variables.testAdminUserid#" cfsqltype="cf_sql_integer">
+                <cfqueryparam value="0" cfsqltype="cf_sql_tinyint">,
+                <cfqueryparam value="#variables.adminUserid#" cfsqltype="cf_sql_integer">
             )
         </cfquery>
     </cftransaction>
-    <cfset variables.newUserId = variables.insResult.generatedKey>
-    <cflog file="TAO_setup_test_harness"
-           text="provision: inserted test userid=#variables.newUserId# email=#variables.email# redirect_userid=#variables.testAdminUserid# by admin=#session.userid#">
+    <cfset variables.tcId = variables.insResult.generatedKey>
 
-    <!--- Ruling 2: snapshot the 12 session.user* keys user_setup_core overwrites (:77-88). --->
-    <cfset variables.sessionKeys = ["userMediaPath","userMediaUrl","userContactsPath","userContactsUrl",
-        "userImportsPath","userImportsUrl","userExportsPath","userExportsUrl",
-        "userSharePath","userShareUrl","userAvatarPath","userAvatarUrl"]>
-    <cfset variables.sessionSnapshot = {}>
-    <cfloop array="#variables.sessionKeys#" index="variables.sk">
-        <cfif structKeyExists(session, variables.sk)>
-            <cfset variables.sessionSnapshot[variables.sk] = session[variables.sk]>
-        </cfif>
-    </cfloop>
-
-    <!--- (2) Provision OUTSIDE any transaction. Contract: user_setup_core.cfm reads
-          select_userid from the variables scope (C6). --->
-    <cfset variables.provisionError = "">
-    <cftry>
-        <cfset variables.select_userid = variables.newUserId>
-        <cfinclude template="/setup/user_setup_core.cfm">
-        <cfcatch type="any">
-            <cfset variables.provisionError = cfcatch.message>
-            <cflog file="TAO_setup_test_harness" type="error"
-                   text="provision: user_setup_core threw for userid=#variables.newUserId#: #cfcatch.message# | #cfcatch.detail#">
-        </cfcatch>
-        <cffinally>
-            <!--- Restore admin session keys (set->restore, absent->remove). --->
-            <cfloop array="#variables.sessionKeys#" index="variables.sk">
-                <cfif structKeyExists(variables.sessionSnapshot, variables.sk)>
-                    <cfset session[variables.sk] = variables.sessionSnapshot[variables.sk]>
-                <cfelseif structKeyExists(session, variables.sk)>
-                    <cfset structDelete(session, variables.sk)>
-                </cfif>
-            </cfloop>
-            <cflog file="TAO_setup_test_harness"
-                   text="provision: restored #structCount(variables.sessionSnapshot)# admin session key(s) for admin=#session.userid#">
-        </cffinally>
-    </cftry>
-
-    <!--- (3) Post-condition guard (the real silent-failure catch). --->
-    <cfquery name="variables.qChk" datasource="#application.dsn#">
-        SELECT
-            (SELECT contactid FROM taousers_tbl
-              WHERE userid = <cfqueryparam value="#variables.newUserId#" cfsqltype="cf_sql_integer">) AS user_contactid,
-            (SELECT COUNT(*) FROM contactdetails_tbl
-              WHERE userid = <cfqueryparam value="#variables.newUserId#" cfsqltype="cf_sql_integer">
-                AND user_yn = 'Y') AS self_contacts
+    <!--- Resolve the admin's email for the operator message. --->
+    <cfquery name="variables.qAdmin" datasource="#application.dsn#">
+        SELECT userEmail FROM taousers
+        WHERE userid = <cfqueryparam value="#variables.adminUserid#" cfsqltype="cf_sql_integer">
     </cfquery>
+    <cfset variables.adminEmail = (variables.qAdmin.recordCount AND len(trim(variables.qAdmin.userEmail))) ? trim(variables.qAdmin.userEmail) : "(no email on file)">
 
-    <cfif val(variables.qChk.user_contactid) LTE 0 OR val(variables.qChk.self_contacts) EQ 0>
-        <!--- (4) Soft-delete + mangle email to free the unique slot. Do NOT chase orphans here. --->
-        <cfquery datasource="#application.dsn#">
-            UPDATE taousers_tbl
-            SET IsDeleted = 1,
-                userEmail = CONCAT('deleted_', userid, '_', UNIX_TIMESTAMP())
-            WHERE userid = <cfqueryparam value="#variables.newUserId#" cfsqltype="cf_sql_integer">
-        </cfquery>
-        <cfset variables.response.success = false>
-        <cfset variables.response.message =
-            "Provisioning failed post-condition (contactid=#variables.qChk.user_contactid#, self_contacts=#variables.qChk.self_contacts#"
-            & (len(variables.provisionError) ? "; error=" & variables.provisionError : "")
-            & "); user soft-deleted. No usable user created.">
-        <cflog file="TAO_setup_test_harness" type="error"
-               text="provision SOFT-DELETED userid=#variables.newUserId#: post-condition failed contactid=#variables.qChk.user_contactid# self_contacts=#variables.qChk.self_contacts# provisionError=#variables.provisionError#">
-    <cfelse>
-        <cfset variables.response.success = true>
-        <cfset variables.response.message = "Test setup user " & variables.newUserId & " created (" & variables.email & ").">
-        <!--- Return the actual password used so the operator always has working creds,
-              even if the field was autofilled/non-empty (dev-only endpoint, throwaway user). --->
-        <cfset variables.response.data = { "userid": variables.newUserId, "email": variables.email, "password": variables.password }>
-        <cflog file="TAO_setup_test_harness"
-               text="provision: COMMITTED test userid=#variables.newUserId# contactid=#variables.qChk.user_contactid# by admin=#session.userid#">
-    </cfif>
+    <cflog file="TAO_setup_test_harness"
+           text="provision: created TEST thrivecart id=#variables.tcId# customerEmail=#variables.email# customerid=#variables.testCustomerId# admin=#variables.adminUserid# by admin=#session.userid#">
+
+    <cfset variables.response.success = true>
+    <cfset variables.response.message = "Test purchase created (thrivecart id " & variables.tcId & "). The setup email will go to " & variables.adminEmail & " (admin " & variables.adminUserid & ") next time the thrivecart scheduled task runs. Click GET STARTED in that email to run setup.">
+    <cfset variables.response.data = {
+        "thrivecartId": variables.tcId,
+        "customerEmail": variables.email,
+        "adminUserid": variables.adminUserid,
+        "adminEmail": variables.adminEmail
+    }>
 
     <cfcatch type="any">
         <cfset variables.response.success = false>
-        <cfset variables.response.message = "Provision error: " & cfcatch.message>
+        <cfset variables.response.message = "Provision failed: " & cfcatch.message & (structKeyExists(cfcatch,"detail") AND len(cfcatch.detail) ? " | " & cfcatch.detail : "")>
         <cflog file="TAO_setup_test_harness" type="error"
-               text="provision OUTER error admin=#session.userid#: #cfcatch.message#">
+               text="provision FAILED admin=#session.userid#: #cfcatch.message# | #(structKeyExists(cfcatch,'detail') ? cfcatch.detail : '')#">
     </cfcatch>
 </cftry>
 </cfsilent>

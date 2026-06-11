@@ -210,8 +210,8 @@
             <div class="modal-body">
                 <div id="testSetupAlert" class="alert d-none"></div>
                 <p class="text-muted small mb-3">
-                    Provisions a user in pre-setup state (userstatus=Setup, is_setup_test=1) and runs full
-                    provisioning. This user's setup email redirects to the test admin's inbox.
+                    Creates a flagged test purchase (IsDemo) so the standard scheduled task sends the real
+                    setup email -- redirected to the admin below. Click GET STARTED in that email to run setup.
                 </p>
                 <div class="mb-3">
                     <label class="form-label">Contact Name *</label>
@@ -222,14 +222,10 @@
                     <input type="email" id="tsEmail" class="form-control form-control-sm" autocomplete="off" placeholder="blank = auto-generate setup-test+{epoch}@theactorsoffice.com">
                 </div>
                 <div class="row">
-                    <div class="col-6 mb-3">
-                        <label class="form-label">Test Admin User ID</label>
+                    <div class="col-12 mb-3">
+                        <label class="form-label">Send setup email to (admin user ID)</label>
                         <input type="number" id="tsAdminUserid" class="form-control form-control-sm" value="<cfoutput>#val(session.userid)#</cfoutput>">
-                        <div class="form-text">Inbox that receives this user's setup email.</div>
-                    </div>
-                    <div class="col-6 mb-3">
-                        <label class="form-label">Password</label>
-                        <input type="text" id="tsPassword" class="form-control form-control-sm" autocomplete="off" placeholder="blank = default dev password">
+                        <div class="form-text">The test purchase's setup email is redirected to this admin's inbox.</div>
                     </div>
                 </div>
             </div>
@@ -274,15 +270,10 @@
         adminPost(AJAX_BASE + 'create-test-setup.cfm', {
             contactName: name,
             email: $.trim($('#tsEmail').val()),
-            testAdminUserid: $.trim($('#tsAdminUserid').val()),
-            password: $('#tsPassword').val()
+            testAdminUserid: $.trim($('#tsAdminUserid').val())
         }).done(function(r) {
-            if (r && r.success) {
-                // Show the exact login creds (incl. the real password used) so autofill can't hide them.
-                tsSetupAlert('Created userid ' + r.data.userid + ' — login: ' + r.data.email + '  /  ' + r.data.password, true);
-            } else {
-                tsSetupAlert((r && r.message) ? r.message : 'Provision failed.', false);
-            }
+            // Backend message describes where the setup email will be sent.
+            tsSetupAlert((r && r.message) ? r.message : (r && r.success ? 'Test purchase created.' : 'Provision failed.'), !!(r && r.success));
         }).fail(function(xhr) {
             tsSetupAlert('Request failed (' + xhr.status + '). ' + (xhr.responseText || ''), false);
         }).always(function() {
