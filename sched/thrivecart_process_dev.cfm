@@ -21,7 +21,7 @@
 
 <cfset to_email = "kevinking7135@gmail.com" />
 
-<cfquery result="result"  name="U" datasa">
+<cfquery result="result"  name="U" datasource="abod">
     SELECT th.id
     ,th.CustomerFirst
     ,th.CustomerLast
