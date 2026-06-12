@@ -21,7 +21,7 @@
 
 <cfset to_email = "kevinking7135@gmail.com" />
 
-<cfquery result="result"  name="U" datasource="#application.dsn#">
+<cfquery result="result"  name="U" datasa">
     SELECT th.id
     ,th.CustomerFirst
     ,th.CustomerLast
@@ -48,7 +48,7 @@
             <cfset new_planName = "#u.planName#" />
         </cfoutput>
 
-        <cfquery result="result" name="update" datasource="#application.dsn#">
+        <cfquery result="result" name="update" datasource="abod">
             UPDATE thrivecart
             SET uuid = <cfqueryparam cfsqltype="cf_sql_varchar" value="#new_uuid#" />
             WHERE id = <cfqueryparam cfsqltype="cf_sql_integer" value="#new_id#" />
@@ -63,14 +63,14 @@
         <cfset mailTo = new_customerEmail />
         <cfset subjectPrefix = "" />
         <cfset suppressSend = false />
-        <cfquery name="qTestFlag" datasource="#application.dsn#">
+        <cfquery name="qTestFlag" datasource="abod">
             SELECT IsDemo, userid AS test_admin_userid
             FROM thrivecart_tbl
             WHERE id = <cfqueryparam value="#new_id#" cfsqltype="cf_sql_integer" />
         </cfquery>
         <cfif qTestFlag.recordCount AND val(qTestFlag.IsDemo) EQ 1>
             <cfif isNumeric(qTestFlag.test_admin_userid) AND val(qTestFlag.test_admin_userid) GT 0>
-                <cfquery name="qTestAdmin" datasource="#application.dsn#">
+                <cfquery name="qTestAdmin" datasource="abod">
                     SELECT userEmail FROM taousers
                     WHERE userid = <cfqueryparam value="#val(qTestFlag.test_admin_userid)#" cfsqltype="cf_sql_integer" />
                 </cfquery>
@@ -152,7 +152,7 @@
             </cfcatch>
         </cftry>
 
-        <cfquery result="result" name="update2" datasource="#application.dsn#">
+        <cfquery result="result" name="update2" datasource="abod">
             UPDATE thrivecart
             SET status = <cfqueryparam cfsqltype="cf_sql_varchar" value="Emailed" />
             WHERE id = <cfqueryparam cfsqltype="cf_sql_integer" value="#new_id#" />
