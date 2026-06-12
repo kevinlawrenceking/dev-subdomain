@@ -4,7 +4,14 @@
       request of the session or when a profile update sets the bust flag.
       MIGRATE: In Go, this becomes a JWT claims payload or Redis-cached user struct. --->
 <cfif NOT structKeyExists(session, "cachedUserData")
-      OR (structKeyExists(session, "bustUserCache") AND session.bustUserCache)>
+      OR (structKeyExists(session, "bustUserCache") AND session.bustUserCache)
+      OR (structKeyExists(session, "userid")
+          AND structKeyExists(session.cachedUserData, "userId")
+          AND val(session.cachedUserData.userId) NEQ val(session.userid))>
+    <!--- Refresh when absent, explicitly busted, OR the cached struct belongs to a
+          different user than the one now authenticated in the session. The last clause
+          prevents stale identity after logging in as a different user within the same
+          session (e.g. switching between an admin and a setup-test user). --->
     <cfset userService = request.svc("UserService")>
     <cfset session.cachedUserData = userService.getUserById(userID)>
     <cfset session.bustUserCache = false>
