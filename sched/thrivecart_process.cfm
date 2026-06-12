@@ -63,33 +63,46 @@
         <cfset mailTo = new_customerEmail />
         <cfset subjectPrefix = "" />
         <cfset suppressSend = false />
-        <cfquery name="qTestFlag" datasource="#application.dsn#">
-            SELECT IsDemo, userid AS test_admin_userid
-            FROM thrivecart_tbl
-            WHERE id = <cfqueryparam value="#new_id#" cfsqltype="cf_sql_integer" />
-        </cfquery>
-        <cfif qTestFlag.recordCount AND val(qTestFlag.IsDemo) EQ 1>
-            <cfif isNumeric(qTestFlag.test_admin_userid) AND val(qTestFlag.test_admin_userid) GT 0>
-                <cfquery name="qTestAdmin" datasource="#application.dsn#">
-                    SELECT userEmail FROM taousers
-                    WHERE userid = <cfqueryparam value="#val(qTestFlag.test_admin_userid)#" cfsqltype="cf_sql_integer" />
-                </cfquery>
-                <cfif qTestAdmin.recordCount AND len(trim(qTestAdmin.userEmail))>
-                    <cfset mailTo = trim(qTestAdmin.userEmail) />
-                    <cfset subjectPrefix = "[TEST] " />
-                    <cflog file="TAO_setup_test_harness"
-                           text="thrivecart_process: test row id=#new_id# -> redirecting setup email to admin #qTestFlag.test_admin_userid# (#mailTo#).">
+        <!--- PROD-SAFE: if thrivecart_tbl has no IsDemo/userid columns (a prod schema
+              without the test fields) or any error occurs, fall back to a normal
+              customer send so real welcome emails are never blocked. --->
+        <cftry>
+            <cfquery name="qTestFlag" datasource="#application.dsn#">
+                SELECT IsDemo, userid AS test_admin_userid
+                FROM thrivecart_tbl
+                WHERE id = <cfqueryparam value="#new_id#" cfsqltype="cf_sql_integer" />
+            </cfquery>
+            <cfif qTestFlag.recordCount AND val(qTestFlag.IsDemo) EQ 1>
+                <cfif isNumeric(qTestFlag.test_admin_userid) AND val(qTestFlag.test_admin_userid) GT 0>
+                    <cfquery name="qTestAdmin" datasource="#application.dsn#">
+                        SELECT userEmail FROM taousers
+                        WHERE userid = <cfqueryparam value="#val(qTestFlag.test_admin_userid)#" cfsqltype="cf_sql_integer" />
+                    </cfquery>
+                    <cfif qTestAdmin.recordCount AND len(trim(qTestAdmin.userEmail))>
+                        <cfset mailTo = trim(qTestAdmin.userEmail) />
+                        <cfset subjectPrefix = "[TEST] " />
+                        <cflog file="TAO_setup_test_harness"
+                               text="thrivecart_process: test row id=#new_id# -> redirecting setup email to admin #qTestFlag.test_admin_userid# (#mailTo#).">
+                    <cfelse>
+                        <cfset suppressSend = true />
+                        <cflog file="TAO_setup_test_harness" type="warning"
+                               text="thrivecart_process: test row id=#new_id# IsDemo=1 but admin userid=#qTestFlag.test_admin_userid# has no email; suppressing (fail-safe).">
+                    </cfif>
                 <cfelse>
                     <cfset suppressSend = true />
                     <cflog file="TAO_setup_test_harness" type="warning"
-                           text="thrivecart_process: test row id=#new_id# IsDemo=1 but admin userid=#qTestFlag.test_admin_userid# has no email; suppressing (fail-safe).">
+                           text="thrivecart_process: test row id=#new_id# IsDemo=1 but no admin userid; suppressing (fail-safe).">
                 </cfif>
-            <cfelse>
-                <cfset suppressSend = true />
-                <cflog file="TAO_setup_test_harness" type="warning"
-                       text="thrivecart_process: test row id=#new_id# IsDemo=1 but no admin userid; suppressing (fail-safe).">
             </cfif>
-        </cfif>
+            <cfcatch type="any">
+                <!--- Missing test columns (prod schema) or any error: send normally. --->
+                <cfset mailTo = new_customerEmail />
+                <cfset subjectPrefix = "" />
+                <cfset suppressSend = false />
+                <cflog file="TAO_setup_test_harness" type="warning"
+                       text="thrivecart_process: test-redirect resolver skipped for id=#new_id# (#cfcatch.message#); sending normally.">
+            </cfcatch>
+        </cftry>
 
         <cftry>
             <cfif suppressSend>
