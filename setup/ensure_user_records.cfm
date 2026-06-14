@@ -16,7 +16,13 @@
     <cflocation url="/app/" addtoken="false">
 </cfif>
 
-<cfset isAdmin = structKeyExists(session, "userrole") and session.userrole eq "Admin">
+<!--- Role is NOT in session (login only sets userid/userLoggedIn); look it up
+      in taousers.userRole -- same rule as app/admin-users/admin-guard.cfm. --->
+<cfquery name="qRole" datasource="#application.dsn#" maxrows="1">
+    SELECT userRole FROM taousers
+    WHERE userid = <cfqueryparam value="#session.userid#" cfsqltype="cf_sql_integer">
+</cfquery>
+<cfset isAdmin = qRole.recordCount and (qRole.userRole eq "Admin" or qRole.userRole eq "Administrator")>
 <cfset targetUserid = val(url.userid)>
 
 <!--- Non-admins can only heal themselves; default to self when unspecified --->

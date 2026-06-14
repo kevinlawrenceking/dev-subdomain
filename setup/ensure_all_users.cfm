@@ -11,9 +11,16 @@
 <!--- Bulk run over every user can take a while; lift the request timeout. --->
 <cfsetting requesttimeout="900">
 
-<!--- Admin guard --->
-<cfif not structKeyExists(session, "userid") or not val(session.userid)
-      or not structKeyExists(session, "userrole") or session.userrole neq "Admin">
+<!--- Admin guard. Role is NOT in session (login only sets userid/userLoggedIn),
+      so look it up in taousers.userRole -- same rule as app/admin-users/admin-guard.cfm. --->
+<cfif not structKeyExists(session, "userid") or not val(session.userid)>
+    <cflocation url="/app/" addtoken="false">
+</cfif>
+<cfquery name="qRole" datasource="#application.dsn#" maxrows="1">
+    SELECT userRole FROM taousers
+    WHERE userid = <cfqueryparam value="#session.userid#" cfsqltype="cf_sql_integer">
+</cfquery>
+<cfif not (qRole.recordCount AND (qRole.userRole EQ "Admin" OR qRole.userRole EQ "Administrator"))>
     <cflocation url="/app/" addtoken="false">
 </cfif>
 

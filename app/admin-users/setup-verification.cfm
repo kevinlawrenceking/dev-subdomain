@@ -5,15 +5,11 @@
     DEPENDENCIES: Application.cfc with DSN configured
 --->
 
-<!--- Admin-only. This page is self-contained (renders its own full HTML) and
-      needs only application.dsn (from /app/Application.cfc) plus the session role
-      set at login -- no shared bootstrap include. The previous /include/qry/core.cfm
-      include did not exist and crashed the page before the admin check ever ran.
-      Guard is structKeyExists-safe so a missing role redirects instead of erroring. --->
-<cfif not structKeyExists(session, "userid") or not val(session.userid)
-      or not structKeyExists(session, "userrole") or session.userrole neq "Admin">
-    <cflocation url="/app/" addtoken="false">
-</cfif>
+<!--- Admin-only. Use the canonical admin-guard (DB role lookup on taousers.userRole).
+      The previous /include/qry/core.cfm include did not exist and crashed the page
+      before any auth check ran. This page is otherwise self-contained (renders its
+      own full HTML) and needs only application.dsn from /app/Application.cfc. --->
+<cfinclude template="admin-guard.cfm">
 
 <!--- Get all active users --->
 <cfquery name="getAllUsers" datasource="#application.dsn#">
