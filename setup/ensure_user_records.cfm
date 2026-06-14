@@ -11,6 +11,9 @@
 <cfparam name="url.userid" default="0">
 <cfparam name="url.json"   default="0">
 
+<!--- Heal can touch many tables; give it effectively unlimited time. --->
+<cfsetting requesttimeout="86400">
+
 <!--- Auth guard --->
 <cfif not structKeyExists(session, "userid") or not val(session.userid)>
     <cflocation url="/app/" addtoken="false">
