@@ -5,10 +5,13 @@
     DEPENDENCIES: Application.cfc with DSN configured
 --->
 
-<cfinclude template="/include/qry/core.cfm">
-
-<!--- Check if user has admin access --->
-<cfif not isDefined("session.userid") or session.userrole neq "Admin">
+<!--- Admin-only. This page is self-contained (renders its own full HTML) and
+      needs only application.dsn (from /app/Application.cfc) plus the session role
+      set at login -- no shared bootstrap include. The previous /include/qry/core.cfm
+      include did not exist and crashed the page before the admin check ever ran.
+      Guard is structKeyExists-safe so a missing role redirects instead of erroring. --->
+<cfif not structKeyExists(session, "userid") or not val(session.userid)
+      or not structKeyExists(session, "userrole") or session.userrole neq "Admin">
     <cflocation url="/app/" addtoken="false">
 </cfif>
 
