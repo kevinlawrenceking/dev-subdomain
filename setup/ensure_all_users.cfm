@@ -2,14 +2,20 @@
     PURPOSE: Run the per-user enum heal across ALL active users.
              Output is one row per user: name + total records added.
     AUTHOR:  Kevin King
-    USAGE:   /setup/ensure_all_users.cfm           (HTML summary)
-             /setup/ensure_all_users.cfm?json=1    (JSON summary)
+    USAGE:   /setup/ensure_all_users.cfm              (HTML summary; skips already-complete users)
+             /setup/ensure_all_users.cfm?json=1       (JSON summary)
+             /setup/ensure_all_users.cfm?force=1      (heal EVERY user, even complete ones)
     SECURITY: Admin only -- this provisions every user.
+    NOTE:    By default already-complete users are skipped after a cheap count
+             check, so a re-run after a timeout finishes the remaining users fast.
 --->
-<cfparam name="url.json" default="0">
+<cfparam name="url.json"  default="0">
+<cfparam name="url.force" default="0">
+
+<cfset skipComplete = (val(url.force) NEQ 1)>
 
 <!--- Bulk run over every user can take a while; lift the request timeout. --->
-<cfsetting requesttimeout="900">
+<cfsetting requesttimeout="86400">
 
 <!--- Admin guard. Role is NOT in session (login only sets userid/userLoggedIn),
       so look it up in taousers.userRole -- same rule as app/admin-users/admin-guard.cfm. --->
@@ -37,17 +43,22 @@
 <cfset rows = []>
 <cfset grandTotal = 0>
 
+<cfset skippedCount = 0>
+
 <cfloop query="getAllUsers">
     <cftry>
-        <cfset r = svc.ensureUserRecords(getAllUsers.userid)>
+        <cfset r = svc.ensureUserRecords(getAllUsers.userid, skipComplete)>
         <cfset added = r.data.totalInserted>
+        <cfset wasSkipped = structKeyExists(r.data, "skipped") AND r.data.skipped>
+        <cfif wasSkipped><cfset skippedCount++></cfif>
         <cfset arrayAppend(rows, {
             userid   = getAllUsers.userid,
             fullname = getAllUsers.fullname,
             added    = added,
             complete = r.data.complete,
             issues   = arrayLen(r.data.issues),
-            ok       = r.success
+            ok       = r.success,
+            skipped  = wasSkipped
         })>
         <cfset grandTotal += added>
         <cfcatch type="any">
@@ -58,13 +69,20 @@
                 complete = false,
                 issues   = -1,
                 ok       = false,
+                skipped  = false,
                 error    = cfcatch.message
             })>
         </cfcatch>
     </cftry>
 </cfloop>
 
-<cfset summary = { totalUsers = arrayLen(rows), grandTotalAdded = grandTotal, users = rows }>
+<cfset summary = {
+    totalUsers      = arrayLen(rows),
+    grandTotalAdded = grandTotal,
+    skippedComplete = skippedCount,
+    healed          = arrayLen(rows) - skippedCount,
+    users           = rows
+}>
 
 <!--- JSON mode --->
 <cfif val(url.json) eq 1>
@@ -97,8 +115,11 @@
     </div>
 
     <div class="alert alert-info">
-        Processed <strong>#summary.totalUsers#</strong> user(s).
+        Processed <strong>#summary.totalUsers#</strong> user(s):
+        <strong>#summary.healed#</strong> healed,
+        <strong>#summary.skippedComplete#</strong> already complete (skipped).
         Total records added this run: <strong>#summary.grandTotalAdded#</strong>.
+        <cfif val(url.force) EQ 1><span class="badge bg-dark">force mode: healed all</span></cfif>
     </div>
 
     <table class="table table-sm table-striped table-hover align-middle">
@@ -120,6 +141,8 @@
                         <cfif not u.ok>
                             <span class="badge bg-danger">FAILED</span>
                             <cfif structKeyExists(u, "error")><small class="text-muted">#encodeForHTML(u.error)#</small></cfif>
+                        <cfelseif u.skipped>
+                            <span class="badge bg-secondary">Skipped (already complete)</span>
                         <cfelseif u.complete>
                             <span class="badge bg-success">Complete</span>
                         <cfelse>

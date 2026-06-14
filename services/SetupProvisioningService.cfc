@@ -54,6 +54,8 @@
     ================================================================ --->
     <cffunction name="ensureUserRecords" access="public" returntype="struct" output="false">
         <cfargument name="userid" type="numeric" required="true">
+        <cfargument name="skipIfComplete" type="boolean" required="false" default="false"
+                    hint="When true, run only the cheap count check first and skip the full heal if the user is already fully provisioned. Great for fast batch re-runs.">
 
         <cfset var local = {}>
         <cfset local.dsn = getDSN()>
@@ -67,7 +69,8 @@
                 matrix        = [],
                 totalInserted = 0,
                 issues        = [],
-                complete      = false
+                complete      = false,
+                skipped       = false
             }
         }>
 
@@ -102,6 +105,18 @@
         <!--- Snapshot BEFORE counts (per-user) and MASTER expected counts --->
         <cfset local.before = countUserTables(local.uid, local.tables, local.dsn)>
         <cfset local.master = countMasterTables(local.tables, local.dsn)>
+
+        <!--- Fast path: if already complete, skip the (expensive) heal entirely.
+              The heal does a per-master-row existence check, so skipping a
+              complete user turns minutes of work into ~16 cheap COUNT(*)s. --->
+        <cfif arguments.skipIfComplete AND countsAreComplete(local.before, local.master, local.tables)>
+            <cfset buildMatrix(local.result, local.tables, local.before, local.before, local.master)>
+            <cfset local.result.data.complete = true>
+            <cfset local.result.data.skipped  = true>
+            <cfset local.result.success = true>
+            <cfset local.result.message = "Already complete -- skipped (no heal run).">
+            <cfreturn local.result>
+        </cfif>
 
         <!---
             Run syncs in dependency order:
@@ -138,43 +153,8 @@
 
         <!--- Snapshot AFTER counts and build the matrix --->
         <cfset local.after = countUserTables(local.uid, local.tables, local.dsn)>
-
-        <cfset local.totalInserted = 0>
-        <cfloop array="#local.tables#" index="local.t">
-            <cfset local.b = local.before[local.t.name]>
-            <cfset local.a = local.after[local.t.name]>
-            <cfset local.m = local.master[local.t.name]>
-            <cfset local.ins = (local.a GTE 0 AND local.b GTE 0) ? (local.a - local.b) : 0>
-            <cfif local.ins GT 0><cfset local.totalInserted += local.ins></cfif>
-
-            <!--- Status --->
-            <cfif local.a EQ -1 OR local.m EQ -1>
-                <cfset local.status = "ERROR">
-            <cfelseif local.a EQ 0 AND (local.m GT 0 OR NOT local.t.exact)>
-                <cfset local.status = "EMPTY">
-            <cfelseif local.t.exact AND local.m GT 0 AND local.a LT local.m>
-                <cfset local.status = "SHORT">
-            <cfelse>
-                <cfset local.status = "OK">
-            </cfif>
-
-            <cfif local.status NEQ "OK">
-                <cfset arrayAppend(local.result.data.issues, local.t.name)>
-            </cfif>
-
-            <cfset arrayAppend(local.result.data.matrix, {
-                table       = local.t.name,
-                description = local.t.desc,
-                master      = local.m,
-                before      = local.b,
-                inserted    = local.ins,
-                after       = local.a,
-                status      = local.status
-            })>
-        </cfloop>
-
-        <cfset local.result.data.totalInserted = local.totalInserted>
-        <cfset local.result.data.complete = (arrayLen(local.result.data.issues) EQ 0)>
+        <cfset buildMatrix(local.result, local.tables, local.before, local.after, local.master)>
+        <cfset local.totalInserted = local.result.data.totalInserted>
         <cfset local.result.success = true>
         <cfset local.result.message = local.result.data.complete
                 ? "All user tables populated (#local.totalInserted# record(s) inserted)."
@@ -205,6 +185,72 @@
       </cftry>
 
         <cfreturn local.result>
+    </cffunction>
+
+    <!--- ================================================================
+         Status for one table given its user count vs master expectation.
+         exact=false tables are "OK" on any non-zero count.
+    ================================================================ --->
+    <cffunction name="rowStatus" access="private" returntype="string" output="false">
+        <cfargument name="after"  type="numeric" required="true">
+        <cfargument name="master" type="numeric" required="true">
+        <cfargument name="exact"  type="boolean" required="true">
+        <cfif arguments.after EQ -1 OR arguments.master EQ -1>
+            <cfreturn "ERROR">
+        <cfelseif arguments.after EQ 0 AND (arguments.master GT 0 OR NOT arguments.exact)>
+            <cfreturn "EMPTY">
+        <cfelseif arguments.exact AND arguments.master GT 0 AND arguments.after LT arguments.master>
+            <cfreturn "SHORT">
+        </cfif>
+        <cfreturn "OK">
+    </cffunction>
+
+    <!--- True only when every table is OK (used for the skip-if-complete check). --->
+    <cffunction name="countsAreComplete" access="private" returntype="boolean" output="false">
+        <cfargument name="counts" type="struct" required="true">
+        <cfargument name="master" type="struct" required="true">
+        <cfargument name="tables" type="array"  required="true">
+        <cfset var t = "">
+        <cfloop array="#arguments.tables#" index="t">
+            <cfif rowStatus(arguments.counts[t.name], arguments.master[t.name], t.exact) NEQ "OK">
+                <cfreturn false>
+            </cfif>
+        </cfloop>
+        <cfreturn true>
+    </cffunction>
+
+    <!--- Populate result.data.matrix / issues / totalInserted / complete from
+          before/after/master count maps. Mutates the passed-in result struct. --->
+    <cffunction name="buildMatrix" access="private" returntype="void" output="false">
+        <cfargument name="result" type="struct" required="true">
+        <cfargument name="tables" type="array"  required="true">
+        <cfargument name="before" type="struct" required="true">
+        <cfargument name="after"  type="struct" required="true">
+        <cfargument name="master" type="struct" required="true">
+
+        <cfset var local = {totalInserted = 0}>
+        <cfloop array="#arguments.tables#" index="local.t">
+            <cfset local.b = arguments.before[local.t.name]>
+            <cfset local.a = arguments.after[local.t.name]>
+            <cfset local.m = arguments.master[local.t.name]>
+            <cfset local.ins = (local.a GTE 0 AND local.b GTE 0) ? (local.a - local.b) : 0>
+            <cfif local.ins GT 0><cfset local.totalInserted += local.ins></cfif>
+            <cfset local.status = rowStatus(local.a, local.m, local.t.exact)>
+            <cfif local.status NEQ "OK">
+                <cfset arrayAppend(arguments.result.data.issues, local.t.name)>
+            </cfif>
+            <cfset arrayAppend(arguments.result.data.matrix, {
+                table       = local.t.name,
+                description = local.t.desc,
+                master      = local.m,
+                before      = local.b,
+                inserted    = local.ins,
+                after       = local.a,
+                status      = local.status
+            })>
+        </cfloop>
+        <cfset arguments.result.data.totalInserted = local.totalInserted>
+        <cfset arguments.result.data.complete = (arrayLen(arguments.result.data.issues) EQ 0)>
     </cffunction>
 
     <!--- ================================================================
