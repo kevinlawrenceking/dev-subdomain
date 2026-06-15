@@ -340,6 +340,15 @@
           <cflocation url="/loginform.cfm?pwrong=Y" addToken="false" />
         </cfif>
 
+        <!--- Preserve the original admin id so impersonation can be reversed
+              ("Return to admin"). Guarded with structKeyExists so a chained ?u=
+              can never overwrite the true admin id mid-impersonation. --->
+        <cfif NOT structKeyExists(session, "adminUserid")>
+          <cfset session.adminUserid = session.userid />
+        </cfif>
+        <cflog file="tao_impersonation" type="information"
+               text="impersonation start: admin=#session.adminUserid# now viewing user=#url.u# | page=#cgi.SCRIPT_NAME#">
+
         <!--- Admin confirmed — impersonate target user --->
         <cfset session.userid = url.u />
         <cfset userid = session.userid />
@@ -486,6 +495,7 @@
             AND NOT findNoCase("/ajax/", cgi.SCRIPT_NAME)
             AND NOT findNoCase("/login", cgi.SCRIPT_NAME)
             AND NOT findNoCase("/logout", cgi.SCRIPT_NAME)
+            AND NOT findNoCase("/stop-impersonate", cgi.SCRIPT_NAME)
             AND NOT REFindNoCase("\.(css|js|png|jpg|gif|svg|woff|woff2|ttf|ico)$", cgi.SCRIPT_NAME)>
         <cflocation url="/app/setup-wizard/" addtoken="false" />
       </cfif>

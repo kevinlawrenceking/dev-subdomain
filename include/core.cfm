@@ -62,6 +62,7 @@
 
       <body>
         <div id="wrapper">
+          <cfinclude template="/include/impersonation-banner.cfm"/>
           <cfinclude template="/include/topbar.cfm"/>
           <cfinclude template="/include/leftbar.cfm"/>
 

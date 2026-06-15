@@ -37,7 +37,8 @@
                 <h4 class="mb-0" id="pageTitle">User Detail</h4>
             </div>
             <div>
-                <button id="btnEditUser" class="btn btn-primary btn-sm">Edit User</button>
+                <button id="btnLoginAsUser" class="btn btn-warning btn-sm" title="Open this user's account in a new tab without their password">Log in as User</button>
+                <button id="btnEditUser" class="btn btn-primary btn-sm ms-1">Edit User</button>
                 <a href="/app/admin-users/" class="btn btn-outline-secondary btn-sm ms-1">User List</a>
             </div>
         </div>
@@ -566,6 +567,17 @@
         $('#btnConfirmSendEmail').on('click', sendEmail);
 
         $('#btnEditUser').on('click', openEditModal);
+
+        $('#btnLoginAsUser').on('click', function() {
+            if (!userData) return;
+            var name = (getVal(userData, ['userFirstName', 'USERFIRSTNAME']) + ' ' +
+                        getVal(userData, ['userLastName', 'USERLASTNAME'])).trim();
+            var label = name || ('user ' + USER_ID);
+            if (!confirm('Log in as ' + label + '?\n\n' +
+                'Your session will switch to this user\'s account. Use the ' +
+                '"Return to admin" bar at the bottom of the screen to come back.')) return;
+            window.location.href = '/app/?u=' + USER_ID;
+        });
 
         $('#btnSaveEdit').on('click', saveEdit);
 
