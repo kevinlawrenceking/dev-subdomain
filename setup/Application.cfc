@@ -69,8 +69,11 @@
           UUID validation in index.cfm handles access control. --->
     <cfscript>
         // Ensure application scope vars exist (cold-start / race-condition safety)
-        // Check baseMediaPath, not just dsn -- dsn can survive a partial reinit
-        if (NOT structKeyExists(application, "baseMediaPath")) {
+        // Check imagesPath, not baseMediaPath or dsn -- imagesPath is derived last
+        // and is the var setup pages actually read (user_setup_core.cfm). A partial
+        // reinit can leave baseMediaPath present while imagesPath is absent, which
+        // would skip healing and crash on application.imagesPath.
+        if (NOT structKeyExists(application, "imagesPath")) {
             ensureAppVars();
         }
         request.dsn = application.dsn;
@@ -93,11 +96,37 @@
         }
         application.baseMediaUrl = "/media-" & variables._dsn;
         application.auditionimporttemplate = application.baseMediaUrl & "/auditionimporttemplates.xlsx";
+
+        // Keep this full set in sync with /app/Application.cfc -- /setup shares the
+        // same application scope (this.name = "TAO_<env>"), so any path var a setup
+        // page reads must be defined here too, or it crashes when /setup initializes
+        // the scope first.
         application.imagesPath = application.baseMediaPath & "\\images";
-        application.imagesUrl = application.baseMediaUrl & "/images";
+        application.imagesUrl  = application.baseMediaUrl  & "/images";
+
         application.datesPath = application.imagesPath & "\\dates";
+        application.datesUrl  = application.imagesUrl  & "/dates";
+
         application.defaultsPath = application.imagesPath & "\\defaults";
+        application.defaultsUrl  = application.imagesUrl  & "/defaults";
+
+        application.defaultAvatarUrl  = application.defaultsUrl  & "/avatar.jpg";
         application.defaultAvatarPath = application.defaultsPath & "\\avatar.jpg";
+
+        application.emailImagesPath = application.imagesPath & "\\email";
+        application.emailImagesUrl  = application.imagesUrl  & "/email";
+
+        application.filetypesPath = application.imagesPath & "\\filetypes";
+        application.filetypesUrl  = application.imagesUrl  & "/filetypes";
+
+        application.retinaIconsPath = application.imagesPath & "\\retina-circular-icons";
+        application.retinaIconsUrl  = application.imagesUrl  & "/retina-circular-icons";
+
+        application.retinaIcons14Path = application.retinaIconsPath & "\\14";
+        application.retinaIcons14Url  = application.retinaIconsUrl  & "/14";
+
+        application.retinaIcons32Path = application.retinaIconsPath & "\\32";
+        application.retinaIcons32Url  = application.retinaIconsUrl  & "/32";
     </cfscript>
 </cffunction>
 
