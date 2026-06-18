@@ -830,6 +830,19 @@
                             </cfif>
                         </cfcase>
 
+                        <!--- notes: long free text that becomes the role's charDescription
+                             (and the project's projDescription) at finalize. Both target
+                             columns are TEXT/LONGVARCHAR, so do NOT cap at 500 here. Preserve
+                             the full text; only guard against exceeding MySQL TEXT capacity. --->
+                        <cfcase value="notes">
+                            <cfset variables.normalizedValue = trim(variables.transformedValue)>
+                            <cfif len(variables.normalizedValue) gt 60000>
+                                <cfset variables.normalizedValue = left(variables.normalizedValue, 60000)>
+                                <cfset variables.warningCount++>
+                                <cfset arrayAppend(variables.rowWarnings, { field: variables.effectiveFieldName, warning: "Truncated to 60000 characters" })>
+                            </cfif>
+                        </cfcase>
+
                         <!--- Default: trim and cap at 500 --->
                         <cfdefaultcase>
                             <cfset variables.normalizedValue = trim(variables.transformedValue)>
