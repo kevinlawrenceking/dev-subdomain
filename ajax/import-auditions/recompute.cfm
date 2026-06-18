@@ -672,7 +672,11 @@
                 <!--- First row: log every fact's column mapping resolution (validates mapping correctness) --->
                 <cfif variables.rowsProcessed eq 1>
                     <cfset variables.debugVal = left(variables.rawValue, 30)>
-                    <cfif listFindNoCase("contact_name,contact_email,casting_director", variables.effectiveFieldName)>
+                    <!--- effectiveFieldName is not assigned until later in this fact iteration
+                         (see below); compute the equivalent inline here so this first-row
+                         debug/redaction block cannot throw "variable undefined" on the very
+                         first fact of the first row (which blanked row 1 in the review grid). --->
+                    <cfif listFindNoCase("contact_name,contact_email,casting_director", (len(variables.targetKey) ? variables.targetKey : variables.fieldName))>
                         <cfset variables.debugVal = "[REDACTED]">
                     </cfif>
                     <cfset addDebug("row1_fact col_id=#variables.columnId# found=#variables.columnMappingFound# field=#variables.fieldName# intent=#variables.intent# target=#variables.targetKey# val=#variables.debugVal#")>
