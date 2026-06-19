@@ -57,10 +57,20 @@
 
     <cfset todayDate = dateFormat(now(), 'yyyy-MM-dd') />
 
-    <!--- PERF: run timer + counters for the end-of-run audit cflog. --->
+    <!--- DRY RUN. ?dryrun=1 acquires the lock and runs every SELECT (driver +
+          preloads) so you can test selection, locking and query performance,
+          but performs ZERO writes: no JOB A flip, no JOB B soft-delete, no
+          JOB C enrollment/completion, no JOB D backfill, no ICS regen. The
+          summary reports what WOULD have happened (counts only). --->
+    <cfparam name="dryrun" default="0" />
+    <cfset dryRun = (val(dryrun) EQ 1) />
+
+    <!--- PERF: run timer + counters for the end-of-run audit cflog.
+          dry* counters are populated only on a dry run (would-have figures). --->
     <cfset runStartTick = getTickCount() />
-    <cfset runStats = { eventsProcessed = 0, eventsFailed = 0, enrollments = 0 } />
-    <cflog file="events_completed" text="START events_completed run (#todayDate#)" />
+    <cfset runStats = { eventsProcessed = 0, eventsFailed = 0, enrollments = 0,
+                        notifsWouldFlip = 0, usersWouldCancel = 0, followupCandidates = 0 } />
+    <cflog file="events_completed" text="START events_completed run (#todayDate#)#dryRun ? ' [DRY RUN]' : ''#" />
 
     <!---
         ANTI-OVERLAP LOCK. A run can take up to requestTimeout (600s) to drain
@@ -113,12 +123,22 @@
                 statement. NotificationStatusService reads notstatus directly,
                 so this flip is what makes due reminders visible in the UI.
             --->
-            <cfquery datasource="#dsn#" result="result" name="upactive">
-                UPDATE funotifications
-                SET notstatus = 'Active'
-                WHERE notstartdate < <cfqueryparam cfsqltype="cf_sql_date" value="#todayDate#" />
-                AND notstatus = <cfqueryparam cfsqltype="cf_sql_varchar" value="Future" />
-            </cfquery>
+            <cfif dryRun>
+                <!--- DRY RUN: count what WOULD flip; do not write. --->
+                <cfquery datasource="#dsn#" name="upactive">
+                    SELECT COUNT(*) AS cnt FROM funotifications
+                    WHERE notstartdate < <cfqueryparam cfsqltype="cf_sql_date" value="#todayDate#" />
+                    AND notstatus = <cfqueryparam cfsqltype="cf_sql_varchar" value="Future" />
+                </cfquery>
+                <cfset runStats.notifsWouldFlip = upactive.cnt />
+            <cfelse>
+                <cfquery datasource="#dsn#" result="result" name="upactive">
+                    UPDATE funotifications
+                    SET notstatus = 'Active'
+                    WHERE notstartdate < <cfqueryparam cfsqltype="cf_sql_date" value="#todayDate#" />
+                    AND notstatus = <cfqueryparam cfsqltype="cf_sql_varchar" value="Future" />
+                </cfquery>
+            </cfif>
 
                     <!---
                         JOB B -- cancelled user soft-delete.
@@ -143,7 +163,8 @@
                                 will then filter these users out on subsequent
                                 reads.
                             --->
-                            <cfif c.recordcount GT 0>
+                            <cfset runStats.usersWouldCancel = c.recordcount />
+                            <cfif c.recordcount GT 0 AND NOT dryRun>
                                 <cfset cancelledUserIds = valueList(c.userid) />
                                 <cfquery datasource="#dsn#" result="result" name="s">
                                     UPDATE taousers_tbl SET isdeleted = 1
@@ -267,6 +288,9 @@
             AND tu.userid = e.userid
             AND eu.userid = e.userid
         </cfquery>
+        <!--- Follow-up enrollment candidates across this batch (reported on a
+              dry run; this is the row population the JOB C loop iterates). --->
+        <cfset runStats.followupCandidates = allFollowups.recordCount />
 
         <!---
             allEnrollments -- every active fusystemusers row for this batch's
@@ -353,6 +377,10 @@
                          so we can regenerate their ICS files once the batch finishes. --->
                     <cfset affectedIcsUserIds = {} />
 
+                    <!--- DRY RUN: skip the entire write loop. eventsProcessed
+                          stays 0; the summary reports eventsFound /
+                          followupCandidates as the "would process" figures. --->
+                    <cfif NOT dryRun>
                     <cfloop query="events">
                     <cftransaction>
                     <!--- PERF/reliability: isolate each event. Before this, a
@@ -654,6 +682,11 @@
                                     </cftry>
                                     </cftransaction>
                                     </cfloop>
+                                    </cfif><!--- end NOT dryRun (JOB C loop) --->
+
+<!--- DRY RUN: JOB D (backfill) and the ICS regen are writes/side effects too,
+      so skip both. They resume normally on a real run. --->
+<cfif NOT dryRun>
 
 <!---
     JOB D -- contactdetails backfill (WO-4.4: own transaction).
@@ -715,6 +748,8 @@ WHERE cd.contactMeetingloc IS NULL;
     </cfcatch>
 </cftry>
 
+</cfif><!--- end NOT dryRun (JOB D + ICS) --->
+
     </cflock><!--- release anti-overlap lock --->
 
 <!--- Overlap case: another run held the lock, so we did no work. Report it
@@ -742,7 +777,7 @@ WHERE cd.contactMeetingloc IS NULL;
 <cfset runElapsedSec = int((getTickCount() - runStartTick) / 1000) />
 <cfset batchCapped = (events.recordCount GTE maxEvents) />
 <cflog file="events_completed"
-       text="END events_completed run -- elapsedSec=#runElapsedSec# eventsFound=#events.recordCount# eventsProcessed=#runStats.eventsProcessed# eventsFailed=#runStats.eventsFailed# maxEvents=#maxEvents# batchCapped=#batchCapped# (backlog likely remains; next run continues)" />
+       text="END events_completed run#dryRun ? ' [DRY RUN -- no writes]' : ''# -- elapsedSec=#runElapsedSec# eventsFound=#events.recordCount# eventsProcessed=#runStats.eventsProcessed# eventsFailed=#runStats.eventsFailed# wouldFlipNotifs=#runStats.notifsWouldFlip# wouldCancelUsers=#runStats.usersWouldCancel# followupCandidates=#runStats.followupCandidates# maxEvents=#maxEvents# batchCapped=#batchCapped# (backlog likely remains; next run continues)" />
 
 <cfif dbug eq "Y">
     <cfoutput>
@@ -757,5 +792,5 @@ WHERE cd.contactMeetingloc IS NULL;
     <!--- Compact machine-readable summary for the scheduler / manual checks.
           No giant HTML dump. --->
     <cfcontent type="application/json; charset=utf-8" reset="true" />
-    <cfoutput>{"success":true,"status":"completed","elapsedSec":#runElapsedSec#,"eventsFound":#events.recordCount#,"eventsProcessed":#runStats.eventsProcessed#,"eventsFailed":#runStats.eventsFailed#,"maxEvents":#maxEvents#,"batchCapped":#batchCapped#}</cfoutput>
+    <cfoutput>{"success":true,"status":"#dryRun ? 'dryrun' : 'completed'#","dryRun":#dryRun ? 'true' : 'false'#,"elapsedSec":#runElapsedSec#,"eventsFound":#events.recordCount#,"eventsProcessed":#runStats.eventsProcessed#,"eventsFailed":#runStats.eventsFailed#,"wouldFlipNotifs":#runStats.notifsWouldFlip#,"wouldCancelUsers":#runStats.usersWouldCancel#,"followupCandidates":#runStats.followupCandidates#,"maxEvents":#maxEvents#,"batchCapped":#batchCapped#}</cfoutput>
 </cfif>
