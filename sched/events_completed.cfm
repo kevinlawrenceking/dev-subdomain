@@ -792,5 +792,5 @@ WHERE cd.contactMeetingloc IS NULL;
     <!--- Compact machine-readable summary for the scheduler / manual checks.
           No giant HTML dump. --->
     <cfcontent type="application/json; charset=utf-8" reset="true" />
-    <cfoutput>{"success":true,"status":"#dryRun ? 'dryrun' : 'completed'#","dryRun":#dryRun ? 'true' : 'false'#,"elapsedSec":#runElapsedSec#,"eventsFound":#events.recordCount#,"eventsProcessed":#runStats.eventsProcessed#,"eventsFailed":#runStats.eventsFailed#,"wouldFlipNotifs":#runStats.notifsWouldFlip#,"wouldCancelUsers":#runStats.usersWouldCancel#,"followupCandidates":#runStats.followupCandidates#,"maxEvents":#maxEvents#,"batchCapped":#batchCapped#}</cfoutput>
+    <cfoutput>{"success":true,"status":"#dryRun ? 'dryrun' : 'completed'#","dryRun":#dryRun ? 'true' : 'false'#,"elapsedSec":#runElapsedSec#,"eventsFound":#events.recordCount#,"eventsProcessed":#runStats.eventsProcessed#,"eventsFailed":#runStats.eventsFailed#,"wouldFlipNotifs":#runStats.notifsWouldFlip#,"wouldCancelUsers":#runStats.usersWouldCancel#,"followupCandidates":#runStats.followupCandidates#,"maxEvents":#maxEvents#,"batchCapped":#batchCapped ? 'true' : 'false'#}</cfoutput>
 </cfif>
