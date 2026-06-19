@@ -11,8 +11,14 @@
 --->
 <cfparam name="url.json"  default="0">
 <cfparam name="url.force" default="0">
+<!--- Optional batch cap. ?limit=N processes only the first N active users
+      (by name). On a normal run already-complete users are skipped cheaply,
+      so re-running drains the rest; use ?limit for a bounded test run or to
+      chunk a large cold backlog and avoid the request timeout seen in prod. --->
+<cfparam name="url.limit" default="0">
 
 <cfset skipComplete = (val(url.force) NEQ 1)>
+<cfset batchLimit   = max(0, int(val(url.limit)))>
 
 <!--- Bulk run over every user can take a while; lift the request timeout. --->
 <cfsetting requesttimeout="86400">
@@ -30,6 +36,20 @@
     <cflocation url="/app/" addtoken="false">
 </cfif>
 
+<!--- Defaults so the output blocks below are always safe, even if we never
+      acquire the lock (a heal is already running). --->
+<cfset rows = []>
+<cfset grandTotal = 0>
+<cfset skippedCount = 0>
+<cfset gotLock = false>
+
+<!--- ANTI-OVERLAP LOCK. This provisions every active user and can run long;
+      two admins (or a re-fired run) healing the same users at once duplicates
+      work and races on inserts. An exclusive named lock with a short acquire
+      timeout makes the second caller bow out immediately. --->
+<cflock name="setup_ensure_all_users" type="exclusive" timeout="3" throwontimeout="false">
+<cfset gotLock = true>
+
 <!--- Active users (matches setup-verification.cfm) --->
 <cfquery name="getAllUsers" datasource="#application.dsn#">
     SELECT userid,
@@ -37,13 +57,12 @@
     FROM taousers
     WHERE userstatus = 'Active'
     ORDER BY userlastname, userfirstname
+    <cfif batchLimit GT 0>
+        LIMIT <cfqueryparam value="#batchLimit#" cfsqltype="cf_sql_integer">
+    </cfif>
 </cfquery>
 
 <cfset svc = new services.SetupProvisioningService()>
-<cfset rows = []>
-<cfset grandTotal = 0>
-
-<cfset skippedCount = 0>
 
 <cfloop query="getAllUsers">
     <cftry>
@@ -76,11 +95,29 @@
     </cftry>
 </cfloop>
 
+</cflock><!--- release anti-overlap lock --->
+
+<!--- Overlap: another heal already holds the lock. Report it instead of
+      running a second concurrent pass. --->
+<cfif NOT gotLock>
+    <cflog file="setup_ensure_all_users" type="warning"
+           text="SKIPPED ensure_all_users -- another run is already in progress.">
+    <cfif val(url.json) eq 1>
+        <cfcontent type="application/json; charset=utf-8" reset="true">
+        <cfoutput>{"success":false,"status":"skipped","reason":"overlap","message":"Another ensure-all-users run is already in progress."}</cfoutput>
+    <cfelse>
+        <cfcontent type="text/html; charset=utf-8" reset="true">
+        <cfoutput><!DOCTYPE html><html><head><meta charset="utf-8"><title>Run in progress</title></head><body style="font-family:sans-serif;padding:40px"><h1 style="font-size:20px">Another run is already in progress</h1><p>An ensure-all-users heal is currently running. Please wait for it to finish, then refresh.</p></body></html></cfoutput>
+    </cfif>
+    <cfabort>
+</cfif>
+
 <cfset summary = {
     totalUsers      = arrayLen(rows),
     grandTotalAdded = grandTotal,
     skippedComplete = skippedCount,
     healed          = arrayLen(rows) - skippedCount,
+    batchLimit      = batchLimit,
     users           = rows
 }>
 

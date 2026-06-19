@@ -552,6 +552,48 @@
     <cfargument name="eventName" />
 
     <cftry>
+      <!--- TAO: classify the request FIRST so the error handler itself can
+            never amplify a timeout. A scheduled/internal caller (CF scheduler,
+            setup scripts) must get a one-line plain-text body, NOT a full
+            error-friendly.cfm render with its own includes/queries -- that
+            second render is exactly what turned a request timeout into a
+            cascading timeout in the production logs. --->
+      <cfset var isInternal = (
+          findNoCase("/sched/", cgi.SCRIPT_NAME) GT 0
+          OR findNoCase("/setup/", cgi.SCRIPT_NAME) GT 0
+          OR cgi.REMOTE_ADDR EQ "127.0.0.1"
+          OR cgi.REMOTE_ADDR EQ "::1"
+          OR (len(trim(cgi.LOCAL_ADDR)) AND cgi.REMOTE_ADDR EQ cgi.LOCAL_ADDR)
+      ) />
+
+      <!--- Oversized upload: ColdFusion throws "Post Size exceeds the maximum
+            limit" during form parse, BEFORE the target page runs, so onError
+            is the only place we can return a friendly answer. Handle it cheaply
+            -- no ErrorService, no template include. --->
+      <cfset var isPostSize = false />
+      <cfif structKeyExists(arguments, "exception")
+            AND structKeyExists(arguments.exception, "message")
+            AND findNoCase("Post Size exceeds", arguments.exception.message) GT 0>
+        <cfset isPostSize = true />
+      </cfif>
+      <cfif isPostSize>
+        <cflog file="TAO_upload" type="warning"
+               text="Oversized upload rejected: #cgi.SCRIPT_NAME# remote=#cgi.REMOTE_ADDR#" />
+        <cfset var wantsJson = (
+            findNoCase("xmlhttprequest", cgi.HTTP_X_REQUESTED_WITH) GT 0
+            OR findNoCase("/ajax/", cgi.SCRIPT_NAME) GT 0
+        ) />
+        <cfheader statuscode="413" statustext="Payload Too Large" />
+        <cfif wantsJson>
+          <cfcontent type="application/json; charset=utf-8" reset="true" />
+          <cfoutput>{"success":false,"message":"That file is too large. The maximum upload size is 20 MB. Please choose a smaller file."}</cfoutput>
+        <cfelse>
+          <cfcontent type="text/html; charset=utf-8" reset="true" />
+          <cfoutput><!DOCTYPE html><html><head><title>File too large</title></head><body style="font-family:sans-serif;text-align:center;padding:60px 20px;color:##333"><h1 style="font-size:22px">That file is too large</h1><p>The maximum upload size is 20&nbsp;MB. Please choose a smaller file and try again.</p><p><a href="javascript:history.back()" style="color:##406E8E">Go Back</a></p></body></html></cfoutput>
+        </cfif>
+        <cfabort />
+      </cfif>
+
       <!--- Delegate to ErrorService --->
       <cfif structKeyExists(application, "services")
             AND structKeyExists(application.services, "errorService")
@@ -577,6 +619,12 @@
         <cfheader statuscode="500" />
         <cfcontent type="application/json; charset=utf-8" reset="true" />
         <cfoutput>{"success":false,"message":"#encodeForJavaScript(result.message)#","ticketId":"#encodeForJavaScript(result.ticketId)#","support":"support@theactorsoffice.com","reference":"Quote this ticket ID when contacting support."}</cfoutput>
+      <cfelseif isInternal>
+        <!--- Scheduled/internal job: minimal plain text only. No template
+              include, no extra queries -- cannot trigger a second timeout. --->
+        <cfheader statuscode="500" />
+        <cfcontent type="text/plain; charset=utf-8" reset="true" />
+        <cfoutput>ERROR ticketId=#result.ticketId# -- internal job failed; see TAO error logs.</cfoutput>
       <cfelse>
         <cfheader statuscode="500" />
         <cfcontent type="text/html; charset=utf-8" reset="true" />
@@ -599,10 +647,16 @@
         <cfcatch></cfcatch>
       </cftry>
 
-      <!--- Detect AJAX for fallback response --->
+      <!--- Detect AJAX / internal for fallback response. Internal jobs are
+            routed through the JSON (minimal, no-template) path so even the
+            absolute fallback never runs error-friendly.cfm for the scheduler. --->
       <cfset var fallbackIsAjax = (
         findNoCase("xmlhttprequest", cgi.HTTP_X_REQUESTED_WITH) GT 0 OR
-        findNoCase("/ajax/", cgi.SCRIPT_NAME) GT 0
+        findNoCase("/ajax/", cgi.SCRIPT_NAME) GT 0 OR
+        findNoCase("/sched/", cgi.SCRIPT_NAME) GT 0 OR
+        findNoCase("/setup/", cgi.SCRIPT_NAME) GT 0 OR
+        cgi.REMOTE_ADDR EQ "127.0.0.1" OR
+        cgi.REMOTE_ADDR EQ "::1"
       ) />
 
       <cfif fallbackIsAjax>

@@ -30,6 +30,13 @@
     the real-time migration plan.
     ============================================================================
 --->
+<!--- Scheduled endpoint: suppress the whitespace flood from the tag soup
+      below (every cfif/cfloop/cfquery would otherwise emit blank lines into
+      the response). Only explicit <cfoutput> blocks render now -- the dbug
+      panels and the final compact summary. Keeps the response tiny. --->
+<cfsetting enablecfoutputonly="true" />
+<!--- requestTimeout is a GUARD, not the fix. The real protection is the
+      ?batchSize cap (JOB C) plus the anti-overlap lock below. --->
 <cfsetting requesttimeout="600" />
 
     <cfparam name="dbug" default="N" />
@@ -54,6 +61,19 @@
     <cfset runStartTick = getTickCount() />
     <cfset runStats = { eventsProcessed = 0, eventsFailed = 0, enrollments = 0 } />
     <cflog file="events_completed" text="START events_completed run (#todayDate#)" />
+
+    <!---
+        ANTI-OVERLAP LOCK. A run can take up to requestTimeout (600s) to drain
+        the backlog; the Quartz scheduler firing again -- or an admin opening
+        the URL manually -- must NOT start a second concurrent pass over the
+        same Active events (double-enrollment / duplicate notifications). An
+        exclusive named lock with a short acquire timeout means the second
+        caller gives up immediately instead of piling on. gotJobLock records
+        whether we actually entered, so the tail can report "skipped" cleanly.
+    --->
+    <cfset gotJobLock = false />
+    <cflock name="sched_events_completed" type="exclusive" timeout="3" throwontimeout="false">
+    <cfset gotJobLock = true />
 
     <!---
         JOB A -- notstatus repair.
@@ -160,7 +180,14 @@
                 current 952 backlog, run repeatedly with a small batch
                 (?maxEvents=200) and watch elapsedSec before raising it.
             --->
+            <!--- Batch cap. Accept ?batchSize (preferred, e.g. ?batchSize=10
+                  for a small test run) or the legacy ?maxEvents; batchSize
+                  wins when both are supplied. --->
             <cfparam name="maxEvents" default="300" />
+            <cfparam name="batchSize" default="" />
+            <cfif len(trim(batchSize))>
+                <cfset maxEvents = batchSize />
+            </cfif>
             <cfset maxEvents = max(1, int(val(maxEvents))) />
             <cfquery datasource="#dsn#" result="result" name="events">
                 SELECT e.eventid, e.eventtitle, e.eventstop, u.recordname, u.userid
@@ -688,6 +715,27 @@ WHERE cd.contactMeetingloc IS NULL;
     </cfcatch>
 </cftry>
 
+    </cflock><!--- release anti-overlap lock --->
+
+<!--- Overlap case: another run held the lock, so we did no work. Report it
+      compactly and stop -- never fall through into the END audit (which reads
+      run-only vars like `events`). --->
+<cfif NOT gotJobLock>
+    <cflog file="events_completed"
+           text="SKIPPED events_completed -- another run already holds the lock; no overlap permitted." />
+    <cfif dbug EQ "Y">
+        <cfoutput>
+            <div style="background-color: ##fff3cd; padding: 10px; margin: 5px; border: 1px solid ##ffeeba;">
+                <strong>SKIPPED:</strong> another events_completed run is already in progress.
+            </div>
+        </cfoutput>
+    <cfelse>
+        <cfcontent type="application/json; charset=utf-8" reset="true" />
+        <cfoutput>{"success":true,"status":"skipped","reason":"overlap","message":"Another run is in progress."}</cfoutput>
+    </cfif>
+    <cfabort />
+</cfif>
+
 <!--- PERF: end-of-run audit line. Makes "did the cron finish, how long,
      how much work" answerable from the log after the fact -- essential for
      diagnosing timeouts. --->
@@ -705,4 +753,9 @@ WHERE cd.contactMeetingloc IS NULL;
             Total events processed: #events.recordCount#<br>
         </div>
     </cfoutput>
+<cfelse>
+    <!--- Compact machine-readable summary for the scheduler / manual checks.
+          No giant HTML dump. --->
+    <cfcontent type="application/json; charset=utf-8" reset="true" />
+    <cfoutput>{"success":true,"status":"completed","elapsedSec":#runElapsedSec#,"eventsFound":#events.recordCount#,"eventsProcessed":#runStats.eventsProcessed#,"eventsFailed":#runStats.eventsFailed#,"maxEvents":#maxEvents#,"batchCapped":#batchCapped#}</cfoutput>
 </cfif>

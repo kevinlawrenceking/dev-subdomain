@@ -162,9 +162,12 @@
             return;
         }
 
-        // Validate file size (50MB)
-        if (file.size > 52428800) {
-            showAlert('error', 'File too large. Maximum size is 50MB.');
+        // Validate file size. Must match the ColdFusion server post limit
+        // (20 MB). A larger client cap lets 20-50MB files through to a hard
+        // server-side "Post Size exceeds the maximum limit 20 MB" error
+        // instead of this friendly message -- the cause of the logged failures.
+        if (file.size > 20971520) {
+            showAlert('error', 'File too large. Maximum size is 20MB.');
             return;
         }
 

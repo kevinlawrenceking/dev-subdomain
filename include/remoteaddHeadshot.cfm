@@ -11,9 +11,24 @@
 </script>
 
 <script>
-    function unlock() {
-        <!--- Enable the submit button when a file is selected. --->
-        document.getElementById('buttonSubmit').removeAttribute("disabled");
+    <!--- 20 MB matches the ColdFusion post-size limit. Catching it here gives
+          the user a clear message instead of the generic "Post Size exceeds
+          the maximum limit 20 MB" exception (4 such errors in the log). The
+          server-side guard in Application.cfc onError is the backstop. --->
+    var TAO_MAX_UPLOAD_BYTES = 20 * 1024 * 1024;
+
+    function unlock(inputEl) {
+        var btn = document.getElementById('buttonSubmit');
+        var file = inputEl && inputEl.files && inputEl.files.length ? inputEl.files[0] : null;
+        if (file && file.size > TAO_MAX_UPLOAD_BYTES) {
+            alert('That file is too large (' + (file.size / 1048576).toFixed(1) +
+                  ' MB). The maximum upload size is 20 MB. Please choose a smaller file.');
+            inputEl.value = '';                 // clear the oversized selection
+            btn.setAttribute('disabled', 'disabled');
+            return;
+        }
+        <!--- Enable the submit button only for a valid selection. --->
+        btn.removeAttribute("disabled");
     }
 </script>
 
@@ -47,7 +62,7 @@
     <div class="form-group col-md-12">
         <label for="attachmenturl">Upload File <span class="text-danger">*</span></label>
         <p>
-            <input name="file" onchange="unlock();" type="file" />
+            <input name="file" onchange="unlock(this);" type="file" />
         </p>
     </div>
 
