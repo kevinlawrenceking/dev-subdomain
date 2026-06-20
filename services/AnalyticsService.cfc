@@ -1,0 +1,269 @@
+<cfcomponent displayname="AnalyticsService" output="false"
+    hint="Read-only system-wide aggregates for the admin Activity Analytics page. Performs zero writes.">
+
+<!---
+    TAO-ADMIN-ANALYTICS-01 -- Admin Activity Analytics service.
+    System-wide (all users) aggregates for four tiles and their monthly trends:
+      auditions, relationships (non-self contacts), reminders completed, bookings.
+    Conventions: reads application.dsn; every request-derived value is cfqueryparam'd;
+    MySQL syntax (DATE_FORMAT/COALESCE). No INSERT/UPDATE/DELETE anywhere.
+    // MIGRATE: maps to a Go AnalyticsRepository, one method per concern; range resolved in the handler.
+--->
+
+    <cffunction name="init" access="public" returntype="any" output="false">
+        <cfreturn this>
+    </cffunction>
+
+    <!--- Resolve a whitelisted preset to concrete bounds.
+          Upper bound is half-open (< today+1) so it includes today and excludes future-dated rows. --->
+    <cffunction name="resolveRange" access="public" returntype="struct" output="false">
+        <cfargument name="rangeKey" type="string" required="true">
+
+        <cfset var today  = createDate(year(now()), month(now()), day(now()))>
+        <cfset var toExcl = dateAdd("d", 1, today)>
+        <cfset var fromDate = "">
+        <cfset var label = "">
+        <cfset var isAll = false>
+        <cfset var key = lcase(trim(arguments.rangeKey))>
+
+        <cfswitch expression="#key#">
+            <cfcase value="30d">
+                <cfset fromDate = dateAdd("d", -30, today)>
+                <cfset label = "Last 30 days">
+            </cfcase>
+            <cfcase value="12m">
+                <cfset fromDate = dateAdd("m", -12, today)>
+                <cfset label = "Last 12 months">
+            </cfcase>
+            <cfcase value="all">
+                <cfset isAll = true>
+                <cfset label = "All time">
+            </cfcase>
+            <cfdefaultcase>
+                <cfset key = "90d">
+                <cfset fromDate = dateAdd("d", -90, today)>
+                <cfset label = "Last 90 days">
+            </cfdefaultcase>
+        </cfswitch>
+
+        <cfreturn {
+            "key": key,
+            "isAll": isAll,
+            "from": fromDate,
+            "toExcl": toExcl,
+            "publicView": {
+                "key": key,
+                "from": isAll ? "" : dateFormat(fromDate, "yyyy-mm-dd"),
+                "to": dateFormat(today, "yyyy-mm-dd"),
+                "label": label
+            }
+        }>
+    </cffunction>
+
+    <!--- Four headline totals for the selected range. --->
+    <cffunction name="getTotals" access="public" returntype="struct" output="false">
+        <cfargument name="from"   type="any"     required="true">
+        <cfargument name="toExcl" type="any"     required="true">
+        <cfargument name="isAll"  type="boolean" required="true">
+
+        <!--- Auditions: audprojects x audroles, unit = audroleid. Soft-delete/status copied from getAuditions. --->
+        <cfquery name="qAud" datasource="#application.dsn#">
+            SELECT COUNT(DISTINCT r.audroleid) AS cnt
+            FROM audprojects p
+            INNER JOIN audroles r ON p.audprojectID = r.audprojectID
+            WHERE r.isdeleted = 0 AND p.isDeleted = 0
+            <cfif NOT arguments.isAll>
+              AND p.projdate >= <cfqueryparam value="#arguments.from#"   cfsqltype="cf_sql_date">
+              AND p.projdate <  <cfqueryparam value="#arguments.toExcl#" cfsqltype="cf_sql_date">
+            </cfif>
+            <!--- all-range headline drops the date predicate entirely (uniform across tiles):
+                  counts NULL-projdate + future-dated rows in the all-time total. The trend
+                  series stays future-clamped, so headline >= sum(series) for range=all. --->
+        </cfquery>
+
+        <!--- Bookings: same base + Booking (isbooked=1) OR Direct Booking (isDirect=1).
+              Flags are bit(1) (confirmed via SHOW COLUMNS) -> integer literal = 1, no cast. --->
+        <cfquery name="qBook" datasource="#application.dsn#">
+            SELECT COUNT(DISTINCT r.audroleid) AS cnt
+            FROM audprojects p
+            INNER JOIN audroles r ON p.audprojectID = r.audprojectID
+            WHERE r.isdeleted = 0 AND p.isDeleted = 0
+              AND (r.isbooked = 1 OR p.isDirect = 1)
+            <cfif NOT arguments.isAll>
+              AND p.projdate >= <cfqueryparam value="#arguments.from#"   cfsqltype="cf_sql_date">
+              AND p.projdate <  <cfqueryparam value="#arguments.toExcl#" cfsqltype="cf_sql_date">
+            </cfif>
+        </cfquery>
+
+        <!--- Relationships: non-self contacts. COALESCE keeps NULL/empty user_yn (real contacts). --->
+        <cfquery name="qRel" datasource="#application.dsn#">
+            SELECT COUNT(*) AS cnt
+            FROM contactdetails d
+            WHERE COALESCE(d.user_yn,'N') <> 'Y'
+            <cfif NOT arguments.isAll>
+              AND d.contactCreationDate >= <cfqueryparam value="#arguments.from#"   cfsqltype="cf_sql_date">
+              AND d.contactCreationDate <  <cfqueryparam value="#arguments.toExcl#" cfsqltype="cf_sql_date">
+            </cfif>
+        </cfquery>
+
+        <!--- Reminders completed: anchored on notenddate (written = today on completion). --->
+        <cfquery name="qRem" datasource="#application.dsn#">
+            SELECT COUNT(*) AS cnt
+            FROM funotifications
+            WHERE notstatus = 'Completed' AND isdeleted = 0
+            <cfif NOT arguments.isAll>
+              AND notenddate >= <cfqueryparam value="#arguments.from#"   cfsqltype="cf_sql_date">
+              AND notenddate <  <cfqueryparam value="#arguments.toExcl#" cfsqltype="cf_sql_date">
+            </cfif>
+        </cfquery>
+
+        <cfreturn {
+            "auditions": val(qAud.cnt),
+            "relationships": val(qRel.cnt),
+            "remindersCompleted": val(qRem.cnt),
+            "bookings": val(qBook.cnt)
+        }>
+    </cffunction>
+
+    <!--- Monthly series for all four metrics over a shared, continuous month axis. --->
+    <cffunction name="getActivitySeries" access="public" returntype="struct" output="false">
+        <cfargument name="from"   type="any"     required="true">
+        <cfargument name="toExcl" type="any"     required="true">
+        <cfargument name="isAll"  type="boolean" required="true">
+
+        <cfset var qAud  = seriesAuditions(arguments.from, arguments.toExcl, arguments.isAll, false)>
+        <cfset var qBook = seriesAuditions(arguments.from, arguments.toExcl, arguments.isAll, true)>
+        <cfset var qRel  = seriesRelationships(arguments.from, arguments.toExcl, arguments.isAll)>
+        <cfset var qRem  = seriesReminders(arguments.from, arguments.toExcl, arguments.isAll)>
+
+        <!--- Continuous month axis. Bounded: from -> today. All: earliest data month -> today. --->
+        <cfset var endYM = dateFormat(now(), "yyyy") & "-" & numberFormat(month(now()), "00")>
+        <cfset var startYM = "">
+        <cfif arguments.isAll>
+            <cfset startYM = earliestYM([qAud, qBook, qRel, qRem], endYM)>
+        <cfelse>
+            <cfset startYM = dateFormat(arguments.from, "yyyy") & "-" & numberFormat(month(arguments.from), "00")>
+        </cfif>
+
+        <cfset var labels = buildMonthLabels(startYM, endYM)>
+
+        <cfreturn {
+            "labels": labels,
+            "auditions": mapSeries(qAud, labels),
+            "relationships": mapSeries(qRel, labels),
+            "remindersCompleted": mapSeries(qRem, labels),
+            "bookings": mapSeries(qBook, labels)
+        }>
+    </cffunction>
+
+    <!--- Auditions (bookedOnly=false) or Bookings (bookedOnly=true) monthly buckets. --->
+    <cffunction name="seriesAuditions" access="private" returntype="query" output="false">
+        <cfargument name="from"       type="any"     required="true">
+        <cfargument name="toExcl"     type="any"     required="true">
+        <cfargument name="isAll"      type="boolean" required="true">
+        <cfargument name="bookedOnly" type="boolean" required="true">
+        <cfquery name="q" datasource="#application.dsn#">
+            SELECT DATE_FORMAT(p.projdate, '%Y-%m') AS ym, COUNT(DISTINCT r.audroleid) AS cnt
+            FROM audprojects p
+            INNER JOIN audroles r ON p.audprojectID = r.audprojectID
+            WHERE r.isdeleted = 0 AND p.isDeleted = 0
+              AND p.projdate < <cfqueryparam value="#arguments.toExcl#" cfsqltype="cf_sql_date">
+            <cfif arguments.bookedOnly>
+              AND (r.isbooked = 1 OR p.isDirect = 1)
+            </cfif>
+            <cfif NOT arguments.isAll>
+              AND p.projdate >= <cfqueryparam value="#arguments.from#" cfsqltype="cf_sql_date">
+            </cfif>
+            GROUP BY DATE_FORMAT(p.projdate, '%Y-%m')
+            ORDER BY ym
+        </cfquery>
+        <cfreturn q>
+    </cffunction>
+
+    <cffunction name="seriesRelationships" access="private" returntype="query" output="false">
+        <cfargument name="from"   type="any"     required="true">
+        <cfargument name="toExcl" type="any"     required="true">
+        <cfargument name="isAll"  type="boolean" required="true">
+        <cfquery name="q" datasource="#application.dsn#">
+            SELECT DATE_FORMAT(d.contactCreationDate, '%Y-%m') AS ym, COUNT(*) AS cnt
+            FROM contactdetails d
+            WHERE COALESCE(d.user_yn,'N') <> 'Y'
+            <cfif arguments.isAll>
+              AND d.contactCreationDate IS NOT NULL
+            <cfelse>
+              AND d.contactCreationDate >= <cfqueryparam value="#arguments.from#"   cfsqltype="cf_sql_date">
+              AND d.contactCreationDate <  <cfqueryparam value="#arguments.toExcl#" cfsqltype="cf_sql_date">
+            </cfif>
+            GROUP BY DATE_FORMAT(d.contactCreationDate, '%Y-%m')
+            ORDER BY ym
+        </cfquery>
+        <cfreturn q>
+    </cffunction>
+
+    <cffunction name="seriesReminders" access="private" returntype="query" output="false">
+        <cfargument name="from"   type="any"     required="true">
+        <cfargument name="toExcl" type="any"     required="true">
+        <cfargument name="isAll"  type="boolean" required="true">
+        <cfquery name="q" datasource="#application.dsn#">
+            SELECT DATE_FORMAT(notenddate, '%Y-%m') AS ym, COUNT(*) AS cnt
+            FROM funotifications
+            WHERE notstatus = 'Completed' AND isdeleted = 0
+            <cfif arguments.isAll>
+              AND notenddate IS NOT NULL
+            <cfelse>
+              AND notenddate >= <cfqueryparam value="#arguments.from#"   cfsqltype="cf_sql_date">
+              AND notenddate <  <cfqueryparam value="#arguments.toExcl#" cfsqltype="cf_sql_date">
+            </cfif>
+            GROUP BY DATE_FORMAT(notenddate, '%Y-%m')
+            ORDER BY ym
+        </cfquery>
+        <cfreturn q>
+    </cffunction>
+
+    <!--- Lowest 'yyyy-mm' present across the supplied series queries; fallback when all empty. --->
+    <cffunction name="earliestYM" access="private" returntype="string" output="false">
+        <cfargument name="queries"  type="array"  required="true">
+        <cfargument name="fallback" type="string" required="true">
+        <cfset var minYM = "">
+        <cfset var q = "">
+        <cfloop array="#arguments.queries#" index="q">
+            <cfloop query="q">
+                <cfif NOT len(minYM) OR q.ym LT minYM>
+                    <cfset minYM = q.ym>
+                </cfif>
+            </cfloop>
+        </cfloop>
+        <cfreturn len(minYM) ? minYM : arguments.fallback>
+    </cffunction>
+
+    <cffunction name="buildMonthLabels" access="private" returntype="array" output="false">
+        <cfargument name="startYM" type="string" required="true">
+        <cfargument name="endYM"   type="string" required="true">
+        <cfset var labels = []>
+        <cfset var cur  = createDate(listFirst(arguments.startYM,"-"), listLast(arguments.startYM,"-"), 1)>
+        <cfset var endD = createDate(listFirst(arguments.endYM,"-"),   listLast(arguments.endYM,"-"),   1)>
+        <cfset var guard = 0>
+        <cfloop condition="cur LTE endD AND guard LT 600">
+            <cfset arrayAppend(labels, dateFormat(cur,"yyyy") & "-" & numberFormat(month(cur),"00"))>
+            <cfset cur = dateAdd("m", 1, cur)>
+            <cfset guard = guard + 1>
+        </cfloop>
+        <cfreturn labels>
+    </cffunction>
+
+    <cffunction name="mapSeries" access="private" returntype="array" output="false">
+        <cfargument name="q"      type="query" required="true">
+        <cfargument name="labels" type="array" required="true">
+        <cfset var m = {}>
+        <cfloop query="arguments.q">
+            <cfset m[arguments.q.ym] = val(arguments.q.cnt)>
+        </cfloop>
+        <cfset var out = []>
+        <cfset var lbl = "">
+        <cfloop array="#arguments.labels#" index="lbl">
+            <cfset arrayAppend(out, structKeyExists(m, lbl) ? m[lbl] : 0)>
+        </cfloop>
+        <cfreturn out>
+    </cffunction>
+
+</cfcomponent>
