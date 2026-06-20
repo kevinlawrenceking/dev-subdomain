@@ -1,0 +1,30 @@
+-- PURPOSE: Fix cross-schema reference in `contacts_ss_target`. The live prod
+--          definition hardcoded `new_development.` (the DEV schema) on every
+--          table reference, so in PROD the Targeted-list view read DEV tables
+--          and returned no rows -> "No data available in table" on the
+--          /app/contacts/ Targeted tab, even though the enrollment exists.
+--
+-- FIX:     Remove the `new_development.` qualifier from every reference so the
+--          names resolve to the host database (mirrors the working
+--          `contacts_ss_maint`, which is unqualified). NOTHING else changes:
+--          same column list/order/aliases, same ALGORITHM, same DEFINER, same
+--          SQL SECURITY, same hardcoded systemID list (5,6), same IN-subquery.
+--
+-- TARGET:  This exact statement is run on BOTH databases, connected to the
+--          target schema first:
+--            PROD: USE actorsbusinessoffice;
+--            DEV : USE new_development;
+--          Unqualified -> resolves to whichever DB is selected. One definition,
+--          correct in both, replay-safe. Do NOT hardcode actorsbusinessoffice.
+--
+-- MIGRATE: Run via the mysql CLI ONLY. Do NOT use phpMyAdmin -- it silently
+--          rewrites the DEFINER / SQL SECURITY clause. Run as an account that
+--          can set DEFINER=`kingk436`@`%` (the account itself, or one holding
+--          SET_USER_ID / SUPER); otherwise the explicit DEFINER is rejected.
+--
+-- BLAST RADIUS: information_schema sweep confirmed `contacts_ss_target` is the
+--          ONLY view in actorsbusinessoffice referencing new_development.
+--
+-- ROLLBACK: 2026-06-18_fix_view_xschema_contacts_ss_target_ROLLBACK.sql
+
+CREATE OR REPLACE ALGORITHM=UNDEFINED DEFINER=`kingk436`@`%` SQL SECURITY DEFINER VIEW `contacts_ss_target` AS select `d`.`contactID` AS `contactid`,concat('<input type="checkbox" class="form-check-input" id="C',`d`.`contactID`,'" name="batchlist"  value="',`d`.`contactID`,'">') AS `contactcheck`,concat('<img src="/mediaroot/users/',`d`.`userID`,'/contacts/',`d`.`contactID`,'/avatar.jpg?ver=',`d`.`contactID`,'" class="mr-3  rounded-circle gambar img-responsive img-thumbnail" style="height:20px;" alt="profile-image" >') AS `avatar`,concat('<a href="/app/contact/?contactid=',`d`.`contactID`,'" >',`d`.`contactFullName`,'</a>') AS `hlink`,`d`.`contactFullName` AS `col1`,(select group_concat(concat('<span class=\'badge badge-blue\'>',`contactitems`.`valueText`,'</span>') separator ' ') from `contactitems` where ((`contactitems`.`valueCategory` = 'Tag') and (`contactitems`.`contactID` = `d`.`contactID`) and (`contactitems`.`itemStatus` = 'Active')) limit 1) AS `col2`,concat(coalesce(substring_index((select group_concat(concat('<span class=\'badge badge-blue\'>',`contactitems`.`valueText`,'</span>') order by `contactitems`.`valueText` ASC separator '&nbsp; ') from `contactitems` where ((`contactitems`.`valueCategory` = 'Tag') and (`contactitems`.`contactID` = `d`.`contactID`) and (`contactitems`.`itemStatus` = 'Active'))),'&nbsp;',2),''),convert(convert(coalesce((case when (((select count(0) from `contactitems` where ((`contactitems`.`valueCategory` = 'Tag') and (`contactitems`.`contactID` = `d`.`contactID`) and (`contactitems`.`itemStatus` = 'Active'))) - 2) > 0) then concat(' +',((select count(0) from `contactitems` where ((`contactitems`.`valueCategory` = 'Tag') and (`contactitems`.`contactID` = `d`.`contactID`) and (`contactitems`.`itemStatus` = 'Active'))) - 2)) else NULL end),'') using utf8mb3) using utf8mb4)) AS `col2b`,(select `contactitems`.`valueText` from `contactitems` where ((`contactitems`.`valueCategory` = 'Phone') and (`contactitems`.`contactID` = `d`.`contactID`) and (`contactitems`.`itemStatus` = 'Active')) order by `contactitems`.`primary_YN` desc limit 1) AS `col3`,(select `contactitems`.`valueText` from `contactitems` where ((`contactitems`.`valueCategory` = 'Email') and (`contactitems`.`contactID` = `d`.`contactID`) and (`contactitems`.`itemStatus` = 'Active')) order by `contactitems`.`primary_YN` desc limit 1) AS `col4`,(select `contactitems`.`valueCompany` from `contactitems` where ((`contactitems`.`contactID` = `d`.`contactID`) and (`contactitems`.`valueCategory` = 'Company') and (`contactitems`.`itemStatus` = 'active')) order by `contactitems`.`primary_YN` desc limit 1) AS `col5`,`d`.`userID` AS `userid` from `contactdetails` `d` where ((`d`.`contactStatus` = 'Active') and `d`.`contactID` in (select `fusystemusers`.`contactID` from `fusystemusers` where (`fusystemusers`.`systemID` in (5,6))));
