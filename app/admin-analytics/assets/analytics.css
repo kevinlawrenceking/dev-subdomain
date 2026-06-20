@@ -1,4 +1,20 @@
 /* TAO-ADMIN-ANALYTICS-01 -- Activity Analytics page styling (minimal; relies on app.min.css cards). */
+
+/* Brand banner: --tao-blue #406E8E, white logo (logo-light.png), no menu. */
+.aa-banner { background: #406E8E; }
+.aa-banner-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.aa-logo { height: 36px; width: auto; display: block; }
+.aa-back { font-weight: 500; }
+
+.aa-content { padding: 20px; max-width: 1200px; margin: 0 auto; }
+
 .aa-tile .aa-value { font-size: 2rem; font-weight: 700; line-height: 1.1; }
 .aa-tile .aa-label { color: #6c757d; font-size: 0.85rem; margin-top: 4px; }
 .aa-chart-wrap { position: relative; height: 200px; }

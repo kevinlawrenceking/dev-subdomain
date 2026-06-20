@@ -1,7 +1,7 @@
 /*
  * TAO-ADMIN-ANALYTICS-01 -- Admin Activity Analytics page script.
  * Fetches ajax/stats.cfm and renders four stat tiles + four small-multiple line charts.
- * Read-only. No writes. Range selector drives a single re-fetch + re-render.
+ * Read-only. Range selector drives a single re-fetch + re-render. CSV export is client-side.
  */
 (function () {
   "use strict";
@@ -14,8 +14,10 @@
   ];
 
   var charts = {};
+  var lastData = null;
   var sel = document.getElementById("rangeSelect");
   var errBox = document.getElementById("analyticsError");
+  var exportBtn = document.getElementById("exportCsv");
 
   function setError(msg) {
     if (!errBox) { return; }
@@ -37,6 +39,7 @@
   }
 
   function render(data) {
+    lastData = data;
     setError(null);
     METRICS.forEach(function (m) {
       var el = document.getElementById("tile-" + m.key);
@@ -91,8 +94,58 @@
       });
   }
 
+  // ---- CSV export (current loaded range) ----
+  function csvCell(v) {
+    var s = (v === null || v === undefined) ? "" : String(v);
+    if (/[",\r\n]/.test(s)) { s = '"' + s.replace(/"/g, '""') + '"'; }
+    return s;
+  }
+
+  function buildCsv() {
+    if (!lastData) { return ""; }
+    var d = lastData;
+    var rng = d.range || {};
+    var rows = [];
+    rows.push(["The Actor's Office - Activity Analytics"]);
+    rows.push(["Range", rng.label || "", rng.from ? (rng.from + " to " + rng.to) : ("through " + (rng.to || ""))]);
+    rows.push([]);
+    rows.push(["Month", "Auditions", "Relationships added", "Reminders completed", "Bookings"]);
+    var labels = (d.series && d.series.labels) || [];
+    labels.forEach(function (lbl, i) {
+      rows.push([
+        lbl,
+        d.series.auditions[i], d.series.relationships[i],
+        d.series.remindersCompleted[i], d.series.bookings[i]
+      ]);
+    });
+    rows.push([]);
+    rows.push([
+      "Total (" + (rng.label || "") + ")",
+      d.totals.auditions, d.totals.relationships,
+      d.totals.remindersCompleted, d.totals.bookings
+    ]);
+    return rows.map(function (r) { return r.map(csvCell).join(","); }).join("\r\n");
+  }
+
+  function downloadCsv() {
+    var csv = buildCsv();
+    if (!csv) { return; }
+    var blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    var key = (lastData.range && lastData.range.key) || "report";
+    var to = (lastData.range && lastData.range.to) || "";
+    a.href = url;
+    a.download = "tao-activity-analytics-" + key + (to ? "-" + to : "") + ".csv";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
   function init() {
     if (sel) { sel.addEventListener("change", function () { load(sel.value); }); }
+    if (exportBtn) { exportBtn.addEventListener("click", downloadCsv); }
     load(sel ? sel.value : "90d");
   }
 
