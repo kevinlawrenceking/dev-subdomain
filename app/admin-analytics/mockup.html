@@ -104,10 +104,11 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 <script>
+  // Graphs end at the last FULL month. "Today" = June 2026, so the last point is May (index 4).
   function lastNMonths(n) {
     var out = [];
     for (var i = n - 1; i >= 0; i--) {
-      var d = new Date(2026, 5 - i, 1);
+      var d = new Date(2026, 4 - i, 1);
       out.push(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0"));
     }
     return out;
@@ -121,14 +122,16 @@
   function build(n, key, label, extraAud) {
     var labels = lastNMonths(n);
     var s = { auditions: gen(n, 85, 12), relationships: gen(n, 32, 5), remindersCompleted: gen(n, 135, 18), bookings: gen(n, 12, 3) };
+    // Current partial month (month-to-date): counts in the TOTALS but is NOT charted.
+    var partial = { auditions: 38, relationships: 14, remindersCompleted: 61, bookings: 5 };
     return {
       range: { key: key, label: label, from: (key === "all" ? "" : labels[0] + "-01"), to: "2026-06-19" },
       labels: labels, series: s,
       totals: {
-        auditions: sum(s.auditions) + (extraAud || 0),
-        relationships: sum(s.relationships),
-        remindersCompleted: sum(s.remindersCompleted),
-        bookings: sum(s.bookings)
+        auditions: sum(s.auditions) + partial.auditions + (extraAud || 0),
+        relationships: sum(s.relationships) + partial.relationships,
+        remindersCompleted: sum(s.remindersCompleted) + partial.remindersCompleted,
+        bookings: sum(s.bookings) + partial.bookings
       }
     };
   }

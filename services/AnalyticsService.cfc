@@ -131,19 +131,30 @@
         <cfargument name="toExcl" type="any"     required="true">
         <cfargument name="isAll"  type="boolean" required="true">
 
-        <cfset var qAud  = seriesAuditions(arguments.from, arguments.toExcl, arguments.isAll, false)>
-        <cfset var qBook = seriesAuditions(arguments.from, arguments.toExcl, arguments.isAll, true)>
-        <cfset var qRel  = seriesRelationships(arguments.from, arguments.toExcl, arguments.isAll)>
-        <cfset var qRem  = seriesReminders(arguments.from, arguments.toExcl, arguments.isAll)>
+        <!--- Graphs show COMPLETE months only: cut the trailing current (partial) month so the
+              last point is never an artificial dip. Totals (getTotals) still run through today.
+              Upper bound for the series = first day of the current month (exclusive). --->
+        <cfset var seriesToExcl = createDate(year(now()), month(now()), 1)>
 
-        <!--- Continuous month axis. Bounded: from -> today. All: earliest data month -> today. --->
-        <cfset var endYM = dateFormat(now(), "yyyy") & "-" & numberFormat(month(now()), "00")>
+        <cfset var qAud  = seriesAuditions(arguments.from, seriesToExcl, arguments.isAll, false)>
+        <cfset var qBook = seriesAuditions(arguments.from, seriesToExcl, arguments.isAll, true)>
+        <cfset var qRel  = seriesRelationships(arguments.from, seriesToExcl, arguments.isAll)>
+        <cfset var qRem  = seriesReminders(arguments.from, seriesToExcl, arguments.isAll)>
+
+        <!--- Axis ends at the last FULL month (the day before the current month begins). --->
+        <cfset var lastFull = dateAdd("d", -1, seriesToExcl)>
+        <cfset var endYM = dateFormat(lastFull, "yyyy") & "-" & numberFormat(month(lastFull), "00")>
         <cfset var startYM = "">
         <cfif arguments.isAll>
             <!--- Floor guards against stray/sentinel dates (e.g. a 1918 row) hijacking the axis. --->
             <cfset startYM = earliestYM([qAud, qBook, qRel, qRem], endYM, "2000-01")>
         <cfelse>
             <cfset startYM = dateFormat(arguments.from, "yyyy") & "-" & numberFormat(month(arguments.from), "00")>
+        </cfif>
+
+        <!--- No complete month in range yet -> empty axis rather than a bogus single point. --->
+        <cfif startYM GT endYM>
+            <cfreturn { "labels": [], "auditions": [], "relationships": [], "remindersCompleted": [], "bookings": [] }>
         </cfif>
 
         <cfset var labels = buildMonthLabels(startYM, endYM)>
