@@ -140,7 +140,8 @@
         <cfset var endYM = dateFormat(now(), "yyyy") & "-" & numberFormat(month(now()), "00")>
         <cfset var startYM = "">
         <cfif arguments.isAll>
-            <cfset startYM = earliestYM([qAud, qBook, qRel, qRem], endYM)>
+            <!--- Floor guards against stray/sentinel dates (e.g. a 1918 row) hijacking the axis. --->
+            <cfset startYM = earliestYM([qAud, qBook, qRel, qRem], endYM, "2000-01")>
         <cfelse>
             <cfset startYM = dateFormat(arguments.from, "yyyy") & "-" & numberFormat(month(arguments.from), "00")>
         </cfif>
@@ -224,11 +225,14 @@
     <cffunction name="earliestYM" access="private" returntype="string" output="false">
         <cfargument name="queries"  type="array"  required="true">
         <cfargument name="fallback" type="string" required="true">
+        <cfargument name="floorYM"  type="string" required="false" default="2000-01">
         <cfset var minYM = "">
         <cfset var q = "">
         <cfloop array="#arguments.queries#" index="q">
             <cfloop query="q">
-                <cfif NOT len(minYM) OR q.ym LT minYM>
+                <!--- Ignore implausibly old/sentinel dates (e.g. a stray 1918 row) so a single
+                      bad record cannot stretch the all-time chart axis back a century. --->
+                <cfif q.ym GTE arguments.floorYM AND (NOT len(minYM) OR q.ym LT minYM)>
                     <cfset minYM = q.ym>
                 </cfif>
             </cfloop>
