@@ -14,6 +14,12 @@
         <cfreturn this>
     </cffunction>
 
+    <!--- Production data start. Rows before this are test data and are excluded from the
+          All-time range (totals and charts). Bounded ranges never reach back this far. --->
+    <cffunction name="allTimeFloor" access="private" returntype="date" output="false">
+        <cfreturn createDate(2021, 10, 1)>
+    </cffunction>
+
     <!--- Resolve a whitelisted preset to concrete bounds.
           Upper bound is half-open (< today+1) so it includes today and excludes future-dated rows. --->
     <cffunction name="resolveRange" access="public" returntype="struct" output="false">
@@ -53,14 +59,15 @@
             "toExcl": toExcl,
             "publicView": {
                 "key": key,
-                "from": isAll ? "" : dateFormat(fromDate, "yyyy-mm-dd"),
+                "from": isAll ? dateFormat(allTimeFloor(), "yyyy-mm-dd") : dateFormat(fromDate, "yyyy-mm-dd"),
                 "to": dateFormat(today, "yyyy-mm-dd"),
                 "label": label
             }
         }>
     </cffunction>
 
-    <!--- Four headline totals for the selected range. --->
+    <!--- Four headline totals for the selected range. Totals run through today;
+          All-time is floored at the production start (test data excluded). --->
     <cffunction name="getTotals" access="public" returntype="struct" output="false">
         <cfargument name="from"   type="any"     required="true">
         <cfargument name="toExcl" type="any"     required="true">
@@ -72,13 +79,12 @@
             FROM audprojects p
             INNER JOIN audroles r ON p.audprojectID = r.audprojectID
             WHERE r.isdeleted = 0 AND p.isDeleted = 0
-            <cfif NOT arguments.isAll>
+            <cfif arguments.isAll>
+              AND p.projdate >= <cfqueryparam value="#allTimeFloor()#" cfsqltype="cf_sql_date">
+            <cfelse>
               AND p.projdate >= <cfqueryparam value="#arguments.from#"   cfsqltype="cf_sql_date">
               AND p.projdate <  <cfqueryparam value="#arguments.toExcl#" cfsqltype="cf_sql_date">
             </cfif>
-            <!--- all-range headline drops the date predicate entirely (uniform across tiles):
-                  counts NULL-projdate + future-dated rows in the all-time total. The trend
-                  series stays future-clamped, so headline >= sum(series) for range=all. --->
         </cfquery>
 
         <!--- Bookings: same base + Booking (isbooked=1) OR Direct Booking (isDirect=1).
@@ -89,7 +95,9 @@
             INNER JOIN audroles r ON p.audprojectID = r.audprojectID
             WHERE r.isdeleted = 0 AND p.isDeleted = 0
               AND (r.isbooked = 1 OR p.isDirect = 1)
-            <cfif NOT arguments.isAll>
+            <cfif arguments.isAll>
+              AND p.projdate >= <cfqueryparam value="#allTimeFloor()#" cfsqltype="cf_sql_date">
+            <cfelse>
               AND p.projdate >= <cfqueryparam value="#arguments.from#"   cfsqltype="cf_sql_date">
               AND p.projdate <  <cfqueryparam value="#arguments.toExcl#" cfsqltype="cf_sql_date">
             </cfif>
@@ -100,7 +108,9 @@
             SELECT COUNT(*) AS cnt
             FROM contactdetails d
             WHERE COALESCE(d.user_yn,'N') <> 'Y'
-            <cfif NOT arguments.isAll>
+            <cfif arguments.isAll>
+              AND d.contactCreationDate >= <cfqueryparam value="#allTimeFloor()#" cfsqltype="cf_sql_date">
+            <cfelse>
               AND d.contactCreationDate >= <cfqueryparam value="#arguments.from#"   cfsqltype="cf_sql_date">
               AND d.contactCreationDate <  <cfqueryparam value="#arguments.toExcl#" cfsqltype="cf_sql_date">
             </cfif>
@@ -111,7 +121,9 @@
             SELECT COUNT(*) AS cnt
             FROM funotifications
             WHERE notstatus = 'Completed' AND isdeleted = 0
-            <cfif NOT arguments.isAll>
+            <cfif arguments.isAll>
+              AND notenddate >= <cfqueryparam value="#allTimeFloor()#" cfsqltype="cf_sql_date">
+            <cfelse>
               AND notenddate >= <cfqueryparam value="#arguments.from#"   cfsqltype="cf_sql_date">
               AND notenddate <  <cfqueryparam value="#arguments.toExcl#" cfsqltype="cf_sql_date">
             </cfif>
@@ -135,19 +147,20 @@
               last point is never an artificial dip. Totals (getTotals) still run through today.
               Upper bound for the series = first day of the current month (exclusive). --->
         <cfset var seriesToExcl = createDate(year(now()), month(now()), 1)>
+        <cfset var lowerBound = arguments.isAll ? allTimeFloor() : arguments.from>
 
-        <cfset var qAud  = seriesAuditions(arguments.from, seriesToExcl, arguments.isAll, false)>
-        <cfset var qBook = seriesAuditions(arguments.from, seriesToExcl, arguments.isAll, true)>
-        <cfset var qRel  = seriesRelationships(arguments.from, seriesToExcl, arguments.isAll)>
-        <cfset var qRem  = seriesReminders(arguments.from, seriesToExcl, arguments.isAll)>
+        <cfset var qAud  = seriesAuditions(lowerBound, seriesToExcl, false)>
+        <cfset var qBook = seriesAuditions(lowerBound, seriesToExcl, true)>
+        <cfset var qRel  = seriesRelationships(lowerBound, seriesToExcl)>
+        <cfset var qRem  = seriesReminders(lowerBound, seriesToExcl)>
 
         <!--- Axis ends at the last FULL month (the day before the current month begins). --->
         <cfset var lastFull = dateAdd("d", -1, seriesToExcl)>
         <cfset var endYM = dateFormat(lastFull, "yyyy") & "-" & numberFormat(month(lastFull), "00")>
         <cfset var startYM = "">
         <cfif arguments.isAll>
-            <!--- Floor guards against stray/sentinel dates (e.g. a 1918 row) hijacking the axis. --->
-            <cfset startYM = earliestYM([qAud, qBook, qRel, qRem], endYM, "2000-01")>
+            <!--- Earliest real data month within the production window; floor guards stray dates. --->
+            <cfset startYM = earliestYM([qAud, qBook, qRel, qRem], endYM, "2021-10")>
         <cfelse>
             <cfset startYM = dateFormat(arguments.from, "yyyy") & "-" & numberFormat(month(arguments.from), "00")>
         </cfif>
@@ -168,23 +181,21 @@
         }>
     </cffunction>
 
-    <!--- Auditions (bookedOnly=false) or Bookings (bookedOnly=true) monthly buckets. --->
+    <!--- Auditions (bookedOnly=false) or Bookings (bookedOnly=true) monthly buckets.
+          Always bounded [from, toExcl) -- toExcl is the first of the current month (full months only). --->
     <cffunction name="seriesAuditions" access="private" returntype="query" output="false">
         <cfargument name="from"       type="any"     required="true">
         <cfargument name="toExcl"     type="any"     required="true">
-        <cfargument name="isAll"      type="boolean" required="true">
         <cfargument name="bookedOnly" type="boolean" required="true">
         <cfquery name="q" datasource="#application.dsn#">
             SELECT DATE_FORMAT(p.projdate, '%Y-%m') AS ym, COUNT(DISTINCT r.audroleid) AS cnt
             FROM audprojects p
             INNER JOIN audroles r ON p.audprojectID = r.audprojectID
             WHERE r.isdeleted = 0 AND p.isDeleted = 0
-              AND p.projdate < <cfqueryparam value="#arguments.toExcl#" cfsqltype="cf_sql_date">
+              AND p.projdate >= <cfqueryparam value="#arguments.from#"   cfsqltype="cf_sql_date">
+              AND p.projdate <  <cfqueryparam value="#arguments.toExcl#" cfsqltype="cf_sql_date">
             <cfif arguments.bookedOnly>
               AND (r.isbooked = 1 OR p.isDirect = 1)
-            </cfif>
-            <cfif NOT arguments.isAll>
-              AND p.projdate >= <cfqueryparam value="#arguments.from#" cfsqltype="cf_sql_date">
             </cfif>
             GROUP BY DATE_FORMAT(p.projdate, '%Y-%m')
             ORDER BY ym
@@ -193,19 +204,14 @@
     </cffunction>
 
     <cffunction name="seriesRelationships" access="private" returntype="query" output="false">
-        <cfargument name="from"   type="any"     required="true">
-        <cfargument name="toExcl" type="any"     required="true">
-        <cfargument name="isAll"  type="boolean" required="true">
+        <cfargument name="from"   type="any" required="true">
+        <cfargument name="toExcl" type="any" required="true">
         <cfquery name="q" datasource="#application.dsn#">
             SELECT DATE_FORMAT(d.contactCreationDate, '%Y-%m') AS ym, COUNT(*) AS cnt
             FROM contactdetails d
             WHERE COALESCE(d.user_yn,'N') <> 'Y'
-            <cfif arguments.isAll>
-              AND d.contactCreationDate IS NOT NULL
-            <cfelse>
               AND d.contactCreationDate >= <cfqueryparam value="#arguments.from#"   cfsqltype="cf_sql_date">
               AND d.contactCreationDate <  <cfqueryparam value="#arguments.toExcl#" cfsqltype="cf_sql_date">
-            </cfif>
             GROUP BY DATE_FORMAT(d.contactCreationDate, '%Y-%m')
             ORDER BY ym
         </cfquery>
@@ -213,36 +219,30 @@
     </cffunction>
 
     <cffunction name="seriesReminders" access="private" returntype="query" output="false">
-        <cfargument name="from"   type="any"     required="true">
-        <cfargument name="toExcl" type="any"     required="true">
-        <cfargument name="isAll"  type="boolean" required="true">
+        <cfargument name="from"   type="any" required="true">
+        <cfargument name="toExcl" type="any" required="true">
         <cfquery name="q" datasource="#application.dsn#">
             SELECT DATE_FORMAT(notenddate, '%Y-%m') AS ym, COUNT(*) AS cnt
             FROM funotifications
             WHERE notstatus = 'Completed' AND isdeleted = 0
-            <cfif arguments.isAll>
-              AND notenddate IS NOT NULL
-            <cfelse>
               AND notenddate >= <cfqueryparam value="#arguments.from#"   cfsqltype="cf_sql_date">
               AND notenddate <  <cfqueryparam value="#arguments.toExcl#" cfsqltype="cf_sql_date">
-            </cfif>
             GROUP BY DATE_FORMAT(notenddate, '%Y-%m')
             ORDER BY ym
         </cfquery>
         <cfreturn q>
     </cffunction>
 
-    <!--- Lowest 'yyyy-mm' present across the supplied series queries; fallback when all empty. --->
     <cffunction name="earliestYM" access="private" returntype="string" output="false">
         <cfargument name="queries"  type="array"  required="true">
         <cfargument name="fallback" type="string" required="true">
-        <cfargument name="floorYM"  type="string" required="false" default="2000-01">
+        <cfargument name="floorYM"  type="string" required="false" default="2021-10">
         <cfset var minYM = "">
         <cfset var q = "">
         <cfloop array="#arguments.queries#" index="q">
             <cfloop query="q">
-                <!--- Ignore implausibly old/sentinel dates (e.g. a stray 1918 row) so a single
-                      bad record cannot stretch the all-time chart axis back a century. --->
+                <!--- Ignore anything below the production floor so a stray/old row cannot
+                      stretch the all-time chart axis. --->
                 <cfif q.ym GTE arguments.floorYM AND (NOT len(minYM) OR q.ym LT minYM)>
                     <cfset minYM = q.ym>
                 </cfif>
