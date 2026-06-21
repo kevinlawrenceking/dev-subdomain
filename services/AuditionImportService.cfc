@@ -1671,7 +1671,10 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                     )",
                     {
                         projName: { value: left(trim(audData.project_name), 500), cfsqltype: "cf_sql_varchar" },
-                        projDescription: { value: audData.notes, cfsqltype: "cf_sql_longvarchar", null: !len(audData.notes) },
+                        // The import has no Project Description/logline field. Leave it NULL.
+                        // The mapped "notes" value is written to the audition Notes log below (E4b),
+                        // NOT into projDescription (which is the logline shown on the audition page).
+                        projDescription: { value: "", cfsqltype: "cf_sql_longvarchar", null: true },
                         userid: { value: arguments.userid, cfsqltype: "cf_sql_integer" },
                         audSubCatID: { value: audSubCatId, cfsqltype: "cf_sql_integer" },
                         contactid: { value: projectContactId, cfsqltype: "cf_sql_integer", null: projectContactId eq 0 },
@@ -1696,7 +1699,9 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                     {
                         roleName: { value: roleName, cfsqltype: "cf_sql_varchar" },
                         projectId: { value: newProjectId, cfsqltype: "cf_sql_integer" },
-                        charDescription: { value: audData.notes, cfsqltype: "cf_sql_longvarchar", null: !len(audData.notes) },
+                        // The import has no Character Description field. Leave it NULL; the mapped
+                        // "notes" value goes to the audition Notes log below (E4b), not here.
+                        charDescription: { value: "", cfsqltype: "cf_sql_longvarchar", null: true },
                         userid: { value: arguments.userid, cfsqltype: "cf_sql_integer" }
                     },
                     { datasource: application.datasource, result: "qRoleResult" }
@@ -1768,6 +1773,21 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                     { datasource: application.datasource }
                 );
                 if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
+
+                // E4b) Write the mapped note to the audition Notes log (keyed by audprojectid)
+                //      so it shows in the audition's Notes tab. Previously the note was wrongly
+                //      written into projDescription (logline) and charDescription.
+                if (len(trim(audData.notes))) {
+                    request.svc("NoteService").INSnoteslog_23966(
+                        userid = arguments.userid,
+                        contactid = val(contactId),
+                        noteDetails = audData.notes,
+                        isPublic = false,
+                        audprojectid = newProjectId,
+                        notedetailshtml = audData.notes
+                    );
+                    if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
+                }
 
                 fieldsWritten = qFacts.recordCount;
 

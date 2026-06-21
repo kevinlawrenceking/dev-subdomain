@@ -667,8 +667,10 @@
     <cfset arrayAppend(rules, { keywords: ["time"], field: "audition_time" })>
     <!--- location --->
     <cfset arrayAppend(rules, { keywords: ["location", "address", "room", "studio"], field: "location" })>
-    <!--- category (medium) --->
-    <cfset arrayAppend(rules, { keywords: ["medium", "category", "type", "format"], field: "medium" })>
+    <!--- medium (do NOT include "category" here: a column literally named "Category"
+         must fall through to the category rule below, which resolves to audsubcatid
+         and is what the Review grid displays). --->
+    <cfset arrayAppend(rules, { keywords: ["medium", "type", "format"], field: "medium" })>
     <!--- status --->
     <cfset arrayAppend(rules, { keywords: ["status", "result", "outcome"], field: "status" })>
     <!--- self_tape --->

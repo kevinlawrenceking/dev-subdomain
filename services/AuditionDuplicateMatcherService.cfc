@@ -130,8 +130,8 @@
         <cfquery name="qAuditions" datasource="#application.datasource#" timeout="30">
             SELECT a.audition_id, a.contactid, a.project_name, a.role_name,
                    a.audition_date, a.casting_director,
-                   COALESCE(cd.firstName, '') AS contact_first,
-                   COALESCE(cd.lastName, '') AS contact_last
+                   COALESCE(cd.contactFullName, '') AS contact_first,
+                   '' AS contact_last
             FROM auditions a
             LEFT JOIN contactdetails cd ON cd.contactid = a.contactid
             WHERE a.userid = <cfqueryparam cfsqltype="cf_sql_integer" value="#arguments.userid#">
@@ -201,8 +201,8 @@
         <cflog file="import_auditions" text="DupeService: index built items=#result.items_total# ms=#result.build_ms#">
 
         <cfcatch type="any">
-            <cfset result.abort_reason = "Build failed: " & cfcatch.message>
-            <cflog file="import_auditions" text="DupeService.buildUserDupeIndex ERROR: #cfcatch.message#">
+            <cfset result.abort_reason = "Build failed: " & cfcatch.message & (structKeyExists(cfcatch, "detail") and len(cfcatch.detail) ? " — " & cfcatch.detail : "")>
+            <cflog file="import_auditions" text="DupeService.buildUserDupeIndex ERROR: #cfcatch.message# detail=#structKeyExists(cfcatch, 'detail') ? cfcatch.detail : ''#">
         </cfcatch>
     </cftry>
 
@@ -344,8 +344,8 @@
             SELECT a.audition_id, a.project_name, a.role_name, a.casting_director,
                    a.agency, a.audition_date, a.audition_time, a.location,
                    a.medium, a.status, a.self_tape,
-                   COALESCE(cd.firstName, '') AS contact_first,
-                   COALESCE(cd.lastName, '') AS contact_last
+                   COALESCE(cd.contactFullName, '') AS contact_first,
+                   '' AS contact_last
             FROM auditions a
             LEFT JOIN contactdetails cd ON cd.contactid = a.contactid
             WHERE a.audition_id IN (<cfqueryparam cfsqltype="cf_sql_integer" value="#idList#" list="true">)

@@ -1098,23 +1098,31 @@
                     })>
 
                     <cfcatch type="any">
+                        <!--- Build a useful error: cfcatch.message for DB errors is always the
+                             generic "Error executing Database Query." The real cause (e.g. the
+                             offending column / constraint) is in cfcatch.detail. Surface both. --->
+                        <cfset var rowErrMsg = cfcatch.message>
+                        <cfif structKeyExists(cfcatch, "detail") and len(trim(cfcatch.detail))>
+                            <cfset rowErrMsg = rowErrMsg & " — " & trim(cfcatch.detail)>
+                        </cfif>
+
                         <!--- Mark row as failed --->
                         <cfquery >
                             UPDATE import_job_rows
                             SET
                                 status = 'failed',
-                                import_error = <cfqueryparam cfsqltype="cf_sql_longvarchar" value="#cfcatch.message#">,
+                                import_error = <cfqueryparam cfsqltype="cf_sql_longvarchar" value="#rowErrMsg#">,
                                 updated_at = NOW()
                             WHERE row_id = <cfqueryparam cfsqltype="cf_sql_integer" value="#qRows.row_id#">
                         </cfquery>
 <cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
                         <cfset result.failed++>
-                        <cfset arrayAppend(result.errors, "Row " & qRows.row_num & ": " & cfcatch.message)>
+                        <cfset arrayAppend(result.errors, "Row " & qRows.row_num & ": " & rowErrMsg)>
 
                         <cfset logEvent(arguments.job_id, "row_failed", {
                             row_id: qRows.row_id,
-                            error: cfcatch.message
+                            error: rowErrMsg
                         })>
                     </cfcatch>
                 </cftry>
@@ -1144,7 +1152,11 @@
                     <cfset logEvent(arguments.job_id, "import_failed", {error: cfcatch.message})>
                 </cftransaction>
 
-                <cfset arrayAppend(result.errors, "Import failed: " & cfcatch.message)>
+                <cfset var importErrMsg = cfcatch.message>
+                <cfif structKeyExists(cfcatch, "detail") and len(trim(cfcatch.detail))>
+                    <cfset importErrMsg = importErrMsg & " — " & trim(cfcatch.detail)>
+                </cfif>
+                <cfset arrayAppend(result.errors, "Import failed: " & importErrMsg)>
             </cfcatch>
         </cftry>
     </cftransaction>
