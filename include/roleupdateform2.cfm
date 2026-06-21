@@ -79,6 +79,17 @@
 <cfset new_audroletypeid = val(new_audroletypeid) />
 <cfset new_audsourceid = val(new_audsourceid) />
 
+<!--- WO-5.1: Guard against missing/invalid role id (stray GET, refresh replay, or bot).
+      Without a valid role id there is nothing to update, and the destructive delete/update
+      includes below must not run. Bail out cleanly instead of crashing or doing no-op writes. --->
+<cfif new_audroleid LTE 0>
+    <cfif audprojectid GT 0>
+        <cflocation url="/app/audition/?audprojectid=#audprojectid#&secid=#secid#" addtoken="false" />
+    <cfelse>
+        <cflocation url="/app/" addtoken="false" />
+    </cfif>
+</cfif>
+
 <!--- Include necessary query files for deletion and processing. --->
 <cfinclude template="/include/qry/delete_287_1.cfm" />
 <cfinclude template="/include/qry/delete_287_2.cfm" />
