@@ -294,8 +294,16 @@
     <cfset var rowNum = 1>
     <cfset var charIndex = 0>
     <cfset var contentLen = len(arguments.content)>
+    <cfset var skipNext = false>
 
     <cfloop from="1" to="#contentLen#" index="i">
+        <!--- Skip the second char of an escaped "" pair. A <cfloop from/to> ignores
+              reassigning its index var (the old "<cfset i++>" was a no-op), which left
+              inQuotes inverted and shifted/truncated every later column. --->
+        <cfif skipNext>
+            <cfset skipNext = false>
+            <cfcontinue>
+        </cfif>
         <cfset var char = mid(arguments.content, i, 1)>
         <cfset var nextChar = i lt contentLen ? mid(arguments.content, i + 1, 1) : "">
 
@@ -305,7 +313,7 @@
                 <cfif nextChar eq arguments.quoteChar>
                     <!--- Escaped quote --->
                     <cfset currentField &= arguments.quoteChar>
-                    <cfset i++>
+                    <cfset skipNext = true>
                 <cfelse>
                     <!--- End of quoted field --->
                     <cfset inQuotes = false>
