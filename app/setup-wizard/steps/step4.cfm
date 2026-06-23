@@ -43,6 +43,9 @@
                         <input type="text" class="form-control form-control-sm" placeholder="Project name" data-field="projectName" />
                     </div>
                     <div class="col-md-6">
+                        <input type="text" class="form-control form-control-sm" placeholder="Role / character (optional)" data-field="roleName" />
+                    </div>
+                    <div class="col-md-6">
                         <select class="form-select form-select-sm" data-field="audsubcatid">
                             <option value="">-- Category --</option>
                             <cfloop query="qCatOptions">
@@ -88,6 +91,7 @@ $('##add-audition-entry').on('click', function() {
         '<div class="audition-entry border rounded p-3 mb-2">' +
         '<div class="row g-2">' +
         '<div class="col-md-6"><input type="text" class="form-control form-control-sm" placeholder="Project name" data-field="projectName" /></div>' +
+        '<div class="col-md-6"><input type="text" class="form-control form-control-sm" placeholder="Role / character (optional)" data-field="roleName" /></div>' +
         '<div class="col-md-6"><select class="form-select form-select-sm" data-field="audsubcatid">' + categoryOptions + '</select></div>' +
         '<div class="col-md-6"><input type="text" class="form-control form-control-sm" placeholder="Casting director" data-field="castingDirector" /></div>' +
         '<div class="col-md-6"><input type="date" class="form-control form-control-sm" data-field="audDate" /></div>' +
@@ -104,6 +108,7 @@ window.wizardCollectStepData = function() {
         if (!name) return;
         auditions.push({
             projectName: name,
+            roleName: $e.find('[data-field="roleName"]').val().trim(),
             audsubcatid: $e.find('[data-field="audsubcatid"]').val(),
             castingDirector: $e.find('[data-field="castingDirector"]').val().trim(),
             audDate: $e.find('[data-field="audDate"]').val(),

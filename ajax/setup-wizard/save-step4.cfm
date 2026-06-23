@@ -25,6 +25,10 @@
         <cfset projName = trim(aud.projectName ?: "")>
         <cfif NOT len(projName)><cfcontinue></cfif>
 
+        <!--- D7: role/character is its own value, distinct from the project title.
+              Optional in the wizard; stored empty when not supplied. --->
+        <cfset roleName = trim(aud.roleName ?: "")>
+
         <cfset audDate = trim(aud.audDate ?: "")>
         <cfif NOT len(audDate) OR NOT isDate(audDate)>
             <cfset audDate = now()>
@@ -88,7 +92,7 @@
                 holdStartDate, holdEndDate, audDialectID, audSourceID,
                 userid, isDeleted, isBooked
             ) VALUES (
-                <cfqueryparam cfsqltype="cf_sql_varchar"     value="#projName#" maxlength="500" />,
+                <cfqueryparam cfsqltype="cf_sql_varchar"     value="#roleName#" maxlength="500" />,
                 <cfqueryparam cfsqltype="cf_sql_integer"     value="#newProjId#" />,
                 <cfqueryparam cfsqltype="cf_sql_integer"     value="#audRoleTypeID#" />,
                 <cfqueryparam cfsqltype="cf_sql_longvarchar" value="" null="true" />,
@@ -101,6 +105,40 @@
                 <cfqueryparam cfsqltype="cf_sql_bit"         value="0" />
             )
         </cfquery>
+
+        <!--- D7: link the casting director to this audition via
+              audcontacts_auditions_xref. Resolve the typed CD name to a contact
+              for this user (match an existing active contact by name first for
+              idempotency, otherwise create one), then write the xref. Mirrors the
+              canonical include/audition-add2.cfm path. The xref insert is
+              INSERT IGNORE (ContactAuditionService), so a double-submit will not
+              create a duplicate link. All within the surrounding transaction. --->
+        <cfset cdName = trim(aud.castingDirector ?: "")>
+        <cfif len(cdName)>
+            <cfquery name="qCd" datasource="#application.datasource#" maxrows="1">
+                SELECT contactid
+                FROM contactdetails
+                WHERE userid = <cfqueryparam value="#userid#" cfsqltype="cf_sql_integer" />
+                  AND contactFullName = <cfqueryparam value="#cdName#" cfsqltype="cf_sql_varchar" />
+                  AND contactStatus = 'Active'
+            </cfquery>
+            <cfif qCd.recordCount>
+                <cfset cdContactId = qCd.contactid>
+            <cfelse>
+                <!--- Create with contactStatus='Active' (matches save-step2 and the
+                      dedupe lookup above) so a re-submit resolves the same contact
+                      instead of creating a duplicate. --->
+                <cfset cdContactId = request.svc("ContactService").create({
+                    userid: userid,
+                    contactFullName: cdName,
+                    contactStatus: "Active"
+                })>
+            </cfif>
+            <cfset request.svc("ContactAuditionService").INSaudcontacts_auditions_xref_23780(
+                audprojectid = newProjId,
+                new_contactid = cdContactId
+            )>
+        </cfif>
 
         <cfset auditionsCreated++>
     </cfloop>
