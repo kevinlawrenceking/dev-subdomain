@@ -51,7 +51,7 @@ WHERE th.uuid = <cfqueryparam value="#uuid#" cfsqltype="cf_sql_varchar" />
             <link rel="shortcut icon" href="/media/shared/images/favicon.ico">
             <link href="/app/assets/css/app.min.css?ver=13.3.1.20.102243915958" rel="stylesheet" type="text/css" id="app-style"/>
         </head>
-        <body class="loading" style="background-color: white; font-family: 'Source Sans Pro', sans-serif;">
+        <body style="background-color: white; font-family: 'Source Sans Pro', sans-serif;">
             <div class="account-pages mt-5 mb-5">
                 <div class="container">
                     <div class="row justify-content-center">
