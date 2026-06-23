@@ -1625,14 +1625,15 @@ ORDER BY contactfullname
     <cfargument name="userId" type="numeric" required="true">
 
 <cfquery name="result" >
-            SELECT 
-                d.contactid, 
-                d.recordname AS contactname, 
-                d.contactStatus 
-            FROM 
-                contactdetails d 
-            INNER JOIN 
-                taousers u ON u.userid = d.userid 
+            SELECT
+                d.contactid,
+                d.recordname AS contactname,
+                d.contacttitle,
+                d.contactStatus
+            FROM
+                contactdetails d
+            INNER JOIN
+                taousers u ON u.userid = d.userid
             WHERE 
                 u.userid = <cfqueryparam value="#arguments.userId#" cfsqltype="CF_SQL_INTEGER"> 
                 AND d.contactStatus = <cfqueryparam value="Active" cfsqltype="CF_SQL_VARCHAR"> 
