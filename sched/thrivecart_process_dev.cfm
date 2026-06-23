@@ -35,6 +35,11 @@
 </cfquery>
 
 
+<!--- TAO-SETUP-DEDUPE-01: track recipients already emailed in this run so each
+      person is emailed only once, even if the paymentplans join returns the same
+      ThriveCart order more than once. --->
+<cfset sentRecipients = {} />
+
 <cfloop query="U">
     <cftry>
         <cfset new_id = U.id />
@@ -88,6 +93,20 @@
                 <cfset suppressSend = true />
                 <cflog file="TAO_setup_test_harness" type="warning"
                        text="thrivecart_process: test row id=#new_id# IsDemo=1 but no admin userid; suppressing (fail-safe).">
+            </cfif>
+        </cfif>
+
+        <!--- TAO-SETUP-DEDUPE-01: suppress a duplicate send if this recipient was
+              already emailed earlier in this same run (e.g. join-duplicated rows).
+              Status is still updated to Emailed below so no row stays Pending. --->
+        <cfif NOT suppressSend>
+            <cfset dedupeKey = lcase(trim(mailTo)) />
+            <cfif len(dedupeKey) AND structKeyExists(sentRecipients, dedupeKey)>
+                <cfset suppressSend = true />
+                <cflog file="TAO_setup_test_harness"
+                       text="thrivecart_process: row id=#new_id# recipient #mailTo# already emailed this run; suppressing duplicate.">
+            <cfelseif len(dedupeKey)>
+                <cfset sentRecipients[dedupeKey] = true />
             </cfif>
         </cfif>
 

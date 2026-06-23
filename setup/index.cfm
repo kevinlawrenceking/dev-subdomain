@@ -12,6 +12,7 @@ SELECT th.id
 ,th.CustomerLast
 ,th.CustomerEmail
 ,th.`status`
+,th.CustomerID
 ,th.BaseProductLabel
 ,pp.planName
 ,th.uuid
@@ -19,13 +20,69 @@ SELECT th.id
 FROM thrivecart th
 LEFT JOIN paymentplans pp ON pp.BasePaymentPlanId = th.BasePaymentPlanId
 LEFT JOIN products pr ON pr.BaseProductId = th.BaseProductId
-WHERE th.STATUS = 'Emailed' and th.uuid = <cfqueryparam value="#uuid#" cfsqltype="cf_sql_varchar" />
+WHERE th.uuid = <cfqueryparam value="#uuid#" cfsqltype="cf_sql_varchar" />
 </cfquery>
 
 
+<!--- No purchase matches this link at all -> nothing to set up. --->
 <cfif #u.recordcount# is not "1">
 <cflocation url="/app/dashboard_new/" />
 
+</cfif>
+
+<!--- TAO-SETUP-LINK-GUARD: a setup link is single-use. If a (non-deleted) user
+      already exists for this purchase, or the purchase is no longer awaiting
+      setup (status moved past 'Emailed'), the link has already been used. Show a
+      friendly "link expired" page instead of the setup form. --->
+<cfquery name="qExistingUser" datasource="#application.dsn#">
+    SELECT userid FROM taousers_tbl
+    WHERE customerid = <cfqueryparam value="#val(u.CustomerID)#" cfsqltype="cf_sql_bigint" />
+    AND isdeleted = 0
+    LIMIT 1
+</cfquery>
+
+<cfif qExistingUser.recordCount GT 0 OR u.status NEQ "Emailed">
+    <!DOCTYPE html>
+    <html lang="en">
+        <head>
+            <meta charset="utf-8" />
+            <title>Link Expired | The Actor's Office</title>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <link rel="shortcut icon" href="/media/shared/images/favicon.ico">
+            <link href="/app/assets/css/app.min.css?ver=13.3.1.20.102243915958" rel="stylesheet" type="text/css" id="app-style"/>
+        </head>
+        <body class="loading" style="background-color: white; font-family: 'Source Sans Pro', sans-serif;">
+            <div class="account-pages mt-5 mb-5">
+                <div class="container">
+                    <div class="row justify-content-center">
+                        <div class="col-md-8 col-lg-6 col-xl-5">
+                            <div class="card">
+                                <div class="card-body p-4">
+                                    <div class="text-center w-85 m-auto">
+                                        <div class="auth-logo">
+                                            <span class="logo no-hover-effect-lg">
+                                                <img src="<cfoutput>#imagesurl#/taowhite.png</cfoutput>" alt="" height="60">
+                                            </span>
+                                        </div>
+                                        <h5 class="mt-3">Link Expired</h5>
+                                    </div>
+                                    <div class="alert alert-warning mt-3" role="alert" style="font-size:14px;">
+                                        Sorry, the link expired. Please contact
+                                        <a href="mailto:support@theactorsoffice.com">support@theactorsoffice.com</a>
+                                        if you have any issues.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <footer class="footer footer-alt text-white-50">
+                &copy; 2021 The Actor's Office &trade; - All Right Reserved.
+            </footer>
+        </body>
+    </html>
+    <cfabort>
 </cfif>
 
 <!--- Store validated UUID + thrivecart ID in session for setup2.cfm server-side re-validation --->

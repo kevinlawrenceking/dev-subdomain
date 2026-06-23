@@ -150,6 +150,12 @@
 <!--- P11: Set session.userid so the wizard guard works on first request --->
 <cfset session.userid = select_userid>
 
+<!--- TAO-SETUP-WIZARD-RESET: the new user starts the wizard at step 1. Reset any
+      setup_step left in the session from a prior login (e.g. an admin testing a
+      dummy record carries their own setup_step=7, which would otherwise drop the
+      wizard onto the last step). The new taousers_tbl row has no progress yet. --->
+<cfset session.setup_step = 0>
+
 <!--- Session verification logging -- remove after setup flow is confirmed stable --->
 <cflog file="TAO_setup_session" type="information"
        text="Setup complete | userid=#select_userid# | email=#setupEmail# | dsn=#application.dsn# | appName=#application.applicationName# | cfid=#cookie.cfid# | cftoken=#cookie.cftoken#" />

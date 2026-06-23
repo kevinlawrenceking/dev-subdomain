@@ -26,10 +26,10 @@
 
 <cfset variables.response = { "success": false, "message": "", "data": {} }>
 
-<!--- Allow-list env gate: dev/UAT only. --->
-<cfset variables.allowedDsns = "abod">
+<!--- Allow-list env gate: dev + prod. --->
+<cfset variables.allowedDsns = "abo,abod">
 <cfif NOT structKeyExists(application, "dsn") OR NOT listFindNoCase(variables.allowedDsns, application.dsn)>
-    <cfset variables.response.message = "Test setup provisioning is available on the dev environment only.">
+    <cfset variables.response.message = "Test setup provisioning is not available in this environment.">
     <cflog file="TAO_setup_test_harness" type="warning"
            text="provision BLOCKED on dsn=#structKeyExists(application,'dsn') ? application.dsn : '(unset)'# by admin=#session.userid#">
     <cfheader statuscode="403">

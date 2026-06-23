@@ -34,9 +34,9 @@
                 <button id="btnCreateUser" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#userModal">
                     + New User
                 </button>
-                <!--- TAO-SETUP-TEST-HARNESS-01 D2: dev-only setup-test provisioner --->
-                <cfif structKeyExists(application, "dsn") AND application.dsn EQ "abod">
-                    <button id="btnOpenTestSetup" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#testSetupModal" title="Provision a setup-test user (dev only)">
+                <!--- TAO-SETUP-TEST-HARNESS-01 D2: setup-test provisioner (dev + prod) --->
+                <cfif structKeyExists(application, "dsn") AND listFindNoCase("abo,abod", application.dsn)>
+                    <button id="btnOpenTestSetup" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#testSetupModal" title="Provision a setup-test user">
                         Create Test Setup User
                     </button>
                 </cfif>
@@ -198,36 +198,29 @@
     </div>
 </div>
 
-<!--- TAO-SETUP-TEST-HARNESS-01 D2: dev-only setup-test provisioner modal --->
-<cfif structKeyExists(application, "dsn") AND application.dsn EQ "abod">
+<!--- TAO-SETUP-TEST-HARNESS-01 D2: setup-test provisioner modal (dev + prod) --->
+<cfif structKeyExists(application, "dsn") AND listFindNoCase("abo,abod", application.dsn)>
 <div class="modal fade" id="testSetupModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Create Test Setup User <span class="badge bg-secondary">dev only</span></h5>
+                <h5 class="modal-title">Create Test Setup User</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <div id="testSetupAlert" class="alert d-none"></div>
                 <p class="text-muted small mb-3">
                     Creates a flagged test purchase (IsDemo) so the standard scheduled task sends the real
-                    setup email -- redirected to the admin below. Click GET STARTED in that email to run setup.
+                    setup email -- redirected to your inbox. Click GET STARTED in that email to run setup.
                 </p>
                 <div class="mb-3">
                     <label class="form-label">Contact Name *</label>
                     <input type="text" id="tsContactName" class="form-control form-control-sm" required>
                 </div>
-                <div class="mb-3">
-                    <label class="form-label">Email</label>
-                    <input type="email" id="tsEmail" class="form-control form-control-sm" autocomplete="off" placeholder="blank = auto-generate setup-test+{epoch}@theactorsoffice.com">
-                </div>
-                <div class="row">
-                    <div class="col-12 mb-3">
-                        <label class="form-label">Send setup email to (admin user ID)</label>
-                        <input type="number" id="tsAdminUserid" class="form-control form-control-sm" value="<cfoutput>#val(session.userid)#</cfoutput>">
-                        <div class="form-text">The test purchase's setup email is redirected to this admin's inbox.</div>
-                    </div>
-                </div>
+                <!--- Email auto-generates when left blank; admin userid defaults to the current admin.
+                      Hidden because operators never change them -- values still post to create-test-setup.cfm. --->
+                <input type="hidden" id="tsEmail" value="">
+                <input type="hidden" id="tsAdminUserid" value="<cfoutput>#val(session.userid)#</cfoutput>">
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
