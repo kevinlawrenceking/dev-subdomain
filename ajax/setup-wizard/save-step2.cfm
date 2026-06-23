@@ -1,6 +1,7 @@
 <!---
     P11 Step 2 Save: Add Your Representation
-    Creates contacts with rep tags (Agent/Manager/Publicist, My Rep Team, My Team).
+    Creates contacts with a single role tag (Agent/Manager/Publicist). D6: team
+    and rep membership are derived from the role tag by repointed readers.
     Auth + CSRF handled by ajax/Application.cfc.
 --->
 <cfset userid = session.userid>
@@ -77,18 +78,24 @@
             </cfquery>
         </cfif>
 
-        <!--- Tags: role, My Rep Team, My Team --->
-        <cfloop list="#repRole#,My Rep Team,My Team" index="tagName">
-            <cfquery datasource="#application.datasource#">
-                INSERT INTO contactitems_tbl (contactid, valueCategory, valueType, valuetext, itemStatus)
-                VALUES (
-                    <cfqueryparam value="#newContactId#" cfsqltype="cf_sql_integer" />,
-                    'Tag', 'Tags',
-                    <cfqueryparam value="#tagName#" cfsqltype="cf_sql_varchar" />,
-                    'Active'
-                )
-            </cfquery>
-        </cfloop>
+        <!--- D6 (Option A): write only the single role tag (Agent/Manager/
+              Publicist). 'My Rep Team' and 'My Team' are no longer written here;
+              team and rep membership are derived from the role tag by the
+              repointed readers (ContactService SELcontactdetails_24683/GetMyTeam/
+              getContactForCard, LookupService.getContactsNotTeam, wizard steps
+              2/5/7).
+              TECH-DEBT: pre-existing 'My Team'/'My Rep Team' rows on live
+              contacts are intentionally left in place; removing them is a
+              separate data-cleanup pass, not part of this work order. --->
+        <cfquery datasource="#application.datasource#">
+            INSERT INTO contactitems_tbl (contactid, valueCategory, valueType, valuetext, itemStatus)
+            VALUES (
+                <cfqueryparam value="#newContactId#" cfsqltype="cf_sql_integer" />,
+                'Tag', 'Tags',
+                <cfqueryparam value="#repRole#" cfsqltype="cf_sql_varchar" />,
+                'Active'
+            )
+        </cfquery>
 
         <cfset contactsCreated++>
     </cfloop>

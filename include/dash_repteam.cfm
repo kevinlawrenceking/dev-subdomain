@@ -157,7 +157,11 @@
                         <!--- Name and tag in the middle --->
                         <div class="flex-grow-1 team-content">
                             <div class="team-name">#myteam.contactname#</div>
-                            <div class="team-tag">#findtag.tag#</div>
+                            <!--- D5: show the authoritative role (contactdetails.contacttitle).
+                                  The old #findtag.tag# read an unordered, multi-row tag query
+                                  as a scalar, so a Manager could render as "Agent". Fall back to
+                                  the tag only when a legacy contact has no contacttitle. --->
+                            <div class="team-tag">#encodeForHtml( len(trim(myteam.contacttitle)) ? myteam.contacttitle : findtag.tag )#</div>
                         </div>
                         
                         <!--- View button on the right --->

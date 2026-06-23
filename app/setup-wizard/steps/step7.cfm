@@ -19,7 +19,7 @@
     FROM contactdetails cd
     INNER JOIN contactitems ci ON ci.contactid = cd.contactid
         AND ci.valueCategory = 'Tag' AND ci.valueType = 'Tags'
-        AND ci.valuetext = 'My Rep Team' AND ci.itemStatus = 'Active'
+        AND ( ci.valuetext = 'My Rep Team' OR ci.valuetext IN ('Agent','Manager','Publicist') ) AND ci.itemStatus = 'Active'
     WHERE cd.userid = <cfqueryparam value="#userid#" cfsqltype="cf_sql_integer" />
       AND cd.contactStatus = 'Active'
 </cfquery>
@@ -28,7 +28,7 @@
     SELECT COUNT(*) AS cnt
     FROM contactdetails
     WHERE userid = <cfqueryparam value="#userid#" cfsqltype="cf_sql_integer" />
-      AND contactStatus = 'Active' AND user_yn = 'N'
+      AND contactStatus = 'Active' AND COALESCE(user_yn, 'N') <> 'Y'
 </cfquery>
 
 <cfquery name="qAudCount" datasource="#application.datasource#">
@@ -67,7 +67,7 @@
                 #encodeForHTML(qProfile.userFirstName)# #encodeForHTML(qProfile.userLastName)#<br>
                 <small class="text-muted">#encodeForHTML(qProfile.tzname)# &middot; #encodeForHTML(qProfile.dateformat)#</small>
             </div>
-            <a href="/app/settings/" class="summary-edit">Edit</a>
+            <a href="##" class="summary-edit" data-edit-step="1">Edit</a>
         </div>
     </div>
 
@@ -83,7 +83,7 @@
                     None added yet
                 </cfif>
             </div>
-            <a href="/app/contacts/" class="summary-edit">Edit</a>
+            <a href="##" class="summary-edit" data-edit-step="2">Edit</a>
         </div>
     </div>
 
@@ -99,7 +99,7 @@
                     None added yet
                 </cfif>
             </div>
-            <a href="/app/contacts/" class="summary-edit">Edit</a>
+            <a href="##" class="summary-edit" data-edit-step="3">Edit</a>
         </div>
     </div>
 
@@ -117,7 +117,9 @@
                     Skipped
                 </cfif>
             </div>
-            <a href="/app/auditions/" class="summary-edit">Edit</a>
+<cfif val(qProfile.isAuditionModule)>
+            <a href="##" class="summary-edit" data-edit-step="4">Edit</a>
+            </cfif>
         </div>
     </div>
 
@@ -133,7 +135,7 @@
                     None set up yet
                 </cfif>
             </div>
-            <a href="/app/reminders/" class="summary-edit">Edit</a>
+            <a href="##" class="summary-edit" data-edit-step="5">Edit</a>
         </div>
     </div>
 
@@ -149,7 +151,7 @@
                     None added yet
                 </cfif>
             </div>
-            <a href="/app/mylinks/" class="summary-edit">Edit</a>
+            <a href="##" class="summary-edit" data-edit-step="6">Edit</a>
         </div>
     </div>
 

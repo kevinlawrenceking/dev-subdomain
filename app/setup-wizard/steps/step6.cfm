@@ -14,7 +14,7 @@
 <div class="wizard-tutorial" style="margin-top:8px;">
     You'll be able to add your casting profiles and social media links after setup is
     complete -- they'll live on your dashboard, ready to fill in whenever you like.
-    Nothing to do here for now; just click <strong>Next</strong> to continue.
+    Nothing to do here for now; just click <strong>Finish Setup</strong> below to continue.
 </div>
 </cfoutput>
 

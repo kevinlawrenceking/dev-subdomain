@@ -66,9 +66,10 @@ FROM
             contactitems 
             inner  join contactdetails d on d.contactid = contactitems.contactid 
         WHERE 
-            contactitems.valueCategory = 'Tag'  
-            AND contactitems.valueText = 'My Team'
-            AND contactitems.contactID = d.contactID 
+            contactitems.valueCategory = 'Tag'
+            AND ( contactitems.valueText = 'My Team'
+                  OR contactitems.valueText IN ('Agent','Manager','Publicist') )
+            AND contactitems.contactID = d.contactID
             AND contactitems.itemStatus = 'Active'
             and d.userid =  <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
 

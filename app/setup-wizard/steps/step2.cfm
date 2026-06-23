@@ -19,7 +19,7 @@
     FROM contactdetails cd
     INNER JOIN contactitems ci2 ON ci2.contactid = cd.contactid
         AND ci2.valueCategory = 'Tag' AND ci2.valueType = 'Tags'
-        AND ci2.valuetext = 'My Rep Team' AND ci2.itemStatus = 'Active'
+        AND ( ci2.valuetext = 'My Rep Team' OR ci2.valuetext IN ('Agent','Manager','Publicist') ) AND ci2.itemStatus = 'Active'
     WHERE cd.userid = <cfqueryparam value="#userid#" cfsqltype="cf_sql_integer" />
       AND cd.contactStatus = 'Active'
     GROUP BY cd.contactid

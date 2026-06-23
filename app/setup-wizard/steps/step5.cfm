@@ -19,7 +19,7 @@
     FROM contactdetails cd
     WHERE cd.userid = <cfqueryparam value="#userid#" cfsqltype="cf_sql_integer" />
       AND cd.contactStatus = 'Active'
-      AND cd.user_yn = 'N'
+      AND COALESCE(cd.user_yn, 'N') <> 'Y'
     ORDER BY cd.contactFullName
 </cfquery>
 
@@ -39,7 +39,7 @@
         SELECT 1 FROM contactitems
         WHERE contactid = <cfqueryparam value="#qContacts.contactid#" cfsqltype="cf_sql_integer" />
           AND valueCategory = 'Tag' AND valueType = 'Tags'
-          AND valuetext = 'My Rep Team' AND itemStatus = 'Active'
+          AND ( valuetext = 'My Rep Team' OR valuetext IN ('Agent','Manager','Publicist') ) AND itemStatus = 'Active'
     </cfquery>
     <cfset isRep = qRepTag.recordCount GT 0>
 

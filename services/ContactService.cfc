@@ -1625,22 +1625,24 @@ ORDER BY contactfullname
     <cfargument name="userId" type="numeric" required="true">
 
 <cfquery name="result" >
-            SELECT 
-                d.contactid, 
-                d.recordname AS contactname, 
-                d.contactStatus 
-            FROM 
-                contactdetails d 
-            INNER JOIN 
-                taousers u ON u.userid = d.userid 
+            SELECT
+                d.contactid,
+                d.recordname AS contactname,
+                d.contacttitle,
+                d.contactStatus
+            FROM
+                contactdetails d
+            INNER JOIN
+                taousers u ON u.userid = d.userid
             WHERE 
                 u.userid = <cfqueryparam value="#arguments.userId#" cfsqltype="CF_SQL_INTEGER"> 
                 AND d.contactStatus = <cfqueryparam value="Active" cfsqltype="CF_SQL_VARCHAR"> 
                 AND d.contactid IN (
                     SELECT contactid 
                     FROM contactitems 
-                    WHERE valuetext = <cfqueryparam value="My Team" cfsqltype="CF_SQL_VARCHAR"> 
-                    AND valuecategory = <cfqueryparam value="Tag" cfsqltype="CF_SQL_VARCHAR">
+                    WHERE valuecategory = <cfqueryparam value="Tag" cfsqltype="CF_SQL_VARCHAR">
+                    AND ( valuetext = <cfqueryparam value="My Team" cfsqltype="CF_SQL_VARCHAR">
+                          OR valuetext IN (<cfqueryparam value="Agent,Manager,Publicist" cfsqltype="CF_SQL_VARCHAR" list="true">) )
                     and isDeleted = 0
                 ) 
             ORDER BY 
@@ -1683,8 +1685,9 @@ ORDER BY contactfullname
                 AND d.contactid IN (
                     SELECT contactid 
                     FROM contactitems 
-                    WHERE valuetext = <cfqueryparam value="My Team" cfsqltype="CF_SQL_VARCHAR"> 
-                    AND valuecategory = <cfqueryparam value="Tag" cfsqltype="CF_SQL_VARCHAR">
+                    WHERE valuecategory = <cfqueryparam value="Tag" cfsqltype="CF_SQL_VARCHAR">
+                    AND ( valuetext = <cfqueryparam value="My Team" cfsqltype="CF_SQL_VARCHAR">
+                          OR valuetext IN (<cfqueryparam value="Agent,Manager,Publicist" cfsqltype="CF_SQL_VARCHAR" list="true">) )
                     and isDeleted = 0
                 ) 
             ORDER BY 
@@ -1776,8 +1779,9 @@ ORDER BY contactfullname
                 AND d.contactid IN (
                     SELECT contactid 
                     FROM contactitems 
-                    WHERE valuetext = <cfqueryparam value="My Team" cfsqltype="CF_SQL_VARCHAR"> 
-                    AND valuecategory = <cfqueryparam value="Tag" cfsqltype="CF_SQL_VARCHAR">
+                    WHERE valuecategory = <cfqueryparam value="Tag" cfsqltype="CF_SQL_VARCHAR">
+                    AND ( valuetext = <cfqueryparam value="My Team" cfsqltype="CF_SQL_VARCHAR">
+                          OR valuetext IN (<cfqueryparam value="Agent,Manager,Publicist" cfsqltype="CF_SQL_VARCHAR" list="true">) )
                     and isDeleted = 0
                 ) 
             ORDER BY 
