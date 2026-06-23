@@ -675,15 +675,26 @@
     <cfset var chars = arguments.line.toCharArray()>
     <cfset var i = 1>
     <cfset var charLen = arrayLen(chars)>
+    <cfset var skipNext = false>
 
     <cfloop from="1" to="#charLen#" index="i">
+        <!--- Skip the second quote of an escaped "" pair. A <cfloop from/to> ignores
+              reassigning its index var, so we cannot advance i directly (the old
+              "<cfset i++>" was a no-op). A flag does the skip correctly. Without this,
+              an escaped quote left inQuotes inverted, so the next comma was treated as a
+              column break and quoted notes were truncated mid-text. --->
+        <cfif skipNext>
+            <cfset skipNext = false>
+            <cfcontinue>
+        </cfif>
+
         <cfset var c = chars[i]>
 
         <cfif c eq '"'>
-            <!--- Check for escaped quote --->
+            <!--- Escaped quote ("") inside a quoted field -> one literal " --->
             <cfif inQuotes and i lt charLen and chars[i+1] eq '"'>
                 <cfset currentField &= '"'>
-                <cfset i++>
+                <cfset skipNext = true>
             <cfelse>
                 <cfset inQuotes = not inQuotes>
             </cfif>
