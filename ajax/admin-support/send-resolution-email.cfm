@@ -61,10 +61,15 @@
   </cfoutput>
 </cfsavecontent>
 
+<!--- Non-prod recipient redirect: never email a real user from dev/UAT.
+      Prod host is "app"; anything else routes to the developer inbox. --->
+<cfset realRecipient = qTicket.useremail>
+<cfset effectiveRecipient = findNoCase("app", cgi.SERVER_NAME) ? realRecipient : "kevinking7135@gmail.com">
+
 <!--- SEND + COMMIT (email outside transaction — commit only if send succeeds) --->
 <cftry>
   <cfmail
-    to="#qTicket.useremail#"
+    to="#effectiveRecipient#"
     from="support@theactorsoffice.com"
     failto="kking@theactorsoffice.com"
     replyto="support@theactorsoffice.com"
@@ -86,7 +91,7 @@
     <cfquery datasource="#application.dsn#">
       INSERT INTO ticketslog_tbl (tlogDetails, userID, ticketid, ticketstatus)
       VALUES (
-        <cfqueryparam value="Resolution email sent to #qTicket.useremail#" cfsqltype="cf_sql_varchar">,
+        <cfqueryparam value="Resolution email sent to #effectiveRecipient#" cfsqltype="cf_sql_varchar">,
         <cfqueryparam value="#session.userid#" cfsqltype="cf_sql_integer">,
         <cfqueryparam value="#form.ticketID#" cfsqltype="cf_sql_integer">,
         <cfqueryparam value="resolution_email_sent" cfsqltype="cf_sql_varchar">
@@ -95,7 +100,7 @@
   </cftransaction>
 
   <cfset sentAt = DateTimeFormat(now(), "mmm d, yyyy h:mm tt")>
-  <cfoutput>{"success": true, "message": "Resolution email sent.", "data": {"sentAt": "#sentAt#", "sentTo": "#qTicket.useremail#"}}</cfoutput>
+  <cfoutput>{"success": true, "message": "Resolution email sent.", "data": {"sentAt": "#sentAt#", "sentTo": "#effectiveRecipient#"}}</cfoutput>
 
   <cfcatch type="any">
     <cflog type="error" log="application"

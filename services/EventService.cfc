@@ -1,6 +1,48 @@
 <cfcomponent displayname="EventService" hint="Handles operations for Event table">
 
 <cffunction name="updateEventData" access="public" returntype="void">
+
+    <!---
+        Global event-data housekeeping (broad, table-wide writes to events_tbl,
+        eventcontactsxref, audprojects). This previously ran in one transaction
+        on every auditions/calendar page load with no concurrency guard, so two
+        simultaneous page loads deadlocked against each other
+        (ERR-35874837: "Deadlock found when trying to get lock").
+
+        Guards added (the SQL itself is unchanged):
+          1. Single-flight cflock - only one maintenance run at a time;
+             concurrent requests skip instead of piling on.
+          2. Time throttle - does not re-run on every request.
+          3. Deadlock-aware retry - a lock conflict with an unrelated writer is
+             retried, and a final failure is logged and isolated rather than
+             crashing the page view.
+    --->
+    <cfset var throttleSeconds = 300>
+    <cfset var nowTs = now()>
+    <cfset var attempt = 0>
+    <cfset var maxAttempts = 3>
+    <cfset var committed = false>
+    <cfset var isLockErr = false>
+
+    <!--- Fast path: skip if another request ran this recently. --->
+    <cfif structKeyExists(application, "lastEventDataMaint")
+          AND dateDiff("s", application.lastEventDataMaint, nowTs) LT throttleSeconds>
+        <cfreturn>
+    </cfif>
+
+    <!--- Single-flight: if another thread is already running it, skip. --->
+    <cflock name="updateEventDataMaint" type="exclusive" timeout="1" throwontimeout="false">
+
+        <!--- Re-check throttle inside the lock to close the race window. --->
+        <cfif structKeyExists(application, "lastEventDataMaint")
+              AND dateDiff("s", application.lastEventDataMaint, nowTs) LT throttleSeconds>
+            <cfreturn>
+        </cfif>
+        <cfset application.lastEventDataMaint = nowTs>
+
+        <cfloop condition="NOT committed AND attempt LT maxAttempts">
+            <cfset attempt = attempt + 1>
+            <cftry>
     <cftransaction>
 
         <!--- 1. Insert new eventcontactsxref rows --->
@@ -106,6 +148,29 @@ WHERE  pr.projdate <> x.actual_projdate OR pr.projdate IS NULL;
 <cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
     </cftransaction>
+                <cfset committed = true>
+                <cfcatch type="any">
+                    <!--- cftransaction auto-rolled back as the exception unwound. --->
+                    <cfset isLockErr =
+                        findNoCase("Deadlock", cfcatch.message)
+                        OR findNoCase("Deadlock", cfcatch.detail)
+                        OR findNoCase("Lock wait timeout", cfcatch.message)
+                        OR findNoCase("Lock wait timeout", cfcatch.detail)
+                        OR findNoCase("try restarting transaction", cfcatch.detail)>
+                    <cfif isLockErr AND attempt LT maxAttempts>
+                        <!--- Brief backoff, then retry the whole transaction. --->
+                        <cfset sleep(50 * attempt)>
+                    <cfelse>
+                        <!--- Isolate: housekeeping must not crash the page view. --->
+                        <cflog file="EventDataMaint" type="error"
+                               text="updateEventData failed after #attempt# attempt(s): #cfcatch.message# | #cfcatch.detail#">
+                        <cfset attempt = maxAttempts>
+                    </cfif>
+                </cfcatch>
+            </cftry>
+        </cfloop>
+
+    </cflock>
 </cffunction>
 
 

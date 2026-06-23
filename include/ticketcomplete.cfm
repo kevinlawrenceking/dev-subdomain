@@ -6,46 +6,19 @@
 <cfinclude template="/include/qry/update_300_2.cfm" />
 <cfinclude template="/include/qry/details_303_3.cfm" />
 
-<cfset toEmail = details.userEmail />
+<!---
+  TAO-SPEC-2026-005 (user-facing error mgmt flow): the user completion/resolution
+  email is now sent by the single logged, idempotent sender
+  /ajax/admin-support/send-resolution-email.cfm (triggered from the ticket-detail
+  "Send Resolution Email to User" button, keyed on developerResponse, idempotent on
+  resolvedEmailSentAt, logged to ticketslog_tbl).
 
-<!--- Check if the email_user parameter is set to "Y" to send the email --->
-<cfif emailUser is "Y">
-    <cfmail from="support@theactorsoffice.com" 
-             failto="kking@theactorsoffice.com" 
-             replyto="support@theactorsoffice.com" 
-             to="#toEmail#" 
-             bcc="kking@theactorsoffice.com"  
-             usessl="true"
-             usetls="true"
-             subject="re: TAO TICKET NO #details.recId#" 
-             type="HTML">
-        <HTML>
-            <head>
-                <title>TAO TICKET NO #details.recId#</title>
-            </head>
-            <body>
-                <!--- Style Tag in the Body, not Head, for Email --->
-                <style type="text/css">
-                    body { font-size: 14px; }
-                </style>
-                <p>Hi #details.userFirstName#,</p>
-                <p>This is to inform you that your ticket (no. #details.recId#) has been completed.</p>
-                <cfif trim(details.ticketResponse) is not "">
-                    <p>#details.ticketResponse#</p>
-                </cfif>
-                <p>If there are any further issues on this topic, please open another ticket.</p>
-                <p>&nbsp;</p>
-                <p>Best,</p>
-                <p>Kevin</p>
-                <p>&nbsp;</p>
-
-                <!--- Email Signature --->
-                <!--- The rest of the email content goes here --->
-                
-            </body>
-        </HTML>
-    </cfmail>
-</cfif>
+  The previous cfmail block here never fired (the form posts email_user but this page
+  read emailUser) and is removed to avoid a second, unlogged completion sender. This
+  page now only performs the status transition (update_300_2 -> ticketstatus='Completed',
+  ticketCompletedDate, complete_email=1) above.
+  // TECH-DEBT: the 14 ad-hoc cfmail templates should be consolidated into emailService.cfc.
+--->
 
 <!--- Redirect to the admin support page --->
 <cflocation url="/app/admin-support/" />

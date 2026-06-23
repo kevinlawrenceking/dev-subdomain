@@ -38,11 +38,14 @@
       var diagnostics = buildDiagnostics(arguments.exception, arguments.eventName, arguments.cfContext);
       diagnostics.ticketId = ticketId;
 
-      // Persist to database (try/catch inside)
-      var dbSuccess = persistTicket(diagnostics);
+      // Persist to database (try/catch inside). Returns error_tickets.id (0 on failure).
+      var errorRowId = persistTicket(diagnostics);
+      var dbSuccess = (errorRowId GT 0);
 
-      // Create support ticket in tickets table
-      createSupportTicket(diagnostics);
+      // Create support ticket in tickets table; links tickets_tbl.errorid back to
+      // the error_tickets row and sends the user "we're on it" initial email
+      // (idempotent + 30-minute per-user cooldown enforced inside).
+      createSupportTicket(diagnostics, errorRowId);
 
       // Send email notification (try/catch inside)
       var emailSuccess = sendErrorEmail(diagnostics);
@@ -346,12 +349,13 @@
     </cfscript>
   </cffunction>
 
-  <cffunction name="persistTicket" access="private" returntype="boolean" output="false"
-              hint="INSERT into error_tickets. Returns true on success. Fallback: cflog.">
+  <cffunction name="persistTicket" access="private" returntype="numeric" output="false"
+              hint="INSERT into error_tickets. Returns the new error_tickets.id (0 on failure). Fallback: cflog.">
     <cfargument name="diagnostics" type="struct" required="true" />
 
+    <cfset var insRes = "" />
     <cftry>
-      <cfquery datasource="#variables.dsn#">
+      <cfquery datasource="#variables.dsn#" result="insRes">
         INSERT INTO error_tickets (
           ticket_id, error_type, error_message, error_detail,
           root_cause_type, root_cause_message, root_cause_detail,
@@ -399,7 +403,7 @@
       <cflog file="TAO_error_tickets" type="error"
              text="Ticket #arguments.diagnostics.ticketId# persisted | #arguments.diagnostics.scriptName# | #Left(arguments.diagnostics.errorMessage, 200)#" />
 
-      <cfreturn true />
+      <cfreturn val(insRes.generatedKey) />
 
       <cfcatch>
         <cflog file="TAO_error_fallback" type="error"
@@ -412,14 +416,15 @@
           <cfcatch></cfcatch>
         </cftry>
 
-        <cfreturn false />
+        <cfreturn 0 />
       </cfcatch>
     </cftry>
   </cffunction>
 
   <cffunction name="createSupportTicket" access="private" returntype="void" output="false"
-              hint="INSERT into tickets table so the error appears in the TAO support ticket system.">
+              hint="INSERT into tickets_tbl so the error appears in the TAO support ticket system; links errorid and triggers the user initial email.">
     <cfargument name="diagnostics" type="struct" required="true" />
+    <cfargument name="errorRowId" type="numeric" required="false" default="0" />
 
     <cftry>
       <cfset var ticketName = arguments.diagnostics.ticketId & " - "
@@ -453,9 +458,14 @@
         verid: latest active version (same query Application.cfc uses).
         userid: session user if it resolves; else the lowest userid in taousers_tbl.
       --->
-      <cfquery datasource="#variables.dsn#">
-        INSERT INTO tickets (
-          pgid, verid, ticketName, ticketdetails, tickettype, userid, ticketactive, ticketstring
+      <!--- Write to the base table (tickets is a view over tickets_tbl WHERE IsDeleted=0).
+            IsDeleted set explicitly to 0 so the row is visible through the view without
+            relying on a column default. errorid links back to the error_tickets row so
+            user-facing emails can quote the same ERR-xxxx reference shown on the error screen. --->
+      <cfset var tr = "" />
+      <cfquery datasource="#variables.dsn#" result="tr">
+        INSERT INTO tickets_tbl (
+          pgid, verid, ticketName, ticketdetails, tickettype, userid, ticketactive, ticketstring, errorid, IsDeleted
         )
         SELECT
           COALESCE(
@@ -471,12 +481,22 @@
             (SELECT userid FROM taousers_tbl ORDER BY userid LIMIT 1)
           ),
           <cfqueryparam value="Y" cfsqltype="cf_sql_varchar" />,
-          <cfqueryparam value="#Left(arguments.diagnostics.scriptName & '?' & arguments.diagnostics.queryString, 500)#" cfsqltype="cf_sql_varchar" />
+          <cfqueryparam value="#Left(arguments.diagnostics.scriptName & '?' & arguments.diagnostics.queryString, 500)#" cfsqltype="cf_sql_varchar" />,
+          <cfqueryparam value="#arguments.errorRowId#" cfsqltype="cf_sql_integer" null="#(arguments.errorRowId LE 0)#" />,
+          <cfqueryparam value="0" cfsqltype="cf_sql_bit" />
       </cfquery>
 <cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
       <cflog file="TAO_error_tickets" type="info"
              text="Support ticket created for #arguments.diagnostics.ticketId#" />
+
+      <!--- Send the user "we're on it" initial email. Self-gated (user email present,
+            per-ticket ackEmailSentAt claim, 30-minute per-user cooldown) and never
+            throws -- a mail failure must not break ticket creation. --->
+      <cfset var newTicketId = val(tr.generatedKey) />
+      <cfif newTicketId GT 0>
+        <cfset sendInitialUserEmail(arguments.diagnostics, newTicketId) />
+      </cfif>
 
       <cfcatch>
         <cflog file="TAO_error_fallback" type="warning"
@@ -537,6 +557,114 @@
         <cflog file="TAO_error_email_fail" type="error"
                text="Email failed for #arguments.diagnostics.ticketId#: #cfcatch.message#" />
         <cfreturn false />
+      </cfcatch>
+    </cftry>
+  </cffunction>
+
+  <cffunction name="nonProdRecipient" access="private" returntype="string" output="false"
+              hint="Non-prod recipient redirect: real user on prod (host 'app'), developer inbox otherwise.">
+    <cfargument name="realEmail" type="string" required="true" />
+    <cfreturn (findNoCase("app", cgi.SERVER_NAME) GT 0) ? arguments.realEmail : "kevinking7135@gmail.com" />
+  </cffunction>
+
+  <cffunction name="sendInitialUserEmail" access="private" returntype="void" output="false"
+              hint="Sends the user-facing 'we received your issue' email once per ticket with a 30-minute per-user cooldown. Logs auto_ack_email_sent. Never throws.">
+    <cfargument name="diagnostics" type="struct" required="true" />
+    <cfargument name="ticketId" type="numeric" required="true" />
+
+    <cfset var diag = arguments.diagnostics />
+    <cfset var qCooldown = "" />
+    <cfset var claim = "" />
+    <cfset var effectiveTo = "" />
+    <cfset var emailBody = "" />
+
+    <cftry>
+      <!--- Gate 1: need a resolvable user + email. Anonymous errors get no user mail. --->
+      <cfif NOT len(trim(diag.userEmail)) OR NOT (len(diag.userId) AND isNumeric(diag.userId))>
+        <cfreturn />
+      </cfif>
+
+      <!--- Gate 2: 30-minute per-user cooldown (context-agnostic: spans browser and
+            AJAX auto-tickets). Identity via the distinct auto_ack_email_sent ticketslog
+            marker; recency via tickets_tbl.ackEmailSentAt (a reliable DATETIME this flow
+            sets) rather than the ticketslog timestamp column. --->
+      <cfquery name="qCooldown" datasource="#variables.dsn#">
+        SELECT COUNT(*) AS cnt
+        FROM ticketslog_tbl tl
+        INNER JOIN tickets_tbl t ON t.ticketID = tl.ticketid
+        WHERE tl.userID = <cfqueryparam value="#val(diag.userId)#" cfsqltype="cf_sql_integer" />
+          AND tl.ticketstatus = <cfqueryparam value="auto_ack_email_sent" cfsqltype="cf_sql_varchar" />
+          AND t.ackEmailSentAt IS NOT NULL
+          AND t.ackEmailSentAt >= (NOW() - INTERVAL 30 MINUTE)
+      </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
+      <cfif qCooldown.cnt GT 0>
+        <cflog file="TAO_error_tickets" type="info"
+               text="Initial user email suppressed (30-min cooldown) for user #val(diag.userId)# ticket #diag.ticketId#" />
+        <cfreturn />
+      </cfif>
+
+      <!--- Gate 3: per-ticket claim. Set ackEmailSentAt only if still NULL; proceed only
+            if this request won the claim (recordCount = 1). --->
+      <cfquery result="claim" datasource="#variables.dsn#">
+        UPDATE tickets_tbl
+        SET ackEmailSentAt = NOW()
+        WHERE ticketID = <cfqueryparam value="#arguments.ticketId#" cfsqltype="cf_sql_integer" />
+          AND ackEmailSentAt IS NULL
+      </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
+      <cfif claim.recordCount NEQ 1>
+        <cfreturn />
+      </cfif>
+
+      <!--- Send (non-prod recipient redirect). On failure: revert the claim, log, and do
+            NOT write the marker, so the cooldown only counts successful sends. --->
+      <cfset effectiveTo = nonProdRecipient(diag.userEmail) />
+      <cftry>
+        <cfset request._userInitialDiag = { ticketId = diag.ticketId, userName = diag.userName } />
+        <cfsavecontent variable="emailBody">
+          <cfinclude template="/templates/email/user-initial.cfm" />
+        </cfsavecontent>
+        <cfset structDelete(request, "_userInitialDiag") />
+
+        <cfmail to="#effectiveTo#"
+                from="#variables.fromEmail#"
+                subject="We received your support request -- #diag.ticketId#"
+                type="html"
+                usessl="true"
+                usetls="true">#emailBody#</cfmail>
+
+        <cfquery datasource="#variables.dsn#">
+          INSERT INTO ticketslog_tbl (tlogDetails, userID, ticketid, ticketstatus)
+          VALUES (
+            <cfqueryparam value="Auto error ack email sent to #effectiveTo# (#diag.ticketId#)" cfsqltype="cf_sql_varchar" />,
+            <cfqueryparam value="#val(diag.userId)#" cfsqltype="cf_sql_integer" />,
+            <cfqueryparam value="#arguments.ticketId#" cfsqltype="cf_sql_integer" />,
+            <cfqueryparam value="auto_ack_email_sent" cfsqltype="cf_sql_varchar" />
+          )
+        </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
+
+        <cflog file="TAO_error_tickets" type="info"
+               text="Initial user email sent for #diag.ticketId# (ticket #arguments.ticketId#) to #effectiveTo#" />
+
+        <cfcatch>
+          <!--- Revert the claim so a later occurrence can retry --->
+          <cftry>
+            <cfquery datasource="#variables.dsn#">
+              UPDATE tickets_tbl SET ackEmailSentAt = NULL
+              WHERE ticketID = <cfqueryparam value="#arguments.ticketId#" cfsqltype="cf_sql_integer" />
+            </cfquery>
+            <cfcatch></cfcatch>
+          </cftry>
+          <cflog file="TAO_error_email_fail" type="error"
+                 text="Initial user email failed for #diag.ticketId#: #cfcatch.message#" />
+        </cfcatch>
+      </cftry>
+
+      <cfcatch type="any">
+        <cflog file="TAO_error_fallback" type="warning"
+               text="sendInitialUserEmail failed for ticket #arguments.ticketId#: #cfcatch.message#" />
       </cfcatch>
     </cftry>
   </cffunction>
