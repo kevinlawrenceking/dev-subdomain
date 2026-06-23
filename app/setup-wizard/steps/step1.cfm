@@ -247,17 +247,36 @@ $('##avatar-file').on('change', function() {
 
     var reader = new FileReader();
     reader.onload = function(e) {
-        if (uploadCrop) {
-            uploadCrop.croppie('destroy');
+        var cropEl = document.getElementById('cropModal');
+        var cropModal = bootstrap.Modal.getInstance(cropEl) || new bootstrap.Modal(cropEl);
+
+        // Croppie derives its fit/min-zoom scale from the element's measured
+        // dimensions at bind time. Initializing/binding while the modal is still
+        // display:none measures a zero-size boundary, which pins the image fully
+        // zoomed in with no way to zoom out. Init + bind only once the modal is
+        // actually visible so Croppie measures the real 300x300 boundary.
+        var initCroppie = function() {
+            if (uploadCrop) {
+                uploadCrop.croppie('destroy');
+                uploadCrop = null;
+            }
+            uploadCrop = $('##crop-viewport').croppie({
+                viewport: { width: 200, height: 200, type: 'circle' },
+                boundary: { width: 300, height: 300 },
+                enableExif: true,
+                enableZoom: true,
+                mouseWheelZoom: true
+            });
+            uploadCrop.croppie('bind', { url: e.target.result });
+        };
+
+        if (cropEl.classList.contains('show')) {
+            // Modal already visible (re-selecting a file) -- bind immediately.
+            initCroppie();
+        } else {
+            $(cropEl).one('shown.bs.modal', initCroppie);
+            cropModal.show();
         }
-        uploadCrop = $('##crop-viewport').croppie({
-            viewport: { width: 200, height: 200, type: 'circle' },
-            boundary: { width: 300, height: 300 },
-            enableExif: true
-        });
-        uploadCrop.croppie('bind', { url: e.target.result });
-        var cropModal = new bootstrap.Modal(document.getElementById('cropModal'));
-        cropModal.show();
     };
     reader.readAsDataURL(file);
     $(this).val('');
