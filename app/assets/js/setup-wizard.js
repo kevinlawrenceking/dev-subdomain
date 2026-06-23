@@ -287,17 +287,6 @@
         loadStep(prevStep(step));
     });
 
-    // Complete-step (step 7) summary "Edit" links jump back to the relevant
-    // wizard step. They previously pointed at /app/* routes, which the
-    // Setup-status guard in Application.cfc redirects back to the wizard
-    // (apparent no-op page reload). Delegated from $content because the step
-    // markup is injected after load. Items with no step render no Edit link.
-    $content.on('click', '.summary-edit', function(e) {
-        e.preventDefault();
-        var s = parseInt($(this).attr('data-edit-step'), 10);
-        if (s) { loadStep(s); }
-    });
-
     // Skip
     $btnSkip.on('click', function() {
         if (saving) return;
