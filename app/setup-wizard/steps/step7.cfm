@@ -67,7 +67,6 @@
                 #encodeForHTML(qProfile.userFirstName)# #encodeForHTML(qProfile.userLastName)#<br>
                 <small class="text-muted">#encodeForHTML(qProfile.tzname)# &middot; #encodeForHTML(qProfile.dateformat)#</small>
             </div>
-            <a href="##" class="summary-edit" data-edit-step="1">Edit</a>
         </div>
     </div>
 
@@ -83,7 +82,6 @@
                     None added yet
                 </cfif>
             </div>
-            <a href="##" class="summary-edit" data-edit-step="2">Edit</a>
         </div>
     </div>
 
@@ -99,7 +97,6 @@
                     None added yet
                 </cfif>
             </div>
-            <a href="##" class="summary-edit" data-edit-step="3">Edit</a>
         </div>
     </div>
 
@@ -117,9 +114,6 @@
                     Skipped
                 </cfif>
             </div>
-<cfif val(qProfile.isAuditionModule)>
-            <a href="##" class="summary-edit" data-edit-step="4">Edit</a>
-            </cfif>
         </div>
     </div>
 
@@ -135,7 +129,6 @@
                     None set up yet
                 </cfif>
             </div>
-            <a href="##" class="summary-edit" data-edit-step="5">Edit</a>
         </div>
     </div>
 
@@ -151,7 +144,6 @@
                     None added yet
                 </cfif>
             </div>
-            <a href="##" class="summary-edit" data-edit-step="6">Edit</a>
         </div>
     </div>
 
