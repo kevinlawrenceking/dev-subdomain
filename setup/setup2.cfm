@@ -160,5 +160,7 @@
 <cflog file="TAO_setup_session" type="information"
        text="Setup complete | userid=#select_userid# | email=#setupEmail# | dsn=#application.dsn# | appName=#application.applicationName# | cfid=#cookie.cfid# | cftoken=#cookie.cftoken#" />
 
-<!--- P11: Redirect to onboarding wizard instead of static completion page --->
-<cflocation url="/app/setup-wizard/" addtoken="false" />
+<!--- P11: Redirect to onboarding wizard instead of static completion page.
+      Force step=1 so the new user always starts at the beginning, regardless of
+      any setup_step left in the session (e.g. an admin testing a dummy record). --->
+<cflocation url="/app/setup-wizard/?step=1" addtoken="false" />
