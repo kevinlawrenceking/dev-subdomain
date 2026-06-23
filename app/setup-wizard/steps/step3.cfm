@@ -11,7 +11,7 @@
     FROM contactdetails
     WHERE userid = <cfqueryparam value="#userid#" cfsqltype="cf_sql_integer" />
       AND contactStatus = 'Active'
-      AND user_yn = 'N'
+      AND COALESCE(user_yn, 'N') <> 'Y'
 </cfquery>
 
 <cfoutput>

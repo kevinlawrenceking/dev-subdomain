@@ -19,7 +19,7 @@
     FROM contactdetails cd
     WHERE cd.userid = <cfqueryparam value="#userid#" cfsqltype="cf_sql_integer" />
       AND cd.contactStatus = 'Active'
-      AND cd.user_yn = 'N'
+      AND COALESCE(cd.user_yn, 'N') <> 'Y'
     ORDER BY cd.contactFullName
 </cfquery>
 
