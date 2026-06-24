@@ -15,6 +15,8 @@
 </cftry>
 
 <cfset auditionsCreated = 0>
+<!--- WO-C: distinct CD contactids created/resolved this submit, provisioned post-commit. --->
+<cfset createdCdContactIds = []>
 
 <!--- TECH-DEBT: Inlined INSERT from INSaudprojects() to avoid cookie.userid. Main app still uses cookie path. --->
 
@@ -197,6 +199,12 @@
                 })>
             </cfif>
 
+            <!--- WO-C: capture this CD for post-commit folder provisioning. Dedup so a
+                  CD named across multiple auditions is provisioned once. --->
+            <cfif NOT arrayContains(createdCdContactIds, cdContactId)>
+                <cfset arrayAppend(createdCdContactIds, cdContactId)>
+            </cfif>
+
             <!--- recordname is a VIRTUAL GENERATED column on contactdetails_tbl
                   (GENERATED ALWAYS AS contactFullName), so it cannot be written and
                   needs no UPDATE. Setting contactFullName above already makes the
@@ -251,6 +259,47 @@
     </cfquery>
 
 </cftransaction>
+
+    <!--- WO-C: provision CD media folders. Filesystem-only, best-effort, AFTER the
+          step-4 transaction (which holds the WO-A event insert) commits. Mirrors the
+          main app CD path include/audition-add2.cfm:97-99. A folder failure must NEVER
+          roll back an already-committed audition/CD. --->
+    <cfif arrayLen(createdCdContactIds)>
+        <cftry>
+            <!--- Defensive: session media paths are normally set by
+                  /app/Application.cfc:459-478 on the /app/setup-wizard/ page load.
+                  If absent (cold path), derive from application.baseMediaPath with the
+                  IDENTICAL derivation -- not a hardcoded path. WO-C register: this
+                  inline copy shadows app/Application.cfc block 4. --->
+            <cfif NOT structKeyExists(session, "userMediaPath") OR NOT len(trim(session.userMediaPath))>
+                <cfset session.userMediaPath    = application.baseMediaPath & "\\users\\" & userid>
+                <cfset session.userMediaUrl     = application.baseMediaUrl  & "/users/" & userid>
+                <cfset session.userContactsPath = session.userMediaPath & "\\contacts">
+                <cfset session.userContactsUrl  = session.userMediaUrl  & "/contacts">
+                <cfset session.userImportsUrl   = session.userMediaUrl  & "/imports">
+                <cfset session.userAvatarPath   = session.userMediaPath & "\\avatar.jpg">
+            </cfif>
+
+            <cfloop array="#createdCdContactIds#" index="provCdId">
+                <!--- Mirror audition-add2.cfm:97-98 exactly: set BOTH. select_contactid
+                      is what actually scopes C_73_2 to this one CD; new_contactid set
+                      only to match the proven call (folder_setup reassigns it per row). --->
+                <cfset select_contactid = provCdId>
+                <cfset new_contactid    = provCdId>
+                <!--- cfsavecontent captures and discards the include's dir-create HTML
+                      so it never reaches the JSON response body. --->
+                <cfsavecontent variable="provHtmlSink">
+                    <cfinclude template="/include/folder_setup.cfm">
+                </cfsavecontent>
+                <cflog file="TAO_setup_wizard" type="information"
+                       text="WO-C step4 CD folder provisioned: userid=#userid# contactid=#provCdId# path=#session.userContactsPath#\#provCdId#">
+            </cfloop>
+        <cfcatch type="any">
+            <cflog file="TAO_setup_wizard" type="error"
+                   text="WO-C step4 CD folder provisioning failed (audition+CD committed, continuing): #cfcatch.message# | #cfcatch.detail#">
+        </cfcatch>
+        </cftry>
+    </cfif>
 
     <cfset session.setup_step = 4>
     <cfcontent type="application/json; charset=utf-8" reset="true">

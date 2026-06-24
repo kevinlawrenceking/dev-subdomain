@@ -17,6 +17,8 @@
 </cftry>
 
 <cfset contactsCreated = 0>
+<!--- WO-C: ids of contacts created this submit, provisioned post-commit. --->
+<cfset createdContactIds = []>
 
 <cftry>
 <cftransaction>
@@ -97,6 +99,7 @@
             )
         </cfquery>
 
+        <cfset arrayAppend(createdContactIds, newContactId)>
         <cfset contactsCreated++>
     </cfloop>
 
@@ -108,6 +111,43 @@
     </cfquery>
 
 </cftransaction>
+
+    <!--- WO-C: provision contact media folders. Filesystem-only, best-effort, AFTER
+          the DB transaction commits (mirrors remoteAddContactAdd.cfm:62-65). A folder
+          failure must NEVER roll back an already-committed contact. --->
+    <cfif arrayLen(createdContactIds)>
+        <cftry>
+            <!--- Defensive: session media paths are normally set by
+                  /app/Application.cfc:459-478 on the /app/setup-wizard/ page load.
+                  If absent (cold path), derive from application.baseMediaPath with the
+                  IDENTICAL derivation -- not a hardcoded path. WO-C register: this
+                  inline copy shadows app/Application.cfc block 4. --->
+            <cfif NOT structKeyExists(session, "userMediaPath") OR NOT len(trim(session.userMediaPath))>
+                <cfset session.userMediaPath    = application.baseMediaPath & "\\users\\" & userid>
+                <cfset session.userMediaUrl     = application.baseMediaUrl  & "/users/" & userid>
+                <cfset session.userContactsPath = session.userMediaPath & "\\contacts">
+                <cfset session.userContactsUrl  = session.userMediaUrl  & "/contacts">
+                <cfset session.userImportsUrl   = session.userMediaUrl  & "/imports">
+                <cfset session.userAvatarPath   = session.userMediaPath & "\\avatar.jpg">
+            </cfif>
+
+            <cfloop array="#createdContactIds#" index="provContactId">
+                <cfset select_userid    = userid>
+                <cfset select_contactid = provContactId>
+                <!--- cfsavecontent captures and discards the include's dir-create HTML
+                      so it never reaches the JSON response body. --->
+                <cfsavecontent variable="provHtmlSink">
+                    <cfinclude template="/include/contactfolder_setup.cfm">
+                </cfsavecontent>
+                <cflog file="TAO_setup_wizard" type="information"
+                       text="WO-C step2 folder provisioned: userid=#userid# contactid=#provContactId# path=#session.userMediaPath#\contacts\#provContactId#">
+            </cfloop>
+        <cfcatch type="any">
+            <cflog file="TAO_setup_wizard" type="error"
+                   text="WO-C step2 folder provisioning failed (contacts committed, continuing): #cfcatch.message# | #cfcatch.detail#">
+        </cfcatch>
+        </cftry>
+    </cfif>
 
     <cfset session.setup_step = 2>
 
