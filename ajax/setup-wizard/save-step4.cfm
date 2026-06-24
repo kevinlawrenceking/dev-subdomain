@@ -86,7 +86,7 @@
               then dereferences arguments.<name> unconditionally -- so any caller
               that omits them hits "element is undefined in arguments".
               Column set mirrors the service so table defaults/nullability match. --->
-        <cfquery datasource="#application.datasource#">
+        <cfquery result="roleResult" datasource="#application.datasource#">
             INSERT INTO audroles (
                 audRoleName, audprojectID, audRoleTypeID, charDescription,
                 holdStartDate, holdEndDate, audDialectID, audSourceID,
@@ -105,6 +105,69 @@
                 <cfqueryparam cfsqltype="cf_sql_bit"         value="0" />
             )
         </cfquery>
+        <cfset newAudRoleId = roleResult.generatedKey>
+
+        <!--- WO-A: Create the audition event the main app creates, gated identically.
+              The main app writes an events row whenever isDirect NEQ 1
+              (include/audition-add2.cfm:156). The wizard always logs a real
+              (non-direct) audition, so it meets that condition and must create the
+              same event -- keyed to the new audroleid -- otherwise the audition shows
+              with blank appointment/step columns and is dropped by views that
+              INNER JOIN events (e.g. the per-contact CD history). Routed through the
+              canonical EventService.INSevents_24555 (no inline events_tbl INSERT).
+              Sits INSIDE the existing step-4 transaction, so project + role + event +
+              CD links commit or roll back together as one atomic unit. --->
+        <cfset audIsDirect = 0><!--- mirrors the bit written to audprojects.isDirect above; do NOT flip --->
+        <cfif audIsDirect NEQ 1>
+
+            <!--- Idempotency guard (audrole-scoped): skip if a non-deleted event
+                  already exists for this audrole. The events view filters
+                  IsDeleted = 0, so a view read yields "non-deleted" for free.
+                  Re-running step 4 must not add a second event for the same audrole. --->
+            <cfquery name="qExistingEvent" datasource="#application.datasource#" maxrows="1">
+                SELECT eventID
+                FROM events
+                WHERE audRoleID = <cfqueryparam value="#newAudRoleId#" cfsqltype="cf_sql_integer" />
+            </cfquery>
+
+            <cfif qExistingEvent.recordCount EQ 0>
+                <!--- INTENTIONAL DEVIATION from the main app: cap the event title to
+                      255 chars. events_tbl.eventTitle is varchar(255) but the service
+                      binds maxlength=500; an over-length title would roll back the
+                      ENTIRE wizard transaction (project + role + event + CD xref).
+                      Trimming the title is strictly safer than losing the whole
+                      audition. The wizard is deliberately stricter than the main app
+                      here. (Main app's 500-bind-into-255-column mismatch is logged
+                      separately as a hygiene backlog item; not fixed under WO-A.) --->
+                <cfset eventTitle = left(projName, 255)>
+
+                <!--- Sentinel args mirror auditions_ins_373_1.cfm:5-15 so the
+                      conditional writes inside INSevents_24555 behave exactly like the
+                      main app: only userid, audRoleID, audStepID (=1 'Audition') and
+                      eventtitle are written; every other column is skipped. The
+                      workwithcoach/trackmileage args go in as 0 (the INSevents guard is
+                      isBoolean(), not NEQ 0), written as bit 0 -- identical to main. --->
+                <cfset eventSvc = request.svc("EventService")>
+                <cfset new_eventid = eventSvc.INSevents_24555(
+                    new_userid         = userid,
+                    new_audRoleID      = newAudRoleId,
+                    new_audTypeID      = 0,
+                    new_audLocation    = "",
+                    new_eventStart     = "1970-01-01",
+                    new_eventStartTime = "00:00:00",
+                    new_eventStopTime  = "00:00:00",
+                    new_audplatformid  = 0,
+                    new_audStepID      = 1,
+                    new_parkingDetails = "",
+                    new_workwithcoach  = 0,
+                    new_trackmileage   = 0,
+                    new_eventtitle     = eventTitle
+                )>
+
+                <cflog file="TAO_setup_wizard" type="information"
+                       text="Step 4 event created: userid=#userid# audprojectid=#newProjId# audroleid=#newAudRoleId# eventid=#new_eventid#" />
+            </cfif>
+        </cfif>
 
         <!--- D7: link the casting director to this audition via
               audcontacts_auditions_xref. Resolve the typed CD name to a contact
