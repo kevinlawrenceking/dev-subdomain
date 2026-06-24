@@ -96,7 +96,11 @@
 
 <h3>Set up relationship reminders</h3>
 
-<!--- System explanation cards --->
+<!--- System explanation cards. U1: only show the two system boxes when the
+      Target/Maintenance systems are actually active. When they are not configured
+      (systemsMissing) the boxes are non-actionable and confusing, so hide them and
+      let the warning below carry the message. --->
+<cfif NOT systemsMissing>
 <div class="row g-3 mb-4">
     <div class="col-md-6">
         <div class="system-card">
@@ -113,6 +117,7 @@
         </div>
     </div>
 </div>
+</cfif>
 
 <cfif systemsMissing>
     <div class="alert alert-warning" role="alert">

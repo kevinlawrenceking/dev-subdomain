@@ -38,19 +38,21 @@
               audcatid is derivable via JOIN, so we don't pass it separately. --->
         <cfset audSubCatID = val(aud.audsubcatid ?: "0")>
 
-        <!--- Pick a valid role type for the chosen category.
-              audroletypes is category-scoped (audroletypes.audcatid), so we JOIN
-              through audsubcategories to land on a role type that belongs to the
-              same category. Fallback to 1 (Film > Background) if nothing matches. --->
-        <cfset audRoleTypeID = 1>
-        <cfif audSubCatID GT 0>
+        <!--- Role type is a required, user-selected field in the wizard.
+              Trust but verify: store the submitted audroletypeid only if it is a
+              live role type belonging to the chosen category (audroletypes is
+              category-scoped). If it is missing or invalid, leave it UNSET (NULL)
+              rather than silently defaulting to Background (B3). --->
+        <cfset audRoleTypeID = "">
+        <cfset submittedRoleTypeID = val(aud.audroletypeid ?: "0")>
+        <cfif submittedRoleTypeID GT 0 AND audSubCatID GT 0>
             <cfquery name="qRoleType" datasource="#application.datasource#">
                 SELECT rt.audroletypeid
                 FROM audroletypes rt
                 INNER JOIN audsubcategories sc ON sc.audcatid = rt.audcatid
                 WHERE sc.audsubcatid = <cfqueryparam value="#audSubCatID#" cfsqltype="cf_sql_integer" />
                   AND rt.isDeleted = 0
-                ORDER BY rt.audroletypeid
+                  AND rt.audroletypeid = <cfqueryparam value="#submittedRoleTypeID#" cfsqltype="cf_sql_integer" />
                 LIMIT 1
             </cfquery>
             <cfif qRoleType.recordCount>
@@ -94,7 +96,7 @@
             ) VALUES (
                 <cfqueryparam cfsqltype="cf_sql_varchar"     value="#roleName#" maxlength="500" />,
                 <cfqueryparam cfsqltype="cf_sql_integer"     value="#newProjId#" />,
-                <cfqueryparam cfsqltype="cf_sql_integer"     value="#audRoleTypeID#" />,
+                <cfqueryparam cfsqltype="cf_sql_integer"     value="#audRoleTypeID#" null="#NOT len(audRoleTypeID)#" />,
                 <cfqueryparam cfsqltype="cf_sql_longvarchar" value="" null="true" />,
                 <cfqueryparam cfsqltype="cf_sql_date"        value="" null="true" />,
                 <cfqueryparam cfsqltype="cf_sql_date"        value="" null="true" />,
@@ -169,13 +171,10 @@
             </cfif>
         </cfif>
 
-        <!--- D7: link the casting director to this audition via
-              audcontacts_auditions_xref. Resolve the typed CD name to a contact
-              for this user (match an existing active contact by name first for
-              idempotency, otherwise create one), then write the xref. Mirrors the
-              canonical include/audition-add2.cfm path. The xref insert is
-              INSERT IGNORE (ContactAuditionService), so a double-submit will not
-              create a duplicate link. All within the surrounding transaction. --->
+        <!--- Link the casting director to this audition. Resolve the typed CD name
+              to a contact for this user (match an existing active contact by name
+              first for idempotency, otherwise create one). Mirrors the canonical
+              include/audition-add2.cfm path; all within the surrounding transaction. --->
         <cfset cdName = trim(aud.castingDirector ?: "")>
         <cfif len(cdName)>
             <cfquery name="qCd" datasource="#application.datasource#" maxrows="1">
@@ -197,10 +196,54 @@
                     contactStatus: "Active"
                 })>
             </cfif>
+
+            <!--- B1: the audition list/detail views read the CD name from
+                  contactdetails.recordname (aliased castingFullName), not
+                  contactFullName. Populate recordname when empty so the saved CD
+                  actually shows. Non-destructive: never overwrites an existing name. --->
+            <cfquery datasource="#application.datasource#">
+                UPDATE contactdetails
+                SET recordname = <cfqueryparam value="#cdName#" cfsqltype="cf_sql_varchar" />
+                WHERE contactid = <cfqueryparam value="#cdContactId#" cfsqltype="cf_sql_integer" />
+                  AND userid = <cfqueryparam value="#userid#" cfsqltype="cf_sql_integer" />
+                  AND (recordname IS NULL OR recordname = '')
+            </cfquery>
+
+            <!--- B1: the audition views join the CD on audprojects.contactid
+                  (DETaudprojects_24554 / SELaudprojects). The wizard inserted the
+                  project with contactid NULL, so the CD never appeared. Link it now. --->
+            <cfquery datasource="#application.datasource#">
+                UPDATE audprojects
+                SET contactid = <cfqueryparam value="#cdContactId#" cfsqltype="cf_sql_integer" />
+                WHERE audprojectid = <cfqueryparam value="#newProjId#" cfsqltype="cf_sql_integer" />
+                  AND userid = <cfqueryparam value="#userid#" cfsqltype="cf_sql_integer" />
+            </cfquery>
+
+            <!--- Secondary project-contact link used by other features. INSERT IGNORE,
+                  so a double-submit will not create a duplicate. --->
             <cfset request.svc("ContactAuditionService").INSaudcontacts_auditions_xref_23780(
                 audprojectid = newProjId,
                 new_contactid = cdContactId
             )>
+
+            <!--- B2: tag the contact as a Casting Director in the relationship record
+                  (contactitems Tag), mirroring the main app's insert_28_2 path so the
+                  role appears and Step 5 can scope it. Idempotent: skip if the active
+                  tag already exists (re-submit safe). --->
+            <cfquery name="qCdTag" datasource="#application.datasource#" maxrows="1">
+                SELECT 1 FROM contactitems
+                WHERE contactid = <cfqueryparam value="#cdContactId#" cfsqltype="cf_sql_integer" />
+                  AND valueType = 'Tags'
+                  AND valueCategory = 'Tag'
+                  AND valuetext = <cfqueryparam value="Casting Director" cfsqltype="cf_sql_varchar" />
+                  AND itemStatus = 'Active'
+            </cfquery>
+            <cfif qCdTag.recordCount EQ 0>
+                <cfset request.svc("ContactItemService").INScontactitems(
+                    new_contactid = cdContactId,
+                    cdtype = "Casting Director"
+                )>
+            </cfif>
         </cfif>
 
         <cfset auditionsCreated++>
