@@ -197,17 +197,13 @@
                 })>
             </cfif>
 
-            <!--- B1: the audition list/detail views read the CD name from
-                  contactdetails.recordname (aliased castingFullName), not
-                  contactFullName. Populate recordname when empty so the saved CD
-                  actually shows. Non-destructive: never overwrites an existing name. --->
-            <cfquery datasource="#application.datasource#">
-                UPDATE contactdetails
-                SET recordname = <cfqueryparam value="#cdName#" cfsqltype="cf_sql_varchar" />
-                WHERE contactid = <cfqueryparam value="#cdContactId#" cfsqltype="cf_sql_integer" />
-                  AND userid = <cfqueryparam value="#userid#" cfsqltype="cf_sql_integer" />
-                  AND (recordname IS NULL OR recordname = '')
-            </cfquery>
+            <!--- recordname is a VIRTUAL GENERATED column on contactdetails_tbl
+                  (GENERATED ALWAYS AS contactFullName), so it cannot be written and
+                  needs no UPDATE. Setting contactFullName above already makes the
+                  audition views' castingFullName (= recordname) resolve to the CD
+                  name. Do NOT add an UPDATE here -- MySQL rejects writes to a
+                  generated column ("value specified for generated column ... is not
+                  allowed"). --->
 
             <!--- B1: the audition views join the CD on audprojects.contactid
                   (DETaudprojects_24554 / SELaudprojects). The wizard inserted the

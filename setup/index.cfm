@@ -226,6 +226,10 @@ WHERE th.uuid = <cfqueryparam value="#uuid#" cfsqltype="cf_sql_varchar" />
                                     <div class="form-group mb-0 text-center col-md-12">
                                         <button class="btn btn-block" style="color: white;background-color: #406E8E;border-color:#406E8E;" type="submit" value="create"> Create Account </button>
                                     </div>
+
+                                    <div id="setup-working-msg" class="text-center col-md-12 text-muted mt-2" style="display:none; font-size:13px;">
+                                        Setting up your account &mdash; this can take up to 30 seconds. Please don&rsquo;t close this window.
+                                    </div>
 </div>
                                   
                                 </form>
@@ -257,7 +261,37 @@ WHERE th.uuid = <cfqueryparam value="#uuid#" cfsqltype="cf_sql_varchar" />
         <script src="/assets/js/app.min.js"></script>
  <script>      
  $(document).ready(function() {
-    $(".parsley-examples").parsley()
+    var $form = $(".parsley-examples");
+    var parsleyForm = $form.parsley();
+
+    // Block the Create Account button while setup runs (provisioning takes 20-30s
+    // server-side). Hook Parsley's form:submit so this fires ONLY after client-side
+    // validation passes -- a failed validation must never leave the button stuck.
+    var submitting = false;
+    parsleyForm.on('form:submit', function() {
+        if (submitting) { return false; } // guard against double-submit
+        submitting = true;
+
+        var $btn = $form.find('button[type="submit"]');
+        $btn.data('originalHtml', $btn.html())
+            .prop('disabled', true)
+            .html('<i class="mdi mdi-loading mdi-spin"></i> Creating your account...');
+        $('#setup-working-msg').show();
+
+        return true; // allow the POST to proceed
+    });
+
+    // If the page is restored from the bfcache on Back/Forward, re-enable the
+    // button so the form is never left stuck in the "creating" state.
+    $(window).on('pageshow', function(e) {
+        if (e.originalEvent && e.originalEvent.persisted) {
+            submitting = false;
+            var $btn = $form.find('button[type="submit"]');
+            if ($btn.data('originalHtml')) { $btn.html($btn.data('originalHtml')); }
+            $btn.prop('disabled', false);
+            $('#setup-working-msg').hide();
+        }
+    });
 });
  </script>  
         
