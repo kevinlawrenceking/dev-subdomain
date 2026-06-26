@@ -240,6 +240,53 @@
 
 <cfreturn result>
 </cffunction>
+<cffunction output="false" name="SELauditionReps" access="public" returntype="query">
+    <cfargument name="userid" type="numeric" required="true">
+
+<cfquery name="result" >
+            SELECT DISTINCT
+                c.contactid,
+                c.recordname AS repname
+            FROM audcontacts_auditions_xref x
+            INNER JOIN audprojects p   ON p.audprojectid = x.audprojectid
+            INNER JOIN contactdetails c ON c.contactid   = x.contactid
+            INNER JOIN contactitems ci  ON ci.contactid  = c.contactid
+            WHERE p.userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
+              AND p.isDeleted = 0
+              AND ci.valueCategory = <cfqueryparam value="Tag" cfsqltype="CF_SQL_VARCHAR">
+              AND ci.valuetext IN (
+                  <cfqueryparam value="My Team,Agent,Manager,Publicist" list="true" cfsqltype="CF_SQL_VARCHAR">
+              )
+              AND ci.isDeleted = 0
+            ORDER BY c.recordname
+
+</cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
+
+<cfreturn result>
+</cffunction>
+<cffunction output="false" name="SELauditionSources" access="public" returntype="query">
+    <cfargument name="userid" type="numeric" required="true">
+
+<cfquery name="result" >
+            SELECT DISTINCT
+                s.audsourceid AS id,
+                s.audsource AS name
+            FROM audprojects p
+            INNER JOIN audroles r   ON r.audprojectid = p.audprojectid
+            INNER JOIN audsources s ON s.audsourceid  = r.audSourceID
+            WHERE p.userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
+              AND p.isDeleted = 0
+              AND r.isDeleted = 0
+              AND r.audSourceID IS NOT NULL
+              AND s.audsource <> <cfqueryparam value="My Team" cfsqltype="CF_SQL_VARCHAR">
+            ORDER BY s.audsource
+
+</cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
+
+<cfreturn result>
+</cffunction>
 <cffunction output="false" name="DETaudprojects_23811" access="public" returntype="query">
     <cfargument name="audprojectid" type="numeric" required="true">
 
@@ -1396,10 +1443,12 @@ ORDER BY label
     <cfargument name="sel_date_from" type="string" required="false" default="">
     <cfargument name="sel_date_to" type="string" required="false" default="">
     <cfargument name="sel_year" type="string" required="false" default="">
+    <cfargument name="sel_repid" type="string" required="false" default="%">
+    <cfargument name="sel_sourceid" type="string" required="false" default="%">
 
 <cfquery name="result" >
-            SELECT 
-                p.audprojectid AS recid, 
+            SELECT
+                p.audprojectid AS recid,
                 p.audprojectid, 
                 r.payrate,
                 r.buyout,
@@ -1476,6 +1525,17 @@ ORDER BY label
 
 <cfif arguments.sel_audtype neq "%">
                 AND t.audtype = <cfqueryparam value="#arguments.sel_audtype#" cfsqltype="CF_SQL_VARCHAR">
+            </cfif>
+
+<cfif arguments.sel_repid neq "%">
+                AND p.audprojectid IN (
+                    SELECT audprojectid FROM audcontacts_auditions_xref
+                    WHERE contactid = <cfqueryparam value="#arguments.sel_repid#" cfsqltype="CF_SQL_INTEGER">
+                )
+            </cfif>
+
+<cfif arguments.sel_sourceid neq "%">
+                AND r.audSourceID = <cfqueryparam value="#arguments.sel_sourceid#" cfsqltype="CF_SQL_INTEGER">
             </cfif>
 
             <cfif arguments.auddate eq "future">

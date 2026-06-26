@@ -15,6 +15,8 @@
 
 <cfparam name="sel_contactid" default="%" />
 <cfparam name="sel_coname" default="%" />
+<cfparam name="sel_repid" default="%" />
+<cfparam name="sel_sourceid" default="%" />
 <!--- Date range and year filtering parameters --->
 <cfparam name="sel_date_from" default="" />
 <cfparam name="sel_date_to" default="" />

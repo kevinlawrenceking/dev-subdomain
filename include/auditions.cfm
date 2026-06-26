@@ -55,6 +55,8 @@ Key Features:
 <cfparam name="sel_audstepid" default="%"/>
 <cfparam name="sel_audtype" default="%"/>
 <cfparam name="sel_contactid" default="%"/>
+<cfparam name="sel_repid" default="%"/>
+<cfparam name="sel_sourceid" default="%"/>
 <cfparam name="auddate" default="%"/>
 <cfparam name="materials" default="%"/>
 <cfparam name="audsearch" default=""/>
@@ -418,15 +420,15 @@ Key Features:
                                         <cfset gallery_button="btn-secondary"/>
                                     </cfif>
 
-                                    <a href="<cfoutput>/app/auditions/?sel_audstepid=#sel_audstepid#&sel_audtype=#sel_audtype#&sel_contactid=#sel_contactid#&sel_coname=#sel_coname#&auddate=#auddate#&audsearch=#audsearch#&view=tbl&materials=#materials#&sel_date_from=#sel_date_from#&sel_date_to=#sel_date_to#&sel_year=#sel_year#</cfoutput>" class="btn btn-xs <cfoutput>#table_button#</cfoutput> waves-effect waves-light">
+                                    <a href="<cfoutput>/app/auditions/?sel_audstepid=#sel_audstepid#&sel_audtype=#sel_audtype#&sel_contactid=#sel_contactid#&sel_coname=#sel_coname#&sel_repid=#sel_repid#&sel_sourceid=#sel_sourceid#&auddate=#auddate#&audsearch=#audsearch#&view=tbl&materials=#materials#&sel_date_from=#sel_date_from#&sel_date_to=#sel_date_to#&sel_year=#sel_year#</cfoutput>" class="btn btn-xs <cfoutput>#table_button#</cfoutput> waves-effect waves-light">
                                         <i class="mdi mdi-menu fa-2x"></i>
                                     </a>
                                     &nbsp;
-                                    <a href="<cfoutput>/app/auditions/?sel_audstepid=#sel_audstepid#&sel_audtype=#sel_audtype#&sel_contactid=#sel_contactid#&sel_coname=#sel_coname#&auddate=#auddate#&audsearch=#audsearch#&view=glry&materials=#materials#&sel_date_from=#sel_date_from#&sel_date_to=#sel_date_to#&sel_year=#sel_year#</cfoutput>" class="btn btn-xs <cfoutput>#gallery_button#</cfoutput> waves-effect waves-light">
+                                    <a href="<cfoutput>/app/auditions/?sel_audstepid=#sel_audstepid#&sel_audtype=#sel_audtype#&sel_contactid=#sel_contactid#&sel_coname=#sel_coname#&sel_repid=#sel_repid#&sel_sourceid=#sel_sourceid#&auddate=#auddate#&audsearch=#audsearch#&view=glry&materials=#materials#&sel_date_from=#sel_date_from#&sel_date_to=#sel_date_to#&sel_year=#sel_year#</cfoutput>" class="btn btn-xs <cfoutput>#gallery_button#</cfoutput> waves-effect waves-light">
                                         <i class="mdi mdi-drag fa-2x"></i>
                                     </a>
                                     &nbsp;&nbsp;
-                                    <a href="<cfoutput>/app/auditions/?sel_audstepid=#sel_audstepid#&sel_audtype=#sel_audtype#&sel_contactid=#sel_contactid#&sel_coname=#sel_coname#&auddate=#auddate#&audsearch=#audsearch#&view=#view#&isexport=y&materials=#materials#&sel_date_from=#sel_date_from#&sel_date_to=#sel_date_to#&sel_year=#sel_year#</cfoutput>" class="btn btn-xs btn-outline-secondary waves-effect waves-light" title="Export Auditions">
+                                    <a href="<cfoutput>/app/auditions/?sel_audstepid=#sel_audstepid#&sel_audtype=#sel_audtype#&sel_contactid=#sel_contactid#&sel_coname=#sel_coname#&sel_repid=#sel_repid#&sel_sourceid=#sel_sourceid#&auddate=#auddate#&audsearch=#audsearch#&view=#view#&isexport=y&materials=#materials#&sel_date_from=#sel_date_from#&sel_date_to=#sel_date_to#&sel_year=#sel_year#</cfoutput>" class="btn btn-xs btn-outline-secondary waves-effect waves-light" title="Export Auditions">
                                         <i class="mdi mdi-export fa-2x"></i>
                                     </a>
                                     &nbsp;&nbsp;
@@ -439,6 +441,8 @@ Key Features:
                             <!--- Additional filters --->
                             <cfinclude template="/include/qry/cds_31_4.cfm" />
                             <cfinclude template="/include/qry/cos_31_5.cfm" />
+                            <cfinclude template="/include/qry/reps_sel.cfm" />
+                            <cfinclude template="/include/qry/sources_sel.cfm" />
                             <cfparam name="sel_coname" default="%"/>
 
                             <!--- Casting director filter --->
@@ -457,6 +461,26 @@ Key Features:
                                     <option value="%">All Companies</option>
                                     <cfoutput query="cos">
                                         <option value="#cos.valueCompany#" <cfif "#cos.valueCompany#" is "#sel_coname#" >Selected</cfif>>#cos.valueCompany#</option>
+                                    </cfoutput>
+                                </select>
+                            </div>
+
+                            <!--- Rep filter (My Team contacts linked to an audition) --->
+                            <div class="col-lg-4 pb-1">
+                                <select id="sel_repid" name="sel_repid" class="form-control" onchange="this.form.submit()">
+                                    <option value="%">All Reps</option>
+                                    <cfoutput query="reps">
+                                        <option value="#reps.contactid#" <cfif "#reps.contactid#" is "#sel_repid#">selected</cfif>>#reps.repname#</option>
+                                    </cfoutput>
+                                </select>
+                            </div>
+
+                            <!--- Submission source filter (sources linked to an audition) --->
+                            <div class="col-lg-4 pb-1">
+                                <select id="sel_sourceid" name="sel_sourceid" class="form-control" onchange="this.form.submit()">
+                                    <option value="%">All Submission Sources</option>
+                                    <cfoutput query="sources">
+                                        <option value="#sources.id#" <cfif "#sources.id#" is "#sel_sourceid#">selected</cfif>>#sources.name#</option>
                                     </cfoutput>
                                 </select>
                             </div>
@@ -534,6 +558,8 @@ Key Features:
                                 if (isDefined('sel_audcatid') and sel_audcatid neq "%") urlParams = listAppend(urlParams, "sel_audcatid=" & sel_audcatid, "&");
                                 if (isDefined('sel_contactid') and sel_contactid neq "%") urlParams = listAppend(urlParams, "sel_contactid=" & sel_contactid, "&");
                                 if (isDefined('sel_coname') and sel_coname neq "%") urlParams = listAppend(urlParams, "sel_coname=" & urlEncodedFormat(sel_coname), "&");
+                                if (isDefined('sel_repid') and sel_repid neq "%") urlParams = listAppend(urlParams, "sel_repid=" & sel_repid, "&");
+                                if (isDefined('sel_sourceid') and sel_sourceid neq "%") urlParams = listAppend(urlParams, "sel_sourceid=" & sel_sourceid, "&");
                                 if (isDefined('audsearch') and len(trim(audsearch))) urlParams = listAppend(urlParams, "audsearch=" & urlEncodedFormat(audsearch), "&");
                                 if (isDefined('view')) urlParams = listAppend(urlParams, "view=" & view, "&");
                                 if (isDefined('materials')) urlParams = listAppend(urlParams, "materials=" & materials, "&");

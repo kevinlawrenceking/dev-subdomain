@@ -14,5 +14,7 @@
     audsearch = audsearch,
     sel_date_from = sel_date_from,
     sel_date_to = sel_date_to,
-    sel_year = sel_year
+    sel_year = sel_year,
+    sel_repid = sel_repid,
+    sel_sourceid = sel_sourceid
 )>
