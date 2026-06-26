@@ -270,17 +270,17 @@
 
 <cfquery name="result" >
             SELECT DISTINCT
-                s.audsourceid AS id,
-                s.audsource AS name
+                b.submitsiteid AS id,
+                b.submitsitename AS name
             FROM audprojects p
-            INNER JOIN audroles r   ON r.audprojectid = p.audprojectid
-            INNER JOIN audsources s ON s.audsourceid  = r.audSourceID
+            INNER JOIN audroles r            ON r.audprojectid = p.audprojectid
+            INNER JOIN audsubmitsites_user b ON b.submitsiteid = r.submitsiteid
             WHERE p.userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
               AND p.isDeleted = 0
               AND r.isDeleted = 0
-              AND r.audSourceID IS NOT NULL
-              AND s.audsource <> <cfqueryparam value="My Team" cfsqltype="CF_SQL_VARCHAR">
-            ORDER BY s.audsource
+              AND r.submitsiteid IS NOT NULL
+              AND b.submitsitename <> ''
+            ORDER BY b.submitsitename
 
 </cfquery>
 <cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
@@ -1535,7 +1535,7 @@ ORDER BY label
             </cfif>
 
 <cfif arguments.sel_sourceid neq "%">
-                AND r.audSourceID = <cfqueryparam value="#arguments.sel_sourceid#" cfsqltype="CF_SQL_INTEGER">
+                AND r.submitsiteid = <cfqueryparam value="#arguments.sel_sourceid#" cfsqltype="CF_SQL_INTEGER">
             </cfif>
 
             <cfif arguments.auddate eq "future">

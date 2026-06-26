@@ -465,6 +465,9 @@ Key Features:
                                 </select>
                             </div>
 
+                            <!--- Spacer to align Reps under casting-director column --->
+                            <div class="col-lg-4 pb-1"></div>
+
                             <!--- Rep filter (My Team contacts linked to an audition) --->
                             <div class="col-lg-4 pb-1">
                                 <select id="sel_repid" name="sel_repid" class="form-control" onchange="this.form.submit()">
