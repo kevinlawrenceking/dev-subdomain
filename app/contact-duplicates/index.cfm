@@ -116,7 +116,7 @@
                     <a href="?duplicateType=possible" class="nav-link<cfif duplicateType EQ 'possible'> active</cfif>">Possible duplicates</a>
                 </li>
             </ul>
-            -->
+            --->
 
             <cfif duplicates.recordCount GT 0>
                 <div class="table-responsive">
