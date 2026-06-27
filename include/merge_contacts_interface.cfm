@@ -9,7 +9,12 @@
     DEPENDENCIES: services.ContactDuplicateService
 --->
 
-<cfparam name="contactIds" default="" />
+<cfset contactIds = "" />
+<cfif structKeyExists(url, "contactIds")>
+    <cfset contactIds = url.contactIds />
+<cfelseif structKeyExists(form, "contactIds")>
+    <cfset contactIds = form.contactIds />
+</cfif>
 <cfset userid = session.userid />
 
 <cfset duplicateService = createObject("component", "services.ContactDuplicateService").init() />
