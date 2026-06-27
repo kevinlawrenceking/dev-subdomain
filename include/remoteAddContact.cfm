@@ -73,4 +73,51 @@ Parsley.addValidator('phone', {
     en: 'Please enter a valid phone number.'
   }
 });
+
+// Pre-submit duplicate check (name + email + phone). Warn, never hard-block.
+$(document).ready(function() {
+    $('#profile-form').on('submit', function(e) {
+        var form = this;
+        if (form.dataset.dupeChecked === '1') { return true; }
+        // Honor native HTML5 required-field validation first
+        if (form.checkValidity && !form.checkValidity()) {
+            e.preventDefault();
+            e.stopPropagation();
+            form.classList.add('was-validated');
+            return false;
+        }
+        e.preventDefault();
+        taoContactDupeCheck({
+            contactFullName: $('#contactfullname').val(),
+            email: $('#workemail').val(),
+            phone: $('#workphone').val()
+        }, form);
+    });
+});
+
+function taoContactDupeCheck(payload, form) {
+    $.ajax({
+        url: '/ajax/contacts/check-duplicate.cfm',
+        method: 'POST',
+        dataType: 'json',
+        data: payload
+    }).done(function(res) {
+        if (res && res.success && res.hasDuplicate && res.candidates && res.candidates.length) {
+            var lines = res.candidates.map(function(c) {
+                var why = (c.reasons && c.reasons.length) ? ' — ' + c.reasons.join(', ') : '';
+                return '• ' + c.name + ' (#' + c.contactid + ')' + why;
+            }).join('\n');
+            if (confirm('This may already be in your contacts:\n\n' + lines + '\n\nClick Cancel to review, or OK to add anyway.')) {
+                form.dataset.dupeChecked = '1';
+                form.submit();
+            }
+        } else {
+            form.dataset.dupeChecked = '1';
+            form.submit();
+        }
+    }).fail(function() {
+        form.dataset.dupeChecked = '1';
+        form.submit();
+    });
+}
 </script>

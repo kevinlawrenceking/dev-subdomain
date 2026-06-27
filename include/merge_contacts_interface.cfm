@@ -1,287 +1,228 @@
 <!---
-    PURPOSE: Contact merge interface for selecting field values
-    AUTHOR: Kevin King
-    DATE: 2025-08-07
-    PARAMETERS: contactIds, duplicateType, userid
-    DEPENDENCIES: ContactDuplicateService
+    PURPOSE: Contact merge interface - pick the contact to KEEP (primary) and the
+             contact to MERGE & REMOVE (duplicate), then resolve field conflicts.
+    AUTHOR:  Kevin King
+    DATE:    2025-08-07
+    REWRITE: 2026-06-25 - verified columns (contactFullName/recordname); supports
+             groups of 2+ (merge is pairwise; merge two, list refreshes, repeat).
+    PARAMETERS: contactIds (csv), userid (session)
+    DEPENDENCIES: services.ContactDuplicateService
 --->
 
 <cfparam name="contactIds" default="" />
-<cfparam name="duplicateType" default="name" />
-<cfparam name="userid" default="#session.userid#" />
+<cfset userid = session.userid />
 
-<!--- Initialize service and get contact details --->
-<cfset duplicateService = createObject("component", "services.ContactDuplicateService") />
+<cfset duplicateService = createObject("component", "services.ContactDuplicateService").init() />
 <cfset contactDetails = duplicateService.getContactDetails(contactIds, userid) />
-<cfset contactItems = duplicateService.getContactItems(contactIds) />
+<cfset contactItems   = duplicateService.getContactItems(contactIds, userid) />
 
-<cfif contactDetails.recordcount lt 2>
+<cfif contactDetails.recordCount LT 2>
     <div class="alert alert-warning">
         <i class="fe-alert-triangle"></i>
-        Not enough contacts found for merging. Please try again.
+        Not enough contacts found for merging (they may already be merged). Please refresh and try again.
     </div>
     <cfabort />
 </cfif>
 
-<!--- Organize contact items by contact and category --->
-<cfset contactItemsStruct = {} />
+<!--- Group items by contact and category for display --->
+<cfset itemsByContact = {} />
 <cfloop query="contactItems">
-    <cfif not structKeyExists(contactItemsStruct, contactid)>
-        <cfset contactItemsStruct[contactid] = {} />
+    <cfif not structKeyExists(itemsByContact, contactItems.contactid)>
+        <cfset itemsByContact[contactItems.contactid] = { "Email": [], "Phone": [] } />
     </cfif>
-    <cfif not structKeyExists(contactItemsStruct[contactid], valueCategory)>
-        <cfset contactItemsStruct[contactid][valueCategory] = [] />
+    <cfif structKeyExists(itemsByContact[contactItems.contactid], contactItems.valueCategory)>
+        <cfset arrayAppend(itemsByContact[contactItems.contactid][contactItems.valueCategory], contactItems.valuetext) />
     </cfif>
-    <cfset arrayAppend(contactItemsStruct[contactid][valueCategory], {
-        itemid: itemid,
-        valuetext: valuetext
-    }) />
 </cfloop>
 
 <form id="mergeForm" method="post" action="/app/contact-duplicates/">
-    <cfif structKeyExists(session, "csrfToken")>
-        <cfoutput><input type="hidden" name="csrfToken" value="#session.csrfToken#" /></cfoutput>
-    </cfif>
+    <cfoutput>
+        <cfif structKeyExists(session, "csrfToken")>
+            <input type="hidden" name="csrfToken" value="#session.csrfToken#" />
+        </cfif>
+    </cfoutput>
     <input type="hidden" name="action" value="merge" />
-    <input type="hidden" name="userid" value="<cfoutput>#userid#</cfoutput>" />
-    
-    <!--- Step 1: Select Primary Contact --->
+    <input type="hidden" name="duplicateType" value="full" />
+
+    <div class="alert alert-info py-2">
+        <i class="fe-info"></i>
+        Choose which contact to <strong>keep</strong> and which one to <strong>merge in &amp; remove</strong>.
+        All emails, phones, notes, events, auditions and reminders from the removed contact move to the kept one.
+        Merging more than two? Merge a pair, then repeat.
+    </div>
+
+    <!--- Step 1: choose primary + duplicate --->
     <div class="merge-step" id="step1">
-        <h5 class="text-primary mb-3">
-            <span class="badge bg-primary me-2">1</span>
-            Select Primary Contact
-        </h5>
-        <p class="text-muted mb-4">Choose which contact will be kept as the main record:</p>
-        
-        <div class="row">
-            <cfloop query="contactDetails">
-                <div class="col-md-6 mb-3">
-                    <div class="contact-card card h-100" onclick="selectPrimaryContact(this, <cfoutput>#contactid#</cfoutput>)">
-                        <div class="card-body">
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" 
-                                       name="primaryContactId" 
-                                       value="<cfoutput>#contactid#</cfoutput>" 
-                                       id="primary<cfoutput>#contactid#</cfoutput>" />
-                                <label class="form-check-label" for="primary<cfoutput>#contactid#</cfoutput>">
-                                    <h6 class="card-title mb-2">
-                                        <cfoutput>#contactfirst# #contactlast#</cfoutput>
-                                    </h6>
-                                </label>
-                            </div>
-                            
-                            <div class="contact-info">
-                                <p class="mb-1"><small class="text-muted">Created: <cfoutput>#dateFormat(created_date, 'mm/dd/yyyy')#</cfoutput></small></p>
-                                
-                                <!--- Show email if available --->
-                                <cfif structKeyExists(contactItemsStruct, contactid) and structKeyExists(contactItemsStruct[contactid], "Email")>
-                                    <cfloop array="#contactItemsStruct[contactid]['Email']#" index="emailItem">
-                                        <p class="mb-1"><small><i class="fe-mail"></i> <cfoutput>#emailItem.valuetext#</cfoutput></small></p>
-                                    </cfloop>
-                                </cfif>
-                                
-                                <!--- Show phone if available --->
-                                <cfif structKeyExists(contactItemsStruct, contactid) and structKeyExists(contactItemsStruct[contactid], "Phone")>
-                                    <cfloop array="#contactItemsStruct[contactid]['Phone']#" index="phoneItem">
-                                        <p class="mb-1"><small><i class="fe-phone"></i> <cfoutput>#phoneItem.valuetext#</cfoutput></small></p>
-                                    </cfloop>
-                                </cfif>
-                                
-                                <cfif len(trim(contactpronoun))>
-                                    <p class="mb-1"><small><strong>Pronoun:</strong> <cfoutput>#contactpronoun#</cfoutput></small></p>
-                                </cfif>
-                                
-                                <cfif isDate(contactbirthday)>
-                                    <p class="mb-1"><small><strong>Birthday:</strong> <cfoutput>#dateFormat(contactbirthday, 'mm/dd')#</cfoutput></small></p>
-                                </cfif>
-                                
-                                <cfif len(trim(contactmeetingloc))>
-                                    <p class="mb-1"><small><strong>Meeting Location:</strong> <cfoutput>#contactmeetingloc#</cfoutput></small></p>
-                                </cfif>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </cfloop>
+        <div class="table-responsive">
+            <table class="table table-bordered align-middle">
+                <thead>
+                    <tr>
+                        <th class="text-center" style="width:90px;">Keep</th>
+                        <th class="text-center" style="width:120px;">Merge &amp; remove</th>
+                        <th>Contact</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <cfoutput query="contactDetails">
+                        <tr>
+                            <td class="text-center">
+                                <input class="form-check-input" type="radio" name="primaryContactId"
+                                       value="#contactDetails.contactid#" onchange="onRoleChange()" />
+                            </td>
+                            <td class="text-center">
+                                <input class="form-check-input" type="radio" name="duplicateContactId"
+                                       value="#contactDetails.contactid#" onchange="onRoleChange()" />
+                            </td>
+                            <td>
+                                <div class="contact-card card" id="card_#contactDetails.contactid#">
+                                    <div class="card-body py-2">
+                                        <h6 class="mb-1">#encodeForHtml(contactDetails.contactFullName)#</h6>
+                                        <cfif len(trim(contactDetails.recordname)) AND contactDetails.recordname NEQ contactDetails.contactFullName>
+                                            <div class="text-muted small">aka #encodeForHtml(contactDetails.recordname)#</div>
+                                        </cfif>
+                                        <div class="text-muted small">Created: #dateFormat(contactDetails.contactCreationDate, 'mm/dd/yyyy')#</div>
+                                        <cfif structKeyExists(itemsByContact, contactDetails.contactid)>
+                                            <cfloop array="#itemsByContact[contactDetails.contactid]['Email']#" index="em">
+                                                <div class="small"><i class="fe-mail"></i> #encodeForHtml(em)#</div>
+                                            </cfloop>
+                                            <cfloop array="#itemsByContact[contactDetails.contactid]['Phone']#" index="ph">
+                                                <div class="small"><i class="fe-phone"></i> #encodeForHtml(ph)#</div>
+                                            </cfloop>
+                                        </cfif>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </cfoutput>
+                </tbody>
+            </table>
         </div>
-        
+
         <div class="text-end mt-3">
             <button type="button" class="btn btn-primary" onclick="goToStep(2)" disabled id="step1Next">
-                Next: Select Field Values <i class="fe-arrow-right"></i>
+                Next: choose field values <i class="fe-arrow-right"></i>
             </button>
         </div>
     </div>
 
-    <!--- Step 2: Select Field Values --->
+    <!--- Step 2: resolve field conflicts --->
     <div class="merge-step d-none" id="step2">
-        <h5 class="text-primary mb-3">
-            <span class="badge bg-primary me-2">2</span>
-            Choose Field Values
-        </h5>
-        <p class="text-muted mb-4">For each field with different values, select which one to keep:</p>
-        
-        <div id="fieldComparisons">
-            <!--- Field comparisons will be populated by JavaScript --->
-        </div>
-        
+        <p class="text-muted mb-3">For each differing field, pick the value to keep on the surviving contact:</p>
+        <div id="fieldComparisons"></div>
         <div class="d-flex justify-content-between mt-4">
-            <button type="button" class="btn btn-secondary" onclick="goToStep(1)">
-                <i class="fe-arrow-left"></i> Back
-            </button>
-            <button type="button" class="btn btn-success" onclick="submitMerge()">
-                <i class="fe-shuffle"></i> Complete Merge
-            </button>
+            <button type="button" class="btn btn-secondary" onclick="goToStep(1)"><i class="fe-arrow-left"></i> Back</button>
+            <button type="button" class="btn btn-success" onclick="submitMerge()"><i class="fe-shuffle"></i> Complete merge</button>
         </div>
     </div>
 </form>
 
 <script>
-// Contact data for JavaScript processing
 const contactData = [
-    <cfloop query="contactDetails">
-        <cfoutput>
-        {
-            contactid: #contactid#,
-            contactfirst: '#jsStringFormat(contactfirst)#',
-            contactlast: '#jsStringFormat(contactlast)#',
-            contactfullname: '#jsStringFormat(contactfullname)#',
-            contactpronoun: '#jsStringFormat(contactpronoun)#',
-            contactbirthday: '<cfif isDate(contactbirthday)>#dateFormat(contactbirthday, 'yyyy-mm-dd')#</cfif>',
-            contactmeetingdate: '<cfif isDate(contactmeetingdate)>#dateFormat(contactmeetingdate, 'yyyy-mm-dd')#</cfif>',
-            contactmeetingloc: '#jsStringFormat(contactmeetingloc)#',
-            refer_contact_id: '#refer_contact_id#',
-            newsletter_yn: '#newsletter_yn#',
-            googlealert_yn: '#googlealert_yn#',
-            socialmedia_yn: '#socialmedia_yn#'
-        }<cfif currentRow lt recordcount>,</cfif>
-        </cfoutput>
-    </cfloop>
+    <cfoutput query="contactDetails">
+    {
+        contactid:          #contactDetails.contactid#,
+        contactFullName:    "#jsStringFormat(contactDetails.contactFullName)#",
+        contacttitle:       "#jsStringFormat(contactDetails.contacttitle)#",
+        contactNickname:    "#jsStringFormat(contactDetails.contactNickname)#",
+        contactPronoun:     "#jsStringFormat(contactDetails.contactPronoun)#",
+        contactBirthday:    "<cfif isDate(contactDetails.contactBirthday)>#dateFormat(contactDetails.contactBirthday,'yyyy-mm-dd')#</cfif>",
+        contactMeetingDate: "<cfif isDate(contactDetails.contactMeetingDate)>#dateFormat(contactDetails.contactMeetingDate,'yyyy-mm-dd')#</cfif>",
+        contactMeetingLoc:  "#jsStringFormat(contactDetails.contactMeetingLoc)#",
+        refer_contact_id:   "#jsStringFormat(contactDetails.refer_contact_id)#",
+        newsletter_yn:      "#jsStringFormat(contactDetails.newsletter_yn)#",
+        googlealert_yn:     "#jsStringFormat(contactDetails.googlealert_yn)#",
+        socialmedia_yn:     "#jsStringFormat(contactDetails.socialmedia_yn)#"
+    }<cfif contactDetails.currentRow LT contactDetails.recordCount>,</cfif>
+    </cfoutput>
 ];
 
-let selectedPrimaryId = null;
-let duplicateContactId = null;
+const FIELDS = [
+    {key: 'contactFullName',    label: 'Full name'},
+    {key: 'contacttitle',       label: 'Title'},
+    {key: 'contactNickname',    label: 'Nickname'},
+    {key: 'contactPronoun',     label: 'Pronoun'},
+    {key: 'contactBirthday',    label: 'Birthday'},
+    {key: 'contactMeetingDate', label: 'Meeting date'},
+    {key: 'contactMeetingLoc',  label: 'Meeting location'},
+    {key: 'newsletter_yn',      label: 'Newsletter'},
+    {key: 'googlealert_yn',     label: 'Google alert'},
+    {key: 'socialmedia_yn',     label: 'Social media'}
+];
 
-function selectPrimaryContact(card, contactId) {
-    // Remove previous selections
-    document.querySelectorAll('.contact-card').forEach(c => c.classList.remove('selected'));
-    document.querySelectorAll('input[name="primaryContactId"]').forEach(r => r.checked = false);
-    
-    // Select this contact
-    card.classList.add('selected');
-    document.getElementById('primary' + contactId).checked = true;
-    
-    selectedPrimaryId = contactId;
-    
-    // Find the duplicate contact ID (the other one)
-    duplicateContactId = contactData.find(c => c.contactid != contactId).contactid;
-    
-    // Enable next button
-    document.getElementById('step1Next').disabled = false;
-    
-    // Add hidden input for duplicate contact ID
-    let duplicateInput = document.getElementById('duplicateContactId');
-    if (!duplicateInput) {
-        duplicateInput = document.createElement('input');
-        duplicateInput.type = 'hidden';
-        duplicateInput.name = 'duplicateContactId';
-        duplicateInput.id = 'duplicateContactId';
-        document.getElementById('mergeForm').appendChild(duplicateInput);
+function selectedPrimary()   { const el = document.querySelector('input[name="primaryContactId"]:checked');   return el ? el.value : null; }
+function selectedDuplicate()  { const el = document.querySelector('input[name="duplicateContactId"]:checked'); return el ? el.value : null; }
+
+function onRoleChange() {
+    const p = selectedPrimary(), d = selectedDuplicate();
+    // Highlight cards
+    document.querySelectorAll('.contact-card').forEach(c => c.classList.remove('is-primary','is-duplicate'));
+    if (p) document.getElementById('card_' + p).classList.add('is-primary');
+    if (d) document.getElementById('card_' + d).classList.add('is-duplicate');
+    // Enable next only when both chosen and different
+    const ok = p && d && p !== d;
+    document.getElementById('step1Next').disabled = !ok;
+    if (p && d && p === d) {
+        document.getElementById('step1Next').disabled = true;
     }
-    duplicateInput.value = duplicateContactId;
 }
 
-function goToStep(stepNumber) {
-    document.querySelectorAll('.merge-step').forEach(step => step.classList.add('d-none'));
-    document.getElementById('step' + stepNumber).classList.remove('d-none');
-    
-    if (stepNumber === 2) {
+function goToStep(n) {
+    if (n === 2) {
+        if (selectedPrimary() === selectedDuplicate()) { alert('Keep and Merge must be two different contacts.'); return; }
         buildFieldComparisons();
     }
+    document.querySelectorAll('.merge-step').forEach(s => s.classList.add('d-none'));
+    document.getElementById('step' + n).classList.remove('d-none');
 }
 
 function buildFieldComparisons() {
-    const primaryContact = contactData.find(c => c.contactid == selectedPrimaryId);
-    const duplicateContact = contactData.find(c => c.contactid == duplicateContactId);
-    
-    const fieldsToCompare = [
-        {key: 'contactfirst', label: 'First Name'},
-        {key: 'contactlast', label: 'Last Name'},
-        {key: 'contactfullname', label: 'Full Name'},
-        {key: 'contactpronoun', label: 'Pronoun'},
-        {key: 'contactbirthday', label: 'Birthday'},
-        {key: 'contactmeetingdate', label: 'Meeting Date'},
-        {key: 'contactmeetingloc', label: 'Meeting Location'},
-        {key: 'newsletter_yn', label: 'Newsletter Subscription'},
-        {key: 'googlealert_yn', label: 'Google Alert'},
-        {key: 'socialmedia_yn', label: 'Social Media Follow'}
-    ];
-    
-    let comparisonsHTML = '';
-    
-    fieldsToCompare.forEach(field => {
-        const primaryValue = primaryContact[field.key] || '';
-        const duplicateValue = duplicateContact[field.key] || '';
-        
-        // Only show comparison if values are different
-        if (primaryValue !== duplicateValue) {
-            comparisonsHTML += `
+    const primary   = contactData.find(c => c.contactid == selectedPrimary());
+    const duplicate = contactData.find(c => c.contactid == selectedDuplicate());
+    let html = '';
+    FIELDS.forEach(f => {
+        const pv = primary[f.key]   || '';
+        const dv = duplicate[f.key] || '';
+        if (pv !== dv) {
+            html += `
                 <div class="field-comparison">
-                    <h6>${field.label}</h6>
+                    <h6>${f.label}</h6>
                     <div class="row">
                         <div class="col-md-6">
-                            <div class="field-value ${primaryValue ? '' : 'empty-value'}" 
-                                 onclick="selectFieldValue('${field.key}', '${primaryValue}', this)">
-                                <strong>Primary Contact:</strong><br>
-                                ${primaryValue || '<em>No value</em>'}
+                            <div class="field-value selected ${pv ? '' : 'empty-value'}"
+                                 onclick="pickValue('${f.key}', this)" data-val="${encodeURIComponent(pv)}">
+                                <strong>Keep:</strong><br>${pv || '<em>No value</em>'}
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="field-value ${duplicateValue ? '' : 'empty-value'}" 
-                                 onclick="selectFieldValue('${field.key}', '${duplicateValue}', this)">
-                                <strong>Duplicate Contact:</strong><br>
-                                ${duplicateValue || '<em>No value</em>'}
+                            <div class="field-value ${dv ? '' : 'empty-value'}"
+                                 onclick="pickValue('${f.key}', this)" data-val="${encodeURIComponent(dv)}">
+                                <strong>Removed:</strong><br>${dv || '<em>No value</em>'}
                             </div>
                         </div>
                     </div>
-                    <input type="hidden" name="mergeData[${field.key}]" value="${primaryValue}" />
-                </div>
-            `;
+                    <input type="hidden" name="mergeData[${f.key}]" value="${pv}" />
+                </div>`;
         } else {
-            // If values are the same, just add a hidden input
-            comparisonsHTML += `<input type="hidden" name="mergeData[${field.key}]" value="${primaryValue}" />`;
+            html += `<input type="hidden" name="mergeData[${f.key}]" value="${pv}" />`;
         }
     });
-    
-    if (!comparisonsHTML.includes('field-comparison')) {
-        comparisonsHTML = '<div class="alert alert-info"><i class="fe-info"></i> All field values are identical. No conflicts to resolve.</div>';
+    if (!html.includes('field-comparison')) {
+        html = '<div class="alert alert-info"><i class="fe-info"></i> No conflicting field values. Nothing to choose.</div>' + html;
     }
-    
-    document.getElementById('fieldComparisons').innerHTML = comparisonsHTML;
+    document.getElementById('fieldComparisons').innerHTML = html;
 }
 
-function selectFieldValue(fieldKey, value, element) {
-    // Remove previous selection for this field
-    element.parentElement.parentElement.querySelectorAll('.field-value').forEach(fv => {
-        fv.classList.remove('selected');
-    });
-    
-    // Select this value
-    element.classList.add('selected');
-    
-    // Update hidden input
-    const input = document.querySelector(`input[name="mergeData[${fieldKey}]"]`);
-    if (input) {
-        input.value = value;
-    }
+function pickValue(key, el) {
+    el.parentElement.parentElement.querySelectorAll('.field-value').forEach(v => v.classList.remove('selected'));
+    el.classList.add('selected');
+    const input = document.querySelector(`input[name="mergeData[${key}]"]`);
+    if (input) input.value = decodeURIComponent(el.getAttribute('data-val'));
 }
 
 function submitMerge() {
-    if (!selectedPrimaryId || !duplicateContactId) {
-        alert('Please select a primary contact first.');
-        return;
-    }
-    
-    if (confirm('Are you sure you want to merge these contacts? This action cannot be undone.')) {
+    const p = selectedPrimary(), d = selectedDuplicate();
+    if (!p || !d || p === d) { alert('Choose one contact to keep and a different one to merge.'); return; }
+    if (confirm('Merge these two contacts? The removed contact is archived; this can be undone from the merge log.')) {
         document.getElementById('mergeForm').submit();
     }
 }

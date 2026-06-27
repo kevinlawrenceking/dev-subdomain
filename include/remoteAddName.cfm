@@ -87,7 +87,49 @@
 <script>
     $(document).ready(function() {
         $(".parsley-examples").parsley();
+
+        // Pre-submit duplicate check (warn, never hard-block). See /ajax/contacts/check-duplicate.cfm
+        $('#profile-form').on('submit', function(e) {
+            var form = this;
+            if (form.dataset.dupeChecked === '1') { return true; }
+            var $form = $(form);
+            // Respect Parsley validation so the programmatic submit cannot bypass it
+            if ($form.parsley && !$form.parsley().isValid()) {
+                $form.parsley().validate();
+                return false;
+            }
+            e.preventDefault();
+            taoDupeCheck({
+                contactFullName: $('#contactFullName').val(),
+                email: '',
+                phone: ''
+            }, form);
+        });
     });
+
+    function taoDupeCheck(payload, form) {
+        $.ajax({
+            url: '/ajax/contacts/check-duplicate.cfm',
+            method: 'POST',
+            dataType: 'json',
+            data: payload
+        }).done(function(res) {
+            if (res && res.success && res.hasDuplicate && res.candidates && res.candidates.length) {
+                var lines = res.candidates.map(function(c) { return '• ' + c.name + ' (#' + c.contactid + ')'; }).join('\n');
+                if (confirm('This may already be in your contacts:\n\n' + lines + '\n\nClick Cancel to review, or OK to add anyway.')) {
+                    form.dataset.dupeChecked = '1';
+                    form.submit();
+                }
+            } else {
+                form.dataset.dupeChecked = '1';
+                form.submit();
+            }
+        }).fail(function() {
+            // Fail open: do not block adding a contact on a check error
+            form.dataset.dupeChecked = '1';
+            form.submit();
+        });
+    }
 </script>
 
 <script>
