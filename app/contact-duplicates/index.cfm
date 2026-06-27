@@ -43,14 +43,12 @@
     </cfif>
 </cfif>
 
-<cfif duplicateType EQ "possible">
-    <cfset duplicates = duplicateService.findPossibleDuplicates(userid) />
-    <cfset pageHeading = "Possible duplicate contacts (similar names)" />
-<cfelse>
-    <cfset duplicateType = "full" />
-    <cfset duplicates = duplicateService.findFullDuplicates(userid) />
-    <cfset pageHeading = "Full duplicate contacts (same email / phone / name)" />
-</cfif>
+<!--- Full-duplicates tab hidden 2026-06-25 (users had no action to take on it).
+      findFullDuplicates() is retained in the service; to re-enable, restore the
+      nav tabs below and the duplicateType branch here. --->
+<cfset duplicateType = "possible" />
+<cfset duplicates = duplicateService.findPossibleDuplicates(userid) />
+<cfset pageHeading = "Possible duplicate contacts" />
 
 <!DOCTYPE html>
 <html lang="en">
@@ -109,6 +107,7 @@
 
     <div class="card">
         <div class="card-body">
+<!--- Tabs hidden 2026-06-25: showing Possible duplicates only. Restore to bring back Full.
             <ul class="nav nav-pills nav-justified mb-3" role="tablist">
                 <li class="nav-item">
                     <a href="?duplicateType=full" class="nav-link<cfif duplicateType EQ 'full'> active</cfif>">Full duplicates</a>
@@ -117,6 +116,7 @@
                     <a href="?duplicateType=possible" class="nav-link<cfif duplicateType EQ 'possible'> active</cfif>">Possible duplicates</a>
                 </li>
             </ul>
+            -->
 
             <cfif duplicates.recordCount GT 0>
                 <div class="table-responsive">
