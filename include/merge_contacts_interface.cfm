@@ -122,7 +122,9 @@
 </form>
 
 <script>
-const contactData = [
+<!--- var (not const/let): this fragment is re-loaded via $.load each time the modal
+      opens; jQuery evals it in global scope, and const cannot be redeclared. --->
+var contactData = [
     <cfoutput query="contactDetails">
     {
         contactid:          #contactDetails.contactid#,
@@ -141,7 +143,7 @@ const contactData = [
     </cfoutput>
 ];
 
-const FIELDS = [
+var FIELDS = [
     {key: 'contactFullName',    label: 'Full name'},
     {key: 'contacttitle',       label: 'Title'},
     {key: 'contactNickname',    label: 'Nickname'},
