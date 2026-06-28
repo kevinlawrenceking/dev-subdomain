@@ -346,7 +346,42 @@
                     WHERE  contactid = <cfqueryparam value="#dup#" cfsqltype="cf_sql_integer" />
                 </cfquery>
 
-                <!--- 6. Relationship system enrollments (repoint; see note re: dupe enrollments) --->
+                <!--- 6. Relationship system enrollments. fusystemusers_tbl has a UNIQUE index
+                         uq_active_enrollment(userid, contactid, systemid, active_guard) [WO-3.1],
+                         where active_guard = 1 only for Active, non-deleted rows. A blind repoint
+                         throws a duplicate-key error when BOTH contacts are actively enrolled in the
+                         same system. So: soft-delete the duplicate's colliding active enrollments
+                         first (active_guard recomputes to NULL, freeing the index), then repoint the
+                         remaining rows. --->
+                <!--- 6a. Map + soft-delete duplicate's active enrollments that collide with primary --->
+                <cfquery datasource="#application.datasource#">
+                    INSERT INTO contact_merge_map (mergeid, tbl, pkcol, pkval, old_contactid, new_contactid, action)
+                    SELECT <cfqueryparam value="#mergeid#" cfsqltype="cf_sql_integer" />, 'fusystemusers_tbl', 'suID',
+                           d.suID, <cfqueryparam value="#dup#" cfsqltype="cf_sql_integer" />,
+                           <cfqueryparam value="#pri#" cfsqltype="cf_sql_integer" />, 'enroll_deleted'
+                    FROM   fusystemusers_tbl d
+                    WHERE  d.contactid = <cfqueryparam value="#dup#" cfsqltype="cf_sql_integer" />
+                      AND  d.sustatus = 'Active' AND (d.isdeleted IS NULL OR d.isdeleted = 0)
+                      AND  EXISTS (
+                            SELECT 1 FROM (SELECT * FROM fusystemusers_tbl) p
+                            WHERE p.contactid = <cfqueryparam value="#pri#" cfsqltype="cf_sql_integer" />
+                              AND p.userid = d.userid AND p.systemid = d.systemid
+                              AND p.sustatus = 'Active' AND (p.isdeleted IS NULL OR p.isdeleted = 0)
+                           )
+                </cfquery>
+                <cfquery datasource="#application.datasource#">
+                    UPDATE fusystemusers_tbl d
+                    SET    d.isdeleted = 1
+                    WHERE  d.contactid = <cfqueryparam value="#dup#" cfsqltype="cf_sql_integer" />
+                      AND  d.sustatus = 'Active' AND (d.isdeleted IS NULL OR d.isdeleted = 0)
+                      AND  EXISTS (
+                            SELECT 1 FROM (SELECT * FROM fusystemusers_tbl) p
+                            WHERE p.contactid = <cfqueryparam value="#pri#" cfsqltype="cf_sql_integer" />
+                              AND p.userid = d.userid AND p.systemid = d.systemid
+                              AND p.sustatus = 'Active' AND (p.isdeleted IS NULL OR p.isdeleted = 0)
+                           )
+                </cfquery>
+                <!--- 6b. Map + repoint the remaining (non-colliding) duplicate enrollments --->
                 <cfquery datasource="#application.datasource#">
                     INSERT INTO contact_merge_map (mergeid, tbl, pkcol, pkval, old_contactid, new_contactid, action)
                     SELECT <cfqueryparam value="#mergeid#" cfsqltype="cf_sql_integer" />, 'fusystemusers_tbl', 'suID',
@@ -354,11 +389,13 @@
                            <cfqueryparam value="#pri#" cfsqltype="cf_sql_integer" />, 'repointed'
                     FROM   fusystemusers_tbl
                     WHERE  contactid = <cfqueryparam value="#dup#" cfsqltype="cf_sql_integer" />
+                      AND  (isdeleted IS NULL OR isdeleted = 0)
                 </cfquery>
                 <cfquery datasource="#application.datasource#">
                     UPDATE fusystemusers_tbl
                     SET    contactid = <cfqueryparam value="#pri#" cfsqltype="cf_sql_integer" />
                     WHERE  contactid = <cfqueryparam value="#dup#" cfsqltype="cf_sql_integer" />
+                      AND  (isdeleted IS NULL OR isdeleted = 0)
                 </cfquery>
 
                 <!--- 7. Notifications/reminders: funotifications has NO contactid column.
