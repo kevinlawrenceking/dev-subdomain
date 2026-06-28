@@ -19,7 +19,10 @@
 <cfset duplicateService = createObject("component", "services.ContactDuplicateService").init() />
 
 <!--- Handle merge submit. The merge form carries a csrfToken field validated by /app/Application.cfc. --->
-<cfif action EQ "merge" AND structKeyExists(form, "primaryContactId") AND structKeyExists(form, "duplicateContactId")>
+<!--- Reference form.* explicitly: this server has implicit scope search disabled,
+      so unscoped "action" would resolve to the cfparam default, not the posted value. --->
+<cfif structKeyExists(form, "action") AND form.action EQ "merge"
+      AND structKeyExists(form, "primaryContactId") AND structKeyExists(form, "duplicateContactId")>
     <!--- ColdFusion does NOT auto-nest "mergeData[field]" form fields, so rebuild the struct by hand --->
     <cfset mergeData = {} />
     <cfloop collection="#form#" item="fkey">
