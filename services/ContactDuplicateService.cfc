@@ -462,6 +462,7 @@
                 <cfset result.success = false />
                 <cfset result.mergeid = 0 />
                 <cfset result.message = "Error merging contacts: " & cfcatch.message />
+                <cfset result.detail = cfcatch.detail />
                 <cflog file="contact_merge" type="error"
                        text="mergeContacts FAIL userid=#arguments.userid# primary=#pri# duplicate=#dup# err=#cfcatch.message# detail=#cfcatch.detail#" />
             </cfcatch>

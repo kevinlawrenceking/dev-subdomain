@@ -105,6 +105,26 @@
         </cfoutput>
     </cfif>
 
+    <!--- TEMP MERGE DEBUG (remove once merge is confirmed working) --->
+    <cfif cgi.REQUEST_METHOD EQ "POST">
+        <cfoutput>
+        <div style="background:#fff3cd;border:2px solid #f0ad4e;padding:12px;margin:0 0 16px;font-family:monospace;font-size:13px;">
+            <strong>MERGE DEBUG</strong><br>
+            POST received &mdash;
+            action=#structKeyExists(form,'action') ? encodeForHtml(form.action) : '(none)'#,
+            primaryContactId=#structKeyExists(form,'primaryContactId') ? encodeForHtml(form.primaryContactId) : '(none)'#,
+            duplicateContactId=#structKeyExists(form,'duplicateContactId') ? encodeForHtml(form.duplicateContactId) : '(none)'#<br>
+            <cfif isDefined("mergeResult")>
+                success=#mergeResult.success# | mergeid=#mergeResult.mergeid#<br>
+                message=#encodeForHtml(mergeResult.message)#<br>
+                <cfif structKeyExists(mergeResult,'detail') AND len(mergeResult.detail)>detail=#encodeForHtml(mergeResult.detail)#</cfif>
+            <cfelse>
+                merge handler did NOT run (action/params missing above)
+            </cfif>
+        </div>
+        </cfoutput>
+    </cfif>
+
     <div class="card">
         <div class="card-body">
 <!--- Tabs hidden 2026-06-25: showing Possible duplicates only. Restore to bring back Full.
