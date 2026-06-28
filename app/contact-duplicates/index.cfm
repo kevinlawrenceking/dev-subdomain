@@ -40,10 +40,18 @@
         userid             = userid
     ) />
     <cfif mergeResult.success>
-        <cfset showAlert = { type: "success", message: "Contacts merged successfully. (merge ##" & mergeResult.mergeid & ")" } />
+        <cfset session.cd_flash = { type: "success", message: "Contacts merged successfully. (merge ##" & mergeResult.mergeid & ")" } />
     <cfelse>
-        <cfset showAlert = { type: "danger", message: mergeResult.message } />
+        <cfset session.cd_flash = { type: "danger", message: mergeResult.message } />
     </cfif>
+    <!--- Post/Redirect/Get: redirect to a clean GET URL so a refresh cannot re-submit the merge --->
+    <cflocation url="/app/contact-duplicates/" addtoken="false" />
+</cfif>
+
+<!--- One-time flash message from a prior merge (set just before the PRG redirect) --->
+<cfif structKeyExists(session, "cd_flash")>
+    <cfset showAlert = session.cd_flash />
+    <cfset structDelete(session, "cd_flash") />
 </cfif>
 
 <!--- Full-duplicates tab hidden 2026-06-25 (users had no action to take on it).
