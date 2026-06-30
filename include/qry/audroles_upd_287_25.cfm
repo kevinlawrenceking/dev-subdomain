@@ -34,3 +34,9 @@
 </cfif>
 
 <cfset auditionRoleService.UPDaudroles_24299(argumentCollection=roleArgs)>
+
+<!--- Sync the audition Relationships tab with this role's source contact:
+      adds the team/source contact to audcontacts_auditions_xref when set,
+      removes it when cleared. Reconcile reads the just-saved audroles state. --->
+<cfset contactAuditionService = createObject("component", "services.ContactAuditionService")>
+<cfset contactAuditionService.syncSourceContacts(audroleid = new_audRoleID)>

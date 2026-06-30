@@ -197,4 +197,53 @@
 <cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
+
+<cffunction output="false" name="syncSourceContacts" access="public" returntype="void"
+    hint="Keep audcontacts_auditions_xref in sync with an audition's source contacts (audroles.contactid). Adds the team/source contact to the audition Relationships tab when set; removes it when it is no longer the source on any role. Idempotent and safe to re-run.">
+    <cfargument name="audroleid" type="numeric" required="true">
+
+    <cfset var qProj = "">
+    <cfset var audprojectid = 0>
+
+    <!--- Resolve the audition this role belongs to --->
+    <cfquery name="qProj">
+        SELECT audprojectid
+        FROM   audroles
+        WHERE  audRoleID = <cfqueryparam value="#arguments.audroleid#" cfsqltype="CF_SQL_INTEGER">
+    </cfquery>
+    <cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
+    <cfif qProj.recordCount EQ 0 OR NOT isNumeric(qProj.audprojectid)>
+        <cfreturn>
+    </cfif>
+    <cfset audprojectid = qProj.audprojectid>
+
+    <!--- Add any current source contact not already linked. We tag our rows 'Audition Source'
+          so removals never touch casting-director / referral links. INSERT IGNORE leaves an
+          existing link (any note) for the same pair untouched. --->
+    <cfquery>
+        INSERT IGNORE INTO audcontacts_auditions_xref (audprojectid, contactid, xrefNotes)
+        SELECT DISTINCT r.audprojectid, r.contactid, 'Audition Source'
+        FROM   audroles r
+        WHERE  r.audprojectid = <cfqueryparam value="#audprojectid#" cfsqltype="CF_SQL_INTEGER">
+          AND  r.isDeleted = 0
+          AND  r.contactid IS NOT NULL
+    </cfquery>
+    <cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
+
+    <!--- Remove source links we added for contacts that are no longer a source on any
+          non-deleted role of this audition. Only our 'Audition Source' rows are eligible. --->
+    <cfquery>
+        DELETE FROM audcontacts_auditions_xref
+        WHERE audprojectid = <cfqueryparam value="#audprojectid#" cfsqltype="CF_SQL_INTEGER">
+          AND xrefNotes = 'Audition Source'
+          AND contactid NOT IN (
+                SELECT DISTINCT contactid
+                FROM   audroles
+                WHERE  audprojectid = <cfqueryparam value="#audprojectid#" cfsqltype="CF_SQL_INTEGER">
+                  AND  isDeleted = 0
+                  AND  contactid IS NOT NULL
+          )
+    </cfquery>
+    <cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
+</cffunction>
 </cfcomponent>

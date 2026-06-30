@@ -1638,14 +1638,13 @@ ORDER BY contactfullname
                 u.userid = <cfqueryparam value="#arguments.userId#" cfsqltype="CF_SQL_INTEGER"> 
                 AND d.contactStatus = <cfqueryparam value="Active" cfsqltype="CF_SQL_VARCHAR"> 
                 AND d.contactid IN (
-                    SELECT contactid 
-                    FROM contactitems 
+                    SELECT contactid
+                    FROM contactitems
                     WHERE valuecategory = <cfqueryparam value="Tag" cfsqltype="CF_SQL_VARCHAR">
-                    AND ( valuetext = <cfqueryparam value="My Team" cfsqltype="CF_SQL_VARCHAR">
-                          OR valuetext IN (<cfqueryparam value="Agent,Manager,Publicist" cfsqltype="CF_SQL_VARCHAR" list="true">) )
+                    AND valuetext = <cfqueryparam value="My Team" cfsqltype="CF_SQL_VARCHAR">
                     and isDeleted = 0
-                ) 
-            ORDER BY 
+                )
+            ORDER BY
                 d.contactfullname
         </cfquery>
 <cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
@@ -1683,14 +1682,13 @@ ORDER BY contactfullname
                 u.userid = <cfqueryparam value="#arguments.userId#" cfsqltype="CF_SQL_INTEGER"> 
                 
                 AND d.contactid IN (
-                    SELECT contactid 
-                    FROM contactitems 
+                    SELECT contactid
+                    FROM contactitems
                     WHERE valuecategory = <cfqueryparam value="Tag" cfsqltype="CF_SQL_VARCHAR">
-                    AND ( valuetext = <cfqueryparam value="My Team" cfsqltype="CF_SQL_VARCHAR">
-                          OR valuetext IN (<cfqueryparam value="Agent,Manager,Publicist" cfsqltype="CF_SQL_VARCHAR" list="true">) )
+                    AND valuetext = <cfqueryparam value="My Team" cfsqltype="CF_SQL_VARCHAR">
                     and isDeleted = 0
-                ) 
-            ORDER BY 
+                )
+            ORDER BY
                 d.col1
         </cfquery>
 <cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
@@ -1777,14 +1775,13 @@ ORDER BY contactfullname
                 u.userid = <cfqueryparam value="#arguments.userId#" cfsqltype="CF_SQL_INTEGER"> 
                 
                 AND d.contactid IN (
-                    SELECT contactid 
-                    FROM contactitems 
+                    SELECT contactid
+                    FROM contactitems
                     WHERE valuecategory = <cfqueryparam value="Tag" cfsqltype="CF_SQL_VARCHAR">
-                    AND ( valuetext = <cfqueryparam value="My Team" cfsqltype="CF_SQL_VARCHAR">
-                          OR valuetext IN (<cfqueryparam value="Agent,Manager,Publicist" cfsqltype="CF_SQL_VARCHAR" list="true">) )
+                    AND valuetext = <cfqueryparam value="My Team" cfsqltype="CF_SQL_VARCHAR">
                     and isDeleted = 0
-                ) 
-            ORDER BY 
+                )
+            ORDER BY
                 d.col1
         </cfquery>
 <cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
