@@ -247,12 +247,13 @@
             SELECT DISTINCT
                 c.contactid,
                 c.recordname AS repname
-            FROM audcontacts_auditions_xref x
-            INNER JOIN audprojects p   ON p.audprojectid = x.audprojectid
-            INNER JOIN contactdetails c ON c.contactid   = x.contactid
-            INNER JOIN contactitems ci  ON ci.contactid  = c.contactid
+            FROM audroles r
+            INNER JOIN audprojects p    ON p.audprojectid = r.audprojectid
+            INNER JOIN contactdetails c ON c.contactid    = r.contactid
+            INNER JOIN contactitems ci  ON ci.contactid   = c.contactid
             WHERE p.userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
               AND p.isDeleted = 0
+              AND r.isDeleted = 0
               AND ci.valueCategory = <cfqueryparam value="Tag" cfsqltype="CF_SQL_VARCHAR">
               AND ci.valuetext IN (
                   <cfqueryparam value="My Team,Agent,Manager,Publicist" list="true" cfsqltype="CF_SQL_VARCHAR">
@@ -1529,8 +1530,9 @@ ORDER BY label
 
 <cfif arguments.sel_repid neq "%">
                 AND p.audprojectid IN (
-                    SELECT audprojectid FROM audcontacts_auditions_xref
+                    SELECT audprojectid FROM audroles
                     WHERE contactid = <cfqueryparam value="#arguments.sel_repid#" cfsqltype="CF_SQL_INTEGER">
+                      AND isDeleted = 0
                 )
             </cfif>
 
