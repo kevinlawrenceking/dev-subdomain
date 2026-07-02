@@ -307,8 +307,11 @@
             <cfset addDebug("Data rows parsed: " & arrayLen(variables.dataRows))>
 
         <cfelseif variables.job.file_type eq "xls" or variables.job.file_type eq "xlsx">
-            <!--- Parse Excel using cfspreadsheet --->
-            <cfspreadsheet action="read" src="#variables.filePath#" query="spreadsheetData" headerrow="1">
+            <!--- Parse Excel using cfspreadsheet. excludeHeaderRow keeps the header
+                  out of the data rows so XLSX behaves like the CSV branch above,
+                  which explicitly starts its data loop at row 2. Without it the
+                  header row is ingested as a phantom data row. --->
+            <cfspreadsheet action="read" src="#variables.filePath#" query="spreadsheetData" headerrow="1" excludeHeaderRow="true">
 
             <!--- Get headers from column names --->
             <cfset variables.rawHeaders = listToArray(variables.spreadsheetData.columnList)>
