@@ -1185,7 +1185,44 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                         }
                         break;
                     case "category":
-                        // Category text is accepted - will attempt resolution at finalize time
+                        // Category text is accepted and also resolved to an audsubcatid
+                        // here so the review grid's required-category check clears when a
+                        // user types a category name in the edit modal (matches the
+                        // import-time resolution in ajax/import-auditions/recompute.cfm).
+                        // Skip if the row already has an explicit audsubcatid so a typed
+                        // name never clobbers a dropdown selection.
+                        if (len(normalizedVal)) {
+                            try {
+                                var qExplicitCat = queryExecute(
+                                    "SELECT normalized_value FROM import_auditions_facts
+                                     WHERE row_id = :row_id AND field_name = 'audsubcatid'
+                                       AND normalized_value IS NOT NULL AND normalized_value != '' AND normalized_value != '0'",
+                                    { row_id: { value: arguments.row_id, cfsqltype: "cf_sql_integer" } },
+                                    { datasource: application.datasource }
+                                );
+                                if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
+                                if (qExplicitCat.recordCount eq 0) {
+                                    var resolvedSubCatId = resolveCategoryToSubCatId(normalizedVal);
+                                    if (resolvedSubCatId gt 0) {
+                                        queryExecute(
+                                            "INSERT INTO import_auditions_facts (row_id, column_id, field_name, raw_value, normalized_value, is_valid, updated_at)
+                                             VALUES (:row_id, 0, 'audsubcatid', :val, :val, 1, NOW())
+                                             ON DUPLICATE KEY UPDATE
+                                                 normalized_value = :val, raw_value = :val, is_valid = 1,
+                                                 validation_code = NULL, validation_message = NULL, updated_at = NOW()",
+                                            {
+                                                row_id: { value: arguments.row_id, cfsqltype: "cf_sql_integer" },
+                                                val: { value: resolvedSubCatId, cfsqltype: "cf_sql_varchar" }
+                                            },
+                                            { datasource: application.datasource }
+                                        );
+                                        if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
+                                    }
+                                }
+                            } catch (any eCat) {
+                                // resolution failed; leave category as typed, required-check will flag it
+                            }
+                        }
                         break;
                     case "audsubcatid":
                         // Must be a valid "Other" subcategory ID

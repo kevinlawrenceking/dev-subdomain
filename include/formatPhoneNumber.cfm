@@ -13,11 +13,7 @@
 <cfelse>
     <cfoutput>
         <!--- If the phone number is not 10 digits, use the original phone number --->
-        <cfset formatPhoneNumber = "#phoneNumber#" /> 
-        <cfset anchorPhoneNumber = "#cleanPhoneNumber#" /> 
+        <cfset formatPhoneNumber = "#phoneNumber#" />
+        <cfset anchorPhoneNumber = "#cleanPhoneNumber#" />
     </cfoutput>
 </cfif>
-
-<!--- Set the formatted phone number variables for later use --->
-<cfset formatphonenumber = cleanphonenumber />
-<cfset anchorPhoneNumber = cleanphonenumber />
