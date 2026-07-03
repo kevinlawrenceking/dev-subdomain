@@ -219,13 +219,13 @@ function buildFieldComparisons() {
                         <div class="col-md-6">
                             <div class="field-value ${fillFromRemoved ? '' : 'selected'} ${pv ? '' : 'empty-value'}"
                                  onclick="pickValue('${f.key}', this)" data-val="${encodeURIComponent(pv)}">
-                                <strong>Keep:</strong><br>${pv || '<em>No value</em>'}
+                                <strong class="fv-label"></strong><br>${pv || '<em>No value</em>'}
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="field-value ${fillFromRemoved ? 'selected' : ''} ${dv ? '' : 'empty-value'}"
                                  onclick="pickValue('${f.key}', this)" data-val="${encodeURIComponent(dv)}">
-                                <strong>Removed:</strong><br>${dv || '<em>No value</em>'}
+                                <strong class="fv-label"></strong><br>${dv || '<em>No value</em>'}
                             </div>
                         </div>
                     </div>
@@ -239,11 +239,25 @@ function buildFieldComparisons() {
         html = '<div class="alert alert-info"><i class="fe-info"></i> No conflicting field values. Nothing to choose.</div>' + html;
     }
     document.getElementById('fieldComparisons').innerHTML = html;
+    // Render the selection-state label on modal open. The label is a pure function
+    // of the .selected class (the same state that drives the highlight and the
+    // hidden input), so it is correct for both the keep-side default and the
+    // removed-side fallback default without any parallel state.
+    document.querySelectorAll('#fieldComparisons .field-value').forEach(applyFieldLabel);
+}
+
+// Selected card reads "Keep:", the other reads "Discard:". Derived solely from
+// .selected so label + highlight + hidden field can never disagree.
+function applyFieldLabel(el) {
+    const lbl = el.querySelector('.fv-label');
+    if (lbl) lbl.textContent = el.classList.contains('selected') ? 'Keep:' : 'Discard:';
 }
 
 function pickValue(key, el) {
-    el.parentElement.parentElement.querySelectorAll('.field-value').forEach(v => v.classList.remove('selected'));
+    const pair = el.parentElement.parentElement;
+    pair.querySelectorAll('.field-value').forEach(v => v.classList.remove('selected'));
     el.classList.add('selected');
+    pair.querySelectorAll('.field-value').forEach(applyFieldLabel);
     const input = document.querySelector(`input[name="mergeData[${key}]"]`);
     if (input) input.value = decodeURIComponent(el.getAttribute('data-val'));
 }
