@@ -29,14 +29,23 @@
     <cfabort />
 </cfif>
 
-<!--- Group items by contact and category for display --->
+<!--- Group items by contact and category for display. Company/Address are shown
+      too (ticket 1) so the user can see they are preserved: the merge repoints all
+      of the removed contact's items - including Company and Address - onto the kept
+      contact. Company's display value lives in valueCompany, not valuetext. --->
 <cfset itemsByContact = {} />
 <cfloop query="contactItems">
     <cfif not structKeyExists(itemsByContact, contactItems.contactid)>
-        <cfset itemsByContact[contactItems.contactid] = { "Email": [], "Phone": [] } />
+        <cfset itemsByContact[contactItems.contactid] = { "Email": [], "Phone": [], "Company": [], "Address": [] } />
     </cfif>
     <cfif structKeyExists(itemsByContact[contactItems.contactid], contactItems.valueCategory)>
-        <cfset arrayAppend(itemsByContact[contactItems.contactid][contactItems.valueCategory], contactItems.valuetext) />
+        <cfif contactItems.valueCategory EQ "Company">
+            <cfif len(trim(contactItems.valueCompany))>
+                <cfset arrayAppend(itemsByContact[contactItems.contactid]["Company"], contactItems.valueCompany) />
+            </cfif>
+        <cfelseif len(trim(contactItems.valuetext))>
+            <cfset arrayAppend(itemsByContact[contactItems.contactid][contactItems.valueCategory], contactItems.valuetext) />
+        </cfif>
     </cfif>
 </cfloop>
 
@@ -92,6 +101,12 @@
                                             </cfloop>
                                             <cfloop array="#itemsByContact[contactDetails.contactid]['Phone']#" index="ph">
                                                 <div class="small"><i class="fe-phone"></i> #encodeForHtml(ph)#</div>
+                                            </cfloop>
+                                            <cfloop array="#itemsByContact[contactDetails.contactid]['Company']#" index="co">
+                                                <div class="small"><i class="fe-briefcase"></i> #encodeForHtml(co)#</div>
+                                            </cfloop>
+                                            <cfloop array="#itemsByContact[contactDetails.contactid]['Address']#" index="ad">
+                                                <div class="small"><i class="fe-map-pin"></i> #encodeForHtml(ad)#</div>
                                             </cfloop>
                                         </cfif>
                                     </div>
@@ -190,24 +205,31 @@ function buildFieldComparisons() {
         const pv = primary[f.key]   || '';
         const dv = duplicate[f.key] || '';
         if (pv !== dv) {
+            // Default to the KEEP contact's value, but when Keep is EMPTY fall back
+            // to the Removed contact's value. Previously the hidden field always
+            // defaulted to the (possibly empty) Keep value, so the duplicate's
+            // birthday / meeting date / etc. were dropped instead of merged in
+            // (ticket 1). The user can still click either side to override.
+            const fillFromRemoved = (pv === '' && dv !== '');
+            const defaultVal = fillFromRemoved ? dv : pv;
             html += `
                 <div class="field-comparison">
                     <h6>${f.label}</h6>
                     <div class="row">
                         <div class="col-md-6">
-                            <div class="field-value selected ${pv ? '' : 'empty-value'}"
+                            <div class="field-value ${fillFromRemoved ? '' : 'selected'} ${pv ? '' : 'empty-value'}"
                                  onclick="pickValue('${f.key}', this)" data-val="${encodeURIComponent(pv)}">
                                 <strong>Keep:</strong><br>${pv || '<em>No value</em>'}
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="field-value ${dv ? '' : 'empty-value'}"
+                            <div class="field-value ${fillFromRemoved ? 'selected' : ''} ${dv ? '' : 'empty-value'}"
                                  onclick="pickValue('${f.key}', this)" data-val="${encodeURIComponent(dv)}">
                                 <strong>Removed:</strong><br>${dv || '<em>No value</em>'}
                             </div>
                         </div>
                     </div>
-                    <input type="hidden" name="mergeData[${f.key}]" value="${pv}" />
+                    <input type="hidden" name="mergeData[${f.key}]" value="${defaultVal}" />
                 </div>`;
         } else {
             html += `<input type="hidden" name="mergeData[${f.key}]" value="${pv}" />`;

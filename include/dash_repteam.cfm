@@ -106,8 +106,7 @@
   <div class="card-body">
     <!--- Container for team with similar styling to reminders --->
     <div id="teamContainer">
-        <cfinclude template="/include/qry/findtag_97_1.cfm"/>
-        
+
         <!--- Check if there are team members to display --->
         <cfif myteam.recordcount eq 0>
             <div class="team-empty">
@@ -116,6 +115,13 @@
         <cfelse>
             <!--- Loop through team members and display --->
             <cfloop query="myteam">
+                <!--- Ticket #2539: recompute the tag/role per team member.
+                      findtag was previously included once BEFORE this loop, so it
+                      held the first member's tag and every card fell back to the
+                      same Job Role (e.g. "Manager") whenever contacttitle was empty.
+                      Including it inside the loop scopes myteam.contactid to the
+                      current row so each member gets their own tag. --->
+                <cfinclude template="/include/qry/findtag_97_1.cfm"/>
                 <!--- Construct paths and URLs for avatar --->
                 <cfset contactAvatarUrl = session.userContactsUrl & "/" & myteam.contactid & "/avatar.jpg">
                 <cfset avatarPath = session.userContactsPath & "/" & myteam.contactid & "/avatar.jpg">
@@ -161,7 +167,7 @@
                                   The old #findtag.tag# read an unordered, multi-row tag query
                                   as a scalar, so a Manager could render as "Agent". Fall back to
                                   the tag only when a legacy contact has no contacttitle. --->
-                            <div class="team-tag">#encodeForHtml( len(trim(myteam.contacttitle)) ? myteam.contacttitle : findtag.tag )#</div>
+                            <div class="team-tag">#encodeForHtml( len(trim(myteam.contacttitle)) ? myteam.contacttitle : ( findtag.recordcount ? findtag.tag : "" ) )#</div>
                         </div>
                         
                         <!--- View button on the right --->

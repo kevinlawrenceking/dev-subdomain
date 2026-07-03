@@ -243,17 +243,19 @@
 <cffunction output="false" name="SELauditionReps" access="public" returntype="query">
     <cfargument name="userid" type="numeric" required="true">
 
+<!--- Ticket 4: list EVERY team rep, not only reps already attached to an audition.
+      Previously this joined through audroles/audprojects, so a rep with no linked
+      audition never appeared in the filter and users thought the rep was missing.
+      Now it returns all My Team / Agent / Manager / Publicist contacts for the user
+      (the audition-linkage join is gone). --->
 <cfquery name="result" >
             SELECT DISTINCT
                 c.contactid,
                 c.recordname AS repname
-            FROM audroles r
-            INNER JOIN audprojects p    ON p.audprojectid = r.audprojectid
-            INNER JOIN contactdetails c ON c.contactid    = r.contactid
-            INNER JOIN contactitems ci  ON ci.contactid   = c.contactid
-            WHERE p.userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
-              AND p.isDeleted = 0
-              AND r.isDeleted = 0
+            FROM contactdetails c
+            INNER JOIN contactitems ci ON ci.contactid = c.contactid
+            WHERE c.userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
+              AND (c.isDeleted IS NULL OR c.isDeleted = 0)
               AND ci.valueCategory = <cfqueryparam value="Tag" cfsqltype="CF_SQL_VARCHAR">
               AND ci.valuetext IN (
                   <cfqueryparam value="My Team,Agent,Manager,Publicist" list="true" cfsqltype="CF_SQL_VARCHAR">
@@ -269,17 +271,17 @@
 <cffunction output="false" name="SELauditionSources" access="public" returntype="query">
     <cfargument name="userid" type="numeric" required="true">
 
+<!--- Ticket 4: list EVERY submission site the user has, not only sites already
+      attached to an audition. Previously this joined through audprojects/audroles,
+      so an unused site never appeared in the filter and users thought it was missing.
+      Now it returns all of the user's audsubmitsites_user rows directly. --->
 <cfquery name="result" >
             SELECT DISTINCT
                 b.submitsiteid AS id,
                 b.submitsitename AS name
-            FROM audprojects p
-            INNER JOIN audroles r            ON r.audprojectid = p.audprojectid
-            INNER JOIN audsubmitsites_user b ON b.submitsiteid = r.submitsiteid
-            WHERE p.userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
-              AND p.isDeleted = 0
-              AND r.isDeleted = 0
-              AND r.submitsiteid IS NOT NULL
+            FROM audsubmitsites_user b
+            WHERE b.userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
+              AND (b.isDeleted IS NULL OR b.isDeleted = 0)
               AND b.submitsitename <> ''
             ORDER BY b.submitsitename
 

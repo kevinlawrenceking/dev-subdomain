@@ -232,7 +232,7 @@ Tables were extracted from every `FROM`, `JOIN`, `INSERT INTO`, `UPDATE`, and `D
 | 150 | `links` / `links_tbl` | General link records |
 | 151 | `uploads` | Upload tracking |
 | 152 | `ftypexref_tbl` | Follow-up type cross-reference |
-| 153 | `phonebook` | Phone book data |
+| 153 | ~~`phonebook`~~ | **DRIFT — NEVER-FUNCTIONAL; not a live table. See drift note below.** |
 | 154 | `exttypes` | Extension type reference |
 | 155 | `extensions` | Extension records |
 | 156 | `debugLog` | Debug logging |
@@ -241,6 +241,8 @@ Tables were extracted from every `FROM`, `JOIN`, `INSERT INTO`, `UPDATE`, and `D
 **Total unique tables/views referenced: ~157**
 
 > **Note:** Some names like `contacts_ss`, `contacts_ss_followup`, `contacts_ss_maint`, `contacts_ss_target`, `sharezz`, `sharez`, and `maxaudition` appear to be MySQL VIEWs, not base tables.
+
+> **Drift note (2026-07-03, WO-PHONEBOOK) — row #153 `phonebook`:** This row is a **documentation artifact, not a live table.** It was **derived from a dead code reference**, not from live schema. The only reference is an `INNER JOIN phonebook` in `services/AuditionImportService.cfc:1621` (introduced 2026-03-12, commit `c9305792`; moved by `4e25a3b2c` on 2026-04-12). No `CREATE TABLE phonebook` / `DROP TABLE phonebook` exists anywhere in repo history, and the table is **ABSENT in every schema** (prod `information_schema` sentinel, `docs/plans/evidence/2026-07-03-merge-repoint-sqlpack.txt` pack `E_phonebook`). **Mechanism of the drift:** this schema map was built partly by grepping code references; a reference to a table that was never created produced a phantom row. Verdict **NEVER-FUNCTIONAL** (not orphaned-by-drop) — the join has never resolved. The code reference is being removed under WO-PHONEBOOK Option B. The identical phantom row #153 also appears in the sibling audit docs `database/claude-projects/tao-coldfusion-expert/09-database-schema.md:235` and `database/claude-projects/tao-flutter-expert/03-database-schema.md:235`.
 
 ---
 

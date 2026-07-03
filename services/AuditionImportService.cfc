@@ -1612,27 +1612,11 @@ component displayname="AuditionImportService" accessors="true" output="false" {
                 return { "success": false, "code": "MISSING_PROJECT", "message": "Project name is required" };
             }
 
-            // D) Resolve contact: lookup by email or name, or create minimal contact
+            // D) Resolve contact by name (email-based resolution removed 2026-07-03,
+            //    WO-PHONEBOOK -- it referenced a nonexistent 'phonebook' table and threw
+            //    ER_NO_SUCH_TABLE for every email-bearing row; never-functional since
+            //    2026-03-12. See docs/plans/evidence/2026-07-03-wo-phonebook-recon.md.)
             var contactId = 0;
-            if (len(trim(audData.contact_email))) {
-                var qContact = queryExecute(
-                    "SELECT cd.contactid
-                     FROM contactdetails cd
-                     INNER JOIN phonebook pb ON pb.contactid = cd.contactid
-                     WHERE cd.userid = :userid AND pb.type = 'email'
-                       AND pb.phoneNumber = :email AND cd.IsDeleted = 0
-                     LIMIT 1",
-                    {
-                        userid: { value: arguments.userid, cfsqltype: "cf_sql_integer" },
-                        email: { value: trim(audData.contact_email), cfsqltype: "cf_sql_varchar" }
-                    },
-                    { datasource: application.datasource }
-                );
-                if (structKeyExists(request, "perfSvcQueryCount")) request.perfSvcQueryCount++;
-                if (qContact.recordCount gt 0) {
-                    contactId = qContact.contactid;
-                }
-            }
 
             if (contactId eq 0 && len(trim(audData.contact_name))) {
                 var qContact2 = queryExecute(

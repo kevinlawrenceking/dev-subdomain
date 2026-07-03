@@ -48,6 +48,23 @@
     <cflocation url="/app/contact-duplicates/" addtoken="false" />
 </cfif>
 
+<!--- Handle "Not a match" dismissal (ticket 5B). Same PRG + CSRF pattern as merge.
+      Reference form.* explicitly (implicit scope search is disabled on this server). --->
+<cfif structKeyExists(form, "action") AND form.action EQ "dismiss"
+      AND structKeyExists(form, "id_a") AND structKeyExists(form, "id_b")>
+    <cfset dismissResult = duplicateService.dismissDuplicatePair(
+        userid     = userid,
+        contactIdA = val(form.id_a),
+        contactIdB = val(form.id_b)
+    ) />
+    <cfif dismissResult.success>
+        <cfset session.cd_flash = { type: "success", message: "Removed from the list. These two contacts will not be compared again." } />
+    <cfelse>
+        <cfset session.cd_flash = { type: "danger", message: dismissResult.message } />
+    </cfif>
+    <cflocation url="/app/contact-duplicates/" addtoken="false" />
+</cfif>
+
 <!--- One-time flash message from a prior merge (set just before the PRG redirect) --->
 <cfif structKeyExists(session, "cd_flash")>
     <cfset showAlert = session.cd_flash />
@@ -152,6 +169,19 @@
                                                     onclick="showMergeModal('#id_a#,#id_b#')">
                                                 <i class="fe-shuffle"></i> Review &amp; Merge
                                             </button>
+                                            <!--- Ticket 5B: dismiss a wrong pairing so it never returns to the list --->
+                                            <form method="post" action="/app/contact-duplicates/" style="display:inline"
+                                                  onsubmit="return confirm('Mark these two as NOT a match? They will be removed from this list and not compared again.');">
+                                                <cfif structKeyExists(session, "csrfToken")>
+                                                    <input type="hidden" name="csrfToken" value="#session.csrfToken#" />
+                                                </cfif>
+                                                <input type="hidden" name="action" value="dismiss" />
+                                                <input type="hidden" name="id_a" value="#id_a#" />
+                                                <input type="hidden" name="id_b" value="#id_b#" />
+                                                <button type="submit" class="btn btn-outline-secondary btn-sm">
+                                                    <i class="fe-x-circle"></i> Not a match
+                                                </button>
+                                            </form>
                                         </td>
                                     <cfelse>
                                         <td><span class="badge bg-info">#encodeForHtml(match_type)#</span></td>
