@@ -218,10 +218,47 @@
         <cfset var sa = listLast(a, " ") />
         <cfset var sb = listLast(b, " ") />
         <cfif sa EQ sb><cfreturn true /></cfif>
-        <!--- soundex() is a built-in CFML string function (independent of MySQL) --->
-        <cfif len(sa) AND len(sb) AND soundex(sa) EQ soundex(sb)
+        <!--- cdSoundex() is a LOCAL CFML implementation. Adobe ColdFusion (this server)
+              has NO built-in SoundEx() -- it is Lucee-only, and calling it threw
+              "Variable SOUNDEX is undefined". The MySQL SOUNDEX() in the SQL prefilter
+              above is a separate, valid database function and is unaffected. --->
+        <cfif len(sa) AND len(sb) AND cdSoundex(sa) EQ cdSoundex(sb)
               AND cdLevenshtein(sa, sb) LTE 2><cfreturn true /></cfif>
         <cfreturn false />
+    </cffunction>
+
+    <!--- Local SoundEx. Adobe CF has no built-in SoundEx() (Lucee-only), so this is the
+          classic algorithm: keep the first letter, map consonants to digits, drop vowels
+          and adjacent duplicate codes, then pad/truncate to 4 chars. Both surnames run
+          through this SAME function, so the comparison is internally consistent even if
+          the code differs from another engine's SoundEx by an edge case. --->
+    <cffunction name="cdSoundex" access="private" returntype="string" output="false">
+        <cfargument name="word" type="string" required="true" />
+        <cfset var w = reReplace(ucase(trim(arguments.word)), "[^A-Z]", "", "ALL") />
+        <cfif NOT len(w)><cfreturn "" /></cfif>
+        <!--- code for A B C D E F G H I J K L M N O P Q R S T U V W X Y Z --->
+        <cfset var codeMap = "01230120022455012623010202" />
+        <cfset var result = left(w, 1) />
+        <cfset var prevCode = mid(codeMap, asc(left(w, 1)) - 64, 1) />
+        <cfset var i = 0 />
+        <cfset var ch = "" />
+        <cfset var code = "" />
+        <cfloop from="2" to="#len(w)#" index="i">
+            <cfset ch = mid(w, i, 1) />
+            <cfset code = mid(codeMap, asc(ch) - 64, 1) />
+            <cfif code NEQ "0" AND code NEQ prevCode>
+                <cfset result = result & code />
+                <cfif len(result) GTE 4><cfbreak /></cfif>
+            </cfif>
+            <!--- Vowels (A,E,I,O,U,Y) reset the run; H and W are skipped without
+                  resetting prevCode (classic SoundEx rule). --->
+            <cfif code EQ "0" AND listFindNoCase("A,E,I,O,U,Y", ch)>
+                <cfset prevCode = "0" />
+            <cfelseif code NEQ "0">
+                <cfset prevCode = code />
+            </cfif>
+        </cfloop>
+        <cfreturn left(result & "000", 4) />
     </cffunction>
 
     <!--- Standard iterative Levenshtein edit distance. Names are short so the
