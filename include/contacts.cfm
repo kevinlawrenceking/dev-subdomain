@@ -217,10 +217,6 @@ Tables: contactdetails, contactitems, contactsimport, tags_user, fusystemusers
 
                 <!--- Action + View Toggle Buttons --->
                 <div class="d-flex justify-content-end align-items-center mb-2">
-                    <!--- Find/merge duplicate contacts (self-contained page at /app/contact-duplicates/) --->
-                    <a href="/app/contact-duplicates/" class="btn btn-sm btn-outline-primary waves-effect waves-light me-2" title="Find and merge duplicate contacts">
-                        <i class="mdi mdi-account-multiple-check"></i> Find Duplicates
-                    </a>
                     <cfoutput>
                         <cfset tbl_btn = (view eq "tbl") ? "btn-secondary" : "btn-outline-secondary" />
                         <cfset glry_btn = (view eq "glry") ? "btn-secondary" : "btn-outline-secondary" />
@@ -232,6 +228,10 @@ Tables: contactdetails, contactitems, contactsimport, tags_user, fusystemusers
                             <i class="mdi mdi-drag fa-2x"></i>
                         </a>
                     </cfoutput>
+                    <!--- Find/merge duplicate contacts (self-contained page at /app/contact-duplicates/) --->
+                    <a href="/app/contact-duplicates/" class="btn btn-sm btn-outline-primary waves-effect waves-light ms-2" title="Find and merge duplicate contacts">
+                        <i class="mdi mdi-account-multiple-check"></i> Find Duplicates
+                    </a>
                 </div>
 
                 <!--- Tabbed Interface for Contact Lists --->
