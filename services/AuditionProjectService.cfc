@@ -243,25 +243,48 @@
 <cffunction output="false" name="SELauditionReps" access="public" returntype="query">
     <cfargument name="userid" type="numeric" required="true">
 
-<!--- Ticket 4: list EVERY team rep, not only reps already attached to an audition.
-      Previously this joined through audroles/audprojects, so a rep with no linked
-      audition never appeared in the filter and users thought the rep was missing.
-      Now it returns all My Team / Agent / Manager / Publicist contacts for the user
-      (the audition-linkage join is gone). --->
+<!--- WO-DUPES-R1 R-4-1: UNION of two arms so the Reps filter lists a rep if EITHER
+      arm (A) they carry a team tag (My Team / Agent / Manager / Publicist), OR
+      arm (B) they are actually linked to one of the user's audition roles.
+      Arm B mirrors the audition-list filter predicate exactly -- the filter matches
+      audroles.contactid (filterAuditions, this file ~:1533-1539) -- so every listed
+      rep is guaranteed to return auditions when selected, and a linked-but-UNtagged
+      rep (the regression this UNION exists to prevent) now appears. Arm A preserves
+      the Ticket-4 behavior: a tagged rep with no linked audition still appears. --->
 <cfquery name="result" >
-            SELECT DISTINCT
-                c.contactid,
-                c.recordname AS repname
-            FROM contactdetails c
-            INNER JOIN contactitems ci ON ci.contactid = c.contactid
-            WHERE c.userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
-              AND (c.isDeleted IS NULL OR c.isDeleted = 0)
-              AND ci.valueCategory = <cfqueryparam value="Tag" cfsqltype="CF_SQL_VARCHAR">
-              AND ci.valuetext IN (
-                  <cfqueryparam value="My Team,Agent,Manager,Publicist" list="true" cfsqltype="CF_SQL_VARCHAR">
-              )
-              AND ci.isDeleted = 0
-            ORDER BY c.recordname
+            SELECT contactid, repname FROM (
+                <!--- Arm A: team-tagged contacts (Ticket-4 all-tagged behavior) --->
+                SELECT DISTINCT
+                    c.contactid,
+                    c.recordname AS repname
+                FROM contactdetails c
+                INNER JOIN contactitems ci ON ci.contactid = c.contactid
+                WHERE c.userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
+                  AND (c.isDeleted IS NULL OR c.isDeleted = 0)
+                  AND ci.valueCategory = <cfqueryparam value="Tag" cfsqltype="CF_SQL_VARCHAR">
+                  AND ci.valuetext IN (
+                      <cfqueryparam value="My Team,Agent,Manager,Publicist" list="true" cfsqltype="CF_SQL_VARCHAR">
+                  )
+                  AND ci.isDeleted = 0
+
+                UNION
+
+                <!--- Arm B: reps linked to the user's audition roles (in-use, tag-agnostic) --->
+                SELECT DISTINCT
+                    c.contactid,
+                    c.recordname AS repname
+                FROM audroles r
+                INNER JOIN audprojects p   ON p.audprojectid = r.audprojectid
+                INNER JOIN contactdetails c ON c.contactid   = r.contactid
+                WHERE p.userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
+                  AND p.isDeleted = 0
+                  AND r.isDeleted = 0
+                  AND r.contactid IS NOT NULL
+                  AND r.contactid > 0
+                  AND c.userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
+                  AND (c.isDeleted IS NULL OR c.isDeleted = 0)
+            ) u
+            ORDER BY repname
 
 </cfquery>
 <cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
@@ -271,19 +294,46 @@
 <cffunction output="false" name="SELauditionSources" access="public" returntype="query">
     <cfargument name="userid" type="numeric" required="true">
 
-<!--- Ticket 4: list EVERY submission site the user has, not only sites already
-      attached to an audition. Previously this joined through audprojects/audroles,
-      so an unused site never appeared in the filter and users thought it was missing.
-      Now it returns all of the user's audsubmitsites_user rows directly. --->
+<!--- WO-DUPES-R1 R-4-2: UNION of two arms so the Submission-Source filter lists a
+      submit site if EITHER arm (A) it is in the user's submit-site list (active), OR
+      arm (B) it is actually used on one of the user's audition roles.
+      Arm B mirrors the audition-list filter predicate exactly -- the filter matches
+      audroles.submitsiteid (filterAuditions, this file ~:1541-1543) -- so every listed
+      source returns auditions when selected, and a source used on a role but no longer
+      in the active list (e.g. soft-deleted) now appears.
+      DEV-VERIFY (packet): assumes audroles.submitsiteid references the per-user
+      audsubmitsites_user.submitsiteid keyspace (both arms share that space, so the
+      UNION is coherent). Confirm on the dev visit before prod. --->
 <cfquery name="result" >
-            SELECT DISTINCT
-                b.submitsiteid AS id,
-                b.submitsitename AS name
-            FROM audsubmitsites_user b
-            WHERE b.userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
-              AND (b.isDeleted IS NULL OR b.isDeleted = 0)
-              AND b.submitsitename <> ''
-            ORDER BY b.submitsitename
+            SELECT id, name FROM (
+                <!--- Arm A: user's submit-site list, active (current HEAD behavior) --->
+                SELECT DISTINCT
+                    b.submitsiteid AS id,
+                    b.submitsitename AS name
+                FROM audsubmitsites_user b
+                WHERE b.userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
+                  AND (b.isDeleted IS NULL OR b.isDeleted = 0)
+                  AND b.submitsitename <> ''
+
+                UNION
+
+                <!--- Arm B: submit sites in use on the user's audition roles (in-use) --->
+                SELECT DISTINCT
+                    r.submitsiteid AS id,
+                    COALESCE(NULLIF(su.submitsitename, ''),
+                             CONCAT('(site #', r.submitsiteid, ')')) AS name
+                FROM audroles r
+                INNER JOIN audprojects p ON p.audprojectid = r.audprojectid
+                LEFT JOIN audsubmitsites_user su
+                       ON su.submitsiteid = r.submitsiteid
+                      AND su.userid       = p.userid
+                WHERE p.userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
+                  AND p.isDeleted = 0
+                  AND r.isDeleted = 0
+                  AND r.submitsiteid IS NOT NULL
+                  AND r.submitsiteid > 0
+            ) u
+            ORDER BY name
 
 </cfquery>
 <cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
