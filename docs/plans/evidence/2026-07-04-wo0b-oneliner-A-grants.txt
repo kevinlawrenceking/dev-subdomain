@@ -1,0 +1,43 @@
+# WO-0b One-liner A (Q9b) — SHOW GRANTS FOR CURRENT_USER() — captured 2026-07-04 by Kevin (verbatim)
+# Run on BOTH datasources. Result is IDENTICAL on abo and abod because both connect as the
+# SAME MySQL account: kingk436@%. The abo/abod split is default-schema/connection, NOT a
+# privilege boundary — the one account has rights across all listed schemas.
+#
+# ================= abod (new_development connection) =================
+Grants for kingk436@%
+GRANT USAGE ON *.* TO `kingk436`@`%`
+GRANT ALL PRIVILEGES ON `actorsbusinessoffice`.* TO `kingk436`@`%`
+GRANT ALL PRIVILEGES ON `biblequiz`.* TO `kingk436`@`%`
+GRANT ALL PRIVILEGES ON `db`.* TO `kingk436`@`%`
+GRANT ALL PRIVILEGES ON `paysked`.* TO `kingk436`@`%`
+GRANT ALL PRIVILEGES ON `theactorsbusinessofficedev`.* TO `kingk436`@`%`
+GRANT ALL PRIVILEGES ON `new_development`.* TO `kingk436`@`%`
+GRANT ALL PRIVILEGES ON `tao_development`.* TO `kingk436`@`%`
+GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, REFERENCES, INDEX, ALTER, CREATE TEMPORARY TABLES, LOCK TABLES, EXECUTE, CREATE VIEW, CREATE ROUTINE, ALTER ROUTINE, EVENT, TRIGGER ON `theactorsof_wp_1`.* TO `kingk436`@`%`
+GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, REFERENCES, INDEX, ALTER, CREATE TEMPORARY TABLES, LOCK TABLES, EXECUTE, CREATE VIEW, CREATE ROUTINE, ALTER ROUTINE, EVENT, TRIGGER ON `theactorsof_wp_2`.* TO `kingk436`@`%`
+
+# ================= abo (actorsbusinessoffice connection) =================
+Grants for kingk436@%
+GRANT USAGE ON *.* TO `kingk436`@`%`
+GRANT ALL PRIVILEGES ON `actorsbusinessoffice`.* TO `kingk436`@`%`
+GRANT ALL PRIVILEGES ON `biblequiz`.* TO `kingk436`@`%`
+GRANT ALL PRIVILEGES ON `db`.* TO `kingk436`@`%`
+GRANT ALL PRIVILEGES ON `paysked`.* TO `kingk436`@`%`
+GRANT ALL PRIVILEGES ON `theactorsbusinessofficedev`.* TO `kingk436`@`%`
+GRANT ALL PRIVILEGES ON `new_development`.* TO `kingk436`@`%`
+GRANT ALL PRIVILEGES ON `tao_development`.* TO `kingk436`@`%`
+GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, REFERENCES, INDEX, ALTER, CREATE TEMPORARY TABLES, LOCK TABLES, EXECUTE, CREATE VIEW, CREATE ROUTINE, ALTER ROUTINE, EVENT, TRIGGER ON `theactorsof_wp_1`.* TO `kingk436`@`%`
+GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, REFERENCES, INDEX, ALTER, CREATE TEMPORARY TABLES, LOCK TABLES, EXECUTE, CREATE VIEW, CREATE ROUTINE, ALTER ROUTINE, EVENT, TRIGGER ON `theactorsof_wp_2`.* TO `kingk436`@`%`
+#
+# INTERPRETATION (Q9b / gap G3 CLOSED):
+# - App user = kingk436@% on both DSNs. Identical grants => abo/abod is connection/default-DB only.
+# - ALL PRIVILEGES ON actorsbusinessoffice.* AND new_development.* — both include REFERENCES, ALTER,
+#   INDEX, CREATE, CREATE VIEW. => the user CAN create real FOREIGN KEYs and ALTER tables in prod
+#   and dev. FK privilege is NOT a blocker.
+# - Since Q9a already put companies/co_contacts/co_locations IN actorsbusinessoffice (prod), a
+#   SAME-schema real FK in prod is both possible (tables co-located) and permitted (REFERENCES granted).
+# - Remaining blocker for the FK final call is now ONLY G1: are the PROD master-table copies POPULATED?
+#   (empty prod shells => data lives in new_development/tao_development => reconsider). Add prod COUNT(*).
+# - Undocumented schemas visible: biblequiz, db, paysked, theactorsbusinessofficedev, tao_development,
+#   theactorsof_wp_1/2 (WordPress). Only actorsbusinessoffice/new_development/tao_development host the
+#   master tables (Q9a). tao_development remains the drift-register item (F-0b/F6).

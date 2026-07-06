@@ -1,0 +1,143 @@
+WO-0b PANE 1/2 — DSN=abo — schema=actorsbusinessoffice — run 2026-07-04 by Kevin (verbatim paste)
+Grid columns: section  tbl  item  detail  seq
+NOTE: Q5_dist_type junk rows preserved as evidence of valuetype data quality. abod pane + SHOW GRANTS + EXPLAIN still pending.
+================================================================================
+
+"section"	"tbl"	"item"	"detail"	"seq"
+"abo | Q1_engine"	"-"	"version"	"8.0.41 | MySQL Community Server - GPL"	"0"
+
+--- Q14 contactphoto stored-format samples (all IMDb media-amazon.com URLs) ---
+contactphoto sample values (20 distinct) = full external IMDb image CDN URLs of the form:
+  https://m.media-amazon.com/images/M/MV5B<hash>._V1_UY47_CR..,0,32,47_.jpg
+(20 rows; every sample is an https://m.media-amazon.com/... URL — NOT a filesystem path, NOT local avatar.jpg)
+
+--- Q18 table default collation ---
+contactdetails_tbl  table_collation  utf8mb4_unicode_ci
+contactitems_tbl    table_collation  utf8mb4_unicode_ci
+
+--- Q19 audit timestamp columns ---
+error_tickets.root_cause_type     varchar(255) null=YES default=<NULL>  (ord 14)
+error_tickets.root_cause_message  text         null=YES default=<NULL>  (ord 15)
+error_tickets.root_cause_detail   text         null=YES default=<NULL>  (ord 16)
+error_tickets.root_cause_file     varchar(500) null=YES default=<NULL>  (ord 17)
+error_tickets.root_cause_line     int          null=YES default=<NULL>  (ord 18)
+tickets.developerResponse         text         null=YES default=<NULL>  (ord 26)
+tickets.resolvedEmailSentAt       datetime     null=YES default=<NULL>  (ord 27)
+tickets.ackEmailSentAt            datetime     null=YES default=<NULL>  (ord 28)
+
+--- Q19 time zone ---
+global=SYSTEM | session=SYSTEM
+
+--- Q2Q3 view inventory (actorsbusinessoffice) — full VIEW_DEFINITION captured for all views ---
+Key views (DEFINER kingk436@% / SQL SECURITY DEFINER unless noted):
+  _zzq_20260517_shares_old        (backup)
+  _zzq_20260517_sharez_old        (backup)
+  companies_ss    JOINs actorsbusinessoffice.companies c JOIN actorsbusinessoffice.co_locations l ON c.coid=l.coid  (PROD master tables are real+joined)
+  contactdetails  ENUMERATED 33-col list over contactdetails_tbl WHERE IsDeleted=0; includes recordname; DEFINER
+  contactitems    ENUMERATED col list over contactitems_tbl WHERE IsDeleted=0; DEFINER
+  contacts_attendees / contacts_selected / contacts_ss / contacts_ss_followup / contacts_ss_maint / contacts_ss_target
+        — all carry the phone/email/company correlated-subquery cols (col3/col4/col5) with ORDER BY primary_YN DESC LIMIT 1
+  sharez   (single-z) — uses maxaudition + contactitems VIEW; Company via LEFT JOIN ci_company itemStatus='active'
+  sharezz  (double-z) — REAL, over contactdetails_tbl/taousers_tbl/fusystemusers_tbl base; Company/Title/Audition via
+        correlated subqueries on contactitems_tbl itemStatus='Active' IsDeleted=0 LIMIT 1  [RESOLVES D7]
+  v_contacts_optimized  — CTE + ROW_NUMBER() OVER(PARTITION BY contactID) optimized replacement for the ss pattern
+        (company_pick / title_pick / audition_pick / meet_counts / last_event); NOT referenced by plan
+  taousers  — the ONLY SQL SECURITY INVOKER view; all others DEFINER
+
+--- Q4Q5_columns contactdetails_tbl (ordinal / type / null / default / extra / genexpr / coll / key) ---
+1  contactID            int          NO   <NULL>            auto_increment                                   PRI
+2  contactTitle         varchar(255) YES  <NULL>                                        utf8mb4_unicode_ci
+3  contactFullName      varchar(500) YES  <NULL>                                        utf8mb4_unicode_ci   MUL
+4  contactFirst         varchar(255) YES  <NULL>                                        utf8mb4_unicode_ci   MUL
+5  contactMiddle        varchar(255) YES  <NULL>                                        utf8mb4_unicode_ci
+6  contactLast          varchar(255) YES  <NULL>                                        utf8mb4_unicode_ci   MUL
+7  contactSuffix        varchar(255) YES  <NULL>                                        utf8mb4_unicode_ci
+8  contactNickname      varchar(255) YES  <NULL>                                        utf8mb4_unicode_ci
+9  contactPhoto         varchar(255) YES  <NULL>                                        utf8mb4_unicode_ci
+10 contactShortName     varchar(255) YES  <NULL>                                        utf8mb4_unicode_ci
+11 contactMaidenName    varchar(255) YES  <NULL>                                        utf8mb4_unicode_ci
+12 contactBirthday      date         YES  <NULL>
+13 refer_contact_id     int          YES  <NULL>
+14 contactMeetingLoc    varchar(500) YES  <NULL>                                        utf8mb4_unicode_ci
+15 contactCreationDate  timestamp    NO   CURRENT_TIMESTAMP  DEFAULT_GENERATED
+16 contactLastUpdated   timestamp    YES  CURRENT_TIMESTAMP  DEFAULT_GENERATED on update CURRENT_TIMESTAMP
+17 contactStatus        varchar(50)  NO   Active                                        utf8mb4_unicode_ci   MUL
+18 contactNotes         varchar(5000)YES  <NULL>                                        utf8mb4_unicode_ci
+19 userID               int          NO   1                                                                  MUL
+20 user_yn              char(1)      NO   N                                             utf8mb4_unicode_ci
+21 IsDeleted            bit(1)       NO   b'0'
+22 contactPronoun       varchar(100) YES  <NULL>                                        utf8mb4_unicode_ci
+23 contactMeetingDate   date         YES  <NULL>
+24 birthday_DD          char(2)      YES  <NULL>                                        utf8mb4_unicode_ci
+25 birthday_MM          char(2)      YES  <NULL>                                        utf8mb4_unicode_ci
+26 newsletter_yn        char(1)      YES  N                                             utf8mb4_unicode_ci
+27 googlealert_yn       char(1)      YES  N                                             utf8mb4_unicode_ci
+28 socialmedia_yn       char(1)      YES  N                                             utf8mb4_unicode_ci
+29 dateAdded            date         YES  <NULL>
+30 imdbid               varchar(50)  YES  <NULL>                                        utf8mb4_unicode_ci
+31 recordname           varchar(500) YES  <NULL>            VIRTUAL GENERATED  genexpr=`contactFullName`  utf8mb4_unicode_ci
+32 avatar_yn            char(1)      YES  <NULL>                                        utf8mb4_unicode_ci
+
+--- Q4Q5_columns contactitems_tbl ---
+1  itemID               int          NO   <NULL>  auto_increment   PRI
+2  contactID            int          YES  <NULL>                    MUL
+3  valueType            varchar(100) YES  <NULL>  utf8mb4_unicode_ci
+4  valueCategory        varchar(100) NO   <NULL>  utf8mb4_unicode_ci  MUL
+5  valuetext            text         YES  <NULL>  utf8mb4_unicode_ci  MUL
+6  valueCompany         varchar(255) YES  <NULL>  utf8mb4_unicode_ci  MUL
+7  valueDepartment      varchar(255) YES  <NULL>  utf8mb4_unicode_ci
+8  valueTitle           varchar(255) YES  <NULL>  utf8mb4_unicode_ci
+9  valueStreetAddress   varchar(255) YES  <NULL>  utf8mb4_unicode_ci
+10 valueExtendedAddress varchar(255) YES  <NULL>  utf8mb4_unicode_ci
+11 valueCity            varchar(255) YES  <NULL>  utf8mb4_unicode_ci
+12 valueRegion          varchar(255) YES  <NULL>  utf8mb4_unicode_ci
+13 itemDate             date         YES  <NULL>
+14 itemNotes            varchar(5000)YES  <NULL>  utf8mb4_unicode_ci
+15 itemStatus           varchar(50)  YES  <NULL>  utf8mb4_unicode_ci  MUL
+16 itemCreationDate     timestamp    YES  CURRENT_TIMESTAMP  DEFAULT_GENERATED
+17 itemLastUpdated      timestamp    YES  <NULL>
+18 valueCountry         varchar(100) YES  <NULL>  utf8mb4_unicode_ci
+19 valuePostalCode      varchar(100) YES  <NULL>  utf8mb4_unicode_ci
+20 primary_YN           char(1)      NO   N       utf8mb4_unicode_ci  MUL
+21 IsDeleted            bit(1)       NO   b'0'
+
+--- Q4Q5_indexes (BTREE) ---
+contactdetails_tbl: PRIMARY(contactID); contactFirst; contactfullname_idx(contactFullName); contactLast; contactStatus;
+  idx_contactdetails(contactID,userID,contactStatus,IsDeleted); idx_contactdetails_active_date(contactID,IsDeleted,dateAdded);
+  idx_contactdetails_tbl_dupe_v3(userID,IsDeleted,contactID)
+contactitems_tbl: PRIMARY(itemID); itemStatus; primary_YN; valueCompany; valueText(valuetext);
+  idx_contactitems(contactID,valueCategory,itemStatus,primary_YN);
+  idx_contactitems_tbl_category_status(valueCategory,itemStatus,IsDeleted,contactID);
+  idx_contactitems_tbl_dupe_v3(contactID,itemStatus,IsDeleted,valueCategory,valuetext)
+
+--- Q5_dist_status (contactitems_tbl) ---
+itemstatus=<NULL>   n=2
+itemstatus=Active   n=257491
+itemstatus=Pending  n=7976
+
+--- Q5_dist_type (contactitems_tbl, Phone/Email/Company) — HIGH JUNK ---
+Company canonical: Company/Company n=14059, Company/Job n=20435, Company/Casting Office n=1163, Company/Production Company n=204;
+  ~60 one-off free-text valuetypes (Agency, Manager, Talent Agency, Theatre, etc.).
+Email canonical: Email/Business n=23526, Email/Home n=3786, Email/Home' n=402, Email/Other n=2870, Email/Other' n=1122,
+  Email/Work n=762, Email/Work' n=2319, Email/Personal n=1154, Email/'  n=7278, Email/ (blank) n=1910, Email/Custom n=266;
+  many one-off junk incl. embedded apostrophes and full email addresses as valuetype.
+Phone canonical: Phone/Business n=22366, Phone/Mobile n=7717, Phone/Mobile' n=2100, Phone/Work Fax n=7752 (!), Phone/Work n=1852,
+  Phone/Work' n=1017, Phone/Home n=990, Phone/Home' n=477, Phone/Other n=852, Phone/Other' n=543, Phone/' n=6858, Phone/ (blank) n=165,
+  Phone/iPhone n=56; dozens of raw phone numbers stored AS the valuetype (dirty).
+=> valuetype is free-text and dirty (trailing apostrophes, blanks, phone numbers, company names). Category is reliable; type is not.
+
+--- Q6_length (active, non-deleted) ---
+Company_maxlen  max_char_len=174  n=27918
+Email_maxlen    max_char_len=104  n=44797
+Phone_maxlen    max_char_len=57   n=52321
+
+--- Q7_primary integrity (active, non-deleted; contacts with N items in category) ---
+Phone   zero_primary_contacts=4337   multi_primary_contacts=7644
+Email   zero_primary_contacts=8411   multi_primary_contacts=262
+Company zero_primary_contacts=7863   multi_primary_contacts=423
+
+--- Q9a_presence (host_schema for master tables, from prod connection vantage) ---
+companies    -> actorsbusinessoffice , new_development , tao_development
+co_contacts  -> actorsbusinessoffice , new_development , tao_development
+co_locations -> actorsbusinessoffice , new_development , tao_development
+=> All three master tables EXIST IN PROD (actorsbusinessoffice) as well as new_development and tao_development.

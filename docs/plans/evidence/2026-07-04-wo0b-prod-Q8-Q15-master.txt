@@ -1,0 +1,92 @@
+# WO-0b G2 (prod half) — Q8 master DDL/indexes + Q15 data quality — PROD (actorsbusinessoffice)
+# captured 2026-07-04 by Kevin (verbatim). Scripts A + B, both ran clean.
+# Engine: all three InnoDB, utf8mb4_unicode_ci. => real FKs legal.
+#
+# ================= Q8_columns : co_contacts (PK=id) =================
+id            int PK auto_increment
+title         varchar(500)
+page_url      varchar(500)
+image_url     varchar(500)
+name_url      varchar(500)
+fullname      varchar(500)  key=MUL (indexed)
+suffix        varchar(500)
+starmeter     varchar(500)
+jobtitle_type varchar(500)
+location      varchar(500)  key=MUL (indexed)
+coid          int default 0 key=MUL (indexed)   <-- 0-sentinel for "no company", NOT NULL-based
+imdbid        varchar(50)
+timestamp     timestamp default CURRENT_TIMESTAMP
+coimdbid      varchar(50)
+tag           varchar(100)
+contactid     int                                <-- legacy single link; DO NOT reuse (plan)
+#
+# ================= Q8_columns : co_locations (PK=colocid) =================
+# >>> PK IS colocid (NOT "locid" as plan §4.1 assumed). company_location_id -> co_locations.colocid <<<
+page_url      varchar(500) NOT NULL
+colocid       int PK auto_increment
+location      varchar(500)
+address1      varchar(500)
+address2      varchar(500)
+city          varchar(500)
+state         varchar(500)
+zip           varchar(500)
+country       varchar(500)
+phone         varchar(500)
+fax           varchar(500)
+email         varchar(500)
+website       varchar(500)
+timestamp     timestamp default CURRENT_TIMESTAMP
+current_time  varchar(500)     <-- odd column name (near-reserved); quote if ever referenced
+page_title    varchar(500)
+coImdbID      varchar(100)
+coid          int key=MUL (indexed)   <-- FK to companies.coid
+#
+# ================= Q8_columns : companies (PK=coid) =================
+coid                 int PK auto_increment
+coName               varchar(200) key=UNI (UNIQUE)   <-- plan's idx_co_name is REDUNDANT
+coAlias              varchar(200)
+coAliasAlt           varchar(200)
+coVerificationStatus varchar(100) default Unverified
+coInitialSource      varchar(100)
+coDiscoveryDate      timestamp default CURRENT_TIMESTAMP
+coUpdateDate         timestamp on update CURRENT_TIMESTAMP
+coRegionCode         varchar(50)
+coRegionAlt          varchar(100)
+coImageURL           varchar(200)
+coImageURLAlt        varchar(200)
+coImdbID             varchar(100)
+coImdbRanking        int
+coWebsite            varchar(100)
+coPhone              varchar(100)
+coFacebook/coTwitter/coYoutube  varchar(100)
+coTopInfo            longtext
+coEmail              varchar(100)
+coPolicy/coTopInfo3/coDetailed  longtext
+imdb_yn/cdl_yn/backstage_yn     char(1) default N
+#
+# ================= Q8_indexes =================
+# co_contacts : PRIMARY(id) ; coid ; fullname ; location   (3 single-col non-unique + PK; NO index on contactid)
+# co_locations: PRIMARY(colocid) ; coid
+# companies   : PRIMARY(coid) ; coName UNIQUE
+# => Master-side search indexes the plan proposed ALREADY EXIST (fullname, location, coid, coName).
+#    WO-3 index work largely a no-op; composite idx_cc_name_loc optional (low priority).
+#
+# ================= Q8_table (engine) =================
+# co_contacts  engine=InnoDB coll=utf8mb4_unicode_ci rows_est=24574
+# co_locations engine=InnoDB coll=utf8mb4_unicode_ci rows_est=12429
+# companies    engine=InnoDB coll=utf8mb4_unicode_ci rows_est=10208
+#
+# ================= Q15 data quality =================
+# companies.coVerificationStatus: Unverified = 10,740 (100% — verification is uniformly default; NOT a usable
+#   quality signal in Phase 1. Model C user-override is the safety net.)
+# co_contacts: total 25,200 ; pct_null_coid 0.00% (but coid default 0 => 0-sentinel, not proof of company link);
+#              pct_with_imdbid 100.00% (every person has an imdbid — IMDb-sourced).
+# co_contacts.jobtitle_type: DIRTY — leading space + embedded NEWLINES + nested "(Category)" suffix, e.g.
+#   " Talent Agent\n" (1022), " Manager\n" (823), " Producer\n" (736), " Executive\n" (691),
+#   " President\n(Executive)\n" (497), " Partner\n(Executive)\n" (418), " CEO\n(Executive)\n" (413), ...
+#   BLANK jobtitle_type = 3,740. => must TRIM + strip newlines + parse "(...)" before display/search (WO-5).
+# co_contacts.location: CONTAMINATED — mixes real locations ("Aarhus, Denmark","Agoura Hills, CA") with
+#   phone numbers ("3102762093"), person names ("Ali Delaram","April Kennedy"), and company names
+#   ("Aston Models, Beverly Hills"). => location is an UNRELIABLE filter; do not hard-depend on it (WO-5).
+# co_locations offices-per-company: min=1 avg=1.27 max=46. Most companies = 1 office; NO is_primary flag
+#   => "default office" rule needed (companies_ss uses address1 IS NOT NULL AND <>''); tie-break e.g. MIN(colocid).

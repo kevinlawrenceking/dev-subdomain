@@ -1,0 +1,19 @@
+# WO-0b Gap G1 — PROD master-table row counts (actorsbusinessoffice) — captured 2026-07-04 by Kevin
+# Query:
+#   SELECT 'companies' t, COUNT(*) n FROM actorsbusinessoffice.companies
+#   UNION ALL SELECT 'co_contacts',  COUNT(*) FROM actorsbusinessoffice.co_contacts
+#   UNION ALL SELECT 'co_locations', COUNT(*) FROM actorsbusinessoffice.co_locations;
+#
+"t"	"n"
+"companies"	"10740"
+"co_contacts"	"25200"
+"co_locations"	"12617"
+#
+# INTERPRETATION (G1 CLOSED):
+# - The PROD copies are POPULATED (not empty shells): 10,740 companies / 25,200 people / 12,617 offices.
+# - Combined with Q9a (master tables live IN actorsbusinessoffice) + Q9b (REFERENCES granted on that schema):
+#   => FK DIRECTION DECIDED = REAL, SAME-SCHEMA foreign keys in prod. Soft-FK fallback no longer needed.
+# - Consequence: Q8 (co_locations/companies/co_contacts DDL + indexes) and Q15 (data quality) should now be
+#   pulled from PROD (actorsbusinessoffice), where the directory is authoritative and populated — NOT only
+#   from new_development. The abod pane retains value ONLY for the dev-vs-prod drift diff of the HOT tables
+#   (contactdetails_tbl / contactitems_tbl / the contact views).

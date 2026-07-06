@@ -1,0 +1,36 @@
+# WO-0b One-liner B (Q13) — EXPLAIN grid baseline — captured 2026-07-04 by Kevin (verbatim)
+# Query: EXPLAIN SELECT contactid, col2b, col3, col4, col5, hlink
+#        FROM contacts_ss WHERE userid = :uid ORDER BY col2b LIMIT 0, 25;   (base-tab binding)
+# This is the PRE-denormalization baseline for Acceptance Criterion #4.
+#
+"id"	"select_type"	"table"	"partitions"	"type"	"possible_keys"	"key"	"key_len"	"ref"	"rows"	"filtered"	"Extra"
+"1"	"PRIMARY"	"<derived2>"	\N	"ALL"	\N	\N	\N	\N	"300"	"100.00"	"Using filesort"
+"2"	"DERIVED"	"contactdetails_tbl"	\N	"ref"	"contactStatus,idx_contactdetails_tbl_dupe_v3"	"idx_contactdetails_tbl_dupe_v3"	"5"	"const,const"	"602"	"50.00"	"Using where"
+"3"	"DEPENDENT SUBQUERY"	"contactitems_tbl"	\N	"ref"	"itemStatus,idx_contactitems,idx_contactitems_tbl_dupe_v3,idx_contactitems_tbl_category_status"	"idx_contactitems"	"610"	"func,const,const"	"1"	"50.00"	"Using index condition; Using where; Using filesort"
+"4"	"DEPENDENT SUBQUERY"	"contactitems_tbl"	\N	"ref"	"...(same keys)"	"idx_contactitems"	"610"	"func,const,const"	"1"	"50.00"	"Using index condition; Using where; Using filesort"
+"5"	"DEPENDENT SUBQUERY"	"contactitems_tbl"	\N	"ref"	"...(same keys)"	"idx_contactitems"	"610"	"func,const,const"	"1"	"50.00"	"Using index condition; Using where; Using filesort"
+"6"	"DEPENDENT SUBQUERY"	"contactitems_tbl"	\N	"ref"	"...(same keys)"	"idx_contactitems"	"610"	"func,const,const"	"1"	"50.00"	"Using index condition; Using where"
+"7"	"DEPENDENT SUBQUERY"	"contactitems_tbl"	\N	"ref"	"...(same keys)"	"idx_contactitems"	"610"	"func,const,const"	"1"	"50.00"	"Using index condition; Using where"
+"8"	"DEPENDENT SUBQUERY"	"contactitems_tbl"	\N	"ref"	"...(same keys)"	"idx_contactitems"	"610"	"func,const,const"	"1"	"50.00"	"Using index condition; Using where"
+"9"	"DEPENDENT SUBQUERY"	"contactitems_tbl"	\N	"ref"	"...(same keys)"	"idx_contactitems"	"610"	"func,const,const"	"1"	"50.00"	"Using index condition; Using where"
+"10"	"DEPENDENT SUBQUERY"	"contactitems_tbl"	\N	"ref"	"...(same keys)"	"idx_contactitems"	"610"	"func,const,const"	"1"	"50.00"	"Using index condition; Using where"
+"11"	"DEPENDENT SUBQUERY"	"contactitems_tbl"	\N	"ref"	"...(same keys)"	"idx_contactitems"	"610"	"func,const,const"	"1"	"50.00"	"Using index condition; Using where"
+"12"	"DEPENDENT SUBQUERY"	"contactitems_tbl"	\N	"ref"	"...(same keys)"	"idx_contactitems"	"610"	"func,const,const"	"1"	"50.00"	"Using index condition; Using where"
+#
+# INTERPRETATION (Q13 baseline):
+# - id=1: outer query over the fully-materialized view (<derived2>), type=ALL, 300 est rows, Using filesort.
+# - id=2: base scan of contactdetails_tbl via idx_contactdetails_tbl_dupe_v3 (userID,IsDeleted,...), ref const,const.
+# - id=3..12: TEN DEPENDENT SUBQUERY nodes, ALL on contactitems_tbl, each an indexed ref (idx_contactitems,
+#   rows=1) — the per-row correlated fan-out. EXPLAIN materializes the WHOLE view, so every subquery in the
+#   contacts_ss definition is planned even though the outer SELECT names only col2b/col3/col4/col5/hlink.
+# - Mapping to the view's select list:
+#     * col3 (Phone), col4 (Email), col5 (Company)         = 3 subqueries  <-- WO-6 DENORMALIZATION KILLS THESE
+#     * col2 / col2e / col2b (Tag badges: group_concat + count(0) variants) = the remaining ~7 subqueries
+#       <-- Tags stay in the EAV bag; these are OUT of Phase-1 scope and WILL PERSIST.
+# - Cost shape: each subquery is a cheap 1-row index lookup, but ~10 per output row x up to 300 rows
+#   => up to ~3,000 index probes + filesorts per grid page. Removing the 3 primary-value subqueries is the win.
+#
+# ACCEPTANCE #4 SCOPING (registered as finding F8): "zero correlated subqueries" must be read as
+# "zero PHONE/EMAIL/COMPANY (col3/col4/col5) dependent subqueries" — the Tag-badge subqueries remain
+# by design. Baseline to beat: 3 of the 10 dependent subqueries eliminated; verify post-WO-6 EXPLAIN
+# shows contactitems_tbl referenced ONLY for the Tag columns.
