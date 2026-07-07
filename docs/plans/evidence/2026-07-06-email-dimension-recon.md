@@ -149,3 +149,35 @@ list, each with its own admission test and its own displayed reason; they are no
 Recon complete. No code written, no design committed. The probe SQL is for Kevin/MCP read-only
 execution; the hook-point + binding rule are recorded for the future email-dimension follow-up WO,
 which stays gated behind the DEV-PROOF-RUNBOOK acceptance and the R-5A-1 consolidation.
+
+---
+
+## PROBE RESULTS — prod execution addendum (2026-07-06)
+
+Executed read-only against `actorsbusinessoffice` by Kevin. Full data:
+`docs/plans/evidence/2026-07-06-email-probe-results-prod.txt`. Priority-setting only.
+
+**Perf KB delta:** the probes above (normalize-then-self-join) did not return after 7 then 38 min
+over 44,810 active email rows — O(N^2) function-wrapped self-join, no usable index, amplified by
+shared-inbox groups (one email -> 343 rows). An aggregation-only rewrite (GROUP BY, function once
+per row, no pairwise join) returned in seconds. **The dimension, if built, must pre-aggregate /
+index — never normalize-then-self-join at this scale.**
+
+**Finding — email-as-identity is WEAK in TAO's real data (priority: LOW):** "same email + different
+name" is dominated by **shared agency/company switchboard inboxes** — `info@caa.com` (343 contacts /
+342 names), `info@unitedtalent.com` (245/244), `info@gersh.com` (107/107), plus `contact@`,
+`queries@`, `feedback@`, `mailbox@`, and company gmails. `n_names ~= n_contacts` = **different real
+people**, not duplicates. The email dimension's unique contribution (different-name/same-email) is
+therefore mostly noise on this corpus; the genuine dupe pattern is `n_names < n_contacts` (a name
+repeats), which the **name dimension** already owns.
+
+**Reshapes the follow-up (was: "add email dimension"; now: deprioritized, guardrailed):**
+1. Generic-mailbox denylist (`info`, `contact`, `queries`, `feedback`, `mailbox`, `office`, `hello`,
+   …) + non-email junk guard (`"linked in"` appeared 27x for user 818).
+2. Group-size cap = 2 — an email on exactly two contacts is the only plausible dupe.
+3. "Personal domain only" does NOT rescue it — production-company gmails appear at 50/21 contacts.
+4. userid 11 = separate data-hygiene review (agency inboxes on hundreds of contacts), not dedup.
+
+**Verdict:** email-dimension follow-up WO **DEPRIORITIZED**; name-dimension (R-5A) remains the
+primary dedup investment. Decision reserved to Kevin. Supersedes this note's original neutral
+framing of the email dimension's value.

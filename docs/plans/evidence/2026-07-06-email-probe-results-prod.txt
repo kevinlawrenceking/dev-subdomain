@@ -1,0 +1,90 @@
+EMAIL-DIMENSION PROBE — PROD RESULTS (actorsbusinessoffice)
+Binding: TAO / dev-subdomain / branch dev · Date: 2026-07-06 · Executor: Kevin (read-only MySQL)
+Companion to: docs/plans/evidence/2026-07-06-email-dimension-recon.md
+Class: evidence / priority-setting only. No code, no design committed.
+
+Sizing:
+  active_email_items (contactitems valueCategory='Email', itemStatus='Active') = 44,810
+
+PERFORMANCE NOTE (KB delta):
+  The recon-doc probes (naive normalize-then-self-join on LOWER(TRIM(valuetext)) both sides)
+  did NOT return after 7 min, then 38 min — O(N^2) function-wrapped self-join over 44,810 rows
+  (~2e9 comparisons), no usable index, amplified by shared-inbox groups (one email -> 343 rows).
+  Replaced with an AGGREGATION-ONLY form (GROUP BY over 44,810 rows, function evaluated once per
+  row, no pairwise self-join) -> returned in seconds. The email dimension, if built, must
+  pre-aggregate / index; never normalize-then-self-join at this scale.
+
+--------------------------------------------------------------------------------
+P1 (aggregation) — per user: distinct emails linking 2+ DIFFERENTLY-NAMED contacts
+   cols: userid | shared_email_multiname_groups | contacts_involved | biggest_group
+--------------------------------------------------------------------------------
+11    2317   9957   343      <- dominates; agency-inbox contamination, NOT dupes
+30      52    502    20
+2       41     86     4
+349     11     25     3
+1061    10     20     2
+818      9     48    27      <- includes junk value "linked in" (27)
+629      7     14     2
+1054     7     27     8
+276      4     11     5
+1        3      8     3
+10       3      6     2
+17       3      9     4
+113      3     13     5
+76       3      6     2
+805      3      6     2
+(… long tail: ~35 users at 1–2 groups, biggest_group = 2 = the only clean dupe candidates)
+
+--------------------------------------------------------------------------------
+Drill-down — top 30 shared emails by n_contacts (userid | nemail | n_contacts | n_names)
+--------------------------------------------------------------------------------
+11   info@caa.com                              343   342
+11   info@unitedtalent.com                     245   244
+11   info@gersh.com                            107   107
+11   contact@fulwell73.co.uk                    50    50
+11   smithinternationalproductions@gmail.com    50    50
+11   info@cesdtalent.com                        39    35
+11   info@citizenskull.com                      39    29
+11   contact@untitledent.net                    38    38
+11   info@id-pr.com                             34    34
+11   info@zerogravitymanagement.com             32    32
+11   info@mgm.com                               31    31
+11   queries@circleofconfusion.com              31    31
+11   info@equinoxtalentmanagement.com           31    31
+11   contact@echolakeproductions.com            30    29
+11   csher@cesdtalent.com                       30    26
+11   info@producersguild.org                    29    29
+818  linked in                                  27    27   <- non-email junk value
+11   info@bohemiaent.com                        26    24
+11   la@the360mag.com                           26    26
+11   info@inkfactoryfilms.com                   25    25
+11   feedback@aetv.com                          24    24
+11   mailbox@moving-picture.com                 24    24
+11   info@hierarchypictures.com                 23    15   <- n_names<<n_contacts: some real dupes inside
+11   info@starz.com                             23    20
+11   info@sunshinesachs.com                     23    23
+11   info@lonhaber.com                          23    23
+11   info@ifta-online.org                       22    22
+11   info@viewpointla.com                       22    22
+11   info@fkks.com                              21    21
+11   angelic@angelicpictures.com                21    21
+
+--------------------------------------------------------------------------------
+FINDING (priority = LOW, with hard guardrails if pursued)
+--------------------------------------------------------------------------------
+1. "Same email + different name" in TAO real data is DOMINANTLY shared agency/company
+   switchboard inboxes (info@/contact@/queries@/feedback@/mailbox@ + company gmails), i.e.
+   DIFFERENT real people, NOT duplicates. n_names ~= n_contacts confirms distinct people.
+2. The email dimension's UNIQUE contribution (different-name/same-email) is therefore mostly
+   noise on this corpus. The genuine dupe pattern is n_names < n_contacts (a name repeats) —
+   already the NAME dimension's job (R-4 / R-5A).
+3. Guardrails REQUIRED if the follow-up is built at all:
+   a. Generic-mailbox denylist (info, contact, queries, feedback, mailbox, office, hello, …)
+      + non-email junk guard ("linked in").
+   b. Group-size cap = 2 (email on exactly two contacts is the only plausible dupe).
+   c. "Personal domain only" does NOT rescue it (production-company gmails appear at 50/21).
+4. userid 11 = separate data-hygiene review (agency switchboard emails on hundreds of contacts),
+   independent of dedup.
+
+Verdict: email-dimension follow-up WO DEPRIORITIZED. Recommend name-dimension (R-5A) remains the
+primary dedup investment. Decision reserved to Kevin.
