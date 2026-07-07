@@ -65,3 +65,14 @@ general/unicode) — cosmetic creation-time artifact, noted, not actioned.
    INVOKER like contactdetails/tickets. Own WO, mysql CLI, own proof.
 2. **Seed dev master tables** (D-B) — populate `new_development.co_contacts` / `co_locations` (from
    prod or a fixture) so the linkage feature is testable on dev before prod promotion.
+
+---
+
+## 5. Resolution log
+
+- **D-B RESOLVED 2026-07-07.** Seeded dev from prod via `docs/plans/evidence/2026-07-07-seed-dev-master-tables.sql`
+  (same-server cross-schema `INSERT … SELECT`, FK-checks-off bulk load, transactional). Result:
+  `co_locations` **12,617** rows, `co_contacts` **25,200** rows inserted — 0 duplicates, 0 warnings
+  (structures matched; SELECT * aligned). `companies` untouched (already 10,740). Dev master-directory
+  linkage is now testable end-to-end. Re-seeding later = TRUNCATE + re-copy (prod counts drift).
+- **D-A still OPEN** — dev `contactitems` view DEFINER=`root@108.185.100.195`; INVOKER rebuild not started.
