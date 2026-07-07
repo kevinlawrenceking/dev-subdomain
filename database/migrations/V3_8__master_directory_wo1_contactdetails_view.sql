@@ -27,25 +27,22 @@
 --   including the VIRTUAL GENERATED `recordname` and `IsDeleted`) + 12 new WO-1
 --   columns = 44. WHERE IsDeleted = 0 (active records), matching the captured view.
 --
--- !!! DRAFT UNTIL RECONCILED -- STOP-ON-DELTA (DIR-WO-1 ruling 2) !!!
---   This SELECT is a RECONSTRUCTION from the captured base-table DDL, NOT the live
---   view text. The abo pane summarized the live `contactdetails` view as an
---   "enumerated 33-col list"; the base table has 32 columns (abo pane Q4Q5). That
---   33-vs-32 gap is UNRESOLVED and MUST be closed to a NAMED column before apply.
+-- === RECONCILED 2026-07-07 -- STOP-ON-DELTA CLEARED (DIR-WO-1 ruling 2) ===
+--   The live `contactdetails` view was captured on BOTH environments and enumerates
+--   exactly 32 columns, in the identical order and with the identical
+--   WHERE (IsDeleted = 0) as the 32-column block below:
+--     * prod (abo)  -- 2026-07-07 SHOW CREATE VIEW + abo pane 2026-07-04
+--     * dev (abod)  -- 2026-07-07 abod pane, docs/plans/evidence/2026-07-07-wo0b-pane-abod.txt
+--   The abo pane's "33-col" summary was a MISCOUNT; there is no 33rd base column,
+--   alias, or expression. The only live-vs-this-file delta is the 12 additive WO-1
+--   columns being ABSENT from the live view -> the expected case -> PROCEED.
+--   Reconcile + drift register: docs/plans/evidence/2026-07-07-wo0b-addendum-B-drift.md.
 --
---   Immediately before applying in the target env (mysql CLI):
+--   PROMOTION SAFEGUARD (prod apply): still re-run, immediately before applying,
 --       SHOW CREATE VIEW contactdetails\G
---   Diff the live column list / predicate against the 32 base columns below:
---     * Only difference is the 12 additive WO-1 columns being ABSENT from the live
---       view -> expected; proceed.
---     * A 33rd column that is a BASE column this file omitted -> add it BY NAME,
---       re-emit V3_8, and report.
---     * The 33rd is an ALIAS or EXPRESSION not in the base DDL -> STOP. grep its
---       consumers across the app BEFORE any rebuild; do not drop it silently.
---     * ANY predicate/alias delta beyond the additive new columns -> re-emit and
---       report; NO apply.
---   The pending abod drift pane may carry the dev `SHOW CREATE VIEW contactdetails`
---   -> use it to resolve the named-column question. NN#1: do not guess. Runbook Step 2.
+--   and confirm the live view is these same 32 base columns + WHERE. If a future
+--   delta appears (added/removed base column, changed predicate/alias) -> STOP,
+--   re-emit, report; do NOT apply blind. NN#1: do not guess. Runbook Step 2.
 -- ============================================================================
 
 -- --- Step 0: guard -- view + base table + all 12 new columns must be present ---
