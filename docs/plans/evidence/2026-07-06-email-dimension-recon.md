@@ -179,5 +179,6 @@ repeats), which the **name dimension** already owns.
 4. userid 11 = separate data-hygiene review (agency inboxes on hundreds of contacts), not dedup.
 
 **Verdict:** email-dimension follow-up WO **DEPRIORITIZED**; name-dimension (R-5A) remains the
-primary dedup investment. Decision reserved to Kevin. Supersedes this note's original neutral
-framing of the email dimension's value.
+primary dedup investment. **Accepted by Kevin 2026-07-07** — the follow-up is deprioritized (not
+cancelled); if ever revived it carries the three guardrails above. Supersedes this note's original
+neutral framing of the email dimension's value.
