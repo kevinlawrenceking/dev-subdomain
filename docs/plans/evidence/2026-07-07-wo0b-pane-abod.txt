@@ -1,67 +1,62 @@
 WO-0b PANE 2/2 — DSN=abod — schema=new_development — run 2026-07-07 by Kevin (verbatim paste)
-PARTIAL: views (contactdetails, contactitems, contacts_ss, _followup, _maint, _target,
-sharez, sharezz) + contactdetails_tbl. Remainder (contactitems_tbl, master tables, counts,
-indexes, collations, grants, tz) still pending — not gating V3_8.
+Grid: section | item | detail  (one-grid UNION variant: 2026-07-07-wo0b-pane-abod-onegrid.sql)
+Engine MySQL 8.0.41. Companion prod pane: 2026-07-04-wo0b-pane-abo.txt. Analysis: 2026-07-07-wo0b-addendum-B-drift.md.
+
+CORRECTION NOTE: an earlier version of this file (same name) was written from a paste that was
+later identified as PROD (actorsbusinessoffice), not dev — it carried prod tells (contactitems
+DEFINER=kingk436@%, AUTO_INCREMENT=154963). This file REPLACES it with the true abod/new_development
+capture. The material dev-only differences are the contactitems DEFINER=root@ drift and the empty
+co_contacts/co_locations.
 ================================================================================
 
---- A-Q1 engine ---
-version = 8.0.41
+A-Q1 engine | version | 8.0.41
 
---- A-Q2 contactdetails VIEW (character_set_client=utf8mb4, collation_connection=utf8mb4_general_ci) ---
-CREATE ALGORITHM=UNDEFINED DEFINER=`kingk436`@`%` SQL SECURITY DEFINER VIEW `contactdetails` AS
-select
- `contactdetails_tbl`.`contactID` AS `contactID`,
- `contactdetails_tbl`.`contactTitle` AS `contactTitle`,
- `contactdetails_tbl`.`contactFullName` AS `contactFullName`,
- `contactdetails_tbl`.`contactFirst` AS `contactFirst`,
- `contactdetails_tbl`.`contactMiddle` AS `contactMiddle`,
- `contactdetails_tbl`.`contactLast` AS `contactLast`,
- `contactdetails_tbl`.`contactSuffix` AS `contactSuffix`,
- `contactdetails_tbl`.`contactNickname` AS `contactNickname`,
- `contactdetails_tbl`.`contactPhoto` AS `contactPhoto`,
- `contactdetails_tbl`.`contactShortName` AS `contactShortName`,
- `contactdetails_tbl`.`contactMaidenName` AS `contactMaidenName`,
- `contactdetails_tbl`.`contactBirthday` AS `contactBirthday`,
- `contactdetails_tbl`.`refer_contact_id` AS `refer_contact_id`,
- `contactdetails_tbl`.`contactMeetingLoc` AS `contactMeetingLoc`,
- `contactdetails_tbl`.`contactCreationDate` AS `contactCreationDate`,
- `contactdetails_tbl`.`contactLastUpdated` AS `contactLastUpdated`,
- `contactdetails_tbl`.`contactStatus` AS `contactStatus`,
- `contactdetails_tbl`.`contactNotes` AS `contactNotes`,
- `contactdetails_tbl`.`userID` AS `userID`,
- `contactdetails_tbl`.`user_yn` AS `user_yn`,
- `contactdetails_tbl`.`IsDeleted` AS `IsDeleted`,
- `contactdetails_tbl`.`contactPronoun` AS `contactPronoun`,
- `contactdetails_tbl`.`contactMeetingDate` AS `contactMeetingDate`,
- `contactdetails_tbl`.`birthday_DD` AS `birthday_DD`,
- `contactdetails_tbl`.`birthday_MM` AS `birthday_MM`,
- `contactdetails_tbl`.`newsletter_yn` AS `newsletter_yn`,
- `contactdetails_tbl`.`googlealert_yn` AS `googlealert_yn`,
- `contactdetails_tbl`.`socialmedia_yn` AS `socialmedia_yn`,
- `contactdetails_tbl`.`dateAdded` AS `dateAdded`,
- `contactdetails_tbl`.`imdbid` AS `imdbid`,
- `contactdetails_tbl`.`recordname` AS `recordname`,
- `contactdetails_tbl`.`avatar_yn` AS `avatar_yn`
-from `contactdetails_tbl` where (`contactdetails_tbl`.`IsDeleted` = 0)
-== 32 columns. ==
+A-Q2 contactdetails view | definer/security | DEFINER=kingk436@% | SECURITY=DEFINER | updatable=YES
+A-Q2 contactdetails view | colcount | 32
+  col01 contactID int            col02 contactTitle varchar(255)      col03 contactFullName varchar(500)
+  col04 contactFirst varchar(255) col05 contactMiddle varchar(255)    col06 contactLast varchar(255)
+  col07 contactSuffix varchar(255) col08 contactNickname varchar(255) col09 contactPhoto varchar(255)
+  col10 contactShortName varchar(255) col11 contactMaidenName varchar(255) col12 contactBirthday date
+  col13 refer_contact_id int      col14 contactMeetingLoc varchar(500) col15 contactCreationDate timestamp
+  col16 contactLastUpdated timestamp col17 contactStatus varchar(50)   col18 contactNotes varchar(5000)
+  col19 userID int                col20 user_yn char(1)                col21 IsDeleted bit(1)
+  col22 contactPronoun varchar(100) col23 contactMeetingDate date      col24 birthday_DD char(2)
+  col25 birthday_MM char(2)        col26 newsletter_yn char(1)         col27 googlealert_yn char(1)
+  col28 socialmedia_yn char(1)     col29 dateAdded date                col30 imdbid varchar(50)
+  col31 recordname varchar(500)    col32 avatar_yn char(1)
+A-Q2 view_definition: select ...(32 cols, schema-qualified `new_development.`)... from
+  `new_development`.`contactdetails_tbl` where (`...`.`IsDeleted` = 0)
 
---- A-Q3 view definer/security + collation_connection (F19 + collation drift) ---
-contactdetails         DEFINER kingk436@%  SECURITY DEFINER  conn=utf8mb4_general_ci
-contactitems           DEFINER kingk436@%  SECURITY DEFINER  conn=utf8mb4_general_ci   (21 cols; valueText alias over valuetext)
-contacts_ss            DEFINER kingk436@%  SECURITY DEFINER  conn=utf8mb4_unicode_ci   (FROM contactdetails d)
-contacts_ss_followup   DEFINER kingk436@%  SECURITY DEFINER  conn=utf8mb4_unicode_ci   (FROM contactdetails d; systemID IN (1,2))
-contacts_ss_maint      DEFINER kingk436@%  SECURITY DEFINER  conn=utf8mb4_unicode_ci   (FROM contactdetails d; systemID IN (3,4))
-contacts_ss_target     DEFINER kingk436@%  SECURITY DEFINER  conn=utf8mb4_0900_ai_ci   (FROM contactdetails d; systemID IN (5,6))  <-- collation outlier
-sharez                 DEFINER kingk436@%  SECURITY DEFINER  conn=utf8mb4_general_ci   (FROM contactdetails_tbl; recordname)
-sharezz                DEFINER kingk436@%  SECURITY DEFINER  conn=utf8mb4_general_ci   (FROM contactdetails_tbl; recordname)  <-- double-z EXISTS on dev
+A-Q3 view definer:
+  contactitems          DEFINER=root@108.185.100.195 | SECURITY=DEFINER   <<< DRIFT (F19, dev-only)
+  contacts_ss           DEFINER=kingk436@% | SECURITY=DEFINER
+  contacts_ss_followup  DEFINER=kingk436@% | SECURITY=DEFINER
+  contacts_ss_maint     DEFINER=kingk436@% | SECURITY=DEFINER
+  contacts_ss_target    DEFINER=kingk436@% | SECURITY=DEFINER
+  sharez                DEFINER=kingk436@% | SECURITY=DEFINER
+  sharezz               DEFINER=kingk436@% | SECURITY=DEFINER
+A-Q3 view colcount: contactitems 21 | contacts_ss 13 | contacts_ss_followup 13 |
+  contacts_ss_maint 13 | contacts_ss_target 13 | sharez 13 | sharezz 13
+A-Q3 sharezz exists: YES
 
---- A-Q4 contactdetails_tbl (key facts) ---
-recordname  varchar(500) GENERATED ALWAYS AS (`contactFullName`) VIRTUAL     <-- matches prod (D1/C3)
-contactPhoto varchar(255)                                                    <-- A1 widen to 500 still required
-NONE of the 12 WO-1 columns present (contactPhone/Email/Company/*_src/company_location_id/master_*)  <-- no collision
-contactCreationDate/contactLastUpdated = timestamp (existing)
-PK contactID AUTO_INCREMENT=154963; FK userID->taousers_tbl.userID (RESTRICT/RESTRICT)
-Indexes incl idx_contactdetails_tbl_dupe_v3 (userID,IsDeleted,contactID)
+A-Q4 recordname | definition | varchar(500) | EXTRA=VIRTUAL GENERATED | GEN=`contactFullName`
+A-Q4 collision  | wo1-cols-present | 0 of 13 already exist: (none)
+A-Q4 contactPhoto width | contactPhoto | varchar(255)
 
-(Full verbatim CREATE statements for all 8 views + contactdetails_tbl captured in session
-transcript 2026-07-07; the material facts distilled above are what the reconcile/diff use.)
+A-Q5 itemstatus: Active 5002 | Pending 5
+A-Q5 valuetype (Phone/Email/Company): free-text and DIRTY (test data) — e.g. "555555", "Green",
+  "Casting OfficeACME", "CompanyACME", "Customy Company TypeAnother"; clean-ish: Business 536,
+  Company 671, Home 208, Mobile 416, Personal 163, Work 271, Fax 4. (Confirms Q5 dirty-valueType.)
+
+A-Q8 master counts: companies 10740 | co_contacts 0 | co_locations 0     <<< DRIFT (dev empty vs prod 25,200 / 12,617)
+A-Q8 master indexes: co_contacts [coid,fullname,location,PRIMARY] | co_locations [coid,PRIMARY] |
+  companies [coName,PRIMARY]
+A-Q9 master schema presence: companies/co_contacts/co_locations all in
+  actorsbusinessoffice, new_development, tao_development
+
+A-Q18 collation: contactdetails_tbl utf8mb4_unicode_ci | contactitems_tbl utf8mb4_unicode_ci
+A-Q19 timezone: global/session = SYSTEM / SYSTEM
+
+NOT captured this run (can't be UNION'd): SHOW GRANTS (Q9b — already proven kingk436@% ALL PRIVS
+both DSNs, 2026-07-04) and raw SHOW CREATE TABLE for master tables / contactitems_tbl (not needed
+for V3_7/V3_8; V3_9 FK targets confirmed via index list: co_locations PK, companies PK, co_contacts PK).
