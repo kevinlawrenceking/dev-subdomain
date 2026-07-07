@@ -1,0 +1,67 @@
+WO-0b PANE 2/2 — DSN=abod — schema=new_development — run 2026-07-07 by Kevin (verbatim paste)
+PARTIAL: views (contactdetails, contactitems, contacts_ss, _followup, _maint, _target,
+sharez, sharezz) + contactdetails_tbl. Remainder (contactitems_tbl, master tables, counts,
+indexes, collations, grants, tz) still pending — not gating V3_8.
+================================================================================
+
+--- A-Q1 engine ---
+version = 8.0.41
+
+--- A-Q2 contactdetails VIEW (character_set_client=utf8mb4, collation_connection=utf8mb4_general_ci) ---
+CREATE ALGORITHM=UNDEFINED DEFINER=`kingk436`@`%` SQL SECURITY DEFINER VIEW `contactdetails` AS
+select
+ `contactdetails_tbl`.`contactID` AS `contactID`,
+ `contactdetails_tbl`.`contactTitle` AS `contactTitle`,
+ `contactdetails_tbl`.`contactFullName` AS `contactFullName`,
+ `contactdetails_tbl`.`contactFirst` AS `contactFirst`,
+ `contactdetails_tbl`.`contactMiddle` AS `contactMiddle`,
+ `contactdetails_tbl`.`contactLast` AS `contactLast`,
+ `contactdetails_tbl`.`contactSuffix` AS `contactSuffix`,
+ `contactdetails_tbl`.`contactNickname` AS `contactNickname`,
+ `contactdetails_tbl`.`contactPhoto` AS `contactPhoto`,
+ `contactdetails_tbl`.`contactShortName` AS `contactShortName`,
+ `contactdetails_tbl`.`contactMaidenName` AS `contactMaidenName`,
+ `contactdetails_tbl`.`contactBirthday` AS `contactBirthday`,
+ `contactdetails_tbl`.`refer_contact_id` AS `refer_contact_id`,
+ `contactdetails_tbl`.`contactMeetingLoc` AS `contactMeetingLoc`,
+ `contactdetails_tbl`.`contactCreationDate` AS `contactCreationDate`,
+ `contactdetails_tbl`.`contactLastUpdated` AS `contactLastUpdated`,
+ `contactdetails_tbl`.`contactStatus` AS `contactStatus`,
+ `contactdetails_tbl`.`contactNotes` AS `contactNotes`,
+ `contactdetails_tbl`.`userID` AS `userID`,
+ `contactdetails_tbl`.`user_yn` AS `user_yn`,
+ `contactdetails_tbl`.`IsDeleted` AS `IsDeleted`,
+ `contactdetails_tbl`.`contactPronoun` AS `contactPronoun`,
+ `contactdetails_tbl`.`contactMeetingDate` AS `contactMeetingDate`,
+ `contactdetails_tbl`.`birthday_DD` AS `birthday_DD`,
+ `contactdetails_tbl`.`birthday_MM` AS `birthday_MM`,
+ `contactdetails_tbl`.`newsletter_yn` AS `newsletter_yn`,
+ `contactdetails_tbl`.`googlealert_yn` AS `googlealert_yn`,
+ `contactdetails_tbl`.`socialmedia_yn` AS `socialmedia_yn`,
+ `contactdetails_tbl`.`dateAdded` AS `dateAdded`,
+ `contactdetails_tbl`.`imdbid` AS `imdbid`,
+ `contactdetails_tbl`.`recordname` AS `recordname`,
+ `contactdetails_tbl`.`avatar_yn` AS `avatar_yn`
+from `contactdetails_tbl` where (`contactdetails_tbl`.`IsDeleted` = 0)
+== 32 columns. ==
+
+--- A-Q3 view definer/security + collation_connection (F19 + collation drift) ---
+contactdetails         DEFINER kingk436@%  SECURITY DEFINER  conn=utf8mb4_general_ci
+contactitems           DEFINER kingk436@%  SECURITY DEFINER  conn=utf8mb4_general_ci   (21 cols; valueText alias over valuetext)
+contacts_ss            DEFINER kingk436@%  SECURITY DEFINER  conn=utf8mb4_unicode_ci   (FROM contactdetails d)
+contacts_ss_followup   DEFINER kingk436@%  SECURITY DEFINER  conn=utf8mb4_unicode_ci   (FROM contactdetails d; systemID IN (1,2))
+contacts_ss_maint      DEFINER kingk436@%  SECURITY DEFINER  conn=utf8mb4_unicode_ci   (FROM contactdetails d; systemID IN (3,4))
+contacts_ss_target     DEFINER kingk436@%  SECURITY DEFINER  conn=utf8mb4_0900_ai_ci   (FROM contactdetails d; systemID IN (5,6))  <-- collation outlier
+sharez                 DEFINER kingk436@%  SECURITY DEFINER  conn=utf8mb4_general_ci   (FROM contactdetails_tbl; recordname)
+sharezz                DEFINER kingk436@%  SECURITY DEFINER  conn=utf8mb4_general_ci   (FROM contactdetails_tbl; recordname)  <-- double-z EXISTS on dev
+
+--- A-Q4 contactdetails_tbl (key facts) ---
+recordname  varchar(500) GENERATED ALWAYS AS (`contactFullName`) VIRTUAL     <-- matches prod (D1/C3)
+contactPhoto varchar(255)                                                    <-- A1 widen to 500 still required
+NONE of the 12 WO-1 columns present (contactPhone/Email/Company/*_src/company_location_id/master_*)  <-- no collision
+contactCreationDate/contactLastUpdated = timestamp (existing)
+PK contactID AUTO_INCREMENT=154963; FK userID->taousers_tbl.userID (RESTRICT/RESTRICT)
+Indexes incl idx_contactdetails_tbl_dupe_v3 (userID,IsDeleted,contactID)
+
+(Full verbatim CREATE statements for all 8 views + contactdetails_tbl captured in session
+transcript 2026-07-07; the material facts distilled above are what the reconcile/diff use.)
