@@ -1,0 +1,766 @@
+===== a7e1c05e:database/migrations/V3_7__master_directory_wo1_contactdetails_columns.sql =====
+-- ============================================================================
+-- V3_7  Master Contact Directory -- WO-1 (part 1 of 3)
+--       contactdetails_tbl: denormalized hot fields, master-link pointers,
+--       provenance flags, supporting indexes, and the contactPhoto widen.
+--
+-- PROJECT     : TAO / dev-subdomain / branch dev
+-- WORK ORDER  : Master Contact Directory Phase 1, WO-1 (schema authoring)
+-- CLEARANCE   : WO-0b Decision Memo CLEARED WITH AMENDMENTS (A1-A6), 2026-07-06.
+-- ENGINE      : MySQL 8.0.41 (Q1). Runs verbatim on BOTH new_development (dev)
+--               and actorsbusinessoffice (prod) via DATABASE(). Run USE <schema>; first.
+-- TARGET      : contactdetails_tbl (BASE TABLE). The `contactdetails` VIEW is
+--               rebuilt separately in V3_8, applied in the SAME migration window (A4).
+-- APPLY ORDER : V3_7 (this file) -> V3_8 (view) in one window; V3_9 (FKs) later,
+--               only AFTER backfill validation (A2). See the execution runbook:
+--               docs/plans/evidence/2026-07-06-wo1-execution-runbook.md
+--
+-- IDEMPOTENT / REPLAY-SAFE (NN#5): every ADD/MODIFY/INDEX is guarded against
+--   information_schema; re-running is a no-op. MySQL 8 has no `ADD COLUMN IF NOT
+--   EXISTS`, so temporary helper procedures gate each change. Both procedures are
+--   dropped at the end -- the script leaves no residue.
+--
+-- DECISIONS FOLDED IN (evidence: docs/plans/evidence/2026-07-04-wo0b-pane-abo.txt
+--   and 2026-07-04-wo0b-prod-Q8-Q15-master.txt):
+--   * contactCompany varchar(255) -- match source valueCompany(255); active max 174 (F3/D-5, A-amend).
+--   * contactPhone varchar(100) (active max 57), contactEmail varchar(150) (active max 104) (Q6).
+--   * master_linked_date / master_last_sync = DATETIME, NOT TIMESTAMP (Q19, cross-cut fact #2).
+--   * contactPhoto widen varchar(255) -> varchar(500) -- source co_contacts.image_url is
+--     varchar(500); width-match is deterministic (A1). Collation preserved (utf8mb4_unicode_ci).
+--   * pointer cols INT NULL (signed) -> FK targets are all signed int PK
+--     (co_locations.colocid, co_contacts.id, companies.coid). FKs are a SEPARATE
+--     follow-up file (V3_9) applied post-backfill (A2). This file only adds the
+--     columns + supporting indexes.
+--   * _src ENUM('user','master') NOT NULL DEFAULT 'user' -- user-authored data wins;
+--     existing rows backfill as 'user' from their own contactitems (A1: 'user' beats 'master').
+--   * NO master_link_status column -- link state is DERIVED (master_co_contact_id IS NOT NULL),
+--     per the WO-1 ruling column list. This intentionally diverges from plan-v1 §7 prose;
+--     flagged for the WO-4/WO-5 authors.
+--   * recordname is VIRTUAL GENERATED (= contactFullName) -- untouched here; never written (F1).
+--   * Columns are appended at table end (no AFTER clause) -- physical order is immaterial;
+--     the V3_8 view defines presentation order. Keeps each guarded ADD independent.
+--
+-- ROLLBACK    : V3_7__master_directory_wo1_contactdetails_columns_ROLLBACK.sql
+--               (drop it AFTER V3_9 FK rollback -- FKs pin the indexed columns).
+-- ============================================================================
+
+-- ----------------------------------------------------------------------------
+-- Step 0: Environment guard. Abort cleanly if the base table is missing.
+-- ----------------------------------------------------------------------------
+SET @tbl_ok = (
+    SELECT COUNT(*) FROM information_schema.tables
+    WHERE table_schema = DATABASE()
+      AND table_name   = 'contactdetails_tbl'
+      AND table_type   = 'BASE TABLE'
+);
+-- If @tbl_ok <> 1 the CALLs below still no-op (guarded), but surface it loudly:
+SELECT IF(@tbl_ok = 1,
+          'OK: contactdetails_tbl present in this schema',
+          'ABORT: contactdetails_tbl NOT a base table in this schema -- check USE <schema>')
+       AS preflight;
+
+-- ----------------------------------------------------------------------------
+-- Step 1: Guarded column adds (idempotent).
+-- ----------------------------------------------------------------------------
+DROP PROCEDURE IF EXISTS wo1_add_col;
+DELIMITER //
+CREATE PROCEDURE wo1_add_col(IN p_col VARCHAR(64), IN p_def TEXT)
+BEGIN
+    IF (SELECT COUNT(*) FROM information_schema.COLUMNS
+          WHERE TABLE_SCHEMA = DATABASE()
+            AND TABLE_NAME   = 'contactdetails_tbl'
+            AND COLUMN_NAME  = p_col) = 0 THEN
+        SET @ddl = CONCAT('ALTER TABLE `contactdetails_tbl` ADD COLUMN ', p_def);
+        PREPARE s FROM @ddl; EXECUTE s; DEALLOCATE PREPARE s;
+    END IF;
+END //
+DELIMITER ;
+
+-- Denormalized hot fields (read-path acceleration; backfilled by a later WO)
+CALL wo1_add_col('contactPhone',        '`contactPhone` varchar(100) NULL DEFAULT NULL');
+CALL wo1_add_col('contactEmail',        '`contactEmail` varchar(150) NULL DEFAULT NULL');
+CALL wo1_add_col('contactCompany',      '`contactCompany` varchar(255) NULL DEFAULT NULL');
+
+-- Provenance flags: which side owns the current value ('user' upload/edit wins)
+CALL wo1_add_col('contactPhone_src',    '`contactPhone_src` ENUM(''user'',''master'') NOT NULL DEFAULT ''user''');
+CALL wo1_add_col('contactEmail_src',    '`contactEmail_src` ENUM(''user'',''master'') NOT NULL DEFAULT ''user''');
+CALL wo1_add_col('contactCompany_src',  '`contactCompany_src` ENUM(''user'',''master'') NOT NULL DEFAULT ''user''');
+CALL wo1_add_col('contactPhoto_src',    '`contactPhoto_src` ENUM(''user'',''master'') NOT NULL DEFAULT ''user''');
+
+-- Master-link pointers (signed INT; FKs added in V3_9 after backfill validation)
+CALL wo1_add_col('company_location_id', '`company_location_id` int NULL DEFAULT NULL');   -- -> co_locations.colocid
+CALL wo1_add_col('master_co_contact_id','`master_co_contact_id` int NULL DEFAULT NULL');  -- -> co_contacts.id (the person)
+CALL wo1_add_col('master_coid',         '`master_coid` int NULL DEFAULT NULL');           -- -> companies.coid
+
+-- Master sync bookkeeping (DATETIME, not TIMESTAMP -- Q19)
+CALL wo1_add_col('master_linked_date',  '`master_linked_date` datetime NULL DEFAULT NULL');
+CALL wo1_add_col('master_last_sync',    '`master_last_sync` datetime NULL DEFAULT NULL');
+
+DROP PROCEDURE IF EXISTS wo1_add_col;
+
+-- ----------------------------------------------------------------------------
+-- Step 2: Guarded supporting indexes for the three pointer columns.
+--         (Support the FK adds in V3_9 and the master-filter queries in WO-5/6.)
+-- ----------------------------------------------------------------------------
+DROP PROCEDURE IF EXISTS wo1_add_idx;
+DELIMITER //
+CREATE PROCEDURE wo1_add_idx(IN p_idx VARCHAR(64), IN p_cols VARCHAR(255))
+BEGIN
+    IF (SELECT COUNT(*) FROM information_schema.STATISTICS
+          WHERE TABLE_SCHEMA = DATABASE()
+            AND TABLE_NAME   = 'contactdetails_tbl'
+            AND INDEX_NAME   = p_idx) = 0 THEN
+        SET @ddl = CONCAT('ALTER TABLE `contactdetails_tbl` ADD INDEX `', p_idx, '` (', p_cols, ')');
+        PREPARE s FROM @ddl; EXECUTE s; DEALLOCATE PREPARE s;
+    END IF;
+END //
+DELIMITER ;
+
+CALL wo1_add_idx('idx_cd_master_person', '`master_co_contact_id`');
+CALL wo1_add_idx('idx_cd_master_co',     '`master_coid`');
+CALL wo1_add_idx('idx_cd_company_loc',   '`company_location_id`');
+
+DROP PROCEDURE IF EXISTS wo1_add_idx;
+
+-- ----------------------------------------------------------------------------
+-- Step 3: Widen contactPhoto varchar(255) -> varchar(500) (A1). Guarded so a
+--         replay is a no-op; collation preserved to avoid an implicit convert.
+-- ----------------------------------------------------------------------------
+SET @need_widen = (
+    SELECT COUNT(*) FROM information_schema.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME   = 'contactdetails_tbl'
+      AND COLUMN_NAME  = 'contactPhoto'
+      AND CHARACTER_MAXIMUM_LENGTH < 500
+);
+SET @ddl = IF(@need_widen = 1,
+    'ALTER TABLE `contactdetails_tbl` MODIFY COLUMN `contactPhoto` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL',
+    'SELECT ''contactPhoto already >= varchar(500) -- widen skipped'' AS note');
+PREPARE s FROM @ddl; EXECUTE s; DEALLOCATE PREPARE s;
+
+-- ----------------------------------------------------------------------------
+-- POST-CHECK: all 12 new columns present, 3 indexes present, contactPhoto=500.
+-- ----------------------------------------------------------------------------
+SELECT COUNT(*) AS new_cols_present_expect_12
+FROM information_schema.COLUMNS
+WHERE TABLE_SCHEMA = DATABASE()
+  AND TABLE_NAME = 'contactdetails_tbl'
+  AND COLUMN_NAME IN ('contactPhone','contactEmail','contactCompany',
+                      'contactPhone_src','contactEmail_src','contactCompany_src','contactPhoto_src',
+                      'company_location_id','master_co_contact_id','master_coid',
+                      'master_linked_date','master_last_sync');
+
+SELECT COUNT(DISTINCT INDEX_NAME) AS new_idx_present_expect_3
+FROM information_schema.STATISTICS
+WHERE TABLE_SCHEMA = DATABASE()
+  AND TABLE_NAME = 'contactdetails_tbl'
+  AND INDEX_NAME IN ('idx_cd_master_person','idx_cd_master_co','idx_cd_company_loc');
+
+SELECT COLUMN_NAME, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH
+FROM information_schema.COLUMNS
+WHERE TABLE_SCHEMA = DATABASE()
+  AND TABLE_NAME = 'contactdetails_tbl'
+  AND COLUMN_NAME = 'contactPhoto';
+
+===== a7e1c05e:database/migrations/V3_7__master_directory_wo1_contactdetails_columns_ROLLBACK.sql =====
+-- ============================================================================
+-- V3_7 ROLLBACK  Master Contact Directory -- WO-1 (part 1 of 3)
+--   Reverses V3_7__master_directory_wo1_contactdetails_columns.sql:
+--   drops the 3 supporting indexes, drops the 12 added columns, and narrows
+--   contactPhoto back to varchar(255).
+--
+-- PROJECT : TAO / dev-subdomain / branch dev
+-- ENGINE  : MySQL 8.0.41. DATABASE()-scoped; run USE <schema>; first.
+-- IDEMPOTENT: each drop is guarded; re-running is a no-op.
+--
+-- ORDER (IMPORTANT):
+--   1. Run V3_9__..._fk_ROLLBACK.sql FIRST -- the foreign keys pin the pointer
+--      columns/indexes and their DROP will fail otherwise.
+--   2. Run V3_8__..._view_ROLLBACK.sql (rebuild the 32-column view) BEFORE this
+--      file -- the live 44-column view references columns dropped here.
+--   3. Then run this file.
+--
+-- WARNING (contactPhoto narrow): if any contactPhoto value written after the
+--   widen exceeds 255 chars (master IMDb URLs can), narrowing to varchar(255)
+--   will TRUNCATE under non-strict mode or ERROR under STRICT mode. The guard
+--   below refuses to narrow while any value is longer than 255 and reports the
+--   count instead -- clear those rows first if a true narrow is required.
+-- ============================================================================
+
+-- --- Step 1: drop supporting indexes (guarded) ---
+DROP PROCEDURE IF EXISTS wo1_drop_idx;
+DELIMITER //
+CREATE PROCEDURE wo1_drop_idx(IN p_idx VARCHAR(64))
+BEGIN
+    IF (SELECT COUNT(*) FROM information_schema.STATISTICS
+          WHERE TABLE_SCHEMA = DATABASE()
+            AND TABLE_NAME   = 'contactdetails_tbl'
+            AND INDEX_NAME   = p_idx) > 0 THEN
+        SET @ddl = CONCAT('ALTER TABLE `contactdetails_tbl` DROP INDEX `', p_idx, '`');
+        PREPARE s FROM @ddl; EXECUTE s; DEALLOCATE PREPARE s;
+    END IF;
+END //
+DELIMITER ;
+CALL wo1_drop_idx('idx_cd_master_person');
+CALL wo1_drop_idx('idx_cd_master_co');
+CALL wo1_drop_idx('idx_cd_company_loc');
+DROP PROCEDURE IF EXISTS wo1_drop_idx;
+
+-- --- Step 2: drop added columns (guarded) ---
+DROP PROCEDURE IF EXISTS wo1_drop_col;
+DELIMITER //
+CREATE PROCEDURE wo1_drop_col(IN p_col VARCHAR(64))
+BEGIN
+    IF (SELECT COUNT(*) FROM information_schema.COLUMNS
+          WHERE TABLE_SCHEMA = DATABASE()
+            AND TABLE_NAME   = 'contactdetails_tbl'
+            AND COLUMN_NAME  = p_col) > 0 THEN
+        SET @ddl = CONCAT('ALTER TABLE `contactdetails_tbl` DROP COLUMN `', p_col, '`');
+        PREPARE s FROM @ddl; EXECUTE s; DEALLOCATE PREPARE s;
+    END IF;
+END //
+DELIMITER ;
+CALL wo1_drop_col('master_last_sync');
+CALL wo1_drop_col('master_linked_date');
+CALL wo1_drop_col('master_coid');
+CALL wo1_drop_col('master_co_contact_id');
+CALL wo1_drop_col('company_location_id');
+CALL wo1_drop_col('contactPhoto_src');
+CALL wo1_drop_col('contactCompany_src');
+CALL wo1_drop_col('contactEmail_src');
+CALL wo1_drop_col('contactPhone_src');
+CALL wo1_drop_col('contactCompany');
+CALL wo1_drop_col('contactEmail');
+CALL wo1_drop_col('contactPhone');
+DROP PROCEDURE IF EXISTS wo1_drop_col;
+
+-- --- Step 3: narrow contactPhoto back to varchar(255) (guarded + safety check) ---
+SET @too_long = (
+    SELECT COUNT(*) FROM contactdetails_tbl
+    WHERE contactPhoto IS NOT NULL AND CHAR_LENGTH(contactPhoto) > 255
+);
+SET @is_wide = (
+    SELECT COUNT(*) FROM information_schema.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME   = 'contactdetails_tbl'
+      AND COLUMN_NAME  = 'contactPhoto'
+      AND CHARACTER_MAXIMUM_LENGTH > 255
+);
+SET @ddl = IF(@is_wide = 1 AND @too_long = 0,
+    'ALTER TABLE `contactdetails_tbl` MODIFY COLUMN `contactPhoto` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL',
+    CONCAT('SELECT ', @too_long, ' AS rows_over_255_blocking_narrow, ',
+           @is_wide, ' AS is_currently_wide'));
+PREPARE s FROM @ddl; EXECUTE s; DEALLOCATE PREPARE s;
+
+-- --- POST-CHECK: all new columns/indexes gone ---
+SELECT COUNT(*) AS residual_new_cols_expect_0
+FROM information_schema.COLUMNS
+WHERE TABLE_SCHEMA = DATABASE()
+  AND TABLE_NAME = 'contactdetails_tbl'
+  AND COLUMN_NAME IN ('contactPhone','contactEmail','contactCompany',
+                      'contactPhone_src','contactEmail_src','contactCompany_src','contactPhoto_src',
+                      'company_location_id','master_co_contact_id','master_coid',
+                      'master_linked_date','master_last_sync');
+
+===== a7e1c05e:database/migrations/V3_8__master_directory_wo1_contactdetails_view.sql =====
+-- ============================================================================
+-- V3_8  Master Contact Directory -- WO-1 (part 2 of 3)
+--       Rebuild the `contactdetails` VIEW to expose the 12 new WO-1 columns.
+--
+-- PROJECT     : TAO / dev-subdomain / branch dev
+-- CLEARANCE   : WO-0b Decision Memo CLEARED WITH AMENDMENTS, 2026-07-06.
+-- ENGINE      : MySQL 8.0.41. DATABASE()-scoped; runs verbatim on dev + prod.
+--               Run USE <schema>; first. Apply IMMEDIATELY after V3_7, in the
+--               SAME migration window (A4).
+--
+-- SECURITY MODEL -- SQL SECURITY INVOKER (deliberate, precedented):
+--   The captured abo pane shows the current `contactdetails` view is DEFINER
+--   (only `taousers` is INVOKER). This rebuild INTENTIONALLY converges it to the
+--   TAO house INVOKER standard -- the same fix applied to the `tickets` view in
+--   database/2026-04-18_rebuild_tickets_view_invoker_security.sql, which exists
+--   precisely because a phpMyAdmin apply silently rewrote a DEFINER clause to
+--   root@108.185.100.195 and broke reads (this is finding F19 / the DEFINER
+--   drift class). Under INVOKER, privilege checks run as the CF DSN account,
+--   which holds ALL PRIVILEGES on the base tables (Q9b) -- so the view "just
+--   works" regardless of any DEFINER account. NN#12: mysql CLI only for this DDL.
+--
+-- NO SCHEMA QUALIFIERS (A4): table is referenced bare (`contactdetails_tbl`) so
+--   the same script runs in either schema. Promotion to prod must re-verify no
+--   schema qualifier (e.g. `actorsbusinessoffice.`) was reintroduced.
+--
+-- COLUMN SET: 32 existing base columns (ordinal order, per abo pane Q4Q5,
+--   including the VIRTUAL GENERATED `recordname` and `IsDeleted`) + 12 new WO-1
+--   columns = 44. WHERE IsDeleted = 0 (active records), matching the captured view.
+--
+-- !!! DRAFT UNTIL RECONCILED -- STOP-ON-DELTA (DIR-WO-1 ruling 2) !!!
+--   This SELECT is a RECONSTRUCTION from the captured base-table DDL, NOT the live
+--   view text. The abo pane summarized the live `contactdetails` view as an
+--   "enumerated 33-col list"; the base table has 32 columns (abo pane Q4Q5). That
+--   33-vs-32 gap is UNRESOLVED and MUST be closed to a NAMED column before apply.
+--
+--   Immediately before applying in the target env (mysql CLI):
+--       SHOW CREATE VIEW contactdetails\G
+--   Diff the live column list / predicate against the 32 base columns below:
+--     * Only difference is the 12 additive WO-1 columns being ABSENT from the live
+--       view -> expected; proceed.
+--     * A 33rd column that is a BASE column this file omitted -> add it BY NAME,
+--       re-emit V3_8, and report.
+--     * The 33rd is an ALIAS or EXPRESSION not in the base DDL -> STOP. grep its
+--       consumers across the app BEFORE any rebuild; do not drop it silently.
+--     * ANY predicate/alias delta beyond the additive new columns -> re-emit and
+--       report; NO apply.
+--   The pending abod drift pane may carry the dev `SHOW CREATE VIEW contactdetails`
+--   -> use it to resolve the named-column question. NN#1: do not guess. Runbook Step 2.
+-- ============================================================================
+
+-- --- Step 0: guard -- view + base table + all 12 new columns must be present ---
+SET @is_view = (
+    SELECT COUNT(*) FROM information_schema.tables
+    WHERE table_schema = DATABASE() AND table_name = 'contactdetails' AND table_type = 'VIEW'
+);
+SET @tbl_ok = (
+    SELECT COUNT(*) FROM information_schema.tables
+    WHERE table_schema = DATABASE() AND table_name = 'contactdetails_tbl' AND table_type = 'BASE TABLE'
+);
+SET @new_cols = (
+    SELECT COUNT(*) FROM information_schema.COLUMNS
+    WHERE table_schema = DATABASE() AND table_name = 'contactdetails_tbl'
+      AND column_name IN ('contactPhone','contactEmail','contactCompany',
+                          'contactPhone_src','contactEmail_src','contactCompany_src','contactPhoto_src',
+                          'company_location_id','master_co_contact_id','master_coid',
+                          'master_linked_date','master_last_sync')
+);
+SET @proceed = (@is_view = 1 AND @tbl_ok = 1 AND @new_cols = 12);
+SELECT IF(@proceed = 1,
+          'OK: view + base table + 12 new columns present -- rebuilding',
+          CONCAT('ABORT: preconditions not met (is_view=', @is_view,
+                 ' tbl_ok=', @tbl_ok, ' new_cols=', @new_cols, '/12) -- run V3_7 first'))
+       AS preflight;
+
+-- --- Step 1: drop the current view (only if preconditions met) ---
+SET @sql = IF(@proceed = 1, 'DROP VIEW IF EXISTS `contactdetails`', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+-- --- Step 2: recreate with SQL SECURITY INVOKER, 44 columns, no schema qualifier ---
+SET @sql = IF(@proceed = 1,
+    CONCAT(
+        'CREATE ALGORITHM=UNDEFINED SQL SECURITY INVOKER VIEW `contactdetails` AS SELECT ',
+            -- 32 existing base columns, ordinal order
+            '`contactdetails_tbl`.`contactID` AS `contactID`,',
+            '`contactdetails_tbl`.`contactTitle` AS `contactTitle`,',
+            '`contactdetails_tbl`.`contactFullName` AS `contactFullName`,',
+            '`contactdetails_tbl`.`contactFirst` AS `contactFirst`,',
+            '`contactdetails_tbl`.`contactMiddle` AS `contactMiddle`,',
+            '`contactdetails_tbl`.`contactLast` AS `contactLast`,',
+            '`contactdetails_tbl`.`contactSuffix` AS `contactSuffix`,',
+            '`contactdetails_tbl`.`contactNickname` AS `contactNickname`,',
+            '`contactdetails_tbl`.`contactPhoto` AS `contactPhoto`,',
+            '`contactdetails_tbl`.`contactShortName` AS `contactShortName`,',
+            '`contactdetails_tbl`.`contactMaidenName` AS `contactMaidenName`,',
+            '`contactdetails_tbl`.`contactBirthday` AS `contactBirthday`,',
+            '`contactdetails_tbl`.`refer_contact_id` AS `refer_contact_id`,',
+            '`contactdetails_tbl`.`contactMeetingLoc` AS `contactMeetingLoc`,',
+            '`contactdetails_tbl`.`contactCreationDate` AS `contactCreationDate`,',
+            '`contactdetails_tbl`.`contactLastUpdated` AS `contactLastUpdated`,',
+            '`contactdetails_tbl`.`contactStatus` AS `contactStatus`,',
+            '`contactdetails_tbl`.`contactNotes` AS `contactNotes`,',
+            '`contactdetails_tbl`.`userID` AS `userID`,',
+            '`contactdetails_tbl`.`user_yn` AS `user_yn`,',
+            '`contactdetails_tbl`.`IsDeleted` AS `IsDeleted`,',
+            '`contactdetails_tbl`.`contactPronoun` AS `contactPronoun`,',
+            '`contactdetails_tbl`.`contactMeetingDate` AS `contactMeetingDate`,',
+            '`contactdetails_tbl`.`birthday_DD` AS `birthday_DD`,',
+            '`contactdetails_tbl`.`birthday_MM` AS `birthday_MM`,',
+            '`contactdetails_tbl`.`newsletter_yn` AS `newsletter_yn`,',
+            '`contactdetails_tbl`.`googlealert_yn` AS `googlealert_yn`,',
+            '`contactdetails_tbl`.`socialmedia_yn` AS `socialmedia_yn`,',
+            '`contactdetails_tbl`.`dateAdded` AS `dateAdded`,',
+            '`contactdetails_tbl`.`imdbid` AS `imdbid`,',
+            '`contactdetails_tbl`.`recordname` AS `recordname`,',
+            '`contactdetails_tbl`.`avatar_yn` AS `avatar_yn`,',
+            -- 12 new WO-1 columns
+            '`contactdetails_tbl`.`contactPhone` AS `contactPhone`,',
+            '`contactdetails_tbl`.`contactEmail` AS `contactEmail`,',
+            '`contactdetails_tbl`.`contactCompany` AS `contactCompany`,',
+            '`contactdetails_tbl`.`contactPhone_src` AS `contactPhone_src`,',
+            '`contactdetails_tbl`.`contactEmail_src` AS `contactEmail_src`,',
+            '`contactdetails_tbl`.`contactCompany_src` AS `contactCompany_src`,',
+            '`contactdetails_tbl`.`contactPhoto_src` AS `contactPhoto_src`,',
+            '`contactdetails_tbl`.`company_location_id` AS `company_location_id`,',
+            '`contactdetails_tbl`.`master_co_contact_id` AS `master_co_contact_id`,',
+            '`contactdetails_tbl`.`master_coid` AS `master_coid`,',
+            '`contactdetails_tbl`.`master_linked_date` AS `master_linked_date`,',
+            '`contactdetails_tbl`.`master_last_sync` AS `master_last_sync` ',
+        'FROM `contactdetails_tbl` WHERE (`contactdetails_tbl`.`IsDeleted` = 0)'
+    ),
+    'SELECT 1'
+);
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+-- --- POST-CHECK: view is INVOKER-secured and exposes 44 columns ---
+SELECT table_schema, table_name, security_type, is_updatable
+FROM information_schema.views
+WHERE table_schema = DATABASE() AND table_name = 'contactdetails';
+
+SELECT COUNT(*) AS view_col_count_expect_44
+FROM information_schema.COLUMNS
+WHERE table_schema = DATABASE() AND table_name = 'contactdetails';
+
+-- Smoke test: prove the new columns read through the view.
+SELECT contactID, contactPhone, contactEmail, contactCompany,
+       contactPhone_src, master_co_contact_id, master_coid, master_last_sync
+FROM contactdetails
+ORDER BY contactID DESC
+LIMIT 1;
+
+===== a7e1c05e:database/migrations/V3_8__master_directory_wo1_contactdetails_view_ROLLBACK.sql =====
+-- ============================================================================
+-- V3_8 ROLLBACK  Master Contact Directory -- WO-1 (part 2 of 3)
+--   Rebuild `contactdetails` at its ORIGINAL 32-column shape (dropping the 12
+--   WO-1 columns from the view). Must run BEFORE V3_7 rollback drops those
+--   columns from the base table, or the live 44-column view would break.
+--
+-- PROJECT : TAO / dev-subdomain / branch dev
+-- ENGINE  : MySQL 8.0.41. DATABASE()-scoped; run USE <schema>; first.
+--
+-- SECURITY MODEL: rebuilt as SQL SECURITY INVOKER (the TAO house standard), NOT
+--   restored to the pre-WO-1 DEFINER form. This mirrors the tickets-view
+--   precedent: reintroducing a DEFINER=root@... clause is the very drift class
+--   (F19) the INVOKER standard exists to avoid. If a true DEFINER restore is ever
+--   required, capture the exact prior definition from a backup and apply manually.
+-- ============================================================================
+
+SET @is_view = (
+    SELECT COUNT(*) FROM information_schema.tables
+    WHERE table_schema = DATABASE() AND table_name = 'contactdetails' AND table_type = 'VIEW'
+);
+SET @tbl_ok = (
+    SELECT COUNT(*) FROM information_schema.tables
+    WHERE table_schema = DATABASE() AND table_name = 'contactdetails_tbl' AND table_type = 'BASE TABLE'
+);
+SET @proceed = (@is_view = 1 AND @tbl_ok = 1);
+
+SET @sql = IF(@proceed = 1, 'DROP VIEW IF EXISTS `contactdetails`', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @sql = IF(@proceed = 1,
+    CONCAT(
+        'CREATE ALGORITHM=UNDEFINED SQL SECURITY INVOKER VIEW `contactdetails` AS SELECT ',
+            '`contactdetails_tbl`.`contactID` AS `contactID`,',
+            '`contactdetails_tbl`.`contactTitle` AS `contactTitle`,',
+            '`contactdetails_tbl`.`contactFullName` AS `contactFullName`,',
+            '`contactdetails_tbl`.`contactFirst` AS `contactFirst`,',
+            '`contactdetails_tbl`.`contactMiddle` AS `contactMiddle`,',
+            '`contactdetails_tbl`.`contactLast` AS `contactLast`,',
+            '`contactdetails_tbl`.`contactSuffix` AS `contactSuffix`,',
+            '`contactdetails_tbl`.`contactNickname` AS `contactNickname`,',
+            '`contactdetails_tbl`.`contactPhoto` AS `contactPhoto`,',
+            '`contactdetails_tbl`.`contactShortName` AS `contactShortName`,',
+            '`contactdetails_tbl`.`contactMaidenName` AS `contactMaidenName`,',
+            '`contactdetails_tbl`.`contactBirthday` AS `contactBirthday`,',
+            '`contactdetails_tbl`.`refer_contact_id` AS `refer_contact_id`,',
+            '`contactdetails_tbl`.`contactMeetingLoc` AS `contactMeetingLoc`,',
+            '`contactdetails_tbl`.`contactCreationDate` AS `contactCreationDate`,',
+            '`contactdetails_tbl`.`contactLastUpdated` AS `contactLastUpdated`,',
+            '`contactdetails_tbl`.`contactStatus` AS `contactStatus`,',
+            '`contactdetails_tbl`.`contactNotes` AS `contactNotes`,',
+            '`contactdetails_tbl`.`userID` AS `userID`,',
+            '`contactdetails_tbl`.`user_yn` AS `user_yn`,',
+            '`contactdetails_tbl`.`IsDeleted` AS `IsDeleted`,',
+            '`contactdetails_tbl`.`contactPronoun` AS `contactPronoun`,',
+            '`contactdetails_tbl`.`contactMeetingDate` AS `contactMeetingDate`,',
+            '`contactdetails_tbl`.`birthday_DD` AS `birthday_DD`,',
+            '`contactdetails_tbl`.`birthday_MM` AS `birthday_MM`,',
+            '`contactdetails_tbl`.`newsletter_yn` AS `newsletter_yn`,',
+            '`contactdetails_tbl`.`googlealert_yn` AS `googlealert_yn`,',
+            '`contactdetails_tbl`.`socialmedia_yn` AS `socialmedia_yn`,',
+            '`contactdetails_tbl`.`dateAdded` AS `dateAdded`,',
+            '`contactdetails_tbl`.`imdbid` AS `imdbid`,',
+            '`contactdetails_tbl`.`recordname` AS `recordname`,',
+            '`contactdetails_tbl`.`avatar_yn` AS `avatar_yn` ',
+        'FROM `contactdetails_tbl` WHERE (`contactdetails_tbl`.`IsDeleted` = 0)'
+    ),
+    'SELECT 1'
+);
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SELECT COUNT(*) AS view_col_count_expect_32
+FROM information_schema.COLUMNS
+WHERE table_schema = DATABASE() AND table_name = 'contactdetails';
+
+===== a7e1c05e:database/migrations/V3_9__master_directory_wo1_contactdetails_fk.sql =====
+-- ============================================================================
+-- V3_9  Master Contact Directory -- WO-1 (part 3 of 3): FOREIGN KEYS
+--       Add the three master-link foreign keys to contactdetails_tbl.
+--
+-- PROJECT   : TAO / dev-subdomain / branch dev
+-- CLEARANCE : WO-0b Decision Memo CLEARED WITH AMENDMENTS, 2026-07-06 (A2).
+-- ENGINE    : MySQL 8.0.41, all tables InnoDB (Q8). DATABASE()-scoped.
+--
+-- SEPARATE-FILE / DEFERRED APPLY (A2 two-step): this file is NOT applied in the
+--   V3_7/V3_8 window. It runs ONLY AFTER the backfill WO has populated and
+--   VALIDATED the pointer columns. Adding an FK against unvalidated data will
+--   fail on the first orphan row (error 1452) and abort the ALTER.
+--
+-- FK ACTIONS (A2, LOCKED): ON DELETE SET NULL, ON UPDATE RESTRICT on all three.
+--   Deleting a master row degrades a contact to "unlinked" (pointer -> NULL);
+--   it never cascades a delete and never breaks the contact. SET NULL requires
+--   the FK column to be NULLable -- all three are INT NULL (V3_7). Column type
+--   parity confirmed: pointers are signed int; targets are signed int PK
+--   (co_locations.colocid, co_contacts.id, companies.coid) -- Addendum-B P1 / Q8.
+--
+-- !!! MANDATORY PRE-FLIGHT (must all return 0 before running the CALLs) !!!
+--   0-sentinel trap (F12): co_contacts.coid uses 0 for "no company". The backfill
+--   must map that to NULL for master_coid -- a stored 0 has no companies.coid=0
+--   parent and will fail the FK. The orphan checks below catch it.
+--
+--   SELECT COUNT(*) AS orphan_company_loc FROM contactdetails_tbl d
+--     WHERE d.company_location_id IS NOT NULL
+--       AND NOT EXISTS (SELECT 1 FROM co_locations l WHERE l.colocid = d.company_location_id);
+--   SELECT COUNT(*) AS orphan_master_person FROM contactdetails_tbl d
+--     WHERE d.master_co_contact_id IS NOT NULL
+--       AND NOT EXISTS (SELECT 1 FROM co_contacts c WHERE c.id = d.master_co_contact_id);
+--   SELECT COUNT(*) AS orphan_master_coid FROM contactdetails_tbl d
+--     WHERE d.master_coid IS NOT NULL
+--       AND NOT EXISTS (SELECT 1 FROM companies co WHERE co.coid = d.master_coid);
+--   -- Also confirm no 0-sentinel leaked in:
+--   SELECT COUNT(*) AS zero_sentinel_master_coid FROM contactdetails_tbl WHERE master_coid = 0;
+--
+-- ROLLBACK  : V3_9__master_directory_wo1_contactdetails_fk_ROLLBACK.sql
+--             (must run before V3_7 rollback drops the pointer columns).
+-- ============================================================================
+
+-- --- Guard: the three master tables must exist in this schema ---
+SET @targets_ok = (
+    SELECT COUNT(*) FROM information_schema.tables
+    WHERE table_schema = DATABASE()
+      AND table_name IN ('co_locations','co_contacts','companies')
+);
+SELECT IF(@targets_ok = 3,
+          'OK: co_locations + co_contacts + companies present',
+          CONCAT('ABORT: expected 3 master tables in this schema, found ', @targets_ok))
+       AS preflight;
+
+DROP PROCEDURE IF EXISTS wo1_add_fk;
+DELIMITER //
+CREATE PROCEDURE wo1_add_fk(IN p_name VARCHAR(64), IN p_ddl TEXT)
+BEGIN
+    IF (SELECT COUNT(*) FROM information_schema.TABLE_CONSTRAINTS
+          WHERE CONSTRAINT_SCHEMA = DATABASE()
+            AND TABLE_NAME        = 'contactdetails_tbl'
+            AND CONSTRAINT_NAME   = p_name
+            AND CONSTRAINT_TYPE   = 'FOREIGN KEY') = 0 THEN
+        SET @ddl = CONCAT('ALTER TABLE `contactdetails_tbl` ADD CONSTRAINT `', p_name, '` ', p_ddl);
+        PREPARE s FROM @ddl; EXECUTE s; DEALLOCATE PREPARE s;
+    END IF;
+END //
+DELIMITER ;
+
+CALL wo1_add_fk('fk_cd_company_location',
+    'FOREIGN KEY (`company_location_id`) REFERENCES `co_locations` (`colocid`) ON DELETE SET NULL ON UPDATE RESTRICT');
+CALL wo1_add_fk('fk_cd_master_co_contact',
+    'FOREIGN KEY (`master_co_contact_id`) REFERENCES `co_contacts` (`id`) ON DELETE SET NULL ON UPDATE RESTRICT');
+CALL wo1_add_fk('fk_cd_master_coid',
+    'FOREIGN KEY (`master_coid`) REFERENCES `companies` (`coid`) ON DELETE SET NULL ON UPDATE RESTRICT');
+
+DROP PROCEDURE IF EXISTS wo1_add_fk;
+
+-- --- POST-CHECK: three FKs present with the expected referential actions ---
+SELECT rc.CONSTRAINT_NAME, kcu.REFERENCED_TABLE_NAME, kcu.REFERENCED_COLUMN_NAME,
+       rc.DELETE_RULE, rc.UPDATE_RULE
+FROM information_schema.REFERENTIAL_CONSTRAINTS rc
+JOIN information_schema.KEY_COLUMN_USAGE kcu
+  ON kcu.CONSTRAINT_SCHEMA = rc.CONSTRAINT_SCHEMA
+ AND kcu.CONSTRAINT_NAME   = rc.CONSTRAINT_NAME
+WHERE rc.CONSTRAINT_SCHEMA = DATABASE()
+  AND rc.TABLE_NAME = 'contactdetails_tbl'
+  AND rc.CONSTRAINT_NAME IN ('fk_cd_company_location','fk_cd_master_co_contact','fk_cd_master_coid');
+
+===== a7e1c05e:database/migrations/V3_9__master_directory_wo1_contactdetails_fk_ROLLBACK.sql =====
+-- ============================================================================
+-- V3_9 ROLLBACK  Master Contact Directory -- WO-1 (part 3 of 3)
+--   Drop the three master-link foreign keys. Run this BEFORE the V3_7 rollback
+--   (the FKs pin the pointer columns and their indexes).
+--
+-- PROJECT : TAO / dev-subdomain / branch dev
+-- ENGINE  : MySQL 8.0.41. DATABASE()-scoped; run USE <schema>; first.
+-- IDEMPOTENT: each drop is guarded on information_schema.
+-- ============================================================================
+
+DROP PROCEDURE IF EXISTS wo1_drop_fk;
+DELIMITER //
+CREATE PROCEDURE wo1_drop_fk(IN p_name VARCHAR(64))
+BEGIN
+    IF (SELECT COUNT(*) FROM information_schema.TABLE_CONSTRAINTS
+          WHERE CONSTRAINT_SCHEMA = DATABASE()
+            AND TABLE_NAME        = 'contactdetails_tbl'
+            AND CONSTRAINT_NAME   = p_name
+            AND CONSTRAINT_TYPE   = 'FOREIGN KEY') > 0 THEN
+        SET @ddl = CONCAT('ALTER TABLE `contactdetails_tbl` DROP FOREIGN KEY `', p_name, '`');
+        PREPARE s FROM @ddl; EXECUTE s; DEALLOCATE PREPARE s;
+    END IF;
+END //
+DELIMITER ;
+
+CALL wo1_drop_fk('fk_cd_company_location');
+CALL wo1_drop_fk('fk_cd_master_co_contact');
+CALL wo1_drop_fk('fk_cd_master_coid');
+
+DROP PROCEDURE IF EXISTS wo1_drop_fk;
+
+-- --- POST-CHECK: no WO-1 FKs remain ---
+SELECT COUNT(*) AS residual_wo1_fks_expect_0
+FROM information_schema.TABLE_CONSTRAINTS
+WHERE CONSTRAINT_SCHEMA = DATABASE()
+  AND TABLE_NAME = 'contactdetails_tbl'
+  AND CONSTRAINT_TYPE = 'FOREIGN KEY'
+  AND CONSTRAINT_NAME IN ('fk_cd_company_location','fk_cd_master_co_contact','fk_cd_master_coid');
+
+--- appended HEAD V3_8 for the applied version ---
+===== HEAD:database/migrations/V3_8__master_directory_wo1_contactdetails_view.sql (as applied; delta = comment header only, commit c8c7e6ad) =====
+-- ============================================================================
+-- V3_8  Master Contact Directory -- WO-1 (part 2 of 3)
+--       Rebuild the `contactdetails` VIEW to expose the 12 new WO-1 columns.
+--
+-- PROJECT     : TAO / dev-subdomain / branch dev
+-- CLEARANCE   : WO-0b Decision Memo CLEARED WITH AMENDMENTS, 2026-07-06.
+-- ENGINE      : MySQL 8.0.41. DATABASE()-scoped; runs verbatim on dev + prod.
+--               Run USE <schema>; first. Apply IMMEDIATELY after V3_7, in the
+--               SAME migration window (A4).
+--
+-- SECURITY MODEL -- SQL SECURITY INVOKER (deliberate, precedented):
+--   The captured abo pane shows the current `contactdetails` view is DEFINER
+--   (only `taousers` is INVOKER). This rebuild INTENTIONALLY converges it to the
+--   TAO house INVOKER standard -- the same fix applied to the `tickets` view in
+--   database/2026-04-18_rebuild_tickets_view_invoker_security.sql, which exists
+--   precisely because a phpMyAdmin apply silently rewrote a DEFINER clause to
+--   root@108.185.100.195 and broke reads (this is finding F19 / the DEFINER
+--   drift class). Under INVOKER, privilege checks run as the CF DSN account,
+--   which holds ALL PRIVILEGES on the base tables (Q9b) -- so the view "just
+--   works" regardless of any DEFINER account. NN#12: mysql CLI only for this DDL.
+--
+-- NO SCHEMA QUALIFIERS (A4): table is referenced bare (`contactdetails_tbl`) so
+--   the same script runs in either schema. Promotion to prod must re-verify no
+--   schema qualifier (e.g. `actorsbusinessoffice.`) was reintroduced.
+--
+-- COLUMN SET: 32 existing base columns (ordinal order, per abo pane Q4Q5,
+--   including the VIRTUAL GENERATED `recordname` and `IsDeleted`) + 12 new WO-1
+--   columns = 44. WHERE IsDeleted = 0 (active records), matching the captured view.
+--
+-- === RECONCILED 2026-07-07 -- STOP-ON-DELTA CLEARED (DIR-WO-1 ruling 2) ===
+--   The live `contactdetails` view was captured on BOTH environments and enumerates
+--   exactly 32 columns, in the identical order and with the identical
+--   WHERE (IsDeleted = 0) as the 32-column block below:
+--     * prod (abo)  -- 2026-07-07 SHOW CREATE VIEW + abo pane 2026-07-04
+--     * dev (abod)  -- 2026-07-07 abod pane, docs/plans/evidence/2026-07-07-wo0b-pane-abod.txt
+--   The abo pane's "33-col" summary was a MISCOUNT; there is no 33rd base column,
+--   alias, or expression. The only live-vs-this-file delta is the 12 additive WO-1
+--   columns being ABSENT from the live view -> the expected case -> PROCEED.
+--   Reconcile + drift register: docs/plans/evidence/2026-07-07-wo0b-addendum-B-drift.md.
+--
+--   PROMOTION SAFEGUARD (prod apply): still re-run, immediately before applying,
+--       SHOW CREATE VIEW contactdetails\G
+--   and confirm the live view is these same 32 base columns + WHERE. If a future
+--   delta appears (added/removed base column, changed predicate/alias) -> STOP,
+--   re-emit, report; do NOT apply blind. NN#1: do not guess. Runbook Step 2.
+-- ============================================================================
+
+-- --- Step 0: guard -- view + base table + all 12 new columns must be present ---
+SET @is_view = (
+    SELECT COUNT(*) FROM information_schema.tables
+    WHERE table_schema = DATABASE() AND table_name = 'contactdetails' AND table_type = 'VIEW'
+);
+SET @tbl_ok = (
+    SELECT COUNT(*) FROM information_schema.tables
+    WHERE table_schema = DATABASE() AND table_name = 'contactdetails_tbl' AND table_type = 'BASE TABLE'
+);
+SET @new_cols = (
+    SELECT COUNT(*) FROM information_schema.COLUMNS
+    WHERE table_schema = DATABASE() AND table_name = 'contactdetails_tbl'
+      AND column_name IN ('contactPhone','contactEmail','contactCompany',
+                          'contactPhone_src','contactEmail_src','contactCompany_src','contactPhoto_src',
+                          'company_location_id','master_co_contact_id','master_coid',
+                          'master_linked_date','master_last_sync')
+);
+SET @proceed = (@is_view = 1 AND @tbl_ok = 1 AND @new_cols = 12);
+SELECT IF(@proceed = 1,
+          'OK: view + base table + 12 new columns present -- rebuilding',
+          CONCAT('ABORT: preconditions not met (is_view=', @is_view,
+                 ' tbl_ok=', @tbl_ok, ' new_cols=', @new_cols, '/12) -- run V3_7 first'))
+       AS preflight;
+
+-- --- Step 1: drop the current view (only if preconditions met) ---
+SET @sql = IF(@proceed = 1, 'DROP VIEW IF EXISTS `contactdetails`', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+-- --- Step 2: recreate with SQL SECURITY INVOKER, 44 columns, no schema qualifier ---
+SET @sql = IF(@proceed = 1,
+    CONCAT(
+        'CREATE ALGORITHM=UNDEFINED SQL SECURITY INVOKER VIEW `contactdetails` AS SELECT ',
+            -- 32 existing base columns, ordinal order
+            '`contactdetails_tbl`.`contactID` AS `contactID`,',
+            '`contactdetails_tbl`.`contactTitle` AS `contactTitle`,',
+            '`contactdetails_tbl`.`contactFullName` AS `contactFullName`,',
+            '`contactdetails_tbl`.`contactFirst` AS `contactFirst`,',
+            '`contactdetails_tbl`.`contactMiddle` AS `contactMiddle`,',
+            '`contactdetails_tbl`.`contactLast` AS `contactLast`,',
+            '`contactdetails_tbl`.`contactSuffix` AS `contactSuffix`,',
+            '`contactdetails_tbl`.`contactNickname` AS `contactNickname`,',
+            '`contactdetails_tbl`.`contactPhoto` AS `contactPhoto`,',
+            '`contactdetails_tbl`.`contactShortName` AS `contactShortName`,',
+            '`contactdetails_tbl`.`contactMaidenName` AS `contactMaidenName`,',
+            '`contactdetails_tbl`.`contactBirthday` AS `contactBirthday`,',
+            '`contactdetails_tbl`.`refer_contact_id` AS `refer_contact_id`,',
+            '`contactdetails_tbl`.`contactMeetingLoc` AS `contactMeetingLoc`,',
+            '`contactdetails_tbl`.`contactCreationDate` AS `contactCreationDate`,',
+            '`contactdetails_tbl`.`contactLastUpdated` AS `contactLastUpdated`,',
+            '`contactdetails_tbl`.`contactStatus` AS `contactStatus`,',
+            '`contactdetails_tbl`.`contactNotes` AS `contactNotes`,',
+            '`contactdetails_tbl`.`userID` AS `userID`,',
+            '`contactdetails_tbl`.`user_yn` AS `user_yn`,',
+            '`contactdetails_tbl`.`IsDeleted` AS `IsDeleted`,',
+            '`contactdetails_tbl`.`contactPronoun` AS `contactPronoun`,',
+            '`contactdetails_tbl`.`contactMeetingDate` AS `contactMeetingDate`,',
+            '`contactdetails_tbl`.`birthday_DD` AS `birthday_DD`,',
+            '`contactdetails_tbl`.`birthday_MM` AS `birthday_MM`,',
+            '`contactdetails_tbl`.`newsletter_yn` AS `newsletter_yn`,',
+            '`contactdetails_tbl`.`googlealert_yn` AS `googlealert_yn`,',
+            '`contactdetails_tbl`.`socialmedia_yn` AS `socialmedia_yn`,',
+            '`contactdetails_tbl`.`dateAdded` AS `dateAdded`,',
+            '`contactdetails_tbl`.`imdbid` AS `imdbid`,',
+            '`contactdetails_tbl`.`recordname` AS `recordname`,',
+            '`contactdetails_tbl`.`avatar_yn` AS `avatar_yn`,',
+            -- 12 new WO-1 columns
+            '`contactdetails_tbl`.`contactPhone` AS `contactPhone`,',
+            '`contactdetails_tbl`.`contactEmail` AS `contactEmail`,',
+            '`contactdetails_tbl`.`contactCompany` AS `contactCompany`,',
+            '`contactdetails_tbl`.`contactPhone_src` AS `contactPhone_src`,',
+            '`contactdetails_tbl`.`contactEmail_src` AS `contactEmail_src`,',
+            '`contactdetails_tbl`.`contactCompany_src` AS `contactCompany_src`,',
+            '`contactdetails_tbl`.`contactPhoto_src` AS `contactPhoto_src`,',
+            '`contactdetails_tbl`.`company_location_id` AS `company_location_id`,',
+            '`contactdetails_tbl`.`master_co_contact_id` AS `master_co_contact_id`,',
+            '`contactdetails_tbl`.`master_coid` AS `master_coid`,',
+            '`contactdetails_tbl`.`master_linked_date` AS `master_linked_date`,',
+            '`contactdetails_tbl`.`master_last_sync` AS `master_last_sync` ',
+        'FROM `contactdetails_tbl` WHERE (`contactdetails_tbl`.`IsDeleted` = 0)'
+    ),
+    'SELECT 1'
+);
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+-- --- POST-CHECK: view is INVOKER-secured and exposes 44 columns ---
+SELECT table_schema, table_name, security_type, is_updatable
+FROM information_schema.views
+WHERE table_schema = DATABASE() AND table_name = 'contactdetails';
+
+SELECT COUNT(*) AS view_col_count_expect_44
+FROM information_schema.COLUMNS
+WHERE table_schema = DATABASE() AND table_name = 'contactdetails';
+
+-- Smoke test: prove the new columns read through the view.
+SELECT contactID, contactPhone, contactEmail, contactCompany,
+       contactPhone_src, master_co_contact_id, master_coid, master_last_sync
+FROM contactdetails
+ORDER BY contactID DESC
+LIMIT 1;

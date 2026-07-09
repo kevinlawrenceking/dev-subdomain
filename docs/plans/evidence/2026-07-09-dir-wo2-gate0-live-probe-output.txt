@@ -1,0 +1,217 @@
+
+===== connection =====
+CURRENT_USER() | VERSION() | NOW()
+kingk436@% | 8.0.41 | 2026-07-09 02:04:00
+
+
+########## SCHEMA: new_development (DEV) ##########
+
+===== new_development: G0-2a 12-column presence =====
+COLUMN_NAME | COLUMN_TYPE | IS_NULLABLE | COLUMN_DEFAULT
+company_location_id | int | YES | 
+contactCompany | varchar(255) | YES | 
+contactCompany_src | enum('user','master') | NO | user
+contactEmail | varchar(150) | YES | 
+contactEmail_src | enum('user','master') | NO | user
+contactPhone | varchar(100) | YES | 
+contactPhone_src | enum('user','master') | NO | user
+contactPhoto_src | enum('user','master') | NO | user
+master_co_contact_id | int | YES | 
+master_coid | int | YES | 
+master_last_sync | datetime | YES | 
+master_linked_date | datetime | YES | 
+
+===== new_development: G0-2b SHOW CREATE VIEW contactdetails =====
+View | Create View | character_set_client | collation_connection
+contactdetails | CREATE ALGORITHM=UNDEFINED DEFINER=`kingk436`@`%` SQL SECURITY INVOKER VIEW `contactdetails` AS select `contactdetails_tbl`.`contactID` AS `contactID`,`contactdetails_tbl`.`contactTitle` AS `contactTitle`,`contactdetails_tbl`.`contactFullName` AS `contactFullName`,`contactdetails_tbl`.`contactFirst` AS `contactFirst`,`contactdetails_tbl`.`contactMiddle` AS `contactMiddle`,`contactdetails_tbl`.`contactLast` AS `contactLast`,`contactdetails_tbl`.`contactSuffix` AS `contactSuffix`,`contactdetails_tbl`.`contactNickname` AS `contactNickname`,`contactdetails_tbl`.`contactPhoto` AS `contactPhoto`,`contactdetails_tbl`.`contactShortName` AS `contactShortName`,`contactdetails_tbl`.`contactMaidenName` AS `contactMaidenName`,`contactdetails_tbl`.`contactBirthday` AS `contactBirthday`,`contactdetails_tbl`.`refer_contact_id` AS `refer_contact_id`,`contactdetails_tbl`.`contactMeetingLoc` AS `contactMeetingLoc`,`contactdetails_tbl`.`contactCreationDate` AS `contactCreationDate`,`contactdetails_tbl`.`contactLastUpdated` AS `contactLastUpdated`,`contactdetails_tbl`.`contactStatus` AS `contactStatus`,`contactdetails_tbl`.`contactNotes` AS `contactNotes`,`contactdetails_tbl`.`userID` AS `userID`,`contactdetails_tbl`.`user_yn` AS `user_yn`,`contactdetails_tbl`.`IsDeleted` AS `IsDeleted`,`contactdetails_tbl`.`contactPronoun` AS `contactPronoun`,`contactdetails_tbl`.`contactMeetingDate` AS `contactMeetingDate`,`contactdetails_tbl`.`birthday_DD` AS `birthday_DD`,`contactdetails_tbl`.`birthday_MM` AS `birthday_MM`,`contactdetails_tbl`.`newsletter_yn` AS `newsletter_yn`,`contactdetails_tbl`.`googlealert_yn` AS `googlealert_yn`,`contactdetails_tbl`.`socialmedia_yn` AS `socialmedia_yn`,`contactdetails_tbl`.`dateAdded` AS `dateAdded`,`contactdetails_tbl`.`imdbid` AS `imdbid`,`contactdetails_tbl`.`recordname` AS `recordname`,`contactdetails_tbl`.`avatar_yn` AS `avatar_yn`,`contactdetails_tbl`.`contactPhone` AS `contactPhone`,`contactdetails_tbl`.`contactEmail` AS `contactEmail`,`contactdetails_tbl`.`contactCompany` AS `contactCompany`,`contactdetails_tbl`.`contactPhone_src` AS `contactPhone_src`,`contactdetails_tbl`.`contactEmail_src` AS `contactEmail_src`,`contactdetails_tbl`.`contactCompany_src` AS `contactCompany_src`,`contactdetails_tbl`.`contactPhoto_src` AS `contactPhoto_src`,`contactdetails_tbl`.`company_location_id` AS `company_location_id`,`contactdetails_tbl`.`master_co_contact_id` AS `master_co_contact_id`,`contactdetails_tbl`.`master_coid` AS `master_coid`,`contactdetails_tbl`.`master_linked_date` AS `master_linked_date`,`contactdetails_tbl`.`master_last_sync` AS `master_last_sync` from `contactdetails_tbl` where (`contactdetails_tbl`.`IsDeleted` = 0) | utf8mb4 | utf8mb4_0900_ai_ci
+
+===== new_development: G0-2b view security/updatable =====
+SECURITY_TYPE | IS_UPDATABLE
+INVOKER | YES
+
+===== new_development: G0-2b view col count (expect 44) =====
+view_cols
+44
+
+===== new_development: G0-2d FK presence =====
+CONSTRAINT_NAME | REFERENCED_TABLE_NAME | REFERENCED_COLUMN_NAME | DELETE_RULE | UPDATE_RULE
+fk_cd_company_location | co_locations | colocid | SET NULL | RESTRICT
+fk_cd_master_coid | companies | coid | SET NULL | RESTRICT
+fk_cd_master_co_contact | co_contacts | id | SET NULL | RESTRICT
+
+===== new_development: G0-6b SHOW CREATE VIEW contacts_ss =====
+View | Create View | character_set_client | collation_connection
+contacts_ss | CREATE ALGORITHM=UNDEFINED DEFINER=`kingk436`@`%` SQL SECURITY DEFINER VIEW `contacts_ss` AS select `d`.`contactID` AS `contactid`,concat('<input type="checkbox" class="form-check-input" id="C',`d`.`contactID`,'" name="batchlist" value="',`d`.`contactID`,'">') AS `contactcheck`,concat('<img src="/mediaroot/users/',`d`.`userID`,'/contacts/',`d`.`contactID`,'/avatar.jpg?ver=',`d`.`contactID`,'" class="mr-3  rounded-circle gambar img-responsive img-thumbnail"  alt="profile-image" id="item-img-output">') AS `avatar`,concat('<a href="/app/contact/?contactid=',`d`.`contactID`,'" >',`d`.`contactFullName`,'</a>') AS `hlink`,`d`.`contactFullName` AS `col1`,`d`.`contactID` AS `recid`,(select group_concat(concat('<span class=\'badge badge-blue\'>',`contactitems`.`valueText`,'</span>') order by `contactitems`.`valueText` ASC separator ' ') from `contactitems` where ((`contactitems`.`valueCategory` = 'Tag') and (`contactitems`.`contactID` = `d`.`contactID`) and (`contactitems`.`itemStatus` = 'Active')) limit 1) AS `col2`,concat(substring_index((select group_concat(concat('<span class=\'badge badge-blue\'>',`contactitems`.`valueText`,'</span>') order by `contactitems`.`valueText` ASC separator '&nbsp; ') from `contactitems` where ((`contactitems`.`valueCategory` = 'Tag') and (`contactitems`.`contactID` = `d`.`contactID`) and (`contactitems`.`itemStatus` = 'Active'))),'&nbsp;',2),convert(convert((case when (((select count(0) from `contactitems` where ((`contactitems`.`valueCategory` = 'Tag') and (`contactitems`.`contactID` = `d`.`contactID`) and (`contactitems`.`itemStatus` = 'Active'))) - 2) > 0) then concat(' +',((select count(0) from `contactitems` where ((`contactitems`.`valueCategory` = 'Tag') and (`contactitems`.`contactID` = `d`.`contactID`) and (`contactitems`.`itemStatus` = 'Active'))) - 2)) else NULL end) using utf8mb3) using utf8mb4)) AS `col2e`,concat(coalesce(substring_index((select group_concat(concat('<span class=\'badge badge-blue\'>',`contactitems`.`valueText`,'</span>') order by `contactitems`.`valueText` ASC separator '&nbsp; ') from `contactitems` where ((`contactitems`.`valueCategory` = 'Tag') and (`contactitems`.`contactID` = `d`.`contactID`) and (`contactitems`.`itemStatus` = 'Active'))),'&nbsp;',2),''),convert(convert(coalesce((case when (((select count(0) from `contactitems` where ((`contactitems`.`valueCategory` = 'Tag') and (`contactitems`.`contactID` = `d`.`contactID`) and (`contactitems`.`itemStatus` = 'Active'))) - 2) > 0) then concat(' +',((select count(0) from `contactitems` where ((`contactitems`.`valueCategory` = 'Tag') and (`contactitems`.`contactID` = `d`.`contactID`) and (`contactitems`.`itemStatus` = 'Active'))) - 2)) else NULL end),'') using utf8mb3) using utf8mb4)) AS `col2b`,(select `contactitems`.`valueText` from `contactitems` where ((`contactitems`.`valueCategory` = 'Phone') and (`contactitems`.`contactID` = `d`.`contactID`) and (`contactitems`.`itemStatus` = 'Active')) order by `contactitems`.`primary_YN` desc limit 1) AS `col3`,(select `contactitems`.`valueText` from `contactitems` where ((`contactitems`.`valueCategory` = 'Email') and (`contactitems`.`contactID` = `d`.`contactID`) and (`contactitems`.`itemStatus` = 'Active')) order by `contactitems`.`primary_YN` desc limit 1) AS `col4`,(select `contactitems`.`valueCompany` from `contactitems` where ((`contactitems`.`contactID` = `d`.`contactID`) and (`contactitems`.`valueCategory` = 'Company') and (`contactitems`.`itemStatus` = 'active')) order by `contactitems`.`primary_YN` desc limit 1) AS `col5`,`d`.`userID` AS `userid` from `contactdetails` `d` where (`d`.`contactStatus` = 'Active') | utf8mb4 | utf8mb4_unicode_ci
+
+===== new_development: G0-6b SHOW CREATE VIEW contacts_ss_target =====
+View | Create View | character_set_client | collation_connection
+contacts_ss_target | CREATE ALGORITHM=UNDEFINED DEFINER=`kingk436`@`%` SQL SECURITY DEFINER VIEW `contacts_ss_target` AS select distinct `cs`.`contactid` AS `contactid`,`cs`.`contactcheck` AS `contactcheck`,`cs`.`avatar` AS `avatar`,`cs`.`hlink` AS `hlink`,`cs`.`col1` AS `col1`,`cs`.`recid` AS `recid`,`cs`.`col2` AS `col2`,`cs`.`col2e` AS `col2e`,`cs`.`col2b` AS `col2b`,`cs`.`col3` AS `col3`,`cs`.`col4` AS `col4`,`cs`.`col5` AS `col5`,`cs`.`userid` AS `userid` from ((`contacts_ss` `cs` join `fusystemusers` `su` on(((`su`.`contactID` = `cs`.`contactid`) and (`su`.`userid` = `cs`.`userid`)))) join `fusystems` `s` on((`s`.`systemID` = `su`.`systemID`))) where ((`s`.`SystemType` = 'Targeted List') and (`su`.`suStatus` = 'Active')) | utf8mb4 | utf8mb4_0900_ai_ci
+
+===== new_development: G0-6b SHOW CREATE VIEW contacts_ss_followup =====
+View | Create View | character_set_client | collation_connection
+contacts_ss_followup | CREATE ALGORITHM=UNDEFINED DEFINER=`kingk436`@`%` SQL SECURITY DEFINER VIEW `contacts_ss_followup` AS select distinct `cs`.`contactid` AS `contactid`,`cs`.`contactcheck` AS `contactcheck`,`cs`.`avatar` AS `avatar`,`cs`.`hlink` AS `hlink`,`cs`.`col1` AS `col1`,`cs`.`recid` AS `recid`,`cs`.`col2` AS `col2`,`cs`.`col2e` AS `col2e`,`cs`.`col2b` AS `col2b`,`cs`.`col3` AS `col3`,`cs`.`col4` AS `col4`,`cs`.`col5` AS `col5`,`cs`.`userid` AS `userid` from ((`contacts_ss` `cs` join `fusystemusers` `su` on(((`su`.`contactID` = `cs`.`contactid`) and (`su`.`userid` = `cs`.`userid`)))) join `fusystems` `s` on((`s`.`systemID` = `su`.`systemID`))) where ((`s`.`SystemType` = 'Follow Up') and (`su`.`suStatus` = 'Active')) | utf8mb4 | utf8mb4_0900_ai_ci
+
+===== new_development: G0-6b SHOW CREATE VIEW contacts_ss_maint =====
+View | Create View | character_set_client | collation_connection
+contacts_ss_maint | CREATE ALGORITHM=UNDEFINED DEFINER=`kingk436`@`%` SQL SECURITY DEFINER VIEW `contacts_ss_maint` AS select distinct `cs`.`contactid` AS `contactid`,`cs`.`contactcheck` AS `contactcheck`,`cs`.`avatar` AS `avatar`,`cs`.`hlink` AS `hlink`,`cs`.`col1` AS `col1`,`cs`.`recid` AS `recid`,`cs`.`col2` AS `col2`,`cs`.`col2e` AS `col2e`,`cs`.`col2b` AS `col2b`,`cs`.`col3` AS `col3`,`cs`.`col4` AS `col4`,`cs`.`col5` AS `col5`,`cs`.`userid` AS `userid` from ((`contacts_ss` `cs` join `fusystemusers` `su` on(((`su`.`contactID` = `cs`.`contactid`) and (`su`.`userid` = `cs`.`userid`)))) join `fusystems` `s` on((`s`.`systemID` = `su`.`systemID`))) where ((`s`.`SystemType` = 'Maintenance List') and (`su`.`suStatus` = 'Active')) | utf8mb4 | utf8mb4_0900_ai_ci
+
+===== new_development: G0-6b SHOW CREATE VIEW sharez =====
+View | Create View | character_set_client | collation_connection
+sharez | CREATE ALGORITHM=UNDEFINED DEFINER=`kingk436`@`%` SQL SECURITY DEFINER VIEW `sharez` AS select `cd`.`contactID` AS `contactid`,`cd`.`recordname` AS `NAME`,`cd`.`contactMeetingLoc` AS `WhereMet`,`cd`.`contactMeetingDate` AS `WhenMet`,`cd`.`userID` AS `userid`,left(`tu`.`passwordHash`,10) AS `userHash`,(select `ci`.`valueCompany` from `contactitems_tbl` `ci` where ((`ci`.`contactID` = `cd`.`contactID`) and (`ci`.`valueCategory` = 'Company') and (`ci`.`itemStatus` = 'active') and (`ci`.`IsDeleted` = 0)) limit 1) AS `Company`,(select `ci`.`valuetext` from `contactitems_tbl` `ci` where ((`ci`.`contactID` = `cd`.`contactID`) and (`ci`.`valueCategory` = 'Tag') and (`ci`.`itemStatus` = 'Active') and (`ci`.`IsDeleted` = 0)) limit 1) AS `Title`,(select `s`.`audstep` from ((`audcontacts_auditions_xref` `x` join `events_tbl` `e` on(((`e`.`audRoleID` is not null) and (`e`.`IsDeleted` = 0)))) join `audsteps` `s` on((`s`.`audstepid` = `e`.`audStepID`))) where (`x`.`contactid` = `cd`.`contactID`) order by `s`.`audstepid` desc limit 1) AS `Audition`,(select count(0) from `eventcontactsxref_tbl` `ecx` where ((`ecx`.`contactID` = `cd`.`contactID`) and (`ecx`.`IsDeleted` = 0))) AS `no_mtgs`,(select `e`.`eventStart` from (`eventcontactsxref_tbl` `ecx` join `events_tbl` `e` on(((`e`.`eventID` = `ecx`.`eventID`) and (`e`.`IsDeleted` = 0)))) where ((`ecx`.`contactID` = `cd`.`contactID`) and (`ecx`.`IsDeleted` = 0)) order by `e`.`eventStart` desc limit 1) AS `last_met`,(select `e`.`eventTypeName` from (`eventcontactsxref_tbl` `ecx` join `events_tbl` `e` on(((`e`.`eventID` = `ecx`.`eventID`) and (`e`.`IsDeleted` = 0)))) where ((`ecx`.`contactID` = `cd`.`contactID`) and (`ecx`.`IsDeleted` = 0)) order by `e`.`eventStart` desc limit 1) AS `lasteventtype`,NULL AS `NotesLog` from ((`contactdetails_tbl` `cd` join `taousers_tbl` `tu` on(((`tu`.`userID` = `cd`.`userID`) and (`tu`.`IsDeleted` = 0)))) join `fusystemusers_tbl` `fsu` on(((`fsu`.`contactID` = `cd`.`contactID`) and (`fsu`.`userid` = `cd`.`userID`) and (`fsu`.`sustatus` = 'Active') and (`fsu`.`systemID` in (1,2,3,4)) and (`fsu`.`IsDeleted` = 0)))) where (`cd`.`IsDeleted` = 0) | utf8mb4 | utf8mb4_general_ci
+
+===== new_development: G0-6b SHOW CREATE VIEW sharezz =====
+View | Create View | character_set_client | collation_connection
+sharezz | CREATE ALGORITHM=UNDEFINED DEFINER=`kingk436`@`%` SQL SECURITY DEFINER VIEW `sharezz` AS select `cd`.`contactID` AS `contactid`,`cd`.`recordname` AS `NAME`,`cd`.`contactMeetingLoc` AS `WhereMet`,`cd`.`contactMeetingDate` AS `WhenMet`,`cd`.`userID` AS `userid`,left(`tu`.`passwordHash`,10) AS `userHash`,(select `ci`.`valueCompany` from `contactitems_tbl` `ci` where ((`ci`.`contactID` = `cd`.`contactID`) and (`ci`.`valueCategory` = 'Company') and (`ci`.`itemStatus` = 'Active') and (`ci`.`IsDeleted` = 0)) limit 1) AS `Company`,(select `ci`.`valuetext` from (`contactitems_tbl` `ci` left join `tags` `t` on((`t`.`tagname` = `ci`.`valuetext`))) where ((`ci`.`contactID` = `cd`.`contactID`) and (`ci`.`valueCategory` = 'Tag') and (`ci`.`itemStatus` = 'Active') and (`ci`.`IsDeleted` = 0)) order by (case when ((`t`.`tagPriority` is null) or (`t`.`tagPriority` = 999)) then 1 else 0 end),`t`.`tagPriority`,`ci`.`valuetext` limit 1) AS `Title`,(select `s`.`audstep` from ((`audcontacts_auditions_xref` `x` join `events_tbl` `e` on(((`e`.`audRoleID` is not null) and (`e`.`IsDeleted` = 0)))) join `audsteps` `s` on((`s`.`audstepid` = `e`.`audStepID`))) where (`x`.`contactid` = `cd`.`contactID`) order by `s`.`audstepid` desc limit 1) AS `Audition`,(select count(0) from `eventcontactsxref_tbl` `ecx` where ((`ecx`.`contactID` = `cd`.`contactID`) and (`ecx`.`IsDeleted` = 0))) AS `no_mtgs`,(select `e`.`eventStart` from (`eventcontactsxref_tbl` `ecx` join `events_tbl` `e` on(((`e`.`eventID` = `ecx`.`eventID`) and (`e`.`IsDeleted` = 0)))) where ((`ecx`.`contactID` = `cd`.`contactID`) and (`ecx`.`IsDeleted` = 0)) order by `e`.`eventStart` desc limit 1) AS `last_met`,(select `e`.`eventTypeName` from (`eventcontactsxref_tbl` `ecx` join `events_tbl` `e` on(((`e`.`eventID` = `ecx`.`eventID`) and (`e`.`IsDeleted` = 0)))) where ((`ecx`.`contactID` = `cd`.`contactID`) and (`ecx`.`IsDeleted` = 0)) order by `e`.`eventStart` desc limit 1) AS `lasteventtype`,NULL AS `NotesLog` from ((`contactdetails_tbl` `cd` join `taousers_tbl` `tu` on(((`tu`.`userID` = `cd`.`userID`) and (`tu`.`IsDeleted` = 0)))) join `fusystemusers_tbl` `fsu` on(((`fsu`.`contactID` = `cd`.`contactID`) and (`fsu`.`userid` = `cd`.`userID`) and (`fsu`.`sustatus` = 'Active') and (`fsu`.`systemID` in (1,2,3,4)) and (`fsu`.`IsDeleted` = 0)))) where (`cd`.`IsDeleted` = 0) | utf8mb4 | utf8mb4_general_ci
+
+===== new_development: G0-2c backfill/pointer counts =====
+rows_total | company_nonnull | phone_nonnull | email_nonnull | person_ptr | coid_ptr | office_ptr
+1636 | 435 | 276 | 292 | 0 | 0 | 0
+
+===== new_development: G0-4 seed counts =====
+t | n
+co_contacts | 25200
+co_locations | 12617
+companies | 10740
+
+===== new_development: G0-4 sample co_contacts =====
+id | fullname
+1 | Charlotte Thorp
+2 | Sam Hanson
+3 | Yariv Milchan
+
+===== new_development: G0-4 sample co_locations =====
+colocid | location | coid
+1 | Montreal, QC | 9393
+2 | Los Angeles, CA | 9393
+3 | Ottawa, ON | 9393
+
+===== new_development: G0-4 sample companies =====
+coid | coName
+1 | 0X1 sound
+2 | 1 & 0 Entertainment
+3 | 1 Stooge Entertainment
+
+===== new_development: G0-5 SHOW CREATE TABLE co_locations =====
+Table | Create Table
+co_locations | CREATE TABLE `co_locations` (
+  `page_url` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `colocid` int NOT NULL AUTO_INCREMENT,
+  `location` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `address1` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `address2` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `city` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `state` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `zip` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `country` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `phone` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `fax` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `email` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `website` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `timestamp` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `current_time` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `page_title` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `coImdbID` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `coid` int DEFAULT NULL,
+  PRIMARY KEY (`colocid`) USING BTREE,
+  KEY `coid` (`coid`)
+) ENGINE=InnoDB AUTO_INCREMENT=12621 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+
+===== new_development: G0-5 offices per company 0/1/>1 =====
+zero_loc | one_loc | multi_loc
+785 | 8295 | 1660
+
+===== new_development: G0-6d contactitems_tbl columns =====
+cols
+itemID,contactID,valueType,valueCategory,valuetext,valueCompany,valueDepartment,valueTitle,valueStreetAddress,valueExtendedAddress,valueCity,valueRegion,itemDate,itemNotes,itemStatus,itemCreationDate,itemLastUpdated,valueCountry,valuePostalCode,primary_YN,IsDeleted
+
+===== new_development: G0-11 co_contacts total =====
+co_contacts_total
+25200
+
+===== new_development: G0-11 co_contacts indexes =====
+Table | Non_unique | Key_name | Seq_in_index | Column_name | Collation | Cardinality | Sub_part | Packed | Null | Index_type | Comment | Index_comment | Visible | Expression
+co_contacts | 0 | PRIMARY | 1 | id | A | 24684 |  |  |  | BTREE |  |  | YES | 
+co_contacts | 1 | fullname | 1 | fullname | A | 20961 |  |  | YES | BTREE |  |  | YES | 
+co_contacts | 1 | location | 1 | location | A | 482 |  |  | YES | BTREE |  |  | YES | 
+co_contacts | 1 | coid | 1 | coid | A | 9900 |  |  | YES | BTREE |  |  | YES | 
+
+===== new_development: G0-11 phone/email cols (expect 0 rows) =====
+COLUMN_NAME
+(0 rows)
+
+
+########## SCHEMA: actorsbusinessoffice (PROD - i_s/SHOW only) ##########
+
+===== actorsbusinessoffice: G0-2a 12-column presence =====
+COLUMN_NAME | COLUMN_TYPE | IS_NULLABLE | COLUMN_DEFAULT
+company_location_id | int | YES | 
+contactCompany | varchar(255) | YES | 
+contactCompany_src | enum('user','master') | NO | user
+contactEmail | varchar(150) | YES | 
+contactEmail_src | enum('user','master') | NO | user
+contactPhone | varchar(100) | YES | 
+contactPhone_src | enum('user','master') | NO | user
+contactPhoto_src | enum('user','master') | NO | user
+master_co_contact_id | int | YES | 
+master_coid | int | YES | 
+master_last_sync | datetime | YES | 
+master_linked_date | datetime | YES | 
+
+===== actorsbusinessoffice: G0-2b SHOW CREATE VIEW contactdetails =====
+View | Create View | character_set_client | collation_connection
+contactdetails | CREATE ALGORITHM=UNDEFINED DEFINER=`kingk436`@`%` SQL SECURITY INVOKER VIEW `contactdetails` AS select `contactdetails_tbl`.`contactID` AS `contactID`,`contactdetails_tbl`.`contactTitle` AS `contactTitle`,`contactdetails_tbl`.`contactFullName` AS `contactFullName`,`contactdetails_tbl`.`contactFirst` AS `contactFirst`,`contactdetails_tbl`.`contactMiddle` AS `contactMiddle`,`contactdetails_tbl`.`contactLast` AS `contactLast`,`contactdetails_tbl`.`contactSuffix` AS `contactSuffix`,`contactdetails_tbl`.`contactNickname` AS `contactNickname`,`contactdetails_tbl`.`contactPhoto` AS `contactPhoto`,`contactdetails_tbl`.`contactShortName` AS `contactShortName`,`contactdetails_tbl`.`contactMaidenName` AS `contactMaidenName`,`contactdetails_tbl`.`contactBirthday` AS `contactBirthday`,`contactdetails_tbl`.`refer_contact_id` AS `refer_contact_id`,`contactdetails_tbl`.`contactMeetingLoc` AS `contactMeetingLoc`,`contactdetails_tbl`.`contactCreationDate` AS `contactCreationDate`,`contactdetails_tbl`.`contactLastUpdated` AS `contactLastUpdated`,`contactdetails_tbl`.`contactStatus` AS `contactStatus`,`contactdetails_tbl`.`contactNotes` AS `contactNotes`,`contactdetails_tbl`.`userID` AS `userID`,`contactdetails_tbl`.`user_yn` AS `user_yn`,`contactdetails_tbl`.`IsDeleted` AS `IsDeleted`,`contactdetails_tbl`.`contactPronoun` AS `contactPronoun`,`contactdetails_tbl`.`contactMeetingDate` AS `contactMeetingDate`,`contactdetails_tbl`.`birthday_DD` AS `birthday_DD`,`contactdetails_tbl`.`birthday_MM` AS `birthday_MM`,`contactdetails_tbl`.`newsletter_yn` AS `newsletter_yn`,`contactdetails_tbl`.`googlealert_yn` AS `googlealert_yn`,`contactdetails_tbl`.`socialmedia_yn` AS `socialmedia_yn`,`contactdetails_tbl`.`dateAdded` AS `dateAdded`,`contactdetails_tbl`.`imdbid` AS `imdbid`,`contactdetails_tbl`.`recordname` AS `recordname`,`contactdetails_tbl`.`avatar_yn` AS `avatar_yn`,`contactdetails_tbl`.`contactPhone` AS `contactPhone`,`contactdetails_tbl`.`contactEmail` AS `contactEmail`,`contactdetails_tbl`.`contactCompany` AS `contactCompany`,`contactdetails_tbl`.`contactPhone_src` AS `contactPhone_src`,`contactdetails_tbl`.`contactEmail_src` AS `contactEmail_src`,`contactdetails_tbl`.`contactCompany_src` AS `contactCompany_src`,`contactdetails_tbl`.`contactPhoto_src` AS `contactPhoto_src`,`contactdetails_tbl`.`company_location_id` AS `company_location_id`,`contactdetails_tbl`.`master_co_contact_id` AS `master_co_contact_id`,`contactdetails_tbl`.`master_coid` AS `master_coid`,`contactdetails_tbl`.`master_linked_date` AS `master_linked_date`,`contactdetails_tbl`.`master_last_sync` AS `master_last_sync` from `contactdetails_tbl` where (`contactdetails_tbl`.`IsDeleted` = 0) | utf8mb4 | utf8mb4_0900_ai_ci
+
+===== actorsbusinessoffice: G0-2b view security/updatable =====
+SECURITY_TYPE | IS_UPDATABLE
+INVOKER | YES
+
+===== actorsbusinessoffice: G0-2b view col count (expect 44) =====
+view_cols
+44
+
+===== actorsbusinessoffice: G0-2d FK presence =====
+CONSTRAINT_NAME | REFERENCED_TABLE_NAME | REFERENCED_COLUMN_NAME | DELETE_RULE | UPDATE_RULE
+fk_cd_company_location | co_locations | colocid | SET NULL | RESTRICT
+fk_cd_master_coid | companies | coid | SET NULL | RESTRICT
+fk_cd_master_co_contact | co_contacts | id | SET NULL | RESTRICT
+
+===== actorsbusinessoffice: G0-6b SHOW CREATE VIEW contacts_ss =====
+View | Create View | character_set_client | collation_connection
+contacts_ss | CREATE ALGORITHM=UNDEFINED DEFINER=`kingk436`@`%` SQL SECURITY DEFINER VIEW `contacts_ss` AS select `d`.`contactID` AS `contactid`,concat('<input type="checkbox" class="form-check-input" id="C',`d`.`contactID`,'" name="batchlist" value="',`d`.`contactID`,'">') AS `contactcheck`,concat('<img src="/mediaroot/users/',`d`.`userID`,'/contacts/',`d`.`contactID`,'/avatar.jpg?ver=',`d`.`contactID`,'" class="mr-3  rounded-circle gambar img-responsive img-thumbnail"  alt="profile-image" id="item-img-output">') AS `avatar`,concat('<a href="/app/contact/?contactid=',`d`.`contactID`,'" >',`d`.`contactFullName`,'</a>') AS `hlink`,`d`.`contactFullName` AS `col1`,`d`.`contactID` AS `recid`,(select group_concat(concat('<span class=\'badge badge-blue\'>',`contactitems`.`valueText`,'</span>') order by `contactitems`.`valueText` ASC separator ' ') from `contactitems` where ((`contactitems`.`valueCategory` = 'Tag') and (`contactitems`.`contactID` = `d`.`contactID`) and (`contactitems`.`itemStatus` = 'Active')) limit 1) AS `col2`,concat(substring_index((select group_concat(concat('<span class=\'badge badge-blue\'>',`contactitems`.`valueText`,'</span>') order by `contactitems`.`valueText` ASC separator '&nbsp; ') from `contactitems` where ((`contactitems`.`valueCategory` = 'Tag') and (`contactitems`.`contactID` = `d`.`contactID`) and (`contactitems`.`itemStatus` = 'Active'))),'&nbsp;',2),convert(convert((case when (((select count(0) from `contactitems` where ((`contactitems`.`valueCategory` = 'Tag') and (`contactitems`.`contactID` = `d`.`contactID`) and (`contactitems`.`itemStatus` = 'Active'))) - 2) > 0) then concat(' +',((select count(0) from `contactitems` where ((`contactitems`.`valueCategory` = 'Tag') and (`contactitems`.`contactID` = `d`.`contactID`) and (`contactitems`.`itemStatus` = 'Active'))) - 2)) else NULL end) using utf8mb3) using utf8mb4)) AS `col2e`,concat(coalesce(substring_index((select group_concat(concat('<span class=\'badge badge-blue\'>',`contactitems`.`valueText`,'</span>') order by `contactitems`.`valueText` ASC separator '&nbsp; ') from `contactitems` where ((`contactitems`.`valueCategory` = 'Tag') and (`contactitems`.`contactID` = `d`.`contactID`) and (`contactitems`.`itemStatus` = 'Active'))),'&nbsp;',2),''),convert(convert(coalesce((case when (((select count(0) from `contactitems` where ((`contactitems`.`valueCategory` = 'Tag') and (`contactitems`.`contactID` = `d`.`contactID`) and (`contactitems`.`itemStatus` = 'Active'))) - 2) > 0) then concat(' +',((select count(0) from `contactitems` where ((`contactitems`.`valueCategory` = 'Tag') and (`contactitems`.`contactID` = `d`.`contactID`) and (`contactitems`.`itemStatus` = 'Active'))) - 2)) else NULL end),'') using utf8mb3) using utf8mb4)) AS `col2b`,(select `contactitems`.`valueText` from `contactitems` where ((`contactitems`.`valueCategory` = 'Phone') and (`contactitems`.`contactID` = `d`.`contactID`) and (`contactitems`.`itemStatus` = 'Active')) order by `contactitems`.`primary_YN` desc limit 1) AS `col3`,(select `contactitems`.`valueText` from `contactitems` where ((`contactitems`.`valueCategory` = 'Email') and (`contactitems`.`contactID` = `d`.`contactID`) and (`contactitems`.`itemStatus` = 'Active')) order by `contactitems`.`primary_YN` desc limit 1) AS `col4`,(select `contactitems`.`valueCompany` from `contactitems` where ((`contactitems`.`contactID` = `d`.`contactID`) and (`contactitems`.`valueCategory` = 'Company') and (`contactitems`.`itemStatus` = 'active')) order by `contactitems`.`primary_YN` desc limit 1) AS `col5`,`d`.`userID` AS `userid` from `contactdetails` `d` where (`d`.`contactStatus` = 'Active') | utf8mb4 | utf8mb4_unicode_ci
+
+===== actorsbusinessoffice: G0-6b SHOW CREATE VIEW contacts_ss_target =====
+View | Create View | character_set_client | collation_connection
+contacts_ss_target | CREATE ALGORITHM=UNDEFINED DEFINER=`kingk436`@`%` SQL SECURITY DEFINER VIEW `contacts_ss_target` AS select `d`.`contactID` AS `contactid`,concat('<input type="checkbox" class="form-check-input" id="C',`d`.`contactID`,'" name="batchlist"  value="',`d`.`contactID`,'">') AS `contactcheck`,concat('<img src="/mediaroot/users/',`d`.`userID`,'/contacts/',`d`.`contactID`,'/avatar.jpg?ver=',`d`.`contactID`,'" class="mr-3  rounded-circle gambar img-responsive img-thumbnail" style="height:20px;" alt="profile-image" >') AS `avatar`,concat('<a href="/app/contact/?contactid=',`d`.`contactID`,'" >',`d`.`contactFullName`,'</a>') AS `hlink`,`d`.`contactFullName` AS `col1`,(select group_concat(concat('<span class=\'badge badge-blue\'>',`contactitems`.`valueText`,'</span>') separator ' ') from `contactitems` where ((`contactitems`.`valueCategory` = 'Tag') and (`contactitems`.`contactID` = `d`.`contactID`) and (`contactitems`.`itemStatus` = 'Active')) limit 1) AS `col2`,concat(coalesce(substring_index((select group_concat(concat('<span class=\'badge badge-blue\'>',`contactitems`.`valueText`,'</span>') order by `contactitems`.`valueText` ASC separator '&nbsp; ') from `contactitems` where ((`contactitems`.`valueCategory` = 'Tag') and (`contactitems`.`contactID` = `d`.`contactID`) and (`contactitems`.`itemStatus` = 'Active'))),'&nbsp;',2),''),convert(convert(coalesce((case when (((select count(0) from `contactitems` where ((`contactitems`.`valueCategory` = 'Tag') and (`contactitems`.`contactID` = `d`.`contactID`) and (`contactitems`.`itemStatus` = 'Active'))) - 2) > 0) then concat(' +',((select count(0) from `contactitems` where ((`contactitems`.`valueCategory` = 'Tag') and (`contactitems`.`contactID` = `d`.`contactID`) and (`contactitems`.`itemStatus` = 'Active'))) - 2)) else NULL end),'') using utf8mb3) using utf8mb4)) AS `col2b`,(select `contactitems`.`valueText` from `contactitems` where ((`contactitems`.`valueCategory` = 'Phone') and (`contactitems`.`contactID` = `d`.`contactID`) and (`contactitems`.`itemStatus` = 'Active')) order by `contactitems`.`primary_YN` desc limit 1) AS `col3`,(select `contactitems`.`valueText` from `contactitems` where ((`contactitems`.`valueCategory` = 'Email') and (`contactitems`.`contactID` = `d`.`contactID`) and (`contactitems`.`itemStatus` = 'Active')) order by `contactitems`.`primary_YN` desc limit 1) AS `col4`,(select `contactitems`.`valueCompany` from `contactitems` where ((`contactitems`.`contactID` = `d`.`contactID`) and (`contactitems`.`valueCategory` = 'Company') and (`contactitems`.`itemStatus` = 'active')) order by `contactitems`.`primary_YN` desc limit 1) AS `col5`,`d`.`userID` AS `userid` from `contactdetails` `d` where ((`d`.`contactStatus` = 'Active') and `d`.`contactID` in (select `fusystemusers`.`contactID` from `fusystemusers` where (`fusystemusers`.`systemID` in (5,6)))) | utf8mb4 | utf8mb4_0900_ai_ci
+
+===== actorsbusinessoffice: G0-6b SHOW CREATE VIEW contacts_ss_followup =====
+View | Create View | character_set_client | collation_connection
+contacts_ss_followup | CREATE ALGORITHM=UNDEFINED DEFINER=`kingk436`@`%` SQL SECURITY DEFINER VIEW `contacts_ss_followup` AS select `d`.`contactID` AS `contactid`,concat('<input type="checkbox" class="form-check-input" id="C',`d`.`contactID`,'" name="batchlist" value="',`d`.`contactID`,'">') AS `contactcheck`,concat('<img src="/mediaroot/users/',`d`.`userID`,'/contacts/',`d`.`contactID`,'/avatar.jpg?ver=',`d`.`contactID`,'" class="mr-3  rounded-circle gambar img-responsive img-thumbnail" style="height:20px;" alt="profile-image" >') AS `avatar`,concat('<a href="/app/contact/?contactid=',`d`.`contactID`,'" >',`d`.`contactFullName`,'</a>') AS `hlink`,`d`.`contactFullName` AS `col1`,(select group_concat(concat('<span class=\'badge badge-blue\'>',`ci`.`valueText`,'</span>') separator ' ') from `contactitems` `ci` where ((`ci`.`valueCategory` = 'Tag') and (`ci`.`contactID` = `d`.`contactID`) and (`ci`.`itemStatus` = 'Active')) limit 1) AS `col2`,substring_index((select group_concat(concat('<span class=\'badge badge-blue\'>',`ci`.`valueText`,'</span>') separator '&nbsp;') from `contactitems` `ci` where ((`ci`.`valueCategory` = 'Tag') and (`ci`.`contactID` = `d`.`contactID`) and (`ci`.`itemStatus` = 'Active'))),'&nbsp;',2) AS `col2e`,concat(coalesce(substring_index((select group_concat(concat('<span class=\'badge badge-blue\'>',`ci`.`valueText`,'</span>') order by `ci`.`valueText` ASC separator '&nbsp; ') from `contactitems` `ci` where ((`ci`.`valueCategory` = 'Tag') and (`ci`.`contactID` = `d`.`contactID`) and (`ci`.`itemStatus` = 'Active'))),'&nbsp;',2),''),convert(convert(coalesce((case when (((select count(0) from `contactitems` `ci` where ((`ci`.`valueCategory` = 'Tag') and (`ci`.`contactID` = `d`.`contactID`) and (`ci`.`itemStatus` = 'Active'))) - 2) > 0) then concat(' +',((select count(0) from `contactitems` `ci` where ((`ci`.`valueCategory` = 'Tag') and (`ci`.`contactID` = `d`.`contactID`) and (`ci`.`itemStatus` = 'Active'))) - 2)) else NULL end),'') using utf8mb3) using utf8mb4)) AS `col2b`,(select `ci`.`valueText` from `contactitems` `ci` where ((`ci`.`valueCategory` = 'Phone') and (`ci`.`contactID` = `d`.`contactID`) and (`ci`.`itemStatus` = 'Active')) order by `ci`.`primary_YN` desc limit 1) AS `col3`,(select `ci`.`valueText` from `contactitems` `ci` where ((`ci`.`valueCategory` = 'Email') and (`ci`.`contactID` = `d`.`contactID`) and (`ci`.`itemStatus` = 'Active')) order by `ci`.`primary_YN` desc limit 1) AS `col4`,(select `ci`.`valueCompany` from `contactitems` `ci` where ((`ci`.`contactID` = `d`.`contactID`) and (`ci`.`valueCategory` = 'Company') and (`ci`.`itemStatus` = 'active')) order by `ci`.`primary_YN` desc limit 1) AS `col5`,`d`.`userID` AS `userid` from `contactdetails` `d` where ((`d`.`contactStatus` = 'Active') and exists(select 1 from `fusystemusers` `su` where ((`su`.`contactID` = `d`.`contactID`) and (`su`.`systemID` in (1,2))))) | utf8mb4 | utf8mb4_unicode_ci
+
+===== actorsbusinessoffice: G0-6b SHOW CREATE VIEW contacts_ss_maint =====
+View | Create View | character_set_client | collation_connection
+contacts_ss_maint | CREATE ALGORITHM=UNDEFINED DEFINER=`kingk436`@`%` SQL SECURITY DEFINER VIEW `contacts_ss_maint` AS select `d`.`contactID` AS `contactid`,concat('<input type="checkbox" class="form-check-input" id="C',`d`.`contactID`,'" name="batchlist" value="',`d`.`contactID`,'">') AS `contactcheck`,concat('<img src="/mediaroot/users/',`d`.`userID`,'/contacts/',`d`.`contactID`,'/avatar.jpg?ver=',`d`.`contactID`,'" class="mr-3 rounded-circle gambar img-responsive img-thumbnail" style="height:20px;" alt="profile-image" >') AS `avatar`,concat('<a href="/app/contact/?contactid=',`d`.`contactID`,'" >',`d`.`contactFullName`,'</a>') AS `hlink`,`d`.`contactFullName` AS `col1`,(select group_concat(concat('<span class=\'badge badge-blue\'>',`ci`.`valueText`,'</span>') separator ' ') from `contactitems` `ci` where ((`ci`.`valueCategory` = 'Tag') and (`ci`.`contactID` = `d`.`contactID`) and (`ci`.`itemStatus` = 'Active')) limit 1) AS `col2`,concat(coalesce(substring_index((select group_concat(concat('<span class=\'badge badge-blue\'>',`ci`.`valueText`,'</span>') order by `ci`.`valueText` ASC separator '&nbsp; ') from `contactitems` `ci` where ((`ci`.`valueCategory` = 'Tag') and (`ci`.`contactID` = `d`.`contactID`) and (`ci`.`itemStatus` = 'Active'))),'&nbsp;',2),''),convert(convert(coalesce((case when (((select count(0) from `contactitems` `ci` where ((`ci`.`valueCategory` = 'Tag') and (`ci`.`contactID` = `d`.`contactID`) and (`ci`.`itemStatus` = 'Active'))) - 2) > 0) then concat(' +',((select count(0) from `contactitems` `ci` where ((`ci`.`valueCategory` = 'Tag') and (`ci`.`contactID` = `d`.`contactID`) and (`ci`.`itemStatus` = 'Active'))) - 2)) else NULL end),'') using utf8mb3) using utf8mb4)) AS `col2b`,(select `ci`.`valueText` from `contactitems` `ci` where ((`ci`.`valueCategory` = 'Phone') and (`ci`.`contactID` = `d`.`contactID`) and (`ci`.`itemStatus` = 'Active')) order by `ci`.`primary_YN` desc limit 1) AS `col3`,(select `ci`.`valueText` from `contactitems` `ci` where ((`ci`.`valueCategory` = 'Email') and (`ci`.`contactID` = `d`.`contactID`) and (`ci`.`itemStatus` = 'Active')) order by `ci`.`primary_YN` desc limit 1) AS `col4`,(select `ci`.`valueCompany` from `contactitems` `ci` where ((`ci`.`contactID` = `d`.`contactID`) and (`ci`.`valueCategory` = 'Company') and (`ci`.`itemStatus` = 'active')) order by `ci`.`primary_YN` desc limit 1) AS `col5`,`d`.`userID` AS `userid` from `contactdetails` `d` where ((`d`.`contactStatus` = 'Active') and exists(select 1 from `fusystemusers` `su` where ((`su`.`contactID` = `d`.`contactID`) and (`su`.`systemID` in (3,4))))) | utf8mb4 | utf8mb4_unicode_ci
+
+===== actorsbusinessoffice: G0-6b SHOW CREATE VIEW sharez =====
+View | Create View | character_set_client | collation_connection
+sharez | CREATE ALGORITHM=UNDEFINED DEFINER=`kingk436`@`%` SQL SECURITY DEFINER VIEW `sharez` AS select `d`.`contactID` AS `contactid`,`d`.`recordname` AS `NAME`,`ci_company`.`valueCompany` AS `Company`,`ci_tag`.`valueText` AS `Title`,`mx`.`audstep` AS `Audition`,`d`.`contactMeetingLoc` AS `WhereMet`,`d`.`contactMeetingDate` AS `WhenMet`,NULL AS `NotesLog`,`u`.`userID` AS `userid`,left(`u`.`passwordHash`,10) AS `userHash`,`le`.`eventStart` AS `last_met`,ifnull(`mc`.`no_mtgs`,0) AS `no_mtgs`,`le`.`eventTypeName` AS `lasteventtype` from (((((((`contactdetails_tbl` `d` join `taousers_tbl` `u` on((`u`.`userID` = `d`.`userID`))) join `fusystemusers_tbl` `su` on(((`su`.`contactID` = `d`.`contactID`) and (`su`.`userid` = `d`.`userID`) and (`su`.`sustatus` = 'Active') and (`su`.`systemID` in (1,2,3,4))))) left join `maxaudition` `mx` on((`mx`.`contactid` = `d`.`contactID`))) left join `contactitems` `ci_company` on(((`ci_company`.`contactID` = `d`.`contactID`) and (`ci_company`.`valueCategory` = 'Company') and (`ci_company`.`itemStatus` = 'active')))) left join `contactitems` `ci_tag` on(((`ci_tag`.`contactID` = `d`.`contactID`) and (`ci_tag`.`valueCategory` = 'Tag') and (`ci_tag`.`itemStatus` = 'Active')))) left join (select `eventcontactsxref`.`contactID` AS `contactID`,count(0) AS `no_mtgs` from `eventcontactsxref` group by `eventcontactsxref`.`contactID`) `mc` on((`mc`.`contactID` = `d`.`contactID`))) left join (select `x1`.`contactID` AS `contactID`,`e1`.`eventTypeName` AS `eventTypeName`,`e1`.`eventStart` AS `eventStart` from (`eventcontactsxref` `x1` join `events` `e1` on((`e1`.`eventID` = `x1`.`eventID`))) where (`e1`.`eventStart` = (select max(`e2`.`eventStart`) from (`eventcontactsxref` `x2` join `events` `e2` on((`e2`.`eventID` = `x2`.`eventID`))) where (`x2`.`contactID` = `x1`.`contactID`))) group by `x1`.`contactID`) `le` on((`le`.`contactID` = `d`.`contactID`))) | utf8mb4 | utf8mb4_general_ci
+
+===== actorsbusinessoffice: G0-6b SHOW CREATE VIEW sharezz =====
+View | Create View | character_set_client | collation_connection
+sharezz | CREATE ALGORITHM=UNDEFINED DEFINER=`kingk436`@`%` SQL SECURITY DEFINER VIEW `sharezz` AS select `cd`.`contactID` AS `contactid`,`cd`.`recordname` AS `NAME`,`cd`.`contactMeetingLoc` AS `WhereMet`,`cd`.`contactMeetingDate` AS `WhenMet`,`cd`.`userID` AS `userid`,left(`tu`.`passwordHash`,10) AS `userHash`,(select `ci`.`valueCompany` from `contactitems_tbl` `ci` where ((`ci`.`contactID` = `cd`.`contactID`) and (`ci`.`valueCategory` = 'Company') and (`ci`.`itemStatus` = 'Active') and (`ci`.`IsDeleted` = 0)) limit 1) AS `Company`,(select `ci`.`valuetext` from (`contactitems_tbl` `ci` left join `tags` `t` on((`t`.`tagname` = `ci`.`valuetext`))) where ((`ci`.`contactID` = `cd`.`contactID`) and (`ci`.`valueCategory` = 'Tag') and (`ci`.`itemStatus` = 'Active') and (`ci`.`IsDeleted` = 0)) order by (case when ((`t`.`tagPriority` is null) or (`t`.`tagPriority` = 999)) then 1 else 0 end),`t`.`tagPriority`,`ci`.`valuetext` limit 1) AS `Title`,(select `s`.`audstep` from ((`audcontacts_auditions_xref` `x` join `events_tbl` `e` on(((`e`.`audRoleID` is not null) and (`e`.`IsDeleted` = 0)))) join `audsteps` `s` on((`s`.`audstepid` = `e`.`audStepID`))) where (`x`.`contactid` = `cd`.`contactID`) order by `s`.`audstepid` desc limit 1) AS `Audition`,(select count(0) from `eventcontactsxref_tbl` `ecx` where ((`ecx`.`contactID` = `cd`.`contactID`) and (`ecx`.`IsDeleted` = 0))) AS `no_mtgs`,(select `e`.`eventStart` from (`eventcontactsxref_tbl` `ecx` join `events_tbl` `e` on(((`e`.`eventID` = `ecx`.`eventID`) and (`e`.`IsDeleted` = 0)))) where ((`ecx`.`contactID` = `cd`.`contactID`) and (`ecx`.`IsDeleted` = 0)) order by `e`.`eventStart` desc limit 1) AS `last_met`,(select `e`.`eventTypeName` from (`eventcontactsxref_tbl` `ecx` join `events_tbl` `e` on(((`e`.`eventID` = `ecx`.`eventID`) and (`e`.`IsDeleted` = 0)))) where ((`ecx`.`contactID` = `cd`.`contactID`) and (`ecx`.`IsDeleted` = 0)) order by `e`.`eventStart` desc limit 1) AS `lasteventtype`,NULL AS `NotesLog` from ((`contactdetails_tbl` `cd` join `taousers_tbl` `tu` on(((`tu`.`userID` = `cd`.`userID`) and (`tu`.`IsDeleted` = 0)))) join `fusystemusers_tbl` `fsu` on(((`fsu`.`contactID` = `cd`.`contactID`) and (`fsu`.`userid` = `cd`.`userID`) and (`fsu`.`sustatus` = 'Active') and (`fsu`.`systemID` in (1,2,3,4)) and (`fsu`.`IsDeleted` = 0)))) where (`cd`.`IsDeleted` = 0) | utf8mb4 | utf8mb4_general_ci
+
+===== actorsbusinessoffice: G0-11 co_contacts row estimate (i_s only per WO) =====
+TABLE_NAME | TABLE_ROWS
+co_contacts | 24574
+co_locations | 12429
+companies | 10208
+
+===== actorsbusinessoffice: G0-11 co_contacts indexes =====
+Table | Non_unique | Key_name | Seq_in_index | Column_name | Collation | Cardinality | Sub_part | Packed | Null | Index_type | Comment | Index_comment | Visible | Expression
+co_contacts | 0 | PRIMARY | 1 | id | A | 24574 |  |  |  | BTREE |  |  | YES | 
+co_contacts | 1 | fullname | 1 | fullname | A | 19243 |  |  | YES | BTREE |  |  | YES | 
+co_contacts | 1 | location | 1 | location | A | 482 |  |  | YES | BTREE |  |  | YES | 
+co_contacts | 1 | coid | 1 | coid | A | 9900 |  |  | YES | BTREE |  |  | YES | 
+
+NOTE: prod SELECT COUNT on contactdetails_tbl SKIPPED -- WO constraint 'information_schema and SHOW only' conflicts with G0-2c 'per schema'; registered as WO-internal conflict.
+
+PROBE COMPLETE - all statements were SELECT/SHOW/USE only.
