@@ -840,6 +840,28 @@ FROM contactitems
 <cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
 </cffunction>
+
+<!--- DIR-WO-2 (TAO-MCD-P1): canonical additive Company item writer. Shape per G0-6c.
+      No primary_YN, no IsDeleted (column defaults), no other columns. Company value
+      lives in valueCompany (NOT valuetext). Used by MasterDirectoryService on link. --->
+<cffunction output="false" name="createCompanyItem" access="public" returntype="numeric">
+    <cfargument name="contactid"   type="numeric" required="true">
+    <cfargument name="companyName" type="string"  required="true">
+
+    <cfquery result="result">
+        INSERT INTO contactitems_tbl (CONTACTID, VALUETYPE, VALUECATEGORY, ValueCompany, ITEMSTATUS)
+        VALUES (
+            <cfqueryparam value="#arguments.contactid#"        cfsqltype="CF_SQL_INTEGER">,
+            <cfqueryparam value="Company"                       cfsqltype="CF_SQL_VARCHAR">,
+            <cfqueryparam value="Company"                       cfsqltype="CF_SQL_VARCHAR">,
+            <cfqueryparam value="#trim(arguments.companyName)#" cfsqltype="CF_SQL_VARCHAR">,
+            <cfqueryparam value="Active"                        cfsqltype="CF_SQL_VARCHAR">
+        )
+    </cfquery>
+    <cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
+
+    <cfreturn result.generatedKey>
+</cffunction>
 <cffunction output="false" name="INScontactitems_24049" access="public" returntype="numeric">
     <cfargument name="contactID" type="numeric" required="true">
     <cfargument name="tag" type="string" required="true">

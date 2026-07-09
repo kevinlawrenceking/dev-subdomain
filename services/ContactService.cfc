@@ -91,7 +91,19 @@
             newsletter_yn,
             googlealert_yn,
             socialmedia_yn,
-            isdeleted
+            isdeleted,
+            <!--- DIR-WO-2 (TAO-MCD-P1) additive: 11 in-scope master-link columns --->
+            master_co_contact_id,
+            master_coid,
+            company_location_id,
+            contactCompany,
+            contactPhone,
+            contactEmail,
+            contactCompany_src,
+            contactPhone_src,
+            contactEmail_src,
+            master_linked_date,
+            master_last_sync
         FROM contactdetails
         WHERE contactid = <cfqueryparam value="#arguments.contactid#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
@@ -203,6 +215,43 @@
 
             <cfif structKeyExists(arguments.data, "isdeleted")>
                 #comma# isdeleted = <cfqueryparam value="#arguments.data.isdeleted#" cfsqltype="CF_SQL_BIT" null="#isNull(arguments.data.isdeleted)#">
+                <cfset comma = ",">
+            </cfif>
+
+            <!--- DIR-WO-2 (TAO-MCD-P1) additive master-link blocks. Empty string -> NULL
+                  (matches create() null idiom) so pointers can be cleared on unlink. --->
+            <cfif structKeyExists(arguments.data, "master_co_contact_id")>
+                #comma# master_co_contact_id = <cfqueryparam value="#arguments.data.master_co_contact_id#" cfsqltype="CF_SQL_INTEGER" null="#(NOT len(trim(arguments.data.master_co_contact_id)))#">
+                <cfset comma = ",">
+            </cfif>
+
+            <cfif structKeyExists(arguments.data, "master_coid")>
+                #comma# master_coid = <cfqueryparam value="#arguments.data.master_coid#" cfsqltype="CF_SQL_INTEGER" null="#(NOT len(trim(arguments.data.master_coid)))#">
+                <cfset comma = ",">
+            </cfif>
+
+            <cfif structKeyExists(arguments.data, "company_location_id")>
+                #comma# company_location_id = <cfqueryparam value="#arguments.data.company_location_id#" cfsqltype="CF_SQL_INTEGER" null="#(NOT len(trim(arguments.data.company_location_id)))#">
+                <cfset comma = ",">
+            </cfif>
+
+            <cfif structKeyExists(arguments.data, "contactCompany")>
+                #comma# contactCompany = <cfqueryparam value="#arguments.data.contactCompany#" cfsqltype="CF_SQL_VARCHAR" null="#(NOT len(trim(arguments.data.contactCompany)))#">
+                <cfset comma = ",">
+            </cfif>
+
+            <cfif structKeyExists(arguments.data, "contactCompany_src")>
+                #comma# contactCompany_src = <cfqueryparam value="#arguments.data.contactCompany_src#" cfsqltype="CF_SQL_VARCHAR">
+                <cfset comma = ",">
+            </cfif>
+
+            <cfif structKeyExists(arguments.data, "master_linked_date")>
+                #comma# master_linked_date = <cfqueryparam value="#arguments.data.master_linked_date#" cfsqltype="CF_SQL_TIMESTAMP" null="#(NOT len(trim(arguments.data.master_linked_date)))#">
+                <cfset comma = ",">
+            </cfif>
+
+            <cfif structKeyExists(arguments.data, "master_last_sync")>
+                #comma# master_last_sync = <cfqueryparam value="#arguments.data.master_last_sync#" cfsqltype="CF_SQL_TIMESTAMP" null="#(NOT len(trim(arguments.data.master_last_sync)))#">
                 <cfset comma = ",">
             </cfif>
         WHERE contactid = <cfqueryparam value="#arguments.contactid#" cfsqltype="CF_SQL_INTEGER">

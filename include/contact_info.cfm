@@ -687,6 +687,41 @@ x</button>
 <cfoutput><div class="text-center">#valueCompany#</div></cfoutput>
 </cfloop>
 
+<!--- DIR-WO-2 (TAO-MCD-P1): master-link control + linked badge (read-only state) --->
+<cfquery name="qMasterLink">
+    SELECT d.master_co_contact_id, d.master_coid, d.company_location_id,
+           d.contactCompany, d.contactCompany_src, d.master_last_sync,
+           cc.fullname AS master_person_name, co.coName AS master_company_name
+    FROM contactdetails d
+    LEFT JOIN co_contacts cc ON cc.id   = d.master_co_contact_id
+    LEFT JOIN companies   co ON co.coid = d.master_coid
+    WHERE d.contactid = <cfqueryparam value="#currentid#" cfsqltype="CF_SQL_INTEGER">
+      AND d.userid    = <cfqueryparam value="#session.userid#" cfsqltype="CF_SQL_INTEGER">
+</cfquery>
+<cfset masterIsLinked = (qMasterLink.recordCount AND len(trim(qMasterLink.master_co_contact_id)))>
+
+<cfoutput>
+<div id="masterLinkWrap" class="text-center mt-2" data-contactid="#currentid#" style="font-size:0.8rem;">
+    <div id="masterLinkBadge" style="#masterIsLinked ? '' : 'display:none;'#">
+        <span class="badge badge-blue">Linked to directory</span>
+        <div class="text-muted" style="margin-top:2px;">
+            <span id="masterLinkPerson">#encodeForHTML(qMasterLink.master_person_name)#</span><span id="masterLinkSep"><cfif len(trim(qMasterLink.master_company_name))> &middot; </cfif></span><span id="masterLinkCompany">#encodeForHTML(qMasterLink.master_company_name)#</span>
+        </div>
+        <div class="text-muted" style="font-size:0.72rem;">
+            last sync: <span id="masterLinkSync">#len(trim(qMasterLink.master_last_sync)) ? dateTimeFormat(qMasterLink.master_last_sync, 'yyyy-mm-dd HH:nn') : ''#</span>
+        </div>
+        <button type="button" id="masterUnlinkBtn" class="btn btn-link btn-sm p-0" style="font-size:0.75rem;">Unlink</button>
+    </div>
+    <div id="masterLinkForm" style="#masterIsLinked ? 'display:none;' : ''#">
+        <button type="button" id="masterLinkToggle" class="btn btn-link btn-sm p-0" style="font-size:0.75rem;">Link to directory</button>
+        <div id="masterLinkSearchBox" style="display:none;margin-top:4px;">
+            <input type="text" id="masterLinkSearch" class="form-control form-control-sm" placeholder="Search industry people" autocomplete="off" />
+            <div id="masterLinkLocBox" style="display:none;margin-top:4px;"></div>
+        </div>
+    </div>
+</div>
+</cfoutput>
+
 </div>
         </div>
 
@@ -1160,6 +1195,144 @@ document.addEventListener("DOMContentLoaded", function () {
             handleCustomTypeValidation(this);
         });
     });
+</script>
+
+<!--- DIR-WO-2 (TAO-MCD-P1): master-link search / link / unlink. jQuery UI autocomplete
+      per include/autocomplete.cfm. CSRF auto-injected by core.cfm on non-GET. No reloads. --->
+<script>
+$(function () {
+    var wrap = $("#masterLinkWrap");
+    if (!wrap.length) return;
+    var contactid = wrap.data("contactid");
+    var selected = { masterCoContactId: null, coid: null, coName: null, colocid: null, fullname: null };
+
+    $("#masterLinkToggle").on("click", function () {
+        $("#masterLinkSearchBox").toggle();
+        $("#masterLinkSearch").focus();
+    });
+
+    $("#masterLinkSearch").autocomplete({
+        minLength: 2,
+        source: function (req, resp) {
+            $.ajax({
+                url: "/ajax/master/search.cfm",
+                dataType: "json",
+                data: { term: req.term, limit: 10 },
+                success: function (d) {
+                    var rows = (d && d.data) ? d.data : [];
+                    resp($.map(rows, function (it) {
+                        var lbl = it.fullname
+                            + (it.jobtitle_type ? " - " + it.jobtitle_type : "")
+                            + (it.coName ? " (" + it.coName + ")" : "");
+                        return { label: lbl, value: it.fullname, item: it };
+                    }));
+                }
+            });
+        },
+        select: function (e, ui) {
+            var it = ui.item.item;
+            selected = {
+                masterCoContactId: it.master_co_contact_id,
+                coid: it.coid,
+                coName: it.coName,
+                colocid: null,
+                fullname: it.fullname
+            };
+            $("#masterLinkSearch").val(it.fullname);
+            loadLocations(it.coid);
+            return false;
+        }
+    });
+
+    function loadLocations(coid) {
+        var box = $("#masterLinkLocBox");
+        box.hide().empty();
+        if (!coid || coid <= 0) { doLink(); return; }
+        $.ajax({
+            url: "/ajax/master/locations.cfm",
+            dataType: "json",
+            data: { coid: coid },
+            success: function (d) {
+                var locs = (d && d.data) ? d.data : [];
+                if (locs.length === 0) { selected.colocid = null; doLink(); }
+                else if (locs.length === 1) { selected.colocid = locs[0].colocid; doLink(); }
+                else {
+                    var sel = $('<select class="form-control form-control-sm"></select>');
+                    sel.append('<option value="">Choose office...</option>');
+                    $.each(locs, function (i, l) {
+                        var parts = [];
+                        if (l.location) parts.push(l.location);
+                        if (l.city) parts.push(l.city);
+                        if (l.state) parts.push(l.state);
+                        var t = parts.join(", ");
+                        sel.append($("<option></option>").val(l.colocid).text(t || ("office " + l.colocid)));
+                    });
+                    var go = $('<button type="button" class="btn btn-primary btn-sm mt-1">Link</button>');
+                    go.on("click", function () { selected.colocid = sel.val() || null; doLink(); });
+                    box.append(sel).append("<br>").append(go).show();
+                }
+            }
+        });
+    }
+
+    function doLink() {
+        $.ajax({
+            url: "/ajax/master/link.cfm",
+            method: "POST",
+            dataType: "json",
+            data: {
+                contactid: contactid,
+                masterCoContactId: selected.masterCoContactId,
+                coid: selected.coid || 0,
+                colocid: selected.colocid || 0
+            },
+            success: function (d) {
+                if (d && d.success) {
+                    $("#masterLinkPerson").text(selected.fullname || "");
+                    if (selected.coName) {
+                        $("#masterLinkSep").html(" &middot; ");
+                        $("#masterLinkCompany").text(selected.coName);
+                    } else {
+                        $("#masterLinkSep").html("");
+                        $("#masterLinkCompany").text("");
+                    }
+                    var now = new Date();
+                    var pad = function (n) { return (n < 10 ? "0" : "") + n; };
+                    $("#masterLinkSync").text(now.getFullYear() + "-" + pad(now.getMonth() + 1) + "-" + pad(now.getDate())
+                        + " " + pad(now.getHours()) + ":" + pad(now.getMinutes()));
+                    $("#masterLinkForm").hide();
+                    $("#masterLinkSearchBox").hide();
+                    $("#masterLinkLocBox").hide().empty();
+                    $("#masterLinkSearch").val("");
+                    $("#masterLinkBadge").show();
+                } else {
+                    alert((d && d.message) ? d.message : "Link failed.");
+                }
+            },
+            error: function () { alert("Link failed."); }
+        });
+    }
+
+    $("#masterUnlinkBtn").on("click", function () {
+        if (!confirm("Unlink this contact from the directory?")) return;
+        $.ajax({
+            url: "/ajax/master/unlink.cfm",
+            method: "POST",
+            dataType: "json",
+            data: { contactid: contactid },
+            success: function (d) {
+                if (d && d.success) {
+                    $("#masterLinkBadge").hide();
+                    $("#masterLinkForm").show();
+                    $("#masterLinkSearchBox").hide();
+                } else {
+                    alert((d && d.message) ? d.message : "Unlink failed.");
+                }
+            },
+            error: function () { alert("Unlink failed."); }
+        });
+    });
+});
 </script>
 
 <script>
