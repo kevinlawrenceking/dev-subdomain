@@ -321,7 +321,7 @@
                 SELECT DISTINCT
                     r.submitsiteid AS id,
                     COALESCE(NULLIF(su.submitsitename, ''),
-                             CONCAT('(site #', r.submitsiteid, ')')) AS name
+                             CONCAT('(site ##', r.submitsiteid, ')')) AS name
                 FROM audroles r
                 INNER JOIN audprojects p ON p.audprojectid = r.audprojectid
                 LEFT JOIN audsubmitsites_user su
