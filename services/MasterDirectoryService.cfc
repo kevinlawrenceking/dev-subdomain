@@ -109,7 +109,8 @@
 
     <!--- Resolve the master person + company name --->
     <cfquery name="qMaster">
-        SELECT cc.id AS master_co_contact_id, cc.fullname, cc.coid AS cc_coid, co.coName
+        SELECT cc.id AS master_co_contact_id, cc.fullname, cc.coid AS cc_coid,
+               co.coid AS co_coid_check, co.coName
         FROM co_contacts cc
         LEFT JOIN companies co ON co.coid = cc.coid
         WHERE cc.id = <cfqueryparam value="#arguments.masterCoContactId#" cfsqltype="CF_SQL_INTEGER">
@@ -119,8 +120,22 @@
     </cfif>
 
     <cfset var coName    = qMaster.coName>
-    <cfset var newCoid   = len(arguments.coid)   AND val(arguments.coid)   GT 0 ? int(arguments.coid)   : (len(qMaster.cc_coid) AND val(qMaster.cc_coid) GT 0 ? int(qMaster.cc_coid) : "")>
-    <cfset var newColoc  = len(arguments.colocid) AND val(arguments.colocid) GT 0 ? int(arguments.colocid) : "">
+    <!--- F-2 (Q-3.1/3.2 amended): coid derived SOLELY from the master person row, and ONLY when
+          the referenced companies row actually exists (co_coid_check non-null). Client-supplied
+          arguments.coid is IGNORED. Zero / dangling positive / no-company -> "" -> master_coid NULL,
+          company parts NULL, no fill, no item. Never write a coid the FK cannot satisfy. --->
+    <cfset var newCoid = (val(qMaster.cc_coid) GT 0 AND len(qMaster.co_coid_check) AND val(qMaster.co_coid_check) GT 0) ? int(qMaster.cc_coid) : "">
+    <!--- F-2 (Q-3.3): colocid accepted only if >0 AND it belongs to the derived company
+          (co_locations.coid = newCoid). Wrong-company / missing / non-numeric / no-company -> "" -> NULL. --->
+    <cfset var newColoc = "">
+    <cfif val(arguments.colocid) GT 0 AND len(newCoid) AND val(newCoid) GT 0>
+        <cfquery name="qLocChk">
+            SELECT 1 FROM co_locations
+            WHERE colocid = <cfqueryparam value="#int(arguments.colocid)#" cfsqltype="CF_SQL_INTEGER">
+              AND coid    = <cfqueryparam value="#int(newCoid)#" cfsqltype="CF_SQL_INTEGER">
+        </cfquery>
+        <cfif qLocChk.recordCount EQ 1><cfset newColoc = int(arguments.colocid)></cfif>
+    </cfif>
     <cfset var preSrc    = qOwn.contactCompany_src>
     <cfset var preCompany = qOwn.contactCompany>
     <cfset var itemAction = "none">
@@ -154,6 +169,19 @@
                   AND valueCompany  = <cfqueryparam value="#preCompany#" cfsqltype="CF_SQL_VARCHAR">
             </cfquery>
             <cfset itemAction = "renamed">
+        <cfelseif preSrc EQ "master" AND NOT len(trim(coName)) AND len(trim(preCompany))>
+            <!--- F-3: re-link to a NO-COMPANY master -> soft-delete the stale master-sourced
+                  Company item (R-1 match-guard on preCompany). User items survive. --->
+            <cfquery name="qStaleDel" result="rStale">
+                UPDATE contactitems_tbl
+                SET IsDeleted = <cfqueryparam value="1" cfsqltype="CF_SQL_BIT">
+                WHERE contactID    = <cfqueryparam value="#arguments.contactid#" cfsqltype="CF_SQL_INTEGER">
+                  AND valueCategory = <cfqueryparam value="Company" cfsqltype="CF_SQL_VARCHAR">
+                  AND itemStatus    = <cfqueryparam value="Active"  cfsqltype="CF_SQL_VARCHAR">
+                  AND IsDeleted     = <cfqueryparam value="0" cfsqltype="CF_SQL_BIT">
+                  AND valueCompany  = <cfqueryparam value="#preCompany#" cfsqltype="CF_SQL_VARCHAR">
+            </cfquery>
+            <cfset itemAction = "softdeleted:" & rStale.recordCount>
         </cfif>
 
         <!--- Step 2: Snapshot + pointers via ContactService (sole contactdetails writer). --->
@@ -176,6 +204,10 @@
                 <cfset upd["contactCompany"]     = coName>
                 <cfset upd["contactCompany_src"] = "master">
             </cfif>
+        <cfelseif preSrc EQ "master">
+            <!--- F-3: re-link to a no-company master -> clear the stale master-owned snapshot --->
+            <cfset upd["contactCompany"]     = "">
+            <cfset upd["contactCompany_src"] = "user">
         </cfif>
 
         <!--- master_linked_date only when currently NULL --->
