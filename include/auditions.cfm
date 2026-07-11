@@ -66,7 +66,15 @@ Key Features:
 <cfparam name="sel_year" default=""/>
 <!--- Pagination parameters --->
 <cfparam name="page" default="1"/>
-<cfparam name="pageSize" default="12"/>
+<!--- Rows-per-page default comes from the user's single "Rows Per Page" preference
+      (taousers.defRows, set in account preferences via account_info.cfm); fallback 12
+      if unset. This one preference drives BOTH the gallery and table views. --->
+<cfset defaultPageSize = (isDefined("defRows") AND isNumeric(defRows) AND val(defRows) GT 0) ? int(defRows) : 12 />
+<cfparam name="pageSize" default="#defaultPageSize#"/>
+<!--- Normalize: empty/non-numeric pageSize (e.g. blank hidden form field) falls back to the preference. --->
+<cfif NOT isNumeric(pageSize) OR val(pageSize) LTE 0>
+    <cfset pageSize = defaultPageSize />
+</cfif>
 <cfparam name="totalRecords" default="0"/>
 <cfparam name="totalPages" default="1"/>
 
@@ -694,15 +702,9 @@ Key Features:
                         </cfoutput>
                     </small>
                     
-                    <!--- Page size selector --->
-                    <cfif totalRecords gt 12>
-                        <div class="d-flex align-items-center">
-                            <label for="pageSize" class="form-label me-2 mb-0">Show:</label>
-                            <select id="pageSize" class="form-select form-select-sm" style="width: auto;" onchange="changePageSize(this.value)">
-                                <cfoutput>#paginationService.getPageSizeOptions(pageSize)#</cfoutput>
-                            </select>
-                        </div>
-                    </cfif>
+                    <!--- Rows-per-page is governed by the single "Rows Per Page" account
+                          preference (taousers.defRows), not a per-view selector. --->
+
                 </div>
 
                 <!--- Audition gallery container --->
@@ -954,7 +956,8 @@ Key Features:
         $("#basic-datatable").DataTable({
             "bFilter": false,
             "dom": 'rtip',
-            "pageLength": 100,
+            <!--- Rows per page from the user's single "Rows Per Page" preference (taousers.defRows). --->
+            "pageLength": <cfoutput>#int(pageSize)#</cfoutput>,
             language: {
                 paginate: {
                     previous: "<i class='mdi mdi-chevron-left'>",
