@@ -14,7 +14,7 @@
 - **PC-3 RULED:** V3_10 values stay **user-sourced**; reconcile + retire the matched legacy item at the WO-3 dry run (recon: 100% match, §5C).
 - **Supersession finalized:** PD-L1..L4, R-1, R-3, fill-blank semantics are **historical to the DIR-WO-2 record and do NOT govern DIR-LNK**. Write-consolidation ruled (not open).
 - **WO-7 invariant (verbatim, architect):** "the dead bridge is master-value items. The new preservation step writes DISPLACED USER values as non-primary items (skip if equivalent active item exists). New code never creates an item containing a master value."
-- **C-1/C-2:** `5946ea4f` never deploys to prod; **DG-3/DG-4 struck**; DIR-WO-2 closed as dev acceptance + foundation record; dev fixtures **128621 and 102009 = live historical bridge rows → WO-11 cleanup targets**; audition commits deploy later via cherry-pick branch under separate authorization.
+- **C-1/C-2:** `5946ea4f` never deploys to prod; **DG-3/DG-4 struck**; DIR-WO-2 closed as dev acceptance + foundation record; dev fixtures **128621 and 102009 are NOT WO-11 targets (R-A2: bridge predicate returns 0 for both; they remain linked and migrate via WO-3/4/7)**; audition commits deploy later via cherry-pick branch under separate authorization.
 
 **Surviving product conflicts after rulings: NONE.** (PC-4 SQL-SECURITY choice and PC-5 STATUS-doc re-head are WO-5 design / doc actions, not product conflicts. One residual data-check, not a conflict: office phone/email availability in `co_locations` — quantify at WO-3 for §7.5 blank-master exposure.)
 
@@ -115,7 +115,34 @@ Of the pre-populated columns: **Phone 276 / Email 292 / Company 436 → 100% mat
 ---
 
 ## 6. DIR-WO-2 Foundation Inventory (P-C — present, preserved, unaltered)
-Migrations `V3_7*/V3_8*/V3_9*/V3_10*` + rollbacks (paired); code `MasterDirectoryService.cfc`, `ajax/master/*`, `createCompanyItem:847`, `contact_info.cfm:704` badge, `ContactService.cfc:223-256`; logs `MasterDirectoryService.cfc:221/307`; docs (phase1, STATUS, gate0 bundles, acceptance runbook `768d00ac`+bundle `f5bd4641`, prod-promotion runbook, six-file verbatim, WO0-PROOF-BUNDLE). Closes as dev acceptance / foundation (C-2). **Nothing altered.** **WO-11 cleanup targets registered: dev contacts 128621, 102009** (live historical bridge rows).
+Migrations `V3_7*/V3_8*/V3_9*/V3_10*` + rollbacks (paired); code `MasterDirectoryService.cfc`, `ajax/master/*`, `createCompanyItem:847`, `contact_info.cfm:704` badge, `ContactService.cfc:223-256`; logs `MasterDirectoryService.cfc:221/307`; docs (phase1, STATUS, gate0 bundles, acceptance runbook `768d00ac`+bundle `f5bd4641`, prod-promotion runbook, six-file verbatim, WO0-PROOF-BUNDLE). Closes as dev acceptance / foundation (C-2). **Nothing altered.** ~~WO-11 cleanup targets registered: dev contacts 128621, 102009~~ **CORRECTED (R-A2): NO acceptance fixtures are WO-11 cleanup targets.** The canonical bridge-item predicate returns **0** for both 128621 and 102009 (128621's Company items are user-authored 'Acme Company'/'custom', `_src=user`, ≠ master coName; 102009 is a no-company link with 0 items). **Both fixtures remain linked (live pointers) and migrate under the standard WO-3/4/7 path, not WO-11.** The WO-11 register is populated at WO-11 by the proven-bridge rule, not from these fixtures.
+
+---
+
+## R-A1 / R-A2 Amendments (2026-07-14, DIR-LNK-WO-2 relay)
+
+### R-A1 — production "auto-migratable" counts: exact SQL + DG-1 reconciliation
+The prod auto-migratable figures (Phone 15,927 / Email 24,624 / Company 25,196) = **count of ACTIVE prod contacts whose active items in a category fall in decision-table buckets `one` + `multi, exactly-one-primary`** (spec §6.3 auto-migratable), i.e. eligible to populate the currently-empty primary column. Exact SQL (aggregate-only; prod):
+```sql
+SELECT bucket, COUNT(*) AS contacts FROM (
+  SELECT ci.contactID,
+    CASE WHEN COUNT(*)=1 THEN 'one'
+         WHEN COUNT(*)>1 AND SUM(ci.primary_YN='Y')=1 THEN 'multi_one_primary'
+         WHEN COUNT(*)>1 AND SUM(ci.primary_YN='Y')=0 THEN 'multi_zero_primary'
+         WHEN COUNT(*)>1 AND SUM(ci.primary_YN='Y')>1 THEN 'multi_multi_primary' END AS bucket
+  FROM actorsbusinessoffice.contactitems_tbl ci
+  JOIN actorsbusinessoffice.contactdetails_tbl d ON d.contactID=ci.contactID AND d.IsDeleted=0
+  WHERE ci.valueCategory = <'Phone'|'Email'|'Company'> AND ci.IsDeleted=0 AND ci.itemStatus='Active'
+  GROUP BY ci.contactID
+) t GROUP BY bucket;   -- auto-migratable = contacts in ('one' + 'multi_one_primary')
+```
+**Reconciliation with DG-1:** DG-1 counted 72,062 prod `contactdetails_tbl` rows (all, incl deleted) with **0 populated primary phone/email/company and `_src`=100% 'user'** — the primary COLUMNS are empty (nothing migrated to prod). The auto-migratable counts are ACTIVE contacts (subset of the 46,270 active) holding contactitems ELIGIBLE to populate those empty columns at WO-4. Fully compatible: DG-1 measures the empty destination columns; the auto-migratable counts measure the populated source items. **Interpretation CONFIRMED. Production evidence was aggregate-only (bucket counts; no row-level data).**
+
+### R-A2 — dev company count 435 vs 436 (count core, canonical predicate)
+**Canonical predicate governing ALL DIR-LNK counts hereafter:** a primary field is "populated" iff `IsDeleted=0 AND <col> IS NOT NULL AND TRIM(<col>) <> ''` (covers NULL, empty string, whitespace-only). Under it, dev `contactCompany` populated = **436** (raw NOT NULL = 436; TRIM<>'' = 436; empty/whitespace-only = 0 → **no query-semantics difference**). By source: **`_src='user'` = 435, `_src='master'` = 1.** The +1 over the 435 gate0 figure is **exactly one record: contactID 132419, `contactCompany='Morman Boling Casting'`, `contactCompany_src='master'`, linked master_co_contact_id 3518 / master_coid 6115.** **Cause: snapshot residue** — a master-managed `contactCompany` snapshot column written by a DIR-WO-2 link during dev testing (a snapshot COLUMN, not a `contactitems` bridge row). 435 = the V3_10 Part A user-sourced backfill (pre-linking). **WO-11 registration: NO** (no bridge `contactitems` evidence).
+
+### R-A2 predicate reclassification (item 2)
+The previously delivered bridge-item detection query is a **HIGH-CONFIDENCE CANDIDATE SOURCE for currently-linked records only — NOT the canonical WO-11 deletion predicate.** Known **misses:** post-link unlink; `_src` reset to 'user'; master rename; orphaned pointers (FK SET NULL); dev/prod historical drift. Known **false-positives:** user manually added an identical Company item after linking; a matching user-authored item exists while the snapshot is master-managed. **Binding WO-11 rule:** WO-11 may soft-delete only rows **PROVEN** bridge-created — the candidate query PLUS corroborating evidence (link/application logs, audit/history, creation timing relative to the link operation, test-fixture provenance, exact bridge preconditions, absence of an equivalent pre-link user item). If provenance cannot be proven: leave the item untouched and report it unresolved.
 
 ---
 
