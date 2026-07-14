@@ -1,0 +1,112 @@
+
+===== connection (read channel identity) =====
+kingk436@% | 8.0.41 | 2026-07-14 11:20:28
+
+########## SCHEMA: new_development (DEV -- WO-2 apply target) ##########
+
+===== DEV: table presence (expect 2) =====
+2
+
+===== DEV: table metadata (engine / collation / rows / auto_inc) =====
+master_audit_tbl | InnoDB | utf8mb4_unicode_ci | 0 | 
+master_correction_requests_tbl | InnoDB | utf8mb4_unicode_ci | 0 | 3
+
+===== DEV: SHOW CREATE TABLE master_audit_tbl (verbatim DDL) =====
+CREATE TABLE `master_audit_tbl` (
+  `auditID` bigint NOT NULL AUTO_INCREMENT,
+  `contactID` int NOT NULL,
+  `actor_userid` int DEFAULT NULL,
+  `actor_type` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `master_co_contact_id` int DEFAULT NULL,
+  `master_coid` int DEFAULT NULL,
+  `company_location_id` int DEFAULT NULL,
+  `action_type` varchar(40) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `field_name` varchar(40) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `old_value` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `new_value` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `previous_source` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `new_source` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `correction_request_id` int DEFAULT NULL,
+  `run_id` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `idempotency_key` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `reason` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `metadata` json DEFAULT NULL,
+  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  PRIMARY KEY (`auditID`),
+  UNIQUE KEY `UQ_master_audit_idem` (`idempotency_key`),
+  KEY `IX_master_audit_contact` (`contactID`),
+  KEY `IX_master_audit_master_person` (`master_co_contact_id`),
+  KEY `IX_master_audit_action` (`action_type`),
+  KEY `IX_master_audit_created` (`created_at`),
+  KEY `IX_master_audit_correction` (`correction_request_id`),
+  KEY `IX_master_audit_run` (`run_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+
+===== DEV: live row count master_audit_tbl (expect 0) =====
+0
+
+===== DEV: indexes on master_audit_tbl (information_schema.statistics) =====
+IX_master_audit_action | 1 | action_type | 1 | 
+IX_master_audit_contact | 1 | contactID | 1 | 
+IX_master_audit_correction | 1 | correction_request_id | 1 | YES
+IX_master_audit_created | 1 | created_at | 1 | 
+IX_master_audit_master_person | 1 | master_co_contact_id | 1 | YES
+IX_master_audit_run | 1 | run_id | 1 | YES
+PRIMARY | 1 | auditID | 0 | 
+UQ_master_audit_idem | 1 | idempotency_key | 0 | YES
+
+===== DEV: SHOW CREATE TABLE master_correction_requests_tbl (verbatim DDL) =====
+CREATE TABLE `master_correction_requests_tbl` (
+  `correctionID` int NOT NULL AUTO_INCREMENT,
+  `contactID` int NOT NULL,
+  `master_co_contact_id` int NOT NULL,
+  `field_name` varchar(40) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `current_master_value` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `suggested_value` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `normalized_suggested_value` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `explanation` varchar(1000) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `requesting_userid` int NOT NULL,
+  `request_timestamp` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `status` varchar(24) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'PENDING',
+  `reviewer_userid` int DEFAULT NULL,
+  `resolution_notes` varchar(1000) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `resolved_timestamp` datetime DEFAULT NULL,
+  `applied_timestamp` datetime DEFAULT NULL,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `active_guard` tinyint GENERATED ALWAYS AS ((case when (`status` in (_utf8mb4'PENDING',_utf8mb4'NEEDS_CLARIFICATION')) then 1 else NULL end)) STORED,
+  PRIMARY KEY (`correctionID`),
+  UNIQUE KEY `UQ_mcr_active_dedup` (`master_co_contact_id`,`field_name`,`normalized_suggested_value`,`active_guard`),
+  KEY `IX_mcr_master_field` (`master_co_contact_id`,`field_name`),
+  KEY `IX_mcr_status` (`status`),
+  KEY `IX_mcr_contact` (`contactID`),
+  KEY `IX_mcr_requester` (`requesting_userid`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+
+===== DEV: live row count master_correction_requests_tbl (expect 0) =====
+0
+
+===== DEV: indexes on master_correction_requests_tbl (information_schema.statistics) =====
+IX_mcr_contact | 1 | contactID | 1 | 
+IX_mcr_master_field | 1 | master_co_contact_id | 1 | 
+IX_mcr_master_field | 2 | field_name | 1 | 
+IX_mcr_requester | 1 | requesting_userid | 1 | 
+IX_mcr_status | 1 | status | 1 | 
+PRIMARY | 1 | correctionID | 0 | 
+UQ_mcr_active_dedup | 1 | master_co_contact_id | 0 | 
+UQ_mcr_active_dedup | 2 | field_name | 0 | 
+UQ_mcr_active_dedup | 3 | normalized_suggested_value | 0 | 
+UQ_mcr_active_dedup | 4 | active_guard | 0 | YES
+
+===== DEV: generated column active_guard definition =====
+fusystemusers_tbl | active_guard | tinyint | (case when ((`sustatus` = _utf8mb4\'Active\') and (`IsDeleted` = 0)) then 1 else NULL end) | STORED GENERATED
+master_correction_requests_tbl | active_guard | tinyint | (case when (`status` in (_utf8mb4\'PENDING\',_utf8mb4\'NEEDS_CLARIFICATION\')) then 1 else NULL end) | STORED GENERATED
+
+########## SCHEMA: actorsbusinessoffice (PROD -- read-only, no apply) ##########
+
+===== PROD: table presence (expect 0 -- dev-only delta) =====
+0
+
+===== PROD: any name match (expect 0 rows) =====
+(0 rows)
+
+PROBE COMPLETE -- all statements were SELECT/SHOW/USE only (read-only channel).
