@@ -44,3 +44,20 @@ yr | primary_items
 2021 | 15535
 
 PROBE COMPLETE -- all statements were SELECT/SHOW/USE only (read-only channel).
+===== SELECT @@hostname AS hostname, DATABASE() AS db, CURRENT_USER() AS cu, NOW() AS now_ =====
+hostname | db | cu | now_
+A35-51-468 | actorsbusinessoffice | kingk436@% | 2026-07-14 16:40:42
+
+===== SELECT SUM(coid IS NULL) AS null_coid_offices, =====
+null_coid_offices | zero_coid_offices | total_offices
+46 | 0 | 12617
+
+===== WITH usable AS ( =====
+typeset | primaries_dupnorm | contacts
+Business + Work Fax | 0 | 7324
+Business + Work Fax | 1 | 153
+Business | 1 | 93
+Business | 0 | 72
+Business + Fax | 0 | 1
+
+PROBE COMPLETE -- all statements were SELECT/SHOW/USE only (read-only channel).
