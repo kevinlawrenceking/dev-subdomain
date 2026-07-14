@@ -1,0 +1,80 @@
+===== SELECT @@hostname AS hostname, DATABASE() AS db, CURRENT_USER() AS current_user_, NOW() AS now_, VERSION() AS mysql_vers =====
+hostname | db | current_user_ | now_ | mysql_version
+A35-51-468 | actorsbusinessoffice | kingk436@% | 2026-07-14 16:36:11 | 8.0.41
+
+===== SELECT COUNT(*) AS active_contacts FROM contactdetails_tbl WHERE IsDeleted = 0 =====
+active_contacts
+46272
+
+===== WITH usable AS ( =====
+field | bucket | contacts | dupnorm_all_contacts
+Phone | one | 15434 | 0
+Phone | multi_one_primary | 328 | 7
+Phone | multi_zero_primary | 455 | 14
+Phone | multi_multi_primary | 7643 | 246
+
+===== SELECT 'Phone' AS field, COUNT(*) AS none_usable_contacts FROM ( =====
+field | none_usable_contacts
+Phone | 42
+
+===== SELECT 'Phone' AS field, bucket, COUNT(*) AS contacts FROM ( =====
+field | bucket | contacts
+Phone | one | 15594
+Phone | multi_one_primary | 333
+Phone | multi_zero_primary | 462
+Phone | multi_multi_primary | 7644
+
+===== WITH usable AS ( =====
+field | bucket | contacts | dupnorm_all_contacts
+Email | one | 23889 | 0
+Email | multi_one_primary | 125 | 0
+Email | multi_zero_primary | 481 | 37
+Email | multi_multi_primary | 262 | 123
+
+===== SELECT 'Email' AS field, COUNT(*) AS none_usable_contacts FROM ( =====
+field | none_usable_contacts
+Email | 0
+
+===== SELECT 'Email' AS field, bucket, COUNT(*) AS contacts FROM ( =====
+field | bucket | contacts
+Email | one | 24500
+Email | multi_one_primary | 125
+Email | multi_zero_primary | 484
+Email | multi_multi_primary | 262
+
+===== WITH usable AS ( =====
+field | bucket | contacts | dupnorm_all_contacts
+Company | one | 24875 | 0
+Company | multi_one_primary | 2 | 0
+Company | multi_zero_primary | 207 | 24
+Company | multi_multi_primary | 423 | 423
+
+===== SELECT 'Company' AS field, COUNT(*) AS none_usable_contacts FROM ( =====
+field | none_usable_contacts
+Company | 0
+
+===== SELECT 'Company' AS field, bucket, COUNT(*) AS contacts FROM ( =====
+field | bucket | contacts
+Company | one | 25195
+Company | multi_one_primary | 2
+Company | multi_zero_primary | 263
+Company | multi_multi_primary | 423
+
+===== SELECT COUNT(*) AS total_offices, =====
+total_offices | offices_with_phone | offices_with_email
+12617 | 9747 | 8195
+
+===== SELECT grp, COUNT(*) AS companies, =====
+grp | companies | companies_all_offices_no_phone | companies_all_offices_no_email
+multi_office | 1661 | 212 | 359
+one_office | 8295 | 1944 | 2907
+
+===== SELECT COUNT(*) AS companies_zero_offices =====
+companies_zero_offices
+785
+
+===== SELECT COUNT(*) AS total_companies, =====
+total_companies | companies_with_coPhone | companies_with_coEmail
+10740 | 0 | 0
+
+PROBE COMPLETE -- all statements were SELECT/SHOW/USE only (read-only channel).

@@ -1,0 +1,46 @@
+===== SELECT @@hostname AS hostname, DATABASE() AS db, CURRENT_USER() AS cu, NOW() AS now_ =====
+hostname | db | cu | now_
+A35-51-468 | actorsbusinessoffice | kingk436@% | 2026-07-14 16:37:51
+
+===== WITH usable AS ( =====
+field | mm_contacts | all_items_identical | primaries_identical | primaries_identical_but_secondaries_differ | p2 | p3 | p4plus | contacts_any_prim_lastupdated | contacts_all_prims_have_creation | contacts_prim_creations_all_distinct | contacts_prim_valuetypes_all_distinct
+Phone | 7643 | 246 | 246 | 0 | 7471 | 105 | 67 | 0 | 7643 | 14 | 7328
+
+===== WITH usable AS ( =====
+field | mm_contacts | all_items_identical | primaries_identical | primaries_identical_but_secondaries_differ | p2 | p3 | p4plus | contacts_any_prim_lastupdated | contacts_all_prims_have_creation | contacts_prim_creations_all_distinct | contacts_prim_valuetypes_all_distinct
+Email | 262 | 123 | 123 | 0 | 243 | 17 | 2 | 0 | 262 | 14 | 0
+
+===== WITH usable AS ( =====
+field | mm_contacts | all_items_identical | primaries_identical | primaries_identical_but_secondaries_differ | p2 | p3 | p4plus | contacts_any_prim_lastupdated | contacts_all_prims_have_creation | contacts_prim_creations_all_distinct | contacts_prim_valuetypes_all_distinct
+Company | 423 | 423 | 423 | 0 | 386 | 32 | 5 | 0 | 423 | 19 | 0
+
+===== WITH usable AS ( =====
+field | bucket | dn1 | dn2 | dn3plus
+Phone | multi_multi_primary | 246 | 7303 | 94
+
+===== SELECT itemStatus, COUNT(*) AS items =====
+itemStatus | items
+Active | 125083
+
+===== SELECT valueCategory, =====
+valueCategory | items | with_creation | with_lastupdated
+Phone | 52326 | 52326 | 0
+Email | 44811 | 44811 | 0
+Company | 27946 | 27946 | 0
+
+PROBE COMPLETE -- all statements were SELECT/SHOW/USE only (read-only channel).
+===== SELECT @@hostname AS hostname, DATABASE() AS db, CURRENT_USER() AS cu, NOW() AS now_ =====
+hostname | db | cu | now_
+A35-51-468 | actorsbusinessoffice | kingk436@% | 2026-07-14 16:38:44
+
+===== WITH usable AS ( =====
+typeset | contacts
+Business + Work Fax | 7477
+Business | 165
+Business + Fax | 1
+
+===== WITH usable AS ( =====
+yr | primary_items
+2021 | 15535
+
+PROBE COMPLETE -- all statements were SELECT/SHOW/USE only (read-only channel).
