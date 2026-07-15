@@ -1,0 +1,22 @@
+===== SELECT @@hostname AS hostname, DATABASE() AS db, CURRENT_USER() AS current_user_, NOW() AS now_, VERSION() AS mysql_vers =====
+hostname | db | current_user_ | now_ | mysql_version
+A35-51-468 | new_development | kingk436@% | 2026-07-14 17:40:14 | 8.0.41
+
+===== SELECT =====
+phone_populated_before | email_populated_before | company_populated_before | active_contacts
+276 | 292 | 436 | 1571
+
+===== SELECT COUNT(*) AS items_total, SUM(IsDeleted = 1) AS items_deleted, MAX(itemID) AS max_itemID =====
+items_total | items_deleted | max_itemID
+5011 | 122 | 312621
+
+===== WITH usable AS ( =====
+field | sel_case | expected_writes | excluded_G_LNK | excluded_G_WIDTH
+
+===== WITH usable AS ( =====
+field | sel_case | expected_writes | excluded_G_LNK | excluded_G_WIDTH
+
+===== WITH usable AS ( =====
+field | sel_case | expected_writes | excluded_G_LNK
+
+PROBE COMPLETE -- all statements were SELECT/SHOW/USE only (read-only channel).
