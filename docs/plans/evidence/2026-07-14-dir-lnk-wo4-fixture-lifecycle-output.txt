@@ -1,0 +1,525 @@
+DIR-LNK-WO-4 -- FIXTURE LIFECYCLE CONSOLIDATED OUTPUT (F-1..F-10)
+Executor: CC via ratified pymysql write runner (D-3). All values below are
+synthetic fixture data (555-01XX, example.invalid, WO4 Fixture Testing Co).
+
+################ wo4-F1-setup-output.txt ################
+===== START TRANSACTION =====
+[rowcount: 0]
+
+===== INSERT INTO contactdetails_tbl (contactFullName, userID) VALUES ('ZZWO4FIXTURE F1 one phone', 30) =====
+[rowcount: 1]
+
+===== SET @f1 = LAST_INSERT_ID() =====
+[rowcount: 0]
+
+===== INSERT INTO contactitems_tbl (contactID, valueCategory, valueType, valuetext, itemStatus, primary_YN) =====
+[rowcount: 1]
+
+===== INSERT INTO contactdetails_tbl (contactFullName, userID) VALUES ('ZZWO4FIXTURE F2 m1p email', 30) =====
+[rowcount: 1]
+
+===== SET @f2 = LAST_INSERT_ID() =====
+[rowcount: 0]
+
+===== INSERT INTO contactitems_tbl (contactID, valueCategory, valueType, valuetext, itemStatus, primary_YN) =====
+[rowcount: 2]
+
+===== INSERT INTO contactdetails_tbl (contactFullName, userID) VALUES ('ZZWO4FIXTURE F3 rq1 company', 30) =====
+[rowcount: 1]
+
+===== SET @f3 = LAST_INSERT_ID() =====
+[rowcount: 0]
+
+===== INSERT INTO contactitems_tbl (contactID, valueCategory, valueType, valueCompany, itemStatus, primary_YN) =====
+[rowcount: 2]
+
+===== INSERT INTO contactdetails_tbl (contactFullName, userID) VALUES ('ZZWO4FIXTURE F4 rq1 phone mm', 30) =====
+[rowcount: 1]
+
+===== SET @f4 = LAST_INSERT_ID() =====
+[rowcount: 0]
+
+===== INSERT INTO contactitems_tbl (contactID, valueCategory, valueType, valuetext, itemStatus, primary_YN) =====
+[rowcount: 2]
+
+===== INSERT INTO contactdetails_tbl (contactFullName, userID) VALUES ('ZZWO4FIXTURE F5 rq2 biz fax', 30) =====
+[rowcount: 1]
+
+===== SET @f5 = LAST_INSERT_ID() =====
+[rowcount: 0]
+
+===== INSERT INTO contactitems_tbl (contactID, valueCategory, valueType, valuetext, itemStatus, primary_YN) =====
+[rowcount: 2]
+
+===== INSERT INTO contactdetails_tbl (contactFullName, userID, master_co_contact_id) =====
+[rowcount: 1]
+
+===== SET @f6 = LAST_INSERT_ID() =====
+[rowcount: 0]
+
+===== INSERT INTO contactitems_tbl (contactID, valueCategory, valueType, valuetext, itemStatus, primary_YN) =====
+[rowcount: 1]
+
+===== INSERT INTO contactdetails_tbl (contactFullName, userID) VALUES ('ZZWO4FIXTURE F7 gwidth probe', 30) =====
+[rowcount: 1]
+
+===== SET @f7 = LAST_INSERT_ID() =====
+[rowcount: 0]
+
+===== INSERT INTO contactitems_tbl (contactID, valueCategory, valueType, valuetext, itemStatus, primary_YN) =====
+[rowcount: 1]
+
+===== INSERT INTO contactdetails_tbl (contactFullName, userID) VALUES ('ZZWO4FIXTURE F8 mm conflict', 30) =====
+[rowcount: 1]
+
+===== SET @f8 = LAST_INSERT_ID() =====
+[rowcount: 0]
+
+===== INSERT INTO contactitems_tbl (contactID, valueCategory, valueType, valuetext, itemStatus, primary_YN) =====
+[rowcount: 2]
+
+===== SELECT =====
+fixture_contacts_expect_8 | fixture_items_expect_13
+8 | 13
+
+GATE PASS before COMMIT: ('8', '13')
+===== COMMIT =====
+[rowcount: 0]
+
+RUN COMPLETE (write runner, new_development only).
+
+################ wo4-F3-expectation-output.txt ################
+===== SELECT @@hostname AS hostname, DATABASE() AS db, CURRENT_USER() AS current_user_, NOW() AS now_, VERSION() AS mysql_vers =====
+hostname | db | current_user_ | now_ | mysql_version
+A35-51-468 | new_development | kingk436@% | 2026-07-14 18:14:03 | 8.0.41
+
+===== SELECT =====
+phone_populated_before | email_populated_before | company_populated_before | active_contacts
+276 | 292 | 436 | 1579
+
+===== SELECT COUNT(*) AS items_total, SUM(IsDeleted = 1) AS items_deleted, MAX(itemID) AS max_itemID =====
+items_total | items_deleted | max_itemID
+5024 | 122 | 312647
+
+===== WITH usable AS ( =====
+field | sel_case | expected_writes | excluded_G_LNK | excluded_G_WIDTH
+Phone | one | 1 | 1 | 1
+Phone | rq1_carveout | 1 | 0 | 0
+Phone | rq2_business_over_fax | 1 | 0 | 0
+
+===== WITH usable AS ( =====
+field | sel_case | expected_writes | excluded_G_LNK | excluded_G_WIDTH
+Email | multi_one_primary | 1 | 0 | 0
+
+===== WITH usable AS ( =====
+field | sel_case | expected_writes | excluded_G_LNK
+Company | rq1_carveout | 1 | 0
+
+PROBE COMPLETE -- all statements were SELECT/SHOW/USE only (read-only channel).
+
+################ wo4-F4-run1-output.txt ################
+=== WO4_10_backfill_phone (gate 3,3) ===
+===== START TRANSACTION =====
+[rowcount: 0]
+
+===== INSERT IGNORE INTO master_audit_tbl =====
+[rowcount: 3]
+
+===== UPDATE contactdetails_tbl d =====
+[rowcount: 3]
+
+===== SELECT =====
+audit_rows_this_run | columns_matching_audit
+3 | 3
+
+GATE PASS before COMMIT: ('3', '3')
+===== COMMIT =====
+[rowcount: 0]
+
+RUN COMPLETE (write runner, new_development only).
+=== WO4_11_backfill_email (gate 1,1) ===
+===== START TRANSACTION =====
+[rowcount: 0]
+
+===== INSERT IGNORE INTO master_audit_tbl =====
+[rowcount: 1]
+
+===== UPDATE contactdetails_tbl d =====
+[rowcount: 1]
+
+===== SELECT =====
+audit_rows_this_run | columns_matching_audit
+1 | 1
+
+GATE PASS before COMMIT: ('1', '1')
+===== COMMIT =====
+[rowcount: 0]
+
+RUN COMPLETE (write runner, new_development only).
+=== WO4_12_backfill_company (gate 1,1) ===
+===== START TRANSACTION =====
+[rowcount: 0]
+
+===== INSERT IGNORE INTO master_audit_tbl =====
+[rowcount: 1]
+
+===== UPDATE contactdetails_tbl d =====
+[rowcount: 1]
+
+===== SELECT =====
+audit_rows_this_run | columns_matching_audit
+1 | 1
+
+GATE PASS before COMMIT: ('1', '1')
+===== COMMIT =====
+[rowcount: 0]
+
+RUN COMPLETE (write runner, new_development only).
+
+################ wo4-F5-verify1-output.txt ################
+===== SELECT @@hostname AS hostname, DATABASE() AS db, CURRENT_USER() AS current_user_, NOW() AS now_, VERSION() AS mysql_vers =====
+hostname | db | current_user_ | now_ | mysql_version
+A35-51-468 | new_development | kingk436@% | 2026-07-14 18:16:27 | 8.0.41
+
+===== SELECT =====
+phone_populated_after | email_populated_after | company_populated_after | active_contacts
+279 | 293 | 437 | 1579
+
+===== SELECT a.run_id, a.field_name, COUNT(*) AS audit_rows, =====
+run_id | field_name | audit_rows | columns_holding_audited_value
+WO4-DEV-FIXTURE-20260714-PH1 | contactPhone | 3 | 3
+WO4-DEV-FIXTURE-20260714-EM1 | contactEmail | 1 | 1
+WO4-DEV-FIXTURE-20260714-CO1 | contactCompany | 1 | 1
+
+===== SELECT a.field_name, =====
+field_name | src_user_count | audit_rows
+contactPhone | 3 | 3
+contactEmail | 1 | 1
+contactCompany | 1 | 1
+
+===== SELECT COUNT(*) AS items_total, SUM(IsDeleted = 1) AS items_deleted, MAX(itemID) AS max_itemID =====
+items_total | items_deleted | max_itemID
+5024 | 122 | 312647
+
+===== SELECT COUNT(*) AS linked_contacts_backfilled_must_be_zero =====
+linked_contacts_backfilled_must_be_zero
+0
+
+===== SELECT COUNT(*) AS audit_rows_outside_register_must_be_zero =====
+audit_rows_outside_register_must_be_zero
+0
+
+PROBE COMPLETE -- all statements were SELECT/SHOW/USE only (read-only channel).
+===== SELECT @@hostname AS hostname, DATABASE() AS db, CURRENT_USER() AS cu, NOW() AS now_ =====
+hostname | db | cu | now_
+A35-51-468 | new_development | kingk436@% | 2026-07-14 18:16:28
+
+===== SELECT d.contactID, d.contactFullName, d.contactPhone, d.contactEmail, d.contactCompany, =====
+contactID | contactFullName | contactPhone | contactEmail | contactCompany | contactPhone_src | contactEmail_src | contactCompany_src
+132428 | ZZWO4FIXTURE F1 one phone | (310) 555-0141 |  |  | user | user | user
+132429 | ZZWO4FIXTURE F2 m1p email |  | wo4.f2.primary@example.invalid |  | user | user | user
+132430 | ZZWO4FIXTURE F3 rq1 company |  |  | WO4 Fixture Testing Co | user | user | user
+132431 | ZZWO4FIXTURE F4 rq1 phone mm | (310) 555-0144 |  |  | user | user | user
+132432 | ZZWO4FIXTURE F5 rq2 biz fax | (310) 555-0145 |  |  | user | user | user
+132433 | ZZWO4FIXTURE F6 glnk probe |  |  |  | user | user | user
+132434 | ZZWO4FIXTURE F7 gwidth probe |  |  |  | user | user | user
+132435 | ZZWO4FIXTURE F8 mm conflict |  |  |  | user | user | user
+
+===== SELECT itemID, valueType, itemStatus, IsDeleted, primary_YN =====
+itemID | valueType | itemStatus | IsDeleted | primary_YN
+312642 | Business | Active | b'\x00' | Y
+312643 | Work Fax | Active | b'\x00' | Y
+
+===== SELECT auditID, contactID, action_type, field_name, new_value, run_id, idempotency_key, reason =====
+auditID | contactID | action_type | field_name | new_value | run_id | idempotency_key | reason
+1 | 132428 | BACKFILL_FROM_CONTACTITEM | contactPhone | (310) 555-0141 | WO4-DEV-FIXTURE-20260714-PH1 | BACKFILL:contactPhone:132428:WO4-DEV-FIXTURE-20260714-PH1 | WO-4 dev backfill, sel_case=one, source itemID=312635
+2 | 132431 | BACKFILL_FROM_CONTACTITEM | contactPhone | (310) 555-0144 | WO4-DEV-FIXTURE-20260714-PH1 | BACKFILL:contactPhone:132431:WO4-DEV-FIXTURE-20260714-PH1 | WO-4 dev backfill, sel_case=rq1_carveout, source itemID=312640
+3 | 132432 | BACKFILL_FROM_CONTACTITEM | contactPhone | (310) 555-0145 | WO4-DEV-FIXTURE-20260714-PH1 | BACKFILL:contactPhone:132432:WO4-DEV-FIXTURE-20260714-PH1 | WO-4 dev backfill, sel_case=rq2_business_over_fax, source itemID=312642
+4 | 132429 | BACKFILL_FROM_CONTACTITEM | contactEmail | wo4.f2.primary@example.invalid | WO4-DEV-FIXTURE-20260714-EM1 | BACKFILL:contactEmail:132429:WO4-DEV-FIXTURE-20260714-EM1 | WO-4 dev backfill, sel_case=multi_one_primary, source itemID=312636
+5 | 132430 | BACKFILL_FROM_CONTACTITEM | contactCompany | WO4 Fixture Testing Co | WO4-DEV-FIXTURE-20260714-CO1 | BACKFILL:contactCompany:132430:WO4-DEV-FIXTURE-20260714-CO1 | WO-4 dev backfill, sel_case=rq1_carveout, source itemID=312638
+
+PROBE COMPLETE -- all statements were SELECT/SHOW/USE only (read-only channel).
+
+################ wo4-F6-rollback-output.txt ################
+=== ROLLBACK PH1 (gate 3,3) ===
+===== SELECT @@hostname AS hostname, DATABASE() AS db, CURRENT_USER() AS current_user_, NOW() AS now_ =====
+hostname | db | current_user_ | now_
+A35-51-468 | new_development | kingk436@% | 2026-07-14 18:16:50
+
+===== SELECT a.field_name, =====
+field_name | audit_rows_for_run | reversible_still_matching | diverged_will_skip
+contactPhone | 3 | 3 | 0
+
+===== START TRANSACTION =====
+[rowcount: 0]
+
+===== INSERT IGNORE INTO master_audit_tbl =====
+[rowcount: 3]
+
+===== UPDATE contactdetails_tbl d =====
+[rowcount: 3]
+
+===== UPDATE contactdetails_tbl d =====
+[rowcount: 0]
+
+===== UPDATE contactdetails_tbl d =====
+[rowcount: 0]
+
+===== SELECT =====
+reversal_audit_rows | columns_now_empty
+3 | 3
+
+GATE PASS before COMMIT: ('3', '3')
+===== COMMIT =====
+[rowcount: 0]
+
+RUN COMPLETE (write runner, new_development only).
+=== ROLLBACK EM1 (gate 1,1) ===
+===== SELECT @@hostname AS hostname, DATABASE() AS db, CURRENT_USER() AS current_user_, NOW() AS now_ =====
+hostname | db | current_user_ | now_
+A35-51-468 | new_development | kingk436@% | 2026-07-14 18:16:52
+
+===== SELECT a.field_name, =====
+field_name | audit_rows_for_run | reversible_still_matching | diverged_will_skip
+contactEmail | 1 | 1 | 0
+
+===== START TRANSACTION =====
+[rowcount: 0]
+
+===== INSERT IGNORE INTO master_audit_tbl =====
+[rowcount: 1]
+
+===== UPDATE contactdetails_tbl d =====
+[rowcount: 0]
+
+===== UPDATE contactdetails_tbl d =====
+[rowcount: 1]
+
+===== UPDATE contactdetails_tbl d =====
+[rowcount: 0]
+
+===== SELECT =====
+reversal_audit_rows | columns_now_empty
+1 | 1
+
+GATE PASS before COMMIT: ('1', '1')
+===== COMMIT =====
+[rowcount: 0]
+
+RUN COMPLETE (write runner, new_development only).
+=== ROLLBACK CO1 (gate 1,1) ===
+===== SELECT @@hostname AS hostname, DATABASE() AS db, CURRENT_USER() AS current_user_, NOW() AS now_ =====
+hostname | db | current_user_ | now_
+A35-51-468 | new_development | kingk436@% | 2026-07-14 18:16:53
+
+===== SELECT a.field_name, =====
+field_name | audit_rows_for_run | reversible_still_matching | diverged_will_skip
+contactCompany | 1 | 1 | 0
+
+===== START TRANSACTION =====
+[rowcount: 0]
+
+===== INSERT IGNORE INTO master_audit_tbl =====
+[rowcount: 1]
+
+===== UPDATE contactdetails_tbl d =====
+[rowcount: 0]
+
+===== UPDATE contactdetails_tbl d =====
+[rowcount: 0]
+
+===== UPDATE contactdetails_tbl d =====
+[rowcount: 1]
+
+===== SELECT =====
+reversal_audit_rows | columns_now_empty
+1 | 1
+
+GATE PASS before COMMIT: ('1', '1')
+===== COMMIT =====
+[rowcount: 0]
+
+RUN COMPLETE (write runner, new_development only).
+
+################ wo4-F7-run2-output.txt ################
+=== RUN2 PH2 (gate 3,3) ===
+===== START TRANSACTION =====
+[rowcount: 0]
+
+===== INSERT IGNORE INTO master_audit_tbl =====
+[rowcount: 3]
+
+===== UPDATE contactdetails_tbl d =====
+[rowcount: 3]
+
+===== SELECT =====
+audit_rows_this_run | columns_matching_audit
+3 | 3
+
+GATE PASS before COMMIT: ('3', '3')
+===== COMMIT =====
+[rowcount: 0]
+
+RUN COMPLETE (write runner, new_development only).
+=== RUN2 EM2 (gate 1,1) ===
+===== START TRANSACTION =====
+[rowcount: 0]
+
+===== INSERT IGNORE INTO master_audit_tbl =====
+[rowcount: 1]
+
+===== UPDATE contactdetails_tbl d =====
+[rowcount: 1]
+
+===== SELECT =====
+audit_rows_this_run | columns_matching_audit
+1 | 1
+
+GATE PASS before COMMIT: ('1', '1')
+===== COMMIT =====
+[rowcount: 0]
+
+RUN COMPLETE (write runner, new_development only).
+=== RUN2 CO2 (gate 1,1) ===
+===== START TRANSACTION =====
+[rowcount: 0]
+
+===== INSERT IGNORE INTO master_audit_tbl =====
+[rowcount: 1]
+
+===== UPDATE contactdetails_tbl d =====
+[rowcount: 1]
+
+===== SELECT =====
+audit_rows_this_run | columns_matching_audit
+1 | 1
+
+GATE PASS before COMMIT: ('1', '1')
+===== COMMIT =====
+[rowcount: 0]
+
+RUN COMPLETE (write runner, new_development only).
+
+################ wo4-F8-replay-output.txt ################
+=== REPLAY PH2 (gate 3,3) ===
+===== START TRANSACTION =====
+[rowcount: 0]
+
+===== INSERT IGNORE INTO master_audit_tbl =====
+[rowcount: 0]
+
+===== UPDATE contactdetails_tbl d =====
+[rowcount: 0]
+
+===== SELECT =====
+audit_rows_this_run | columns_matching_audit
+3 | 3
+
+GATE PASS before COMMIT: ('3', '3')
+===== COMMIT =====
+[rowcount: 0]
+
+RUN COMPLETE (write runner, new_development only).
+=== REPLAY EM2 (gate 1,1) ===
+===== START TRANSACTION =====
+[rowcount: 0]
+
+===== INSERT IGNORE INTO master_audit_tbl =====
+[rowcount: 0]
+
+===== UPDATE contactdetails_tbl d =====
+[rowcount: 0]
+
+===== SELECT =====
+audit_rows_this_run | columns_matching_audit
+1 | 1
+
+GATE PASS before COMMIT: ('1', '1')
+===== COMMIT =====
+[rowcount: 0]
+
+RUN COMPLETE (write runner, new_development only).
+=== REPLAY CO2 (gate 1,1) ===
+===== START TRANSACTION =====
+[rowcount: 0]
+
+===== INSERT IGNORE INTO master_audit_tbl =====
+[rowcount: 0]
+
+===== UPDATE contactdetails_tbl d =====
+[rowcount: 0]
+
+===== SELECT =====
+audit_rows_this_run | columns_matching_audit
+1 | 1
+
+GATE PASS before COMMIT: ('1', '1')
+===== COMMIT =====
+[rowcount: 0]
+
+RUN COMPLETE (write runner, new_development only).
+
+################ wo4-F9-finalverify-output.txt ################
+===== SELECT @@hostname AS hostname, DATABASE() AS db, CURRENT_USER() AS cu, NOW() AS now_ =====
+hostname | db | cu | now_
+A35-51-468 | new_development | kingk436@% | 2026-07-14 18:18:03
+
+===== SELECT run_id, action_type, field_name, COUNT(*) AS rows_ =====
+run_id | action_type | field_name | rows_
+WO4-DEV-FIXTURE-20260714-PH1 | BACKFILL_FROM_CONTACTITEM | contactPhone | 3
+WO4-DEV-FIXTURE-20260714-EM1 | BACKFILL_FROM_CONTACTITEM | contactEmail | 1
+WO4-DEV-FIXTURE-20260714-CO1 | BACKFILL_FROM_CONTACTITEM | contactCompany | 1
+WO4-DEV-FIXTURE-20260714-PH1-RB | ADMIN_REPAIR | contactPhone | 3
+WO4-DEV-FIXTURE-20260714-EM1-RB | ADMIN_REPAIR | contactEmail | 1
+WO4-DEV-FIXTURE-20260714-CO1-RB | ADMIN_REPAIR | contactCompany | 1
+WO4-DEV-FIXTURE-20260714-PH2 | BACKFILL_FROM_CONTACTITEM | contactPhone | 3
+WO4-DEV-FIXTURE-20260714-EM2 | BACKFILL_FROM_CONTACTITEM | contactEmail | 1
+WO4-DEV-FIXTURE-20260714-CO2 | BACKFILL_FROM_CONTACTITEM | contactCompany | 1
+
+===== SELECT a.run_id, a.field_name, COUNT(*) AS audit_rows, =====
+run_id | field_name | audit_rows | columns_holding_audited_value
+WO4-DEV-FIXTURE-20260714-PH2 | contactPhone | 3 | 3
+WO4-DEV-FIXTURE-20260714-EM2 | contactEmail | 1 | 1
+WO4-DEV-FIXTURE-20260714-CO2 | contactCompany | 1 | 1
+
+===== SELECT COUNT(*) AS audit_rows_outside_register_must_be_zero =====
+audit_rows_outside_register_must_be_zero
+0
+
+===== SELECT =====
+phone_populated | email_populated | company_populated
+279 | 293 | 437
+
+===== SELECT COUNT(*) AS items_total, SUM(IsDeleted = 1) AS items_deleted, MAX(itemID) AS max_itemID =====
+items_total | items_deleted | max_itemID
+5024 | 122 | 312647
+
+===== SELECT COUNT(*) AS audit_rows_total_expect_15 FROM master_audit_tbl =====
+audit_rows_total_expect_15
+15
+
+PROBE COMPLETE -- all statements were SELECT/SHOW/USE only (read-only channel).
+
+################ wo4-F10-cleanup-output.txt ################
+===== START TRANSACTION =====
+[rowcount: 0]
+
+===== SELECT =====
+contacts_to_softdelete | items_to_softdelete
+8 | 13
+
+===== UPDATE contactitems_tbl ci =====
+[rowcount: 13]
+
+===== UPDATE contactdetails_tbl =====
+[rowcount: 8]
+
+===== SELECT =====
+live_fixture_contacts_expect_0 | live_fixture_items_expect_0
+0 | 0
+
+GATE PASS before COMMIT: ('0', '0')
+===== COMMIT =====
+[rowcount: 0]
+
+RUN COMPLETE (write runner, new_development only).
