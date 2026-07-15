@@ -1,0 +1,11 @@
+master_audit_tbl cols: auditID, contactID, actor_userid, actor_type, master_co_contact_id, master_coid, company_location_id, action_type, field_name, old_value, new_value, previous_source, new_source, correction_request_id, run_id, idempotency_key, reason, metadata, created_at
+master_audit_tbl rowcount: 15
+by action_type: ADMIN_REPAIR=5, BACKFILL_FROM_CONTACTITEM=10
+
+=== Phone: 4 changed contacts ===
+  item-bucket dist: {'multi_zero_primary': 4}
+  of these 4, populated by a WO-4 BACKFILL audit row: 0 (rest = pre-WO-4 / V3_10 residue)
+
+=== Email: 60 changed contacts ===
+  item-bucket dist: {'multi_zero_primary': 59, 'multi_multi_primary': 1}
+  of these 60, populated by a WO-4 BACKFILL audit row: 0 (rest = pre-WO-4 / V3_10 residue)
