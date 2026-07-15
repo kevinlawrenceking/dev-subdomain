@@ -2,7 +2,8 @@
 -- DIR-LNK-WO-4 -- BACKFILL contactEmail (DEV ONLY: new_development)
 -- ============================================================================
 -- Same design, guards, idempotency, and operator rules as WO4_10 (header there
--- governs). RUN_ID: WO4-DEV-20260714-EM1 (operator sets MMDD before running).
+-- governs, incl. the W-1 key format). RUN_ID: WO4-DEV-FIXTURE-20260714-EM1
+-- (executor sets MMDD before running; -EM2 for the protocol run 2).
 -- RQ-2 does not apply to Email (Phone-only pattern). G-WIDTH bound = 150.
 -- ============================================================================
 
@@ -43,8 +44,8 @@ WITH usable AS (
   FROM rep r JOIN usable u ON u.itemID = r.rep_itemID
 )
 SELECT s.contactID, NULL, 'migration', 'BACKFILL_FROM_CONTACTITEM', 'contactEmail',
-       NULL, s.new_value, 'WO4-DEV-20260714-EM1',
-       CONCAT('BACKFILL:', s.contactID, ':contactEmail'),
+       NULL, s.new_value, 'WO4-DEV-FIXTURE-20260714-EM1',
+       CONCAT('BACKFILL:contactEmail:', s.contactID, ':WO4-DEV-FIXTURE-20260714-EM1'),
        CONCAT('WO-4 dev backfill; sel_case=', s.sel_case, '; source itemID=', s.rep_itemID)
 FROM sel s
 JOIN contactdetails_tbl d ON d.contactID = s.contactID
@@ -58,7 +59,7 @@ WHERE d.IsDeleted = 0
 UPDATE contactdetails_tbl d
 JOIN master_audit_tbl a
   ON a.contactID = d.contactID
- AND a.run_id = 'WO4-DEV-20260714-EM1'
+ AND a.run_id = 'WO4-DEV-FIXTURE-20260714-EM1'
  AND a.action_type = 'BACKFILL_FROM_CONTACTITEM'
  AND a.field_name = 'contactEmail'
 SET d.contactEmail = a.new_value
@@ -68,11 +69,11 @@ WHERE d.IsDeleted = 0
 -- Step 3: in-transaction sanity -- MUST be equal before COMMIT
 SELECT
   (SELECT COUNT(*) FROM master_audit_tbl
-    WHERE run_id = 'WO4-DEV-20260714-EM1'
+    WHERE run_id = 'WO4-DEV-FIXTURE-20260714-EM1'
       AND action_type = 'BACKFILL_FROM_CONTACTITEM' AND field_name = 'contactEmail') AS audit_rows_this_run,
   (SELECT COUNT(*) FROM contactdetails_tbl d
     JOIN master_audit_tbl a ON a.contactID = d.contactID
-     AND a.run_id = 'WO4-DEV-20260714-EM1' AND a.field_name = 'contactEmail'
+     AND a.run_id = 'WO4-DEV-FIXTURE-20260714-EM1' AND a.field_name = 'contactEmail'
     WHERE d.contactEmail = a.new_value) AS columns_matching_audit;
 
 -- Operator: COMMIT only if equal and matching EX-E. Otherwise ROLLBACK + report.

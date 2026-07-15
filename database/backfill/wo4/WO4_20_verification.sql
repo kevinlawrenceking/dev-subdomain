@@ -25,7 +25,7 @@ SELECT a.run_id, a.field_name, COUNT(*) AS audit_rows,
 FROM master_audit_tbl a
 JOIN contactdetails_tbl d ON d.contactID = a.contactID
 WHERE a.action_type = 'BACKFILL_FROM_CONTACTITEM'
-  AND a.run_id IN ('WO4-DEV-20260714-PH1','WO4-DEV-20260714-EM1','WO4-DEV-20260714-CO1')
+  AND a.run_id IN ('WO4-DEV-FIXTURE-20260714-PH1','WO4-DEV-FIXTURE-20260714-EM1','WO4-DEV-FIXTURE-20260714-CO1')
 GROUP BY a.run_id, a.field_name;
 
 -- V-3: _src untouched proof -- every backfilled contact still has _src='user'
@@ -39,7 +39,7 @@ SELECT a.field_name,
 FROM master_audit_tbl a
 JOIN contactdetails_tbl d ON d.contactID = a.contactID
 WHERE a.action_type = 'BACKFILL_FROM_CONTACTITEM'
-  AND a.run_id IN ('WO4-DEV-20260714-PH1','WO4-DEV-20260714-EM1','WO4-DEV-20260714-CO1')
+  AND a.run_id IN ('WO4-DEV-FIXTURE-20260714-PH1','WO4-DEV-FIXTURE-20260714-EM1','WO4-DEV-FIXTURE-20260714-CO1')
 GROUP BY a.field_name;
 
 -- V-4: contactitems untouched proof (compare to EX-0b baseline; all three equal)
@@ -64,5 +64,22 @@ SELECT COUNT(*) AS linked_contacts_backfilled_must_be_zero
 FROM master_audit_tbl a
 JOIN contactdetails_tbl d ON d.contactID = a.contactID
 WHERE a.action_type = 'BACKFILL_FROM_CONTACTITEM'
-  AND a.run_id IN ('WO4-DEV-20260714-PH1','WO4-DEV-20260714-EM1','WO4-DEV-20260714-CO1')
+  AND a.run_id IN ('WO4-DEV-FIXTURE-20260714-PH1','WO4-DEV-FIXTURE-20260714-EM1','WO4-DEV-FIXTURE-20260714-CO1')
   AND d.master_co_contact_id IS NOT NULL;
+
+-- V-8: G-REG containment proof (protocol d) -- every fixture-run audit row's
+-- contactID must be a REGISTERED fixture. Any outsider = FAIL + rollback + STOP.
+-- (Predicate mirrors the register; ALSO eyeball-match contactIDs against the
+-- committed register output.)
+SELECT COUNT(*) AS audit_rows_outside_register_must_be_zero
+FROM master_audit_tbl a
+LEFT JOIN contactdetails_tbl d
+  ON d.contactID = a.contactID
+ AND d.userID = 30 AND d.contactFullName LIKE 'ZZWO4FIXTURE%'
+WHERE a.run_id LIKE 'WO4-DEV-FIXTURE-%'
+  AND d.contactID IS NULL;
+
+-- V-9: rq2 fax preservation proof -- F5's Work Fax item is untouched
+-- (IsDeleted=0, itemStatus='Active') and the written column equals the
+-- Business item's raw value, not the fax's. Verify via the register itemIDs
+-- and the audit rows' reason strings (source itemID recorded per row).

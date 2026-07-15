@@ -5,15 +5,21 @@
 -- AUTHORIZES: UPDATE contactdetails_tbl.contactPhone (empty -> item value) +
 --             paired INSERT into master_audit_tbl. NOTHING ELSE. Zero DDL,
 --             zero contactitems writes, _src not written (stays default 'user').
--- RUN_ID    : WO4-DEV-20260714-PH1  <- operator: set MMDD to the actual apply
---             date BEFORE running; keep the -PH1 suffix (bump -PH2 for a chunk 2).
+-- RUN_ID    : WO4-DEV-FIXTURE-20260714-PH1  <- executor: set MMDD to the actual
+--             apply date BEFORE running; keep the -PH1 suffix (bump -PH2 for the
+--             protocol run 2 / a second chunk). WO-12 prod execution references
+--             this script by commit SHA and sets its own WO12-class run_id.
 -- DESIGN    : audit-driven pairing. Step 1 INSERTs one audit row per planned
---             column write (INSERT IGNORE: the deterministic idempotency_key
---             'BACKFILL:<contactID>:contactPhone' collides on UQ_master_audit_idem
---             for any contact ever backfilled -> silently skipped). Step 2
---             UPDATEs ONLY by join to THIS run_id's audit rows. Both statements
---             share one transaction: a failed chunk rolls back BOTH.
---             Re-run of the whole script = zero audit inserts + zero updates.
+--             column write. W-1 (architect errata + supplement): idempotency_key
+--             = CONCAT('BACKFILL:', field_name, ':', contactID, ':', run_id) --
+--             unique per column, per contact, PER RUN. Same-run retry collides
+--             on UQ_master_audit_idem (INSERT IGNORE -> skipped); post-rollback
+--             re-application under a NEW run_id inserts cleanly (the W-1
+--             deadlock fix); cross-run double-write is prevented by the
+--             empty-destination selection + the Step-2 re-assertion (W-2).
+--             Step 2 UPDATEs ONLY by join to THIS run_id's audit rows. Both
+--             statements share one transaction: a failed chunk rolls back BOTH.
+--             Re-run of the whole script verbatim = zero inserts + zero updates.
 -- RAW-REPRESENTATIVE RULE (RQ-1, stamped with the lock): written display form =
 --             TRIM(raw) of (i) the single primary_YN='Y' row when exactly one
 --             exists, else (ii) the LOWEST itemID among the value-identical
@@ -71,8 +77,8 @@ WITH usable AS (
   FROM rep r JOIN usable u ON u.itemID = r.rep_itemID
 )
 SELECT s.contactID, NULL, 'migration', 'BACKFILL_FROM_CONTACTITEM', 'contactPhone',
-       NULL, s.new_value, 'WO4-DEV-20260714-PH1',
-       CONCAT('BACKFILL:', s.contactID, ':contactPhone'),
+       NULL, s.new_value, 'WO4-DEV-FIXTURE-20260714-PH1',
+       CONCAT('BACKFILL:contactPhone:', s.contactID, ':WO4-DEV-FIXTURE-20260714-PH1'),
        CONCAT('WO-4 dev backfill; sel_case=', s.sel_case, '; source itemID=', s.rep_itemID)
 FROM sel s
 JOIN contactdetails_tbl d ON d.contactID = s.contactID
@@ -86,7 +92,7 @@ WHERE d.IsDeleted = 0
 UPDATE contactdetails_tbl d
 JOIN master_audit_tbl a
   ON a.contactID = d.contactID
- AND a.run_id = 'WO4-DEV-20260714-PH1'
+ AND a.run_id = 'WO4-DEV-FIXTURE-20260714-PH1'
  AND a.action_type = 'BACKFILL_FROM_CONTACTITEM'
  AND a.field_name = 'contactPhone'
 SET d.contactPhone = a.new_value
@@ -96,11 +102,11 @@ WHERE d.IsDeleted = 0
 -- Step 3: in-transaction sanity -- the two counts MUST be equal before COMMIT
 SELECT
   (SELECT COUNT(*) FROM master_audit_tbl
-    WHERE run_id = 'WO4-DEV-20260714-PH1'
+    WHERE run_id = 'WO4-DEV-FIXTURE-20260714-PH1'
       AND action_type = 'BACKFILL_FROM_CONTACTITEM' AND field_name = 'contactPhone') AS audit_rows_this_run,
   (SELECT COUNT(*) FROM contactdetails_tbl d
     JOIN master_audit_tbl a ON a.contactID = d.contactID
-     AND a.run_id = 'WO4-DEV-20260714-PH1' AND a.field_name = 'contactPhone'
+     AND a.run_id = 'WO4-DEV-FIXTURE-20260714-PH1' AND a.field_name = 'contactPhone'
     WHERE d.contactPhone = a.new_value) AS columns_matching_audit;
 
 -- Operator: COMMIT only if the two numbers above are EQUAL and match EX-P's
