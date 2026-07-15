@@ -48,6 +48,12 @@ management/editor surfaces** (they show all items by design; WO-6 owns them).
   enrollments drop off `_target/_followup/_maint`) is **accepted** and carried on the WO-12 record.
 - **H-1: ACKNOWLEDGED** — reader code held from prod until the WO-12 atomic sequence; interim prod
   deploys are cherry-pick-only from a pre-WO-5 base.
+- **H-1 AMENDED (architect, 2026-07-15, on the P2 zero-reader-diff finding):** the reader-code prod
+  hold is **RETIRED AS SATISFIED-BY-ARCHITECTURE.** WO-5 changes zero reader code (the cutover is
+  view-DDL-only, dev and prod), so there is no reader code to hold; the **dev branch remains
+  prod-safe**, and the WO-12 prod cutover = **backfill + prod view flip only.** The cherry-pick-only
+  doctrine is **retained as the GENERAL rule** for any future merge that makes dev prod-unsafe — but
+  no such condition exists now.
 
 ---
 

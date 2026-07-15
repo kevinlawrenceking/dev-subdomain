@@ -13,6 +13,10 @@ statement splitter (embedded ';' inside '&nbsp;' literals -- WO-4 lesson 7697d37
 == Share-view Company divergence vs cd.contactCompany (SoT column), dev active/eligible ==
   sharez/sharezz plain-LIMIT1        col_pop=436  rule_shows=436  changes_val=0  goes_blank=0
   v_contacts_optimized alpha-first   col_pop=436  rule_shows=435  changes_val=8  goes_blank=0
+  R-1 (Kevin 2026-07-15) HARMONIZATION ACCEPTED. The 8 divergent (harmonized-by-cutover) contactIDs:
+    130878, 130885, 130891, 130944, 131069, 131089, 131235, 131294
+  Edge (excluded from the 8 by the alpha<>'' guard; empty-valueCompany item; also unconsumed): 130943.
+  131089 also appears in the email addendum set (different field/view; no conflict).
 Interpretation: sharez/sharezz Company display == column for all 436 (no change at cutover).
 v_contacts_optimized alpha-pick differs from the column for 8 contacts -- but v_contacts_optimized
 has NO live CFM/CFC consumer (grep-verified), so the 8 are not user-visible; the cutover harmonizes

@@ -70,7 +70,7 @@ WO-12 view flip alone.
 ## UPDATED P4 BUCKET-(b) ENUMERATION (expected, post-addendum + cutover)
 - **contacts_ss / family (Phone, Email):** `changes_val=0`; `goes_blank`=4/60 (the 64 → blank by cleanup — intended, not a defect). Evidenced by WO4_31 BLOCK C.
 - **contacts_ss / sharez / sharezz (Company):** `changes_val=0` (measured live 2026-07-15: sharez/sharezz plain-LIMIT-1 Company pick == column for all 436).
-- **`v_contacts_optimized` (Company):** measured `changes_val=8` (its `ORDER BY valueCompany` alpha-pick differs from the SoT column for 8 contacts). **Not user-visible — no live CFM consumer.** Harmonization-only: the cutover resolves these to the canonical column (§13.3 single-source). Logged; not addendum-treated (Company was not in the §4-ruled 64; these are non-canonical-view artifacts, not residue). Flag for architect note only.
+- **`v_contacts_optimized` (Company) — RULING R-1 (Kevin, 2026-07-15): HARMONIZATION ACCEPTED, addendum NOT extended.** `changes_val=8`: the dead view's `ORDER BY valueCompany` alpha-pick differs from the SoT column for exactly these 8 contacts — **`130878, 130885, 130891, 130944, 131069, 131089, 131235, 131294`** (evidence `evidence/2026-07-15-dir-lnk-wo5-p2-explain-validation.txt`). Not user-visible (no live CFM consumer); the cutover resolves them to the canonical column (§13.3 single-source). P4 enumerates these 8 as *harmonized-by-cutover*. Footnote: contact `130943` is an empty-string-alpha edge (its Company item has empty `valueCompany`), excluded by the `<>''` guard from the ratified 8 — also unconsumed, also harmonized.
 
 ## LINE-REVIEW CHECKLIST
 1. WO4_30 scope = exactly the 64 (IDs enumerated; residue captured live into audit, not in-script). ✓ house pattern (WO4_10 shape, reversed).
