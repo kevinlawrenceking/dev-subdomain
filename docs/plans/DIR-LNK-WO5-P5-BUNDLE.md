@@ -85,8 +85,10 @@ lost to a batch-fragment mangle). No timing improvement is *claimed* — the win
 
 ---
 
-## 6. JODIE EYEBALL — PASS
-Relationships:All as user 30: footer **"Showing 1 to 500 of 979 entries"** (== COUNT); rows match DB
+## 6. EYEBALL — PASS (operator screenshot + architect row-level verification)
+**Attribution corrected (P5-ADDENDUM 4b):** this was the **operator's** full-page screenshot of
+Relationships:All (user 30) with **architect row-level verification** — **not** a Jodie pass (Jodie's
+optional pass did not occur). Footer **"Showing 1 to 500 of 979 entries"** (== COUNT); rows match DB
 capture (`132214` BFR Management, `131171` aj@ajwedding.com, `131680` SH Entertainment, `131068`
 Criminal Minds); blanks blank; partial rows correct; family tabs present. Screenshot retained by
 operator.
@@ -100,11 +102,11 @@ operator.
   2. `database/backfill/wo4/WO4_39_addendum_rollback.sql` — audit-driven restore of the 64 residue
      values (`fwd_rows = restored_cols = 64`; set `@fwd = WO4-DEV-ADDENDUM-20260715-01`).
   - Order for a full revert: **views first, then data** (no reader pointed at a column mid-rollback).
-- **Rollback-cycle TEST (G-7 mechanism proof): PARTIAL — not exercised this session.** The
-  `CREATE OR REPLACE VIEW` mechanism is proven by the forward flip itself (5/5 CREATE OR REPLACE
-  succeeded) and the rollback bodies passed authoring-time EXPLAIN, but a full **down-and-back** cycle
-  on one view was **not run** in the operator paste. Rollback readiness = script + mechanism proven;
-  live down-up cycle = **operator's call** if required before WO-12.
+- **Rollback-cycle TEST (G-7 mechanism proof): PASS — full down-and-back exercised by operator**
+  (HeidiSQL, `new_development`; see `DIR-LNK-WO5-P5-ADDENDUM.md` §A). Rollback restored the OLD
+  item-subquery plan (10 dependent subqueries, ids 3-5 filesort); re-flip restored the NEW
+  primary-column plan (7 correlated subqueries #3-#9 per MySQL note 1276), COUNT 979, mismatch 0/0/0.
+  Rollback readiness fully proven — script + mechanism + live cycle.
 
 ---
 
@@ -130,14 +132,14 @@ operator.
 | C5 | RQ-6(a) family behavior evidenced (`_followup` = 68, flip-independent) | **PASS** |
 | C6 | R-1: 8 `v_contacts_optimized` divergences harmonized to SoT | **PASS** |
 | C7 | G-8 perf sanity (no regression) | **PASS by plan** (timing not captured — not claimed) |
-| C8 | Jodie eyeball | **PASS** |
+| C8 | Eyeball (operator screenshot + architect row-level verify) | **PASS** (attribution corrected — §6 / ADDENDUM 4b) |
 | C9 | Rollback script covers all 5 views + data | **PASS** (committed @ `beb6c4c0`) |
-| C10 | Rollback-cycle test (one view, full cycle) | **PARTIAL** — mechanism proven; down-up cycle not run this session |
+| C10 | Rollback-cycle test (full down-and-back) | **PASS** — operator ran rollback→OLD plan→re-flip→NEW plan (P5-ADDENDUM §A) |
 | C11 | COUNT integrity (979 before == 979 after) | **PASS** |
 
-**Overall: dev read cutover ACCEPTED.** Two criteria carry honest qualifiers — C7 (win by plan, not
-timing) and C10 (rollback mechanism proven, explicit cycle deferred to operator). Neither blocks dev
-acceptance; both are flagged for the WO-12 record.
+**Overall: dev read cutover ACCEPTED.** One honest qualifier remains — C7 (G-8 win proven by plan
+comparison, not wall-clock; no timing claimed). C10 upgraded PARTIAL→**PASS** by the operator's
+down-and-back cycle (see `DIR-LNK-WO5-P5-ADDENDUM.md`). Neither blocks dev acceptance.
 
 ---
 

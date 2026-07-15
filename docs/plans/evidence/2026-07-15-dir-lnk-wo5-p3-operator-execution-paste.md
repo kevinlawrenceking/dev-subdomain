@@ -67,7 +67,9 @@ and the Relationships:All screenshot are **retained by the operator**.
   gone): `130878, 130885, 130891, 130944, 131069, 131089, 131235, 131294`. Harmonized-by-cutover,
   not user-visible (no live CFM consumer).
 
-## 9. EYEBALL — Jodie pass (Relationships:All, user 30): **PASS**
+## 9. EYEBALL — operator screenshot + architect row-level verification (Relationships:All, user 30): **PASS**
+- (Attribution: operator's full-page screenshot with architect row-level verification; Jodie's
+  optional pass did not occur.)
 - Full-page screenshot, architect row-level verify:
   - Footer **"Showing 1 to 500 of 979 entries"** (== `contacts_ss` COUNT).
   - Value rows match the DB capture: `132214` BFR Management, `131171` aj@ajwedding.com,
