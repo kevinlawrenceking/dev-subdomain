@@ -52,7 +52,7 @@ WITH usable AS (
 SELECT s.contactID, NULL, 'migration', 'BACKFILL_FROM_CONTACTITEM', 'contactCompany',
        NULL, s.new_value, 'WO4-DEV-FIXTURE-20260714-CO1',
        CONCAT('BACKFILL:contactCompany:', s.contactID, ':WO4-DEV-FIXTURE-20260714-CO1'),
-       CONCAT('WO-4 dev backfill, sel_case=', s.sel_case, '; source itemID=', s.rep_itemID)
+       CONCAT('WO-4 dev backfill, sel_case=', s.sel_case, ', source itemID=', s.rep_itemID)
 FROM sel s
 JOIN contactdetails_tbl d ON d.contactID = s.contactID
 WHERE d.IsDeleted = 0
