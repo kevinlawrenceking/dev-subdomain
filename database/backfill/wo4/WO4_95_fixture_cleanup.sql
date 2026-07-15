@@ -6,7 +6,7 @@
 -- audit rows are permanent test history (protocol f) -- NEVER deleted.
 -- This script writes ZERO audit rows (protocol f).
 -- Predicate = userID 30 + the ZZWO4FIXTURE name prefix; the affected-row counts
--- MUST match the committed register (8 contacts / 12 items) -- mismatch =
+-- MUST match the committed register (8 contacts / 13 items) -- mismatch =
 -- ROLLBACK + STOP.
 -- ============================================================================
 

@@ -80,10 +80,10 @@ INSERT INTO contactitems_tbl (contactID, valueCategory, valueType, valuetext, it
 VALUES (@f8, 'Phone', 'Business', '(310) 555-0148', 'Active', 'Y'),
        (@f8, 'Phone', 'Business', '(310) 555-0177', 'Active', 'Y');
 
--- Sanity before COMMIT: exactly 8 fixture contacts, 12 fixture items
+-- Sanity before COMMIT: exactly 8 fixture contacts, 13 fixture items
 SELECT
   (SELECT COUNT(*) FROM contactdetails_tbl WHERE userID = 30 AND contactFullName LIKE 'ZZWO4FIXTURE%' AND IsDeleted = 0) AS fixture_contacts_expect_8,
   (SELECT COUNT(*) FROM contactitems_tbl ci JOIN contactdetails_tbl d ON d.contactID = ci.contactID
-    WHERE d.userID = 30 AND d.contactFullName LIKE 'ZZWO4FIXTURE%' AND ci.IsDeleted = 0) AS fixture_items_expect_12;
+    WHERE d.userID = 30 AND d.contactFullName LIKE 'ZZWO4FIXTURE%' AND ci.IsDeleted = 0) AS fixture_items_expect_13;
 
 COMMIT;
