@@ -1,0 +1,28 @@
+DIR-LNK-WO-5 P2 -- authoring-time validation (read-only, new_development, 2026-07-15)
+Channel: pymysql read-only (kingk436@%, MySQL 8.0.41). EXPLAIN + aggregate SELECT only. No writes.
+
+== EXPLAIN of each authored view SELECT body (WO5_01_views_dev.sql) ==
+  OK    contacts_ss
+  OK    sharez
+  OK    sharezz
+  OK    sharez_optimized      (hand-written: ci_company join dropped, Company = d.contactCompany)
+  OK    v_contacts_optimized  (hand-written: company_pick CTE dropped, Company = base.contactCompany)
+All 5 executable; every column/alias reference resolves. contacts_ss requires a quote-aware
+statement splitter (embedded ';' inside '&nbsp;' literals -- WO-4 lesson 7697d37b).
+
+== Share-view Company divergence vs cd.contactCompany (SoT column), dev active/eligible ==
+  sharez/sharezz plain-LIMIT1        col_pop=436  rule_shows=436  changes_val=0  goes_blank=0
+  v_contacts_optimized alpha-first   col_pop=436  rule_shows=435  changes_val=8  goes_blank=0
+Interpretation: sharez/sharezz Company display == column for all 436 (no change at cutover).
+v_contacts_optimized alpha-pick differs from the column for 8 contacts -- but v_contacts_optimized
+has NO live CFM/CFC consumer (grep-verified), so the 8 are not user-visible; the cutover harmonizes
+them to the canonical column (single-source, spec 13.3). Not addendum-treated (Company not in the
+64-row bucket-(b) set; these are non-canonical-view artifacts, not V3_10 residue).
+
+== Consumer map (grep, cfm/cfc) ==
+  contacts_ss (+ target/followup/maint family): contacts_ss.cfm SSP <- contacts_table.cfm <-
+    contacts_all.cfm / contacts_all_tabs.cfm / contacts_gallery.cfm (via #contacts_table#).
+  sharezz: share_contact_details.cfm, share.cfm, remoteShareViewC.cfm, index.cfm, export.cfm.
+  sharez / sharez_optimized / v_contacts_optimized: no live consumer found (legacy / perf alternates).
+  Family views are 'SELECT ... FROM contacts_ss cs' (live capture + database/run-*-2026-04-02.cfm)
+  -> inherit col3/4/5 from contacts_ss -> not redefined in WO-5 (prod family rebuild = WO-12).
