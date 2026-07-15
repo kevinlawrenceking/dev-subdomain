@@ -1,0 +1,21 @@
+===== SELECT @@hostname AS hostname, DATABASE() AS db, CURRENT_USER() AS current_user_, NOW() AS now_ =====
+hostname | db | current_user_ | now_
+A35-51-468 | new_development | kingk436@% | 2026-07-14 18:13:40
+
+===== SELECT d.contactID, d.contactFullName, d.master_co_contact_id, =====
+contactID | contactFullName | master_co_contact_id | itemID | valueCategory | valueType | primary_YN
+132428 | ZZWO4FIXTURE F1 one phone |  | 312635 | Phone | Business | N
+132429 | ZZWO4FIXTURE F2 m1p email |  | 312636 | Email | Work | Y
+132429 | ZZWO4FIXTURE F2 m1p email |  | 312637 | Email | Personal | N
+132430 | ZZWO4FIXTURE F3 rq1 company |  | 312638 | Company | Company | N
+132430 | ZZWO4FIXTURE F3 rq1 company |  | 312639 | Company | Company | N
+132431 | ZZWO4FIXTURE F4 rq1 phone mm |  | 312640 | Phone | Business | Y
+132431 | ZZWO4FIXTURE F4 rq1 phone mm |  | 312641 | Phone | Business | Y
+132432 | ZZWO4FIXTURE F5 rq2 biz fax |  | 312642 | Phone | Business | Y
+132432 | ZZWO4FIXTURE F5 rq2 biz fax |  | 312643 | Phone | Work Fax | Y
+132433 | ZZWO4FIXTURE F6 glnk probe | 1 | 312644 | Phone | Business | N
+132434 | ZZWO4FIXTURE F7 gwidth probe |  | 312645 | Phone | Business | N
+132435 | ZZWO4FIXTURE F8 mm conflict |  | 312646 | Phone | Business | Y
+132435 | ZZWO4FIXTURE F8 mm conflict |  | 312647 | Phone | Business | Y
+
+PROBE COMPLETE -- all statements were SELECT/SHOW/USE only (read-only channel).
