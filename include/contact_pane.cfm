@@ -1,6 +1,12 @@
 <!--- Contact Card View (Optimized) --->
 <div id="contact-card-view2" class="d-flex flex-wrap mx-auto mt-3 px-2">
 
+    <!--- DIR-LNK-WO-6: this grid is ADDITIONAL information (spec 4.5 / 8.2). The primary phone,
+          email, and company live in the primary fields block on the contact card, not here.
+          Items stay fully add/edit/soft-delete on linked AND unlinked contacts alike (spec 8.2,
+          rule 15) - only the primaries are master-managed when linked. --->
+    <div class="w-100 text-uppercase text-muted font-13 mb-2">Additional information</div>
+
     <!--- Loop through active categories --->
     <cfloop query="ActiveCategories">
 

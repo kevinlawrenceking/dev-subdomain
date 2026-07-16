@@ -17,7 +17,14 @@
         <cfthrow message="ContactService.create: contactFullName is required">
     </cfif>
 
-    <!--- Define allowed fields for contactdetails table --->
+    <!--- Define allowed fields for contactdetails table.
+          DIR-LNK-WO-6 (Q1e / D-22): the three primary columns are insertable so unlinked create
+          paths populate primaries directly. A new contact is unlinked by construction (no
+          master_co_contact_id), so no link guard is needed here; master-managed writes never come
+          through create().
+          L-2: the three _src provenance markers are deliberately NOT client-suppliable. create()
+          relies on the column default ('user'); updatePrimary() sets _src='user' server-side
+          inside its own UPDATE. Provenance is never accepted from a caller payload. --->
     <cfset var allowedFields = {
         "userid": "CF_SQL_INTEGER",
         "contactFullName": "CF_SQL_VARCHAR",
@@ -35,7 +42,10 @@
         "newsletter_yn": "CF_SQL_CHAR",
         "googlealert_yn": "CF_SQL_CHAR",
         "socialmedia_yn": "CF_SQL_CHAR",
-        "isdeleted": "CF_SQL_BIT"
+        "isdeleted": "CF_SQL_BIT",
+        "contactPhone": "CF_SQL_VARCHAR",
+        "contactEmail": "CF_SQL_VARCHAR",
+        "contactCompany": "CF_SQL_VARCHAR"
     }>
 
     <!--- Build dynamic INSERT query --->
@@ -52,9 +62,13 @@
         </cfif>
     </cfloop>
 
-    <!--- Execute INSERT - cfqueryparam tags create the placeholders --->
+    <!--- Execute INSERT - cfqueryparam tags create the placeholders.
+          DIR-LNK-WO-6 (P2b Option A): target the BASE TABLE. House non-negotiable is "_tbl for
+          writes, views for reads". contactdetails is a 1:1 updatable view, so this is a
+          doctrinal correction (and removes the fragility if the view is ever redefined
+          non-updatable), not a behavior change - rows already landed in contactdetails_tbl. --->
     <cfquery name="qCreate" result="insertResult">
-        INSERT INTO contactdetails (#arrayToList(columns)#)
+        INSERT INTO contactdetails_tbl (#arrayToList(columns)#)
         VALUES (
             <cfloop from="1" to="#arrayLen(params)#" index="i">
                 <cfif i GT 1>,</cfif>
@@ -257,6 +271,110 @@
         WHERE contactid = <cfqueryparam value="#arguments.contactid#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
 <cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
+</cffunction>
+
+<cffunction name="updatePrimary" access="public" returntype="struct" output="false"
+            hint="DIR-LNK-WO-6 (Q1e): user edit of ONE primary column. Unlinked contacts only; the link and ownership predicates are enforced at the write site.">
+    <cfargument name="contactid" type="numeric" required="true">
+    <cfargument name="userid"    type="numeric" required="true">
+    <cfargument name="field"     type="string"  required="true" hint="contactPhone | contactEmail | contactCompany">
+    <cfargument name="value"     type="string"  required="true">
+
+    <cfset var result    = { "success": false, "message": "", "data": {} }>
+    <cfset var col       = "">
+    <cfset var srcCol    = "">
+    <cfset var maxLen    = 0>
+    <cfset var label     = "">
+    <cfset var newValue  = trim(arguments.value)>
+    <cfset var updResult = "">
+    <cfset var qWhy      = "">
+
+    <!--- Column identity is resolved from this server-side switch only. The client sends a
+          field KEY, never a column name, so no client-supplied string reaches the SQL text. --->
+    <cfswitch expression="#trim(arguments.field)#">
+        <cfcase value="contactPhone">
+            <cfset col = "contactPhone"><cfset srcCol = "contactPhone_src">
+            <cfset maxLen = 100><cfset label = "Primary phone">
+        </cfcase>
+        <cfcase value="contactEmail">
+            <cfset col = "contactEmail"><cfset srcCol = "contactEmail_src">
+            <cfset maxLen = 150><cfset label = "Primary email">
+        </cfcase>
+        <cfcase value="contactCompany">
+            <cfset col = "contactCompany"><cfset srcCol = "contactCompany_src">
+            <cfset maxLen = 255><cfset label = "Primary company">
+        </cfcase>
+        <cfdefaultcase>
+            <cfset result.message = "Unknown field.">
+            <cfreturn result>
+        </cfdefaultcase>
+    </cfswitch>
+
+    <!--- Oversized values are a clean reject, never a silent truncation. --->
+    <cfif len(newValue) GT maxLen>
+        <cfset result.message = "#label# is limited to #maxLen# characters. Nothing was saved.">
+        <cfreturn result>
+    </cfif>
+
+    <!--- THE enforcement (lock Section 2c). One conditional UPDATE: ownership AND the unlinked
+          predicate are re-asserted at the write site, so there is no read-then-update race. A
+          linked contact, a contact owned by another user, and a deleted contact all match zero
+          rows and nothing is written. There is no bypass parameter: the master path uses
+          update(), a separate trusted method. --->
+    <cfquery result="updResult">
+        UPDATE contactdetails_tbl
+        SET    #col#    = <cfqueryparam value="#newValue#" cfsqltype="CF_SQL_VARCHAR" null="#(NOT len(newValue))#">,
+               #srcCol# = <cfqueryparam value="user" cfsqltype="CF_SQL_VARCHAR">
+        WHERE  contactid = <cfqueryparam value="#arguments.contactid#" cfsqltype="CF_SQL_INTEGER">
+          AND  userid    = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
+          AND  master_co_contact_id IS NULL
+          AND  isdeleted = <cfqueryparam value="0" cfsqltype="CF_SQL_BIT">
+    </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
+
+    <cfif val(updResult.recordCount) GTE 1>
+        <cfset result.success = true>
+        <cfset result.message = "Saved.">
+        <cfset result.data = { "field": col, "value": newValue, "src": "user" }>
+        <cfreturn result>
+    </cfif>
+
+    <!--- Zero rows: NOTHING was written. This read only decides which message to show - it
+          never authorizes a write, so it cannot race the guard above. --->
+    <cfquery name="qWhy">
+        SELECT master_co_contact_id, #col# AS currentValue
+        FROM   contactdetails
+        WHERE  contactid = <cfqueryparam value="#arguments.contactid#" cfsqltype="CF_SQL_INTEGER">
+          AND  userid    = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
+          AND  isdeleted = <cfqueryparam value="0" cfsqltype="CF_SQL_BIT">
+    </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
+
+    <cfif qWhy.recordCount EQ 0>
+        <!--- Not this user's contact, or deleted. Deliberately does not distinguish "not yours"
+              from "does not exist" - no enumeration oracle. --->
+        <cfset result.message = "Contact not found.">
+    <cfelseif len(trim(qWhy.master_co_contact_id))>
+        <cfset result.message = "This contact is linked to the TAO Master Directory. Its primary phone, email, and company are managed by the directory and cannot be edited here - use Suggest a correction to propose a change.">
+    <cfelseif compare(trim(qWhy.currentValue), newValue) EQ 0>
+        <!--- The row exists and is unlinked, so the guard DID match; the driver reported zero
+              rows because the value was unchanged (MySQL affected-vs-matched rows depends on the
+              connector's useAffectedRows setting). Re-submitting the same value is a no-op
+              success, which keeps this endpoint idempotent under either setting. --->
+        <cfset result.success = true>
+        <cfset result.message = "Saved.">
+        <cfset result.data = { "field": col, "value": newValue, "src": "user" }>
+    <cfelse>
+        <!--- L-1: exists + owned + unlinked + value DIFFERS after a zero-row UPDATE. This is
+              reachable, not theoretical: the live DIR-WO-2 unlink control in a second tab can
+              flip the contact's link state between this request's UPDATE and this read, so the
+              row being read here is not the row the guard evaluated. Reject - the UPDATE already
+              wrote nothing, and this disambiguation path never authorizes a write, it only
+              chooses a message. The user re-reads current state and retries. --->
+        <cfset result.message = "This contact changed while you were editing it. Nothing was saved - reload the contact and try again.">
+    </cfif>
+
+    <cfreturn result>
 </cffunction>
 
 <cffunction name="update22" access="public" returntype="void" output="false" hint="Update an existing contact record">

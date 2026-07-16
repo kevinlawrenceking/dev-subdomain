@@ -466,6 +466,8 @@
         <cfset var referralActionA = "" />
         <cfset var cndExists       = "" />
         <cfset var qKeepPhoto      = "" />
+        <cfset var priMasterId     = "" />
+        <cfset var dupMasterId     = "" />
 
         <!--- Guard: cannot merge a contact into itself --->
         <cfif pri EQ dup>
@@ -489,7 +491,7 @@
         <!--- Guard: both must exist, be owned by this user, and be active. Also pulls
               contactphoto for the avatar carry-over pre-read (step 9). --->
         <cfquery name="qGuard" datasource="#application.datasource#">
-            SELECT contactid, contactphoto
+            SELECT contactid, contactphoto, master_co_contact_id
             FROM   contactdetails
             WHERE  contactid IN (<cfqueryparam value="#pri#,#dup#" cfsqltype="cf_sql_integer" list="true" />)
               AND  userid    = <cfqueryparam value="#arguments.userid#" cfsqltype="cf_sql_integer" />
@@ -497,6 +499,27 @@
         </cfquery>
         <cfif qGuard.recordCount NEQ 2>
             <cfset result.message = "One or both contacts were not found, are not yours, or were already merged." />
+            <cfreturn result />
+        </cfif>
+
+        <!--- Q1b guard (DIR-LNK-WO-6; operator ruling 2026-07-16). BLOCK a merge when the two
+              contacts are linked to DIFFERENT master records: the merge is otherwise link-blind
+              and would silently bury the discard's link with no audit trail. A deliberate unlink
+              must come first. Runs BEFORE any write (the transaction opens further down), so a
+              reject leaves every table untouched.
+              Scope notes: both linked to the SAME master is not a conflict and is allowed.
+              Discard-linked / keep-unlinked (Q1a = transfer the link) is NOT handled here - it
+              belongs to the merge-owning WO and remains a registered known gap (D-15 class). --->
+        <cfloop query="qGuard">
+            <cfif qGuard.contactid EQ pri>
+                <cfset priMasterId = trim(qGuard.master_co_contact_id) />
+            </cfif>
+            <cfif qGuard.contactid EQ dup>
+                <cfset dupMasterId = trim(qGuard.master_co_contact_id) />
+            </cfif>
+        </cfloop>
+        <cfif len(priMasterId) AND len(dupMasterId) AND compare(priMasterId, dupMasterId) NEQ 0>
+            <cfset result.message = "These contacts are linked to two different TAO Master Directory records. Unlink one of them first, then merge." />
             <cfreturn result />
         </cfif>
 

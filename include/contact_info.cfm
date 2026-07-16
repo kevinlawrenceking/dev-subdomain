@@ -160,7 +160,10 @@
 <cfinclude template="/include/qry/phonecheck_515_1.cfm" />
 <!--- <cfinclude template="/include/qry/rels.cfm" /> --->
 <cfinclude template="/include/qry/fetchcontactitems.cfm" />
-<cfinclude template="/include/qry/findcompany_476_1.cfm" />
+<!--- DIR-LNK-WO-6: findcompany_476_1.cfm removed. Its only consumer was the item-derived company
+      loop this WO replaced with the primary fields block (which reads the contactdetails column),
+      so the query had no remaining reader and ran once per contact page for nothing. emailcheck /
+      phonecheck above are still consumed by the toolbar links and stay. --->
 <cfinclude template="/include/qry/notesRelationship_509_1.cfm" />
 
 <cfif #details.contactphoto# is not "">
@@ -683,14 +686,18 @@ x</button>
 </figure>
 
                         </A>
-<cfloop query="findcompany">
-<cfoutput><div class="text-center">#valueCompany#</div></cfoutput>
-</cfloop>
+<!--- DIR-LNK-WO-6: the item-derived company loop that stood here is replaced by the primary
+      fields block below. Primaries now render from the contactdetails COLUMNS - the same source
+      contacts_ss and the share views read since the WO-5 cutover - so the detail page and the
+      lists can no longer disagree. Additional companies/phones/emails remain in the item grid
+      (contact_pane.cfm, "Additional information"). --->
 
 <!--- DIR-WO-2 (TAO-MCD-P1): master-link control + linked badge (read-only state) --->
 <cfquery name="qMasterLink">
     SELECT d.master_co_contact_id, d.master_coid, d.company_location_id,
            d.contactCompany, d.contactCompany_src, d.master_last_sync,
+           d.contactPhone, d.contactPhone_src,
+           d.contactEmail, d.contactEmail_src,
            cc.fullname AS master_person_name, co.coName AS master_company_name
     FROM contactdetails d
     LEFT JOIN co_contacts cc ON cc.id   = d.master_co_contact_id
@@ -699,6 +706,110 @@ x</button>
       AND d.userid    = <cfqueryparam value="#session.userid#" cfsqltype="CF_SQL_INTEGER">
 </cfquery>
 <cfset masterIsLinked = (qMasterLink.recordCount AND len(trim(qMasterLink.master_co_contact_id)))>
+
+<!--- DIR-LNK-WO-6 primary fields block (spec 13.1 editable / 13.2 read-only).
+      Unlinked: the three primaries are user-editable (Q1e) and save to contactdetails_tbl via
+      /ajax/contact/update-primary.cfm. Linked: read-only and master-managed (spec 8.1) - the
+      edit affordance is not rendered, and the server rejects a primary write regardless (the
+      UI state is presentation on top of the enforcement, never the enforcement itself). --->
+<cfoutput>
+<div id="primaryFields" class="text-center mt-2" data-contactid="#currentid#" style="font-size:0.85rem;">
+
+    <div class="primary-row mb-1" data-field="contactCompany">
+        <span class="primary-value" data-field="contactCompany" data-raw="#encodeForHTMLAttribute(trim(qMasterLink.contactCompany))#" data-empty="No company"><cfif len(trim(qMasterLink.contactCompany))>#encodeForHTML(trim(qMasterLink.contactCompany))#<cfelse><span class="text-muted font-weight-lighter">No company</span></cfif></span><cfif NOT masterIsLinked><button type="button" class="btn btn-link btn-sm p-0 ms-1 primary-edit" data-field="contactCompany" title="Edit primary company" aria-label="Edit primary company"><i class="mdi mdi-square-edit-outline font-18"></i></button></cfif>
+    </div>
+
+    <div class="primary-row mb-1" data-field="contactPhone">
+        <span class="primary-value" data-field="contactPhone" data-raw="#encodeForHTMLAttribute(trim(qMasterLink.contactPhone))#" data-empty="No phone"><cfif len(trim(qMasterLink.contactPhone))>#encodeForHTML(trim(qMasterLink.contactPhone))#<cfelse><span class="text-muted font-weight-lighter">No phone</span></cfif></span><cfif NOT masterIsLinked><button type="button" class="btn btn-link btn-sm p-0 ms-1 primary-edit" data-field="contactPhone" title="Edit primary phone" aria-label="Edit primary phone"><i class="mdi mdi-square-edit-outline font-18"></i></button></cfif>
+    </div>
+
+    <div class="primary-row mb-1" data-field="contactEmail">
+        <span class="primary-value" data-field="contactEmail" data-raw="#encodeForHTMLAttribute(trim(qMasterLink.contactEmail))#" data-empty="No email"><cfif len(trim(qMasterLink.contactEmail))>#encodeForHTML(trim(qMasterLink.contactEmail))#<cfelse><span class="text-muted font-weight-lighter">No email</span></cfif></span><cfif NOT masterIsLinked><button type="button" class="btn btn-link btn-sm p-0 ms-1 primary-edit" data-field="contactEmail" title="Edit primary email" aria-label="Edit primary email"><i class="mdi mdi-square-edit-outline font-18"></i></button></cfif>
+    </div>
+
+    <cfif masterIsLinked>
+        <div class="text-muted" style="font-size:0.72rem;">Managed by the TAO Master Directory</div>
+        <a href="##" id="suggestCorrectionLink" class="btn btn-link btn-sm p-0" style="font-size:0.72rem;">Suggest a correction</a>
+    </cfif>
+
+    <div id="primaryMsg" class="small mt-1" style="display:none;"></div>
+</div>
+</cfoutput>
+
+<!--- DIR-LNK-WO-6 primary inline editor. CSRF is auto-injected by core.cfm on non-GET, per the
+      master-link controller below. Rejects are server-authored: whatever the endpoint returns is
+      what the user sees; this script never decides whether an edit is allowed. --->
+<script>
+$(function () {
+    var wrap = $("#primaryFields");
+    if (!wrap.length) { return; }
+    var contactid = wrap.data("contactid");
+
+    function showMsg(text, ok) {
+        var m = $("#primaryMsg");
+        m.text(text).css("color", ok ? "#3bafda" : "#f1556c").show();
+        if (ok) { setTimeout(function () { m.fadeOut(); }, 2000); }
+    }
+
+    function render(valSpan, value) {
+        valSpan.data("raw", value);
+        if (value && value.length) {
+            valSpan.text(value);
+        } else {
+            valSpan.empty().append(
+                $('<span class="text-muted font-weight-lighter"></span>').text(valSpan.data("empty") || "")
+            );
+        }
+    }
+
+    wrap.on("click", ".primary-edit", function () {
+        var btn = $(this);
+        var row = btn.closest(".primary-row");
+        var field = btn.data("field");
+        if (row.find(".primary-input").length) { return; }
+
+        var valSpan = row.find(".primary-value");
+        var editor = $('<div class="primary-editor mt-1"></div>');
+        var input = $('<input type="text" class="form-control form-control-sm primary-input">').val(valSpan.data("raw") || "");
+        var save = $('<button type="button" class="btn btn-primary btn-sm mt-1">Save</button>');
+        var cancel = $('<button type="button" class="btn btn-link btn-sm mt-1">Cancel</button>');
+
+        editor.append(input).append(save).append(cancel);
+        valSpan.hide(); btn.hide(); row.append(editor); input.trigger("focus");
+
+        cancel.on("click", function () { editor.remove(); valSpan.show(); btn.show(); });
+
+        save.on("click", function () {
+            save.prop("disabled", true);
+            $.ajax({
+                url: "/ajax/contact/update-primary.cfm",
+                method: "POST",
+                dataType: "json",
+                data: { contactid: contactid, field: field, value: input.val() },
+                success: function (d) {
+                    if (d && d.success) {
+                        render(valSpan, (d.data && typeof d.data.value !== "undefined") ? d.data.value : "");
+                        editor.remove(); valSpan.show(); btn.show();
+                        showMsg(d.message || "Saved.", true);
+                    } else {
+                        save.prop("disabled", false);
+                        showMsg((d && d.message) ? d.message : "Save failed.", false);
+                    }
+                },
+                error: function () {
+                    save.prop("disabled", false);
+                    showMsg("Save failed.", false);
+                }
+            });
+        });
+    });
+
+    $("#suggestCorrectionLink").on("click", function (e) {
+        e.preventDefault();
+        showMsg("Correction requests are not available yet.", false);
+    });
+});
+</script>
 
 <cfoutput>
 <div id="masterLinkWrap" class="text-center mt-2" data-contactid="#currentid#" style="font-size:0.8rem;">
