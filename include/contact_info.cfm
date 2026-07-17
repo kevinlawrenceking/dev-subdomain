@@ -673,20 +673,17 @@ x</button>
 </cfquery>
 <cfset masterIsLinked = (qMasterLink.recordCount AND len(trim(qMasterLink.master_co_contact_id)))>
 
-<!--- DIR-LNK-WO-6/UI-6: three render states of one panel. State predicate -
+<!--- DIR-LNK-WO-6/UI-6 state predicate (AMENDED per D-23, operator evidence 2026-07-17):
         linked  = master_co_contact_id present (masterIsLinked, above);
-        synced  = linked AND a first sync has populated the snapshot.
-      master_last_sync is the definitive "a sync ran and populated the snapshot" marker: it is
-      stamped only when the sync job writes the master snapshot into the contactdetails columns
-      (see contact 132419 - _src='master', master_last_sync 2026-07-13 09:38:18 - SYNCED). A
-      bridge-era link (linked before any sync ran, e.g. Steve Miller / Adam Bovasta) has no stamp
-      and its _src columns are still user-sourced, so it classifies INTERIM. This predicate yields
-      INTERIM whenever the stamp is absent, which is exactly the spec's safe fallback: never a
-      false SYNCED, never a "Managed by the Book" claim on an unsynced link. The contactCompany_src
-      / contactPhone_src / contactEmail_src columns corroborate provenance and are surfaced in the
-      operator verification packet; the read-only DB channel was down this session, so the row-level
-      classification of Steve Miller / Adam Bovasta / 132419 is handed to the operator to confirm. --->
-<cfset masterIsSynced = ( masterIsLinked AND len(trim(qMasterLink.master_last_sync)) GT 0 )>
+        synced  = linked AND the company column is master-sourced (contactCompany_src='master').
+      D-23: the old bridge stamps master_last_sync on EVERY linked row unconditionally, so that
+      stamp cannot separate a synced primary from a stale-value link - testing it would classify
+      every linked contact SYNCED (false provenance). The one true 'master' writer fleet-wide is the
+      bridge company-write: it sets contactCompany + _src='master' ONLY when the column was blank,
+      and never writes email/phone (those stay _src='user'; WO-4 backfill also left _src='user').
+      contactCompany_src='master' is therefore the reliable "the Book actually owns a primary here"
+      signal. Company-provenance proxy per D-23 until WO-7 writes full snapshots; revisited WO-7/8. --->
+<cfset masterIsSynced = ( masterIsLinked AND qMasterLink.contactCompany_src EQ "master" )>
 
 <!--- UI-5b: co_contacts.imdbid holds an IMDB name id. The "nm" prefix test is the guard: the
       column's exact value shape could not be sampled this session (the read-only DB channel is
