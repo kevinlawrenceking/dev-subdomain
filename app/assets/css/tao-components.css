@@ -52,6 +52,51 @@ body {
 }
 
 /* --------------------------------------------------------------------------
+   Contact panel identity (DIR-LNK-WO-6 / UI-4)
+   --------------------------------------------------------------------------
+   The contact name leads the card body at heading scale; the blue bar above it
+   carries only the static "Contact" label. contacttitle is the subordinate
+   line. Both are display-only - see include/contact_info.cfm.
+   -------------------------------------------------------------------------- */
+.tao-contact-name {
+    font-size: 1.5rem;
+    font-weight: 500;
+    line-height: 1.25;
+    color: #323a46;
+}
+
+.tao-contact-title {
+    font-size: 0.9rem;
+    line-height: 1.3;
+    color: #98a6ad;
+    margin-top: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   Avatar figure (DIR-LNK-WO-6 / UI-4d)
+   --------------------------------------------------------------------------
+   The circle comes from .tao-avatar's border-radius. This neutralizes any
+   square framing a theme layer may put on the figure or the image itself
+   (thumbnail padding, background fill, box-shadow), which is what shows as
+   corner points behind the circle. Scoped to the figure so no other avatar
+   surface is affected.
+   -------------------------------------------------------------------------- */
+.tao-avatar-figure {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    box-shadow: none;
+}
+
+.tao-avatar-figure img.tao-avatar {
+    padding: 0;
+    background: none;
+    box-shadow: none;
+    border-radius: 50%;
+}
+
+/* --------------------------------------------------------------------------
    EXIF Orientation Fix (Safari / older browsers)
    --------------------------------------------------------------------------
    Safari does not always auto-correct EXIF Orientation tags on uploaded

@@ -160,10 +160,14 @@
 <cfinclude template="/include/qry/phonecheck_515_1.cfm" />
 <!--- <cfinclude template="/include/qry/rels.cfm" /> --->
 <cfinclude template="/include/qry/fetchcontactitems.cfm" />
-<!--- DIR-LNK-WO-6: findcompany_476_1.cfm removed. Its only consumer was the item-derived company
-      loop this WO replaced with the primary fields block (which reads the contactdetails column),
-      so the query had no remaining reader and ran once per contact page for nothing. emailcheck /
-      phonecheck above are still consumed by the toolbar links and stay. --->
+<!--- DIR-LNK-WO-6: the findcompany_476_1.cfm include was removed from THIS page. Its consumer here
+      was the item-derived company loop this WO replaced with the primary fields block (which reads
+      the contactdetails column), so the query had no remaining reader on the contact page and ran
+      once per page load for nothing. The file itself still exists and is still included by
+      include/qry/findcompany.cfm:4 - that wrapper appears to have no live consumer of its own, so
+      the pair registers to the qry-elimination list as a dead chain, to be verified at elimination
+      rather than assumed here. emailcheck / phonecheck above are still consumed by the toolbar
+      links and stay. --->
 <cfinclude template="/include/qry/notesRelationship_509_1.cfm" />
 
 <cfif #details.contactphoto# is not "">
@@ -584,8 +588,10 @@ x</button>
             
             </cfoutput>
 
+<!--- DIR-LNK-WO-6/UI-4: the blue bar carries the static panel label. The contact NAME moved into
+      the card body below the avatar, where it renders at heading scale (UI-4a/b). --->
 <h4 class="card-card-header text-center text-white text-nowrap py-0" style="background-color: #406E8E;margin:0!important;padding:15px!important;" >
-                    <cfoutput>#details.fullname#</cfoutput>
+                    Contact
                 </h4>
                 <div class="py-1 px-3 flex text-center font-22">
 
@@ -640,7 +646,7 @@ x</button>
 
                         <A class="no-hover-effect" href="/app/image-upload-contact/?contactid=<cfoutput>#contactid#&ref_pgid=3</cfoutput>">
 
-<figure>
+<figure class="tao-avatar-figure">
 <cfoutput>
 
 <div class="text-center">
@@ -686,6 +692,22 @@ x</button>
 </figure>
 
                         </A>
+
+<!--- DIR-LNK-WO-6/UI-4: contact identity. The name renders at heading scale here because the blue
+      bar now carries the static "Contact" label; contacttitle follows as a subdued line when the
+      contact has one. Both are DISPLAY ONLY - neither is a primary column, neither is
+      master-managed, and neither is wired to updatePrimary(). Both come from the details query
+      (include/qry/details_456_1.cfm -> ContactService.DETcontactdetails_24624), which already
+      selects contactFullName AS fullname and contacttitle; no query was added or widened. --->
+<cfoutput>
+<div class="text-center mt-2">
+    <div class="tao-contact-name">#encodeForHTML(trim(details.fullname))#</div>
+    <cfif len(trim(details.contacttitle))>
+        <div class="tao-contact-title">#encodeForHTML(trim(details.contacttitle))#</div>
+    </cfif>
+</div>
+</cfoutput>
+
 <!--- DIR-LNK-WO-6: the item-derived company loop that stood here is replaced by the primary
       fields block below. Primaries now render from the contactdetails COLUMNS - the same source
       contacts_ss and the share views read since the WO-5 cutover - so the detail page and the
@@ -719,12 +741,12 @@ x</button>
         <span class="primary-value" data-field="contactCompany" data-raw="#encodeForHTMLAttribute(trim(qMasterLink.contactCompany))#" data-empty="No company"><cfif len(trim(qMasterLink.contactCompany))>#encodeForHTML(trim(qMasterLink.contactCompany))#<cfelse><span class="text-muted font-weight-lighter">No company</span></cfif></span><cfif NOT masterIsLinked><button type="button" class="btn btn-link btn-sm p-0 ms-1 primary-edit" data-field="contactCompany" title="Edit primary company" aria-label="Edit primary company"><i class="mdi mdi-square-edit-outline font-18"></i></button></cfif>
     </div>
 
-    <div class="primary-row mb-1" data-field="contactPhone">
-        <span class="primary-value" data-field="contactPhone" data-raw="#encodeForHTMLAttribute(trim(qMasterLink.contactPhone))#" data-empty="No phone"><cfif len(trim(qMasterLink.contactPhone))>#encodeForHTML(trim(qMasterLink.contactPhone))#<cfelse><span class="text-muted font-weight-lighter">No phone</span></cfif></span><cfif NOT masterIsLinked><button type="button" class="btn btn-link btn-sm p-0 ms-1 primary-edit" data-field="contactPhone" title="Edit primary phone" aria-label="Edit primary phone"><i class="mdi mdi-square-edit-outline font-18"></i></button></cfif>
-    </div>
-
     <div class="primary-row mb-1" data-field="contactEmail">
         <span class="primary-value" data-field="contactEmail" data-raw="#encodeForHTMLAttribute(trim(qMasterLink.contactEmail))#" data-empty="No email"><cfif len(trim(qMasterLink.contactEmail))>#encodeForHTML(trim(qMasterLink.contactEmail))#<cfelse><span class="text-muted font-weight-lighter">No email</span></cfif></span><cfif NOT masterIsLinked><button type="button" class="btn btn-link btn-sm p-0 ms-1 primary-edit" data-field="contactEmail" title="Edit primary email" aria-label="Edit primary email"><i class="mdi mdi-square-edit-outline font-18"></i></button></cfif>
+    </div>
+
+    <div class="primary-row mb-1" data-field="contactPhone">
+        <span class="primary-value" data-field="contactPhone" data-raw="#encodeForHTMLAttribute(trim(qMasterLink.contactPhone))#" data-empty="No phone"><cfif len(trim(qMasterLink.contactPhone))>#encodeForHTML(trim(qMasterLink.contactPhone))#<cfelse><span class="text-muted font-weight-lighter">No phone</span></cfif></span><cfif NOT masterIsLinked><button type="button" class="btn btn-link btn-sm p-0 ms-1 primary-edit" data-field="contactPhone" title="Edit primary phone" aria-label="Edit primary phone"><i class="mdi mdi-square-edit-outline font-18"></i></button></cfif>
     </div>
 
     <cfif masterIsLinked>
@@ -815,7 +837,10 @@ $(function () {
 <div id="masterLinkWrap" class="text-center mt-2" data-contactid="#currentid#" style="font-size:0.8rem;">
     <div id="masterLinkBadge" style="#masterIsLinked ? '' : 'display:none;'#">
         <span class="badge badge-blue">Linked to directory</span>
-        <div class="text-muted" style="margin-top:2px;">
+        <!--- UI-4c: the matched person and company are the content here; the badge and the Unlink
+              control are chrome. They were rendering at or below the chrome's size, which inverted
+              the hierarchy. The data now leads at 0.95rem; last sync stays deliberately small. --->
+        <div class="text-muted" style="margin-top:2px;font-size:0.95rem;">
             <span id="masterLinkPerson">#encodeForHTML(qMasterLink.master_person_name)#</span><span id="masterLinkSep"><cfif len(trim(qMasterLink.master_company_name))> &middot; </cfif></span><span id="masterLinkCompany">#encodeForHTML(qMasterLink.master_company_name)#</span>
         </div>
         <div class="text-muted" style="font-size:0.72rem;">
