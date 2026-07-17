@@ -673,6 +673,21 @@ x</button>
 </cfquery>
 <cfset masterIsLinked = (qMasterLink.recordCount AND len(trim(qMasterLink.master_co_contact_id)))>
 
+<!--- DIR-LNK-WO-6/UI-6: three render states of one panel. State predicate -
+        linked  = master_co_contact_id present (masterIsLinked, above);
+        synced  = linked AND a first sync has populated the snapshot.
+      master_last_sync is the definitive "a sync ran and populated the snapshot" marker: it is
+      stamped only when the sync job writes the master snapshot into the contactdetails columns
+      (see contact 132419 - _src='master', master_last_sync 2026-07-13 09:38:18 - SYNCED). A
+      bridge-era link (linked before any sync ran, e.g. Steve Miller / Adam Bovasta) has no stamp
+      and its _src columns are still user-sourced, so it classifies INTERIM. This predicate yields
+      INTERIM whenever the stamp is absent, which is exactly the spec's safe fallback: never a
+      false SYNCED, never a "Managed by the Book" claim on an unsynced link. The contactCompany_src
+      / contactPhone_src / contactEmail_src columns corroborate provenance and are surfaced in the
+      operator verification packet; the read-only DB channel was down this session, so the row-level
+      classification of Steve Miller / Adam Bovasta / 132419 is handed to the operator to confirm. --->
+<cfset masterIsSynced = ( masterIsLinked AND len(trim(qMasterLink.master_last_sync)) GT 0 )>
+
 <!--- UI-5b: co_contacts.imdbid holds an IMDB name id. The "nm" prefix test is the guard: the
       column's exact value shape could not be sampled this session (the read-only DB channel is
       down), so a value that is not an nm-id renders nothing rather than a broken link. --->
@@ -793,37 +808,50 @@ x</button>
       only, never behavior. --->
 
 
-<!--- DIR-LNK-WO-6 primary fields block (spec 13.1 editable / 13.2 read-only).
-      Unlinked: the three primaries are user-editable (Q1e) and save to contactdetails_tbl via
-      /ajax/contact/update-primary.cfm. Linked: read-only and master-managed (spec 8.1) - the
-      edit affordance is not rendered, and the server rejects a primary write regardless (the
-      UI state is presentation on top of the enforcement, never the enforcement itself). --->
+<!--- DIR-LNK-WO-6/UI-6 primary field rows - three render states of one panel.
+      SYNCED  : leading muted icon + value + trailing lock; office address under Company; read-only.
+      INTERIM : same locked rows showing the current column values ("No X on file" when blank);
+                read-only, plus an "Awaiting first sync" pill - but never a "Managed by the Book"
+                claim (never assert false provenance on a link that has not synced).
+      UNLINKED: same rows with the WO-6 inline pencil editor; a blank field renders an "Add X" link.
+      The value source is the contactdetails COLUMN in every state (contactCompany / contactEmail /
+      contactPhone), so the row content can never disagree with the lists. The lock / pencil is
+      presentation on top of the /ajax/contact/update-primary.cfm enforcement, never the enforcement
+      itself: the server rejects a primary write on a linked contact regardless of what renders. --->
 <cfoutput>
-<div id="primaryFields" class="text-center mt-2" data-contactid="#currentid#" style="font-size:0.85rem;">
-
-    <div class="primary-row mb-1" data-field="contactCompany">
-        <span class="primary-value" data-field="contactCompany" data-raw="#encodeForHTMLAttribute(trim(qMasterLink.contactCompany))#" data-empty="No company"><cfif len(trim(qMasterLink.contactCompany))>#encodeForHTML(trim(qMasterLink.contactCompany))#<cfelse><span class="text-muted font-weight-lighter">No company</span></cfif></span><cfif NOT masterIsLinked><button type="button" class="btn btn-link btn-sm p-0 ms-1 primary-edit" data-field="contactCompany" title="Edit primary company" aria-label="Edit primary company"><i class="mdi mdi-square-edit-outline font-18"></i></button></cfif>
-    </div>
-
-    <!--- UI-5a: master office address, directly beneath the company it belongs to. Linked +
-          company_location_id only; read-only context, never an editable primary. --->
-    <cfif masterIsLinked AND arrayLen(masterOfficeLines)>
-        <div class="text-muted mb-1" style="font-size:0.78rem;line-height:1.35;">
-            <cfloop array="#masterOfficeLines#" index="masterOfficeLine">#encodeForHTML(masterOfficeLine)#<br /></cfloop>
+<div id="primaryFields" class="book-fields mt-2" data-contactid="#currentid#">
+    <cfset primaryDefs = [
+        { "field"="contactCompany", "icon"="mdi-office-building-outline", "value"=trim(qMasterLink.contactCompany), "emptyLabel"="No company on file", "addLabel"="Add company", "editTitle"="Edit primary company" },
+        { "field"="contactEmail",   "icon"="mdi-email-outline",          "value"=trim(qMasterLink.contactEmail),   "emptyLabel"="No email on file",   "addLabel"="Add email",   "editTitle"="Edit primary email" },
+        { "field"="contactPhone",   "icon"="mdi-phone-outline",          "value"=trim(qMasterLink.contactPhone),   "emptyLabel"="No phone on file",   "addLabel"="Add phone",   "editTitle"="Edit primary phone" }
+    ]>
+    <cfloop array="#primaryDefs#" index="pf">
+        <div class="book-field<cfif NOT masterIsLinked> primary-row</cfif>" data-field="#pf.field#">
+            <i class="mdi #pf.icon# book-field__icon" aria-hidden="true"></i>
+            <div class="book-field__body">
+                <cfif masterIsLinked>
+                    <span class="primary-value" data-field="#pf.field#"><cfif len(pf.value)>#encodeForHTML(pf.value)#<cfelse><span class="book-field__empty">#pf.emptyLabel#</span></cfif></span>
+                    <cfif masterIsSynced AND pf.field EQ "contactCompany" AND arrayLen(masterOfficeLines)>
+                        <div class="book-office"><cfloop array="#masterOfficeLines#" index="masterOfficeLine">#encodeForHTML(masterOfficeLine)#<br /></cfloop></div>
+                    </cfif>
+                <cfelse>
+                    <span class="primary-value" data-field="#pf.field#" data-raw="#encodeForHTMLAttribute(pf.value)#" data-empty="#pf.emptyLabel#"><cfif len(pf.value)>#encodeForHTML(pf.value)#</cfif></span>
+                </cfif>
+            </div>
+            <cfif masterIsLinked>
+                <i class="mdi mdi-lock-outline book-field__lock" title="<cfif masterIsSynced>Managed by the Book<cfelse>Awaiting first sync</cfif>" aria-hidden="true"></i>
+            <cfelse>
+                <cfif len(pf.value)>
+                    <button type="button" class="btn btn-link btn-sm p-0 primary-edit" data-field="#pf.field#" title="#pf.editTitle#" aria-label="#pf.editTitle#"><i class="mdi mdi-square-edit-outline font-18"></i></button>
+                <cfelse>
+                    <button type="button" class="btn btn-link btn-sm p-0 primary-edit book-field__add" data-field="#pf.field#">#pf.addLabel#</button>
+                </cfif>
+            </cfif>
         </div>
-    </cfif>
+    </cfloop>
 
-    <div class="primary-row mb-1" data-field="contactEmail">
-        <span class="primary-value" data-field="contactEmail" data-raw="#encodeForHTMLAttribute(trim(qMasterLink.contactEmail))#" data-empty="No email"><cfif len(trim(qMasterLink.contactEmail))>#encodeForHTML(trim(qMasterLink.contactEmail))#<cfelse><span class="text-muted font-weight-lighter">No email</span></cfif></span><cfif NOT masterIsLinked><button type="button" class="btn btn-link btn-sm p-0 ms-1 primary-edit" data-field="contactEmail" title="Edit primary email" aria-label="Edit primary email"><i class="mdi mdi-square-edit-outline font-18"></i></button></cfif>
-    </div>
-
-    <div class="primary-row mb-1" data-field="contactPhone">
-        <span class="primary-value" data-field="contactPhone" data-raw="#encodeForHTMLAttribute(trim(qMasterLink.contactPhone))#" data-empty="No phone"><cfif len(trim(qMasterLink.contactPhone))>#encodeForHTML(trim(qMasterLink.contactPhone))#<cfelse><span class="text-muted font-weight-lighter">No phone</span></cfif></span><cfif NOT masterIsLinked><button type="button" class="btn btn-link btn-sm p-0 ms-1 primary-edit" data-field="contactPhone" title="Edit primary phone" aria-label="Edit primary phone"><i class="mdi mdi-square-edit-outline font-18"></i></button></cfif>
-    </div>
-
-    <cfif masterIsLinked>
-        <div class="text-muted" style="font-size:0.72rem;">Managed by the TAO Master Directory</div>
-        <a href="##" id="suggestCorrectionLink" class="btn btn-link btn-sm p-0" style="font-size:0.72rem;">Suggest a correction</a>
+    <cfif masterIsLinked AND NOT masterIsSynced>
+        <div class="book-await mt-2 mb-1"><span class="book-pill">Awaiting first sync</span></div>
     </cfif>
 
     <div id="primaryMsg" class="small mt-1" style="display:none;"></div>
@@ -905,32 +933,60 @@ $(function () {
 });
 </script>
 
+<!--- DIR-LNK-WO-6/UI-6 consolidated band. Replaces the old managed-by line / blue badge / last-sync
+      / Unlink stack (removed from the fields block above and folded into this ONE band). Both the
+      linked band (#masterLinkBadge) and the unlinked CTA (#masterLinkForm) stay in the DOM, one
+      hidden, so the DIR-WO-2 link / unlink JS below keeps toggling them by id with no change.
+      SYNCED  -> gold "In the Book" chip (lit Book mark, glow) + match line + IMDB + "Synced from
+                 the Book" stamp + fine print (Suggest a correction / unlink).
+      INTERIM -> gray "Linked" chip (flat mark) + match line + IMDB + fine print. NO sync stamp and
+                 no "Managed by the Book" claim; the "Awaiting first sync" pill renders with the
+                 fields above (never assert false provenance on an unsynced link).
+      UNLINKED-> outline "Find in the Book" chip wired to the existing #masterLinkToggle control.
+      The Book mark is inlined at each point of use (house pattern); colours inherit from chip ink,
+      and only the lit gold mark on this contact panel carries the glow (per UI-6 asset rules). --->
 <cfoutput>
-<div id="masterLinkWrap" class="text-center mt-2" data-contactid="#currentid#" style="font-size:0.8rem;">
-    <div id="masterLinkBadge" style="#masterIsLinked ? '' : 'display:none;'#">
-        <span class="badge badge-blue">Linked to directory</span>
-        <!--- UI-4c: the matched person and company are the content here; the badge and the Unlink
-              control are chrome. They were rendering at or below the chrome's size, which inverted
-              the hierarchy. The data now leads at 0.95rem; last sync stays deliberately small. --->
-        <div class="text-muted" style="margin-top:2px;font-size:0.95rem;">
+<div id="masterLinkWrap" data-contactid="#currentid#">
+
+    <div id="masterLinkBadge" class="book-band" style="#masterIsLinked ? '' : 'display:none;'#">
+        <cfif masterIsSynced>
+            <span class="book-chip book-chip--gold">
+                <svg class="book-mark" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M7 3.25h10.25a2.25 2.25 0 0 1 2.25 2.25v13a2.25 2.25 0 0 1-2.25 2.25H7A2.25 2.25 0 0 1 4.75 18.5v-13A2.25 2.25 0 0 1 7 3.25zm1.3 0v17.5h1.35V3.25z"/></svg>
+                In the Book
+            </span>
+        <cfelse>
+            <span class="book-chip book-chip--gray">
+                <svg class="book-mark" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M7 3.25h10.25a2.25 2.25 0 0 1 2.25 2.25v13a2.25 2.25 0 0 1-2.25 2.25H7A2.25 2.25 0 0 1 4.75 18.5v-13A2.25 2.25 0 0 1 7 3.25zm1.3 0v17.5h1.35V3.25z"/></svg>
+                Linked
+            </span>
+        </cfif>
+
+        <div class="book-band__match">
             <span id="masterLinkPerson">#encodeForHTML(qMasterLink.master_person_name)#</span><span id="masterLinkSep"><cfif len(trim(qMasterLink.master_company_name))> &middot; </cfif></span><span id="masterLinkCompany">#encodeForHTML(qMasterLink.master_company_name)#</span>
         </div>
-        <!--- UI-5b: display-only external link to the matched master person on IMDB. --->
+
         <cfif len(masterImdbUrl)>
             <div style="margin-top:2px;">
-                <a href="#masterImdbUrl#" target="_blank" rel="noopener noreferrer"
-                   class="btn btn-link btn-sm p-0" style="font-size:0.75rem;">IMDB</a>
+                <a href="#masterImdbUrl#" target="_blank" rel="noopener noreferrer" class="btn btn-link btn-sm p-0" style="font-size:0.75rem;">IMDB</a>
             </div>
         </cfif>
-        <div class="text-muted" style="font-size:0.72rem;">
-            last sync: <span id="masterLinkSync">#len(trim(qMasterLink.master_last_sync)) ? dateTimeFormat(qMasterLink.master_last_sync, 'yyyy-mm-dd HH:nn') : ''#</span>
+
+        <cfif masterIsSynced>
+            <div class="book-band__sync">Synced from the Book &middot; <span id="masterLinkSync">#len(trim(qMasterLink.master_last_sync)) ? dateTimeFormat(qMasterLink.master_last_sync, 'yyyy-mm-dd HH:nn') : ''#</span></div>
+        </cfif>
+
+        <div class="book-band__fine">
+            <a href="##" id="suggestCorrectionLink">Suggest a correction</a> &middot; <button type="button" id="masterUnlinkBtn" class="book-unlink">unlink</button>
         </div>
-        <button type="button" id="masterUnlinkBtn" class="btn btn-link btn-sm p-0" style="font-size:0.75rem;">Unlink</button>
     </div>
-    <div id="masterLinkForm" style="#masterIsLinked ? 'display:none;' : ''#">
-        <button type="button" id="masterLinkToggle" class="btn btn-link btn-sm p-0" style="font-size:0.75rem;">Link to directory</button>
-        <div id="masterLinkSearchBox" style="display:none;margin-top:4px;">
-            <input type="text" id="masterLinkSearch" class="form-control form-control-sm" placeholder="Search industry people" autocomplete="off" />
+
+    <div id="masterLinkForm" class="book-band" style="#masterIsLinked ? 'display:none;' : ''#">
+        <button type="button" id="masterLinkToggle" class="book-chip book-chip--cta">
+            <svg class="book-mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.75" y="3.25" width="14.75" height="17.5" rx="2.25"/><line x1="8.3" y1="3.25" x2="8.3" y2="20.75"/></svg>
+            Find in the Book
+        </button>
+        <div id="masterLinkSearchBox" style="display:none;margin-top:6px;">
+            <input type="text" id="masterLinkSearch" class="form-control form-control-sm" placeholder="Search the Book" autocomplete="off" />
             <div id="masterLinkLocBox" style="display:none;margin-top:4px;"></div>
         </div>
     </div>

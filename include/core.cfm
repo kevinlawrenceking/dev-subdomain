@@ -28,7 +28,7 @@
 
         <cfinclude template="/include/qry/FindLinksT.cfm"/>
         <cfinclude template="/include/qry/FindLinksB.cfm"/>
-        <cfset rev="18"/>
+        <cfset rev="19"/>
 
 <cfloop query="FindLinksT">
             <cfif findlinkst.linktype IS "script">

@@ -158,3 +158,148 @@ body {
 .footer {
     left: 0;
 }
+
+/* --------------------------------------------------------------------------
+   The Book — master directory contact panel (DIR-LNK-WO-6 / UI-6)
+   --------------------------------------------------------------------------
+   Three render states of one panel: SYNCED ("In the Book", gold), INTERIM
+   ("Linked", awaiting first sync, gray) and UNLINKED ("Find in the Book",
+   outline). Markup in include/contact_info.cfm - display only. The Book mark
+   is inline SVG at each point of use; these classes carry the chip ink, and
+   the mark inherits it via currentColor. Only the lit gold mark on this panel
+   carries the glow.
+   -------------------------------------------------------------------------- */
+
+/* Field rows: leading muted icon, value, trailing lock (or inline pencil) */
+.book-field {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 8px;
+    text-align: left;
+    padding: 3px 0;
+    font-size: 0.85rem;
+    line-height: 1.35;
+}
+.book-field__icon {
+    flex: 0 0 auto;
+    color: #adb5bd;
+    font-size: 15px;
+    margin-top: 1px;
+}
+.book-field__body {
+    flex: 1 1 0;
+    min-width: 0;
+    word-break: break-word;
+}
+.book-field__lock {
+    flex: 0 0 auto;
+    color: #c6cdd3;
+    font-size: 14px;
+    margin-top: 2px;
+}
+.book-field__empty {
+    color: #98a6ad;
+    font-style: italic;
+}
+.book-field .primary-editor {
+    flex-basis: 100%;
+    text-align: left;
+}
+.book-office {
+    color: #98a6ad;
+    font-size: 0.78rem;
+    line-height: 1.35;
+    margin-top: 1px;
+}
+
+/* Awaiting-first-sync pill (INTERIM only) */
+.book-pill {
+    display: inline-block;
+    padding: 2px 9px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    background: #faf5e2;
+    border: 1px solid #eadfb6;
+    color: #9a7b2d;
+}
+
+/* Consolidated band beneath the fields */
+.book-band {
+    background: #f4f7f9;
+    border-top: 1px solid #e3e7ea;
+    margin-top: 10px;
+    padding: 10px 6px 6px;
+    text-align: center;
+}
+.book-band__match {
+    font-size: 0.9rem;
+    color: #5a6570;
+    margin-top: 6px;
+}
+.book-band__sync {
+    font-size: 0.72rem;
+    color: #98a6ad;
+    margin-top: 3px;
+}
+.book-band__fine {
+    font-size: 0.72rem;
+    margin-top: 6px;
+}
+.book-band__fine > a {
+    color: #98a6ad;
+}
+
+/* the Book chips - the mark inherits the chip ink via currentColor */
+.book-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    font-size: 0.72rem;
+    font-weight: 600;
+    line-height: 1.4;
+    font-family: inherit;
+}
+.book-chip .book-mark {
+    width: 14px;
+    height: 14px;
+    flex: 0 0 14px;
+}
+.book-chip--gold {
+    background: #f0e6c0;
+    border-color: #dccd94;
+    color: #7a6a2f;
+}
+.book-chip--gold .book-mark {
+    /* lit gold mark, contact panel only */
+    filter: drop-shadow(0 0 3px rgba(196, 160, 58, 0.65));
+}
+.book-chip--gray {
+    background: #eef1f3;
+    border-color: #d5dade;
+    color: #6b7680;
+}
+.book-chip--cta {
+    background: #fff;
+    border-color: #e3e7ea;
+    color: #406e8e;
+    cursor: pointer;
+}
+
+/* unlink - fine print, half-toned, hover-underline only, last in its row */
+.book-unlink {
+    background: none;
+    border: 0;
+    padding: 0;
+    color: #b0b8bf;
+    font-size: 0.72rem;
+    text-decoration: none;
+    cursor: pointer;
+}
+.book-unlink:hover {
+    color: #b0b8bf;
+    text-decoration: underline;
+}
