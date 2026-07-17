@@ -644,6 +644,70 @@ x</button>
 
                         </cfoutput>
 
+<!--- DIR-WO-2 (TAO-MCD-P1): master-link control + linked badge (read-only state).
+      DIR-LNK-WO-6/UI-5: moved here from below the avatar (UI-5c needs master_image_url before the
+      avatar renders) and extended with ONE join - co_locations - for the office address. No new
+      query. Column names are not guessed: they come from the live prod capture committed at
+      docs/plans/evidence/2026-07-04-wo0b-prod-Q8-Q15-master.txt (captured verbatim 2026-07-04).
+        co_contacts  : imdbid varchar(50), image_url varchar(500)
+        co_locations : address1/address2/city/state/zip varchar(500), PK colocid --->
+<cfquery name="qMasterLink">
+    SELECT d.master_co_contact_id, d.master_coid, d.company_location_id,
+           d.contactCompany, d.contactCompany_src, d.master_last_sync,
+           d.contactPhone, d.contactPhone_src,
+           d.contactEmail, d.contactEmail_src,
+           cc.fullname AS master_person_name, co.coName AS master_company_name,
+           cc.imdbid    AS master_imdbid,
+           cc.image_url AS master_image_url,
+           cl.address1  AS master_office_address1,
+           cl.address2  AS master_office_address2,
+           cl.city      AS master_office_city,
+           cl.state     AS master_office_state,
+           cl.zip       AS master_office_zip
+    FROM contactdetails d
+    LEFT JOIN co_contacts  cc ON cc.id      = d.master_co_contact_id
+    LEFT JOIN companies    co ON co.coid    = d.master_coid
+    LEFT JOIN co_locations cl ON cl.colocid = d.company_location_id
+    WHERE d.contactid = <cfqueryparam value="#currentid#" cfsqltype="CF_SQL_INTEGER">
+      AND d.userid    = <cfqueryparam value="#session.userid#" cfsqltype="CF_SQL_INTEGER">
+</cfquery>
+<cfset masterIsLinked = (qMasterLink.recordCount AND len(trim(qMasterLink.master_co_contact_id)))>
+
+<!--- UI-5b: co_contacts.imdbid holds an IMDB name id. The "nm" prefix test is the guard: the
+      column's exact value shape could not be sampled this session (the read-only DB channel is
+      down), so a value that is not an nm-id renders nothing rather than a broken link. --->
+<cfset masterImdbUrl = "">
+<cfif masterIsLinked AND len(trim(qMasterLink.master_imdbid)) AND left(trim(qMasterLink.master_imdbid), 2) EQ "nm">
+    <cfset masterImdbUrl = "https://www.imdb.com/name/" & trim(qMasterLink.master_imdbid) & "/">
+</cfif>
+
+<!--- UI-5c: master photo used ONLY as a fallback when the contact has no user photo. Display
+      only - nothing is copied or persisted (that is PD-5 / WO-7). The https guard means a
+      non-URL value simply falls through to the existing default avatar, and the onerror hook
+      covers a URL that exists but refuses hotlinking. --->
+<cfset masterPhotoUrl = "">
+<cfif masterIsLinked AND len(trim(qMasterLink.master_image_url)) AND left(trim(qMasterLink.master_image_url), 8) EQ "https://">
+    <cfset masterPhotoUrl = trim(qMasterLink.master_image_url)>
+</cfif>
+
+<!--- UI-5a: office address lines, built once. Blank office or blank address renders nothing. --->
+<cfset masterOfficeLines = []>
+<cfif masterIsLinked AND len(trim(qMasterLink.company_location_id))>
+    <cfif len(trim(qMasterLink.master_office_address1))>
+        <cfset arrayAppend(masterOfficeLines, trim(qMasterLink.master_office_address1))>
+    </cfif>
+    <cfif len(trim(qMasterLink.master_office_address2))>
+        <cfset arrayAppend(masterOfficeLines, trim(qMasterLink.master_office_address2))>
+    </cfif>
+    <cfset masterOfficeCity  = trim(qMasterLink.master_office_city)>
+    <cfset masterOfficeStZip = trim(trim(qMasterLink.master_office_state) & " " & trim(qMasterLink.master_office_zip))>
+    <cfif len(masterOfficeCity) AND len(masterOfficeStZip)>
+        <cfset arrayAppend(masterOfficeLines, masterOfficeCity & ", " & masterOfficeStZip)>
+    <cfelseif len(masterOfficeCity) OR len(masterOfficeStZip)>
+        <cfset arrayAppend(masterOfficeLines, masterOfficeCity & masterOfficeStZip)>
+    </cfif>
+</cfif>
+
                         <A class="no-hover-effect" href="/app/image-upload-contact/?contactid=<cfoutput>#contactid#&ref_pgid=3</cfoutput>">
 
 <figure class="tao-avatar-figure">
@@ -656,10 +720,19 @@ x</button>
 <cfset avatar_path = session.userContactsPath & "/" & currentid & "/avatar.jpg"> <!--- Physical path --->
 
 <cfif NOT fileExists(avatar_path)>
-    <!--- Fallback to default avatar if the contact's avatar doesn't exist --->
-    <img src="#default_avatar#"
-         class="tao-avatar tao-avatar--lg"
-         alt="profile-image" />
+    <!--- No user photo. UI-5c: prefer the linked master's IMDB image when there is one, else the
+          default silhouette. onerror falls back to the default if the host refuses the hotlink,
+          so a blocked image degrades to today's behavior rather than a broken-image icon. --->
+    <cfif len(masterPhotoUrl)>
+        <img src="#masterPhotoUrl#"
+             class="tao-avatar tao-avatar--lg"
+             alt="profile-image"
+             onerror="this.onerror=null;this.src='#default_avatar#';" />
+    <cfelse>
+        <img src="#default_avatar#"
+             class="tao-avatar tao-avatar--lg"
+             alt="profile-image" />
+    </cfif>
 
     <!--- Copy the default avatar to the user's contact folder --->
     <cftry>
@@ -714,20 +787,11 @@ x</button>
       lists can no longer disagree. Additional companies/phones/emails remain in the item grid
       (contact_pane.cfm, "Additional information"). --->
 
-<!--- DIR-WO-2 (TAO-MCD-P1): master-link control + linked badge (read-only state) --->
-<cfquery name="qMasterLink">
-    SELECT d.master_co_contact_id, d.master_coid, d.company_location_id,
-           d.contactCompany, d.contactCompany_src, d.master_last_sync,
-           d.contactPhone, d.contactPhone_src,
-           d.contactEmail, d.contactEmail_src,
-           cc.fullname AS master_person_name, co.coName AS master_company_name
-    FROM contactdetails d
-    LEFT JOIN co_contacts cc ON cc.id   = d.master_co_contact_id
-    LEFT JOIN companies   co ON co.coid = d.master_coid
-    WHERE d.contactid = <cfqueryparam value="#currentid#" cfsqltype="CF_SQL_INTEGER">
-      AND d.userid    = <cfqueryparam value="#session.userid#" cfsqltype="CF_SQL_INTEGER">
-</cfquery>
-<cfset masterIsLinked = (qMasterLink.recordCount AND len(trim(qMasterLink.master_co_contact_id)))>
+<!--- DIR-LNK-WO-6/UI-5: qMasterLink and its derived display vars moved ABOVE the avatar block
+      (see the card-body top) - the UI-5c avatar fallback needs master_image_url, and this query
+      used to run after the avatar had already rendered. Pure read; the move changes ordering
+      only, never behavior. --->
+
 
 <!--- DIR-LNK-WO-6 primary fields block (spec 13.1 editable / 13.2 read-only).
       Unlinked: the three primaries are user-editable (Q1e) and save to contactdetails_tbl via
@@ -740,6 +804,14 @@ x</button>
     <div class="primary-row mb-1" data-field="contactCompany">
         <span class="primary-value" data-field="contactCompany" data-raw="#encodeForHTMLAttribute(trim(qMasterLink.contactCompany))#" data-empty="No company"><cfif len(trim(qMasterLink.contactCompany))>#encodeForHTML(trim(qMasterLink.contactCompany))#<cfelse><span class="text-muted font-weight-lighter">No company</span></cfif></span><cfif NOT masterIsLinked><button type="button" class="btn btn-link btn-sm p-0 ms-1 primary-edit" data-field="contactCompany" title="Edit primary company" aria-label="Edit primary company"><i class="mdi mdi-square-edit-outline font-18"></i></button></cfif>
     </div>
+
+    <!--- UI-5a: master office address, directly beneath the company it belongs to. Linked +
+          company_location_id only; read-only context, never an editable primary. --->
+    <cfif masterIsLinked AND arrayLen(masterOfficeLines)>
+        <div class="text-muted mb-1" style="font-size:0.78rem;line-height:1.35;">
+            <cfloop array="#masterOfficeLines#" index="masterOfficeLine">#encodeForHTML(masterOfficeLine)#<br /></cfloop>
+        </div>
+    </cfif>
 
     <div class="primary-row mb-1" data-field="contactEmail">
         <span class="primary-value" data-field="contactEmail" data-raw="#encodeForHTMLAttribute(trim(qMasterLink.contactEmail))#" data-empty="No email"><cfif len(trim(qMasterLink.contactEmail))>#encodeForHTML(trim(qMasterLink.contactEmail))#<cfelse><span class="text-muted font-weight-lighter">No email</span></cfif></span><cfif NOT masterIsLinked><button type="button" class="btn btn-link btn-sm p-0 ms-1 primary-edit" data-field="contactEmail" title="Edit primary email" aria-label="Edit primary email"><i class="mdi mdi-square-edit-outline font-18"></i></button></cfif>
@@ -843,6 +915,13 @@ $(function () {
         <div class="text-muted" style="margin-top:2px;font-size:0.95rem;">
             <span id="masterLinkPerson">#encodeForHTML(qMasterLink.master_person_name)#</span><span id="masterLinkSep"><cfif len(trim(qMasterLink.master_company_name))> &middot; </cfif></span><span id="masterLinkCompany">#encodeForHTML(qMasterLink.master_company_name)#</span>
         </div>
+        <!--- UI-5b: display-only external link to the matched master person on IMDB. --->
+        <cfif len(masterImdbUrl)>
+            <div style="margin-top:2px;">
+                <a href="#masterImdbUrl#" target="_blank" rel="noopener noreferrer"
+                   class="btn btn-link btn-sm p-0" style="font-size:0.75rem;">IMDB</a>
+            </div>
+        </cfif>
         <div class="text-muted" style="font-size:0.72rem;">
             last sync: <span id="masterLinkSync">#len(trim(qMasterLink.master_last_sync)) ? dateTimeFormat(qMasterLink.master_last_sync, 'yyyy-mm-dd HH:nn') : ''#</span>
         </div>
