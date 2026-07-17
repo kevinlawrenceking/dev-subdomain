@@ -21,7 +21,13 @@ body {
    Sizes:  --xs (32px)  --sm (40px)  --md (56px)  --lg (120px)
    -------------------------------------------------------------------------- */
 .tao-avatar {
-    border-radius: 50%;
+    /* UI-4d: !important is load-bearing, not decoration. core.cfm's FindLinksB loop
+       (include/core.cfm:191-201) injects per-page stylesheets from pgapplinks AFTER this
+       file is linked (:46), so a later sheet beats a plain .tao-avatar rule at equal
+       specificity and the corners come back square. .current-avatar
+       (include/image-upload-contact.cfm:124-136) already carries !important for the same
+       reason and renders the same image correctly. */
+    border-radius: 50% !important;
     object-fit: cover;
     image-orientation: from-image;
     border: 2px solid rgba(0, 0, 0, 0.08);
@@ -93,7 +99,7 @@ body {
     padding: 0;
     background: none;
     box-shadow: none;
-    border-radius: 50%;
+    border-radius: 50% !important;
 }
 
 /* --------------------------------------------------------------------------
