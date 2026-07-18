@@ -519,7 +519,7 @@
             </cfif>
         </cfloop>
         <cfif len(priMasterId) AND len(dupMasterId) AND compare(priMasterId, dupMasterId) NEQ 0>
-            <cfset result.message = "These contacts are linked to two different TAO Master Directory records. Unlink one of them first, then merge." />
+            <cfset result.message = "These contacts are linked to two different records in the Book. Unlink one of them first, then merge." />
             <cfreturn result />
         </cfif>
 

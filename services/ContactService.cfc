@@ -355,7 +355,7 @@
               from "does not exist" - no enumeration oracle. --->
         <cfset result.message = "Contact not found.">
     <cfelseif len(trim(qWhy.master_co_contact_id))>
-        <cfset result.message = "This contact is linked to the TAO Master Directory. Its primary phone, email, and company are managed by the directory and cannot be edited here - use Suggest a correction to propose a change.">
+        <cfset result.message = "This contact is linked to the Book. Its primary phone, email, and company are managed by the Book and cannot be edited here - use Suggest a correction to propose a change.">
     <cfelseif compare(trim(qWhy.currentValue), newValue) EQ 0>
         <!--- The row exists and is unlinked, so the guard DID match; the driver reported zero
               rows because the value was unchanged (MySQL affected-vs-matched rows depends on the

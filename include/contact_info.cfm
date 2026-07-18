@@ -818,7 +818,7 @@ x</button>
 <cfoutput>
 <div id="primaryFields" class="book-fields mt-2" data-contactid="#currentid#">
     <cfset primaryDefs = [
-        { "field"="contactCompany", "icon"="mdi-office-building-outline", "value"=trim(qMasterLink.contactCompany), "emptyLabel"="No company on file", "addLabel"="Add company", "editTitle"="Edit primary company" },
+        { "field"="contactCompany", "icon"="mdi-briefcase-outline", "value"=trim(qMasterLink.contactCompany), "emptyLabel"="No company on file", "addLabel"="Add company", "editTitle"="Edit primary company" },
         { "field"="contactEmail",   "icon"="mdi-email-outline",          "value"=trim(qMasterLink.contactEmail),   "emptyLabel"="No email on file",   "addLabel"="Add email",   "editTitle"="Edit primary email" },
         { "field"="contactPhone",   "icon"="mdi-phone-outline",          "value"=trim(qMasterLink.contactPhone),   "emptyLabel"="No phone on file",   "addLabel"="Add phone",   "editTitle"="Edit primary phone" }
     ]>
@@ -1582,7 +1582,7 @@ $(function () {
     }
 
     $("#masterUnlinkBtn").on("click", function () {
-        if (!confirm("Unlink this contact from the directory?")) return;
+        if (!confirm("Unlink this contact from the Book?")) return;
         $.ajax({
             url: "/ajax/master/unlink.cfm",
             method: "POST",
