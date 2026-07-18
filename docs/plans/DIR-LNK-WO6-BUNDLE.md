@@ -4,7 +4,8 @@
 **Binding:** project = TAO / repo = dev-subdomain / root = c:\Users\kevin\TAO\dev-subdomain / branch = dev
 **Phase:** P6 — BUNDLE + STOP (per DIR-LNK-WO6-PLANLOCK.md §P6)
 **Assembled:** 2026-07-18
-**Status:** Assembled for architect review. Docs-class commit only. NO docs push until architect review -> operator PUSH GO (docs). Code push already occurred (P4b + P5 tidy batch, see §Push Set).
+**Amended:** 2026-07-18 (close relay — icon variance RATIFIED, L-4 supersession noted, MDI-audit backlog registered; see §Amendments)
+**Status:** Architect-reviewed. Bundle amended per the close relay and pushed to origin/dev under the item-5 docs PUSH GO (Kevin, 2026-07-18). **WO-6 NOT YET CLOSED** — closure is gated on three operator confirms (criterion (h) h-1/h-2 + tidy-batch deploy verification) that arrived in the close relay as unfilled `[FILL YES/NO]` placeholders. Code push already occurred (P4b + P5 tidy batch, see §Push Set); no further code push.
 
 ## A-6 PIN RECORD (as-executed)
 
@@ -121,10 +122,10 @@ j) **MERGE INTERFACE COPY** predates primary fields ("All emails, phones, notes,
 | **e) UNLINKED EDIT ROUND-TRIP** | **PASS** | D-9 — 132439 edited via panel; contactdetails_tbl + contacts_ss col3/4/5 identical, no intermediate step; all _src='user'; updatelog unchanged=125 (P2e (ii) accept-unlogged holds empirically). |
 | **f) CREATE PATH** | **PASS (with finding)** | D-6 — create via /include/remoteAddNameAdd.cfm succeeds; INSERT target view -> contactdetails_tbl exercised by every create, no regression. FINDING: the handler builds its own field struct and drops the three new primaries, so create()'s new whitelist entries for company/email/phone are UNEXERCISED (no caller passes them). D-22 closure therefore rests on the panel path (criterion e, proven). Activating them = UI-7 candidate (item 9i), not WO-6 scope. |
 | **g) MERGE GUARD (Q1b)** | **PASS** | D-8 — Pair X (different masters) BLOCKED with banner, zero writes; Pair Y (same master after relink) merged #16. Guard fires before the transaction opens. |
-| **h) CLASS-B** | **PARTIAL — 2 operator confirms pending** | D-9 Class-B proves item editing on an UNLINKED contact (132439 user-added email item). PENDING: (1) item grid header reads "Additional information"; (2) item add/edit on a LINKED contact (132436) moves item panes only with locked primaries unmoved. Both are operator eyeball confirms. |
+| **h) CLASS-B** | **PARTIAL — BLOCKED on missing operator confirms** | D-9 Class-B proves item editing on an UNLINKED contact (132439 user-added email item). PENDING: (h-1) item grid header reads "Additional information"; (h-2) item add/edit on a LINKED contact (132436) moves item panes only with locked primaries unmoved. The 2026-07-18 close relay directed these to final but transmitted both values (and the tidy-batch deploy verification) as unfilled `[FILL YES/NO]` placeholders — NOT supplied. Cannot upgrade to PASS without the operator's eyeball results; not fabricated. |
 | **i) REGRESSION** | **PASS (with attributed variance)** | Test-residue counters EXACT (audit 79 / updatelog 125 / item_rows 2524 all back to baseline). Membership -2 fully attributed to operator merges #17/#18 (outside the fixture set). Architect ruling: baseline restated to 979 going forward; no undelete. |
 
-**Overall:** all enforcement/round-trip/guard criteria PASS. Two operator eyeball confirms (h) outstanding; one create-path finding (f) recorded as an unexercised-whitelist observation, not a defect.
+**Overall (as of 2026-07-18 amendment):** a/b/c/d/e/f/g/i **PASS** (f with the unexercised-whitelist finding, not a defect). **(h) remains PARTIAL — BLOCKED**: h-1 + h-2 operator eyeball confirms were requested to final but arrived unfilled; the final PASS/FAIL line cannot be restated as all-PASS until they are supplied. WO-6 close is gated on h-1, h-2, and the tidy-batch deploy verification.
 
 ---
 
@@ -162,6 +163,7 @@ The /include tier is **NOT uniformly ungated**. Both `/include/remoteUpdateNameU
 4. **create() whitelist admits userid/isdeleted with no session override:** the create allowedFields set includes userid/isdeleted; no session-scoped override guards them. Pre-existing shape, registered; the D-6 spoof did not exploit it (userid=99 was inert because the handler never passed it), but it stays on the register.
 5. **D-24 .git exposure:** repo in docroot; /.git/* accidentally 404s via IIS rewrite, not explicitly denied. Explicit web.config deny + PROD verification = mandatory WO-12 checklist item. The P5 tidy batch did NOT carry the deny (item 10 scoped to three changes); OPEN.
 6. **Cookie info disclosure** (9g), **Add-modal lookup dropdown BUG-1** (9h), **UI-7 create-modal primary fields** (9i), **merge interface copy** (9j) — all registered, none WO-6 scope.
+7. **BACKLOG +1 — nonexistent MDI class audit** (registered 2026-07-18, no action now): audit the codebase for other references to MDI icon classes that do not exist in the loaded set. Broken icon classes fail SILENTLY (no console error, just an unrendered glyph — the exact `mdi-office-building-outline` company-icon shape fixed in the tidy batch), so this case may not be unique.
 
 ---
 
@@ -169,8 +171,8 @@ The /include tier is **NOT uniformly ungated**. Both `/include/remoteUpdateNameU
 
 One code-class commit (commit-approved; PUSH GO Kevin 2026-07-18), pushed to origin/dev. Confirmed origin/dev == 2ecf3d26.
 
-- **(a) Company primary-field icon** — `mdi-office-building-outline` -> `mdi-briefcase-outline` (include/contact_info.cfm:821). **Root cause:** `mdi-office-building-outline` is not a class in the loaded MDI set (only `mdi-office-building` and `mdi-briefcase-outline` exist), so the company row rendered no icon while its `mdi-email-outline` / `mdi-phone-outline` siblings did — exactly the architect's "phone/email carry icons, company does not." **AS-BUILT VARIANCE** from the relay's literal "reuse fe-briefcase verbatim": the row `<i>` hardcodes the `mdi` font family (contact_info.cfm:827) and its siblings are mdi-outline; a feather `fe-briefcase` glyph would not render inside `class="mdi fe-briefcase"` and would clash visually with the outline siblings. `mdi-briefcase-outline` is the in-family briefcase and matches the sibling style. Flagged for architect ratification.
-- **(b) L-4 comment (contact_info.cfm:163)** — **NO CHANGE; already satisfied.** The current-tree comment (committed 6121b8375, 2026-07-16) already states the file is still included by include/qry/findcompany.cfm:4 and registers the pair to the qry-elimination list as a dead chain. The stale "its only consumer" wording the relay quotes survives only in docs/plans/DIR-LNK-WO6-P4-RUNBOOK.md:461 (docs), not in the code. (Third instance this program of the flagged stale-relay pattern — verified against current tree, no fabricated diff.)
+- **(a) Company primary-field icon** — `mdi-office-building-outline` -> `mdi-briefcase-outline` (include/contact_info.cfm:821). **Root cause:** `mdi-office-building-outline` is not a class in the loaded MDI set (only `mdi-office-building` and `mdi-briefcase-outline` exist), so the company row rendered no icon while its `mdi-email-outline` / `mdi-phone-outline` siblings did — exactly the architect's "phone/email carry icons, company does not." **AS-BUILT VARIANCE** from the relay's literal "reuse fe-briefcase verbatim": the row `<i>` hardcodes the `mdi` font family (contact_info.cfm:827) and its siblings are mdi-outline; a feather `fe-briefcase` glyph would not render inside `class="mdi fe-briefcase"` and would clash visually with the outline siblings. `mdi-briefcase-outline` is the in-family briefcase and matches the sibling style. **RATIFIED (architect, 2026-07-18):** `mdi-briefcase-outline` is correct; the root-cause finding (`mdi-office-building-outline` is not a class in the loaded MDI set) is accepted of record; the original "reuse fe-briefcase verbatim" instruction is superseded because the row hardcodes the mdi font family, so an in-family glyph is required.
+- **(b) L-4 comment (contact_info.cfm:163)** — **NO CHANGE; already satisfied.** The current-tree comment (committed 6121b8375, 2026-07-16) already states the file is still included by include/qry/findcompany.cfm:4 and registers the pair to the qry-elimination list as a dead chain. The stale "its only consumer" wording the relay quotes survives only in docs/plans/DIR-LNK-WO6-P4-RUNBOOK.md:461 (docs), not in the code. (Third instance this program of the flagged stale-relay pattern — verified against current tree, no fabricated diff.) **CLOSED AS ALREADY-SATISFIED (architect, 2026-07-18):** the code comment was corrected at 6121b8375 (2026-07-16); the refusal to fabricate a diff was correct. DIR-LNK-WO6-P4-RUNBOOK.md is a historical execution artifact SUPERSEDED by this bundle and gets NO edit — its stale :461 wording stands as an as-run record.
 - **(c) Book vocabulary in user-facing reject/guard copy:**
   - ContactService.updatePrimary() linked-managed message: "the TAO Master Directory ... managed by the directory" -> "the Book ... managed by the Book" (services/ContactService.cfc:358).
   - ContactDuplicateService Q1b block: "two different TAO Master Directory records" -> "two different records in the Book" (services/ContactDuplicateService.cfc:522).
@@ -188,15 +190,27 @@ Diff: 3 files, 4 insertions(+), 4 deletions(-).
 - **D-22** (columns write -> views read): CLOSED end to end via the panel path (item 7).
 - **E-2** (baseline): baseline restated to 979; drift attributed to operator merges #17/#18; test-residue counters exact; no undelete (item 8).
 
-## OUTSTANDING BEFORE CLOSE
+## AMENDMENTS — 2026-07-18 CLOSE RELAY
 
-1. Operator confirm (h): item grid header = "Additional information".
-2. Operator confirm (h): item add/edit on a LINKED contact (132436) moves item panes only, locked primaries unmoved.
-3. Architect ratification of the tidy-batch icon variance (mdi-briefcase-outline vs literal fe-briefcase).
-4. Architect review of this bundle -> operator PUSH GO (docs) -> close.
+1. **Icon variance RATIFIED** (item 1): `mdi-briefcase-outline` correct; `mdi-office-building-outline` not-a-class root cause accepted of record; "reuse fe-briefcase verbatim" superseded (row hardcodes the mdi family). Recorded in §Tidy Batch (a).
+2. **L-4 CLOSED as already-satisfied** (item 2): code comment corrected at 6121b8375; no fabricated diff was the correct call. DIR-LNK-WO6-P4-RUNBOOK.md is a historical execution artifact SUPERSEDED by this bundle; its stale :461 wording gets NO edit. Recorded in §Tidy Batch (b).
+3. **Criterion (h) — BLOCKED** (item 3): the relay directed h-1/h-2 + the tidy-batch deploy verification to final but transmitted all three as unfilled `[FILL YES/NO]` placeholders. Not fabricated; (h) stays PARTIAL. See §Outstanding.
+4. **MDI-audit backlog registered** (item 4): nonexistent-MDI-class sweep — §Live Known Gaps #7.
+5. **Docs PUSH GO executed** (item 5): bundle pushed to origin/dev; base commit 212faf06 was already operator self-pushed (origin/dev == 212faf06 before this amendment — fourth stale-relay instance this program). No code push.
+
+## OUTSTANDING BEFORE CLOSE (as of 2026-07-18 amendment)
+
+RESOLVED this relay: icon variance RATIFIED (1); L-4 closed + P4-RUNBOOK supersession (2); architect review complete + docs PUSH GO executed (5).
+
+BLOCKING CLOSE — three operator confirms arrived as unfilled `[FILL YES/NO]` placeholders and are required to finalize criterion (h) and verify the tidy-batch deploy:
+1. **h-1:** item grid header reads "Additional information" — YES / NO?
+2. **h-2:** item add/edit on a LINKED contact (132436) moves item panes only, locked primaries unmoved — YES / NO?
+3. **deploy:** briefcase icon renders AND "the Book" vocabulary is live in the reject copy — YES / NO?
+
+On those three values, (h) finalizes and DIR-LNK-WO-6 CLOSES.
 
 ---
 
-**STOP for architect review.** No further pushes beyond the P5 tidy commit (2ecf3d26) without a named PUSH GO. The P6 docs push of this bundle is a separate gate after architect review. No DDL, no DML, no audit writes.
+**STOP — awaiting three operator confirms (above) to finalize criterion (h) and CLOSE DIR-LNK-WO-6.** Bundle amended per the 2026-07-18 close relay and pushed to origin/dev under the docs PUSH GO. No code push. No DDL, no DML, no audit writes. Prod remains untouched; prod cutover is WO-12 atomic (backfill 64,653 + prod view flip ref beb6c4c0 + DEFINER->INVOKER + privilege check + D-24 .git verification).
 
 *END — DIR-LNK-WO6-BUNDLE.md*
