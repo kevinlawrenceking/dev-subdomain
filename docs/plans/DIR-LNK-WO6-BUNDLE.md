@@ -5,7 +5,7 @@
 **Phase:** P6 — BUNDLE + STOP (per DIR-LNK-WO6-PLANLOCK.md §P6)
 **Assembled:** 2026-07-18
 **Amended:** 2026-07-18 (close relay — icon variance RATIFIED, L-4 supersession noted, MDI-audit backlog registered; see §Amendments)
-**Status:** Architect-reviewed. Bundle amended per the close relay and pushed to origin/dev under the item-5 docs PUSH GO (Kevin, 2026-07-18). **WO-6 NOT YET CLOSED** — closure is gated on three operator confirms (criterion (h) h-1/h-2 + tidy-batch deploy verification) that arrived in the close relay as unfilled `[FILL YES/NO]` placeholders. Code push already occurred (P4b + P5 tidy batch, see §Push Set); no further code push.
+**Status:** **CLOSED (2026-07-18).** All P5 criteria PASS; operator confirms supplied (h-1 = YES, h-2 = YES, deploy = YES); icon variance ratified; L-4 closed. Bundle finalized docs-class and pushed to origin/dev. Code push already occurred (P4b + P5 tidy batch, see §Push Set); no further code push. Prod untouched.
 
 ## A-6 PIN RECORD (as-executed)
 
@@ -122,10 +122,10 @@ j) **MERGE INTERFACE COPY** predates primary fields ("All emails, phones, notes,
 | **e) UNLINKED EDIT ROUND-TRIP** | **PASS** | D-9 — 132439 edited via panel; contactdetails_tbl + contacts_ss col3/4/5 identical, no intermediate step; all _src='user'; updatelog unchanged=125 (P2e (ii) accept-unlogged holds empirically). |
 | **f) CREATE PATH** | **PASS (with finding)** | D-6 — create via /include/remoteAddNameAdd.cfm succeeds; INSERT target view -> contactdetails_tbl exercised by every create, no regression. FINDING: the handler builds its own field struct and drops the three new primaries, so create()'s new whitelist entries for company/email/phone are UNEXERCISED (no caller passes them). D-22 closure therefore rests on the panel path (criterion e, proven). Activating them = UI-7 candidate (item 9i), not WO-6 scope. |
 | **g) MERGE GUARD (Q1b)** | **PASS** | D-8 — Pair X (different masters) BLOCKED with banner, zero writes; Pair Y (same master after relink) merged #16. Guard fires before the transaction opens. |
-| **h) CLASS-B** | **PARTIAL — BLOCKED on missing operator confirms** | D-9 Class-B proves item editing on an UNLINKED contact (132439 user-added email item). PENDING: (h-1) item grid header reads "Additional information"; (h-2) item add/edit on a LINKED contact (132436) moves item panes only with locked primaries unmoved. The 2026-07-18 close relay directed these to final but transmitted both values (and the tidy-batch deploy verification) as unfilled `[FILL YES/NO]` placeholders — NOT supplied. Cannot upgrade to PASS without the operator's eyeball results; not fabricated. |
+| **h) CLASS-B** | **PASS** | D-9 Class-B proves item editing on an UNLINKED contact (132439 user-added email item). Operator confirms of record (Kevin, 2026-07-18, deployed + verified on dev): (h-1) item grid header reads "Additional information" = **YES**; (h-2) item add/edit on LINKED contact 132436 works and moves item panes only, locked primaries unmoved = **YES**. |
 | **i) REGRESSION** | **PASS (with attributed variance)** | Test-residue counters EXACT (audit 79 / updatelog 125 / item_rows 2524 all back to baseline). Membership -2 fully attributed to operator merges #17/#18 (outside the fixture set). Architect ruling: baseline restated to 979 going forward; no undelete. |
 
-**Overall (as of 2026-07-18 amendment):** a/b/c/d/e/f/g/i **PASS** (f with the unexercised-whitelist finding, not a defect). **(h) remains PARTIAL — BLOCKED**: h-1 + h-2 operator eyeball confirms were requested to final but arrived unfilled; the final PASS/FAIL line cannot be restated as all-PASS until they are supplied. WO-6 close is gated on h-1, h-2, and the tidy-batch deploy verification.
+**Overall (FINAL — WO-6 CLOSE, 2026-07-18):** (a)-(e), (g), (h), (i) **PASS**; (f) **PASS WITH FINDING** — remoteAddNameAdd.cfm builds its own field struct and drops the three primaries, so create()'s whitelist entries are unexercised; D-22 closure rests on the proven panel path (criterion e). All P5 acceptance criteria satisfied.
 
 ---
 
@@ -194,23 +194,18 @@ Diff: 3 files, 4 insertions(+), 4 deletions(-).
 
 1. **Icon variance RATIFIED** (item 1): `mdi-briefcase-outline` correct; `mdi-office-building-outline` not-a-class root cause accepted of record; "reuse fe-briefcase verbatim" superseded (row hardcodes the mdi family). Recorded in §Tidy Batch (a).
 2. **L-4 CLOSED as already-satisfied** (item 2): code comment corrected at 6121b8375; no fabricated diff was the correct call. DIR-LNK-WO6-P4-RUNBOOK.md is a historical execution artifact SUPERSEDED by this bundle; its stale :461 wording gets NO edit. Recorded in §Tidy Batch (b).
-3. **Criterion (h) — BLOCKED** (item 3): the relay directed h-1/h-2 + the tidy-batch deploy verification to final but transmitted all three as unfilled `[FILL YES/NO]` placeholders. Not fabricated; (h) stays PARTIAL. See §Outstanding.
+3. **Criterion (h) — RESOLVED PASS** (item 3, confirms supplied 2026-07-18): the first close relay left the placeholders in place while asserting the confirms in prose; the follow-up supplied explicit values — h-1 = YES, h-2 = YES, deploy = YES (Kevin, deployed + verified on dev). (h) flips to PASS; WO-6 CLOSES. The blocked interval is retained above as an as-run record of the relay defect (architect-acknowledged).
 4. **MDI-audit backlog registered** (item 4): nonexistent-MDI-class sweep — §Live Known Gaps #7.
 5. **Docs PUSH GO executed** (item 5): bundle pushed to origin/dev; base commit 212faf06 was already operator self-pushed (origin/dev == 212faf06 before this amendment — fourth stale-relay instance this program). No code push.
 
-## OUTSTANDING BEFORE CLOSE (as of 2026-07-18 amendment)
+## CLOSE RECORD (2026-07-18)
 
-RESOLVED this relay: icon variance RATIFIED (1); L-4 closed + P4-RUNBOOK supersession (2); architect review complete + docs PUSH GO executed (5).
+ALL P5 criteria PASS. Operator confirms of record (Kevin, after deploying the tidy batch and verifying on dev): **h-1 = YES**, **h-2 = YES**, **deploy = YES** (briefcase icon renders on the company row in family with its phone/email siblings; "the Book" vocabulary live in the reject copy). Architect ratified the icon variance and closed L-4 as already-satisfied. **DIR-LNK-WO-6 IS CLOSED.**
 
-BLOCKING CLOSE — three operator confirms arrived as unfilled `[FILL YES/NO]` placeholders and are required to finalize criterion (h) and verify the tidy-batch deploy:
-1. **h-1:** item grid header reads "Additional information" — YES / NO?
-2. **h-2:** item add/edit on a LINKED contact (132436) moves item panes only, locked primaries unmoved — YES / NO?
-3. **deploy:** briefcase icon renders AND "the Book" vocabulary is live in the reject copy — YES / NO?
-
-On those three values, (h) finalizes and DIR-LNK-WO-6 CLOSES.
+WO-1 through WO-6 closed; prod untouched throughout. Prod cutover remains WO-12 atomic: backfill 64,653 + prod view flip ref beb6c4c0 + DEFINER->INVOKER + app-user privilege check + D-24 .git verification. WO-7 scoping arrives as a separate architect document; no further work under WO-6.
 
 ---
 
-**STOP — awaiting three operator confirms (above) to finalize criterion (h) and CLOSE DIR-LNK-WO-6.** Bundle amended per the 2026-07-18 close relay and pushed to origin/dev under the docs PUSH GO. No code push. No DDL, no DML, no audit writes. Prod remains untouched; prod cutover is WO-12 atomic (backfill 64,653 + prod view flip ref beb6c4c0 + DEFINER->INVOKER + privilege check + D-24 .git verification).
+**DIR-LNK-WO-6 CLOSED (2026-07-18).** All P5 criteria PASS; operator confirms h-1/h-2/deploy all YES; icon variance ratified; L-4 closed. Bundle finalized docs-class and pushed to origin/dev. No code push. No DDL, no DML, no audit writes. Prod untouched; prod cutover is WO-12 atomic (backfill 64,653 + prod view flip ref beb6c4c0 + DEFINER->INVOKER + app-user privilege check + D-24 .git verification).
 
 *END — DIR-LNK-WO6-BUNDLE.md*
