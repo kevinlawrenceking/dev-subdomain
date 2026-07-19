@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TAO — Link preview modal (WO-7B mockup)</title>
+<style>
+  :root{
+    --slate:#3D6A8C; --ink:#3f4a54; --muted:#8b959e; --faint:#b9c1c8;
+    --border:#e3e7ea; --band:#f4f7f9;
+    --gold:#a8862f; --gold-bg:#f0e6c0; --gold-border:#dccd94; --gold-ink:#7a6a2f;
+    --amber-bg:#faf5e2; --amber-border:#eadfb6; --amber-ink:#9a7b2d;
+    --ok:#4f8a5b; --link:#3d7ea6;
+    --pick-bg:#f3f8fb; --pick-border:#9ec3da;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#4a5560;font-family:"Segoe UI",-apple-system,Roboto,Helvetica,Arial,sans-serif;color:var(--ink);}
+  .page{padding:26px 18px 60px;}
+  .caption{max-width:920px;margin:0 auto 18px;color:#dfe5ea;font-size:.78rem;line-height:1.5;}
+  .caption b{color:#fff;}
+
+  .modal{max-width:920px;margin:0 auto;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 18px 50px rgba(0,0,0,.35);}
+  .m-hdr{background:var(--slate);color:#fff;padding:14px 24px;display:flex;align-items:center;gap:10px;}
+  .m-hdr svg{width:19px;height:19px;}
+  .m-hdr h2{font-size:1.02rem;font-weight:600;margin:0;flex:1;}
+  .m-hdr .x{opacity:.75;font-size:1.1rem;cursor:pointer;}
+
+  /* match band */
+  .match{background:var(--band);border-bottom:1px solid var(--border);padding:15px 24px;display:flex;align-items:center;gap:14px;}
+  .match .ava{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#c9d4da,#aebbc4);flex:0 0 46px;}
+  .match .who{flex:1;}
+  .match .nm{font-size:1rem;font-weight:600;}
+  .match .co{font-size:.82rem;color:var(--muted);}
+  .match .co a{color:var(--link);text-decoration:none;margin-left:8px;font-size:.75rem;}
+  .match .wrong{font-size:.75rem;}
+  .match .wrong a{color:var(--link);text-decoration:none;}
+
+  /* office picker */
+  .office{padding:14px 24px 4px;}
+  .sec-label{font-size:.68rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:9px;}
+  .picks{display:flex;gap:10px;flex-wrap:wrap;}
+  .pick{border:1.5px solid var(--border);border-radius:7px;padding:9px 13px;cursor:pointer;min-width:210px;background:#fff;}
+  .pick.sel{border-color:var(--pick-border);background:var(--pick-bg);}
+  .pick .t{font-size:.85rem;font-weight:600;display:flex;align-items:center;gap:7px;}
+  .pick .t i{width:12px;height:12px;border-radius:50%;border:1.5px solid var(--faint);display:inline-block;flex:0 0 12px;}
+  .pick.sel .t i{border-color:var(--slate);background:radial-gradient(circle,var(--slate) 0 45%,#fff 46%);}
+  .pick .s{font-size:.74rem;color:var(--muted);margin-top:3px;padding-left:19px;line-height:1.35;}
+  .pick .tag{font-size:.66rem;color:var(--muted);padding-left:19px;}
+
+  /* diff table */
+  .diff{padding:16px 24px 6px;}
+  .drow{display:flex;align-items:flex-start;gap:12px;padding:11px 0;border-top:1px solid #f0f2f4;}
+  .drow:first-of-type{border-top:0;}
+  .dico{width:17px;flex:0 0 17px;margin-top:2px;}
+  .dico svg{width:17px;height:17px;stroke:var(--muted);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
+  .dlab{width:74px;flex:0 0 74px;font-size:.73rem;color:var(--muted);margin-top:3px;}
+  .dvals{flex:1;display:flex;align-items:flex-start;gap:12px;}
+  .dcell{flex:1;min-width:0;}
+  .dcell .v{font-size:.9rem;line-height:1.35;word-break:break-word;}
+  .dcell .v.old{color:var(--muted);}
+  .dcell .v.none{color:var(--faint);font-style:italic;font-size:.85rem;}
+  .dcell .v.new{font-weight:600;}
+  .dcell .sub{font-size:.72rem;color:var(--muted);margin-top:2px;line-height:1.35;}
+  .arrow{flex:0 0 20px;margin-top:3px;color:var(--faint);text-align:center;font-size:.95rem;}
+  .tag{display:inline-block;font-size:.65rem;border-radius:3px;padding:1px 6px;margin-top:4px;border:1px solid;}
+  .tag.book{background:var(--gold-bg);border-color:var(--gold-border);color:var(--gold-ink);}
+  .tag.moves{background:#eef1f3;border-color:#d5dade;color:#6b7680;}
+  .tag.gain{background:#eef6ef;border-color:#cfe3d3;color:var(--ok);}
+  .tag.warn{background:var(--amber-bg);border-color:var(--amber-border);color:var(--amber-ink);}
+  .colhdr{display:flex;gap:12px;padding:0 24px;}
+  .colhdr .sp{width:103px;flex:0 0 103px;}
+  .colhdr .h{flex:1;font-size:.68rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600;padding-bottom:6px;}
+  .colhdr .a{flex:0 0 20px;}
+
+  /* inline picker rows */
+  .prow{background:#fbfcfd;border:1px solid var(--border);border-radius:7px;padding:11px 13px;margin:9px 0;}
+  .prow .ptitle{font-size:.73rem;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:7px;}
+  .prow .ptitle svg{width:15px;height:15px;stroke:var(--muted);fill:none;stroke-width:1.7;}
+  .prow .ptitle b{color:var(--ink);font-weight:600;font-size:.76rem;}
+  .ava-sm{width:34px;height:34px;border-radius:50%;flex:0 0 34px;}
+  .ava-sm.user{background:linear-gradient(135deg,#e8d9c4,#cbb79a);}
+  .ava-sm.book{background:linear-gradient(135deg,#c9d4da,#93a5b1);}
+  .pick.photo .t{align-items:center;}
+
+  /* footer */
+  .m-ftr{border-top:1px solid var(--border);background:#fafbfc;padding:14px 24px;display:flex;align-items:center;gap:16px;}
+  .sum{flex:1;font-size:.76rem;color:var(--muted);line-height:1.5;}
+  .sum b{color:var(--ink);}
+  .btn{border:0;border-radius:7px;padding:9px 18px;font-size:.85rem;font-weight:600;cursor:pointer;font-family:inherit;}
+  .btn.ghost{background:transparent;color:var(--muted);}
+  .btn.primary{background:var(--slate);color:#fff;display:inline-flex;align-items:center;gap:8px;}
+  .btn.primary svg{width:15px;height:15px;}
+  .note{max-width:920px;margin:22px auto 0;color:#cfd8de;font-size:.75rem;line-height:1.6;}
+  .note b{color:#fff;}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <p class="caption"><b>WO-7B — link preview modal.</b> Fires when the user clicks “Find in the Book” and picks a match. Shows exactly what the Book will manage, what happens to their own values, and what is genuinely blank. Managed fields are confirm-or-cancel; name, photo and office are the user’s choice.</p>
+
+  <div class="modal">
+
+    <div class="m-hdr">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M7 3.25h10.25a2.25 2.25 0 0 1 2.25 2.25v13a2.25 2.25 0 0 1-2.25 2.25H7A2.25 2.25 0 0 1 4.75 18.5v-13A2.25 2.25 0 0 1 7 3.25zm1.3 0v17.5h1.35V3.25z"/></svg>
+      <h2>Add this contact to the Book</h2>
+      <span class="x">&times;</span>
+    </div>
+
+    <div class="match">
+      <div class="ava"></div>
+      <div class="who">
+        <div class="nm">Adam Ambrose</div>
+        <div class="co">Garage Public Relations · Publicist<a href="#">IMDB</a></div>
+      </div>
+      <div class="wrong"><a href="#">Not the right person?</a></div>
+    </div>
+
+    <div class="office">
+      <div class="sec-label">Which office?</div>
+      <div class="picks">
+        <div class="pick sel">
+          <div class="t"><i></i>Beverly Hills</div>
+          <div class="s">8533 Sunset Blvd, Ste 310<br>Los Angeles, CA 90069</div>
+          <div class="tag">(310) 555-0184</div>
+        </div>
+        <div class="pick">
+          <div class="t"><i></i>New York</div>
+          <div class="s">120 W 45th St, Fl 22<br>New York, NY 10036</div>
+          <div class="tag">(212) 555-7120</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="colhdr" style="margin-top:16px;">
+      <div class="sp"></div>
+      <div class="h">Now</div>
+      <div class="a"></div>
+      <div class="h">From the Book</div>
+    </div>
+
+    <div class="diff">
+
+      <!-- COMPANY -->
+      <div class="drow">
+        <div class="dico"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div>
+        <div class="dlab">Company</div>
+        <div class="dvals">
+          <div class="dcell">
+            <div class="v old">Criminal Minds</div>
+            <span class="tag moves">moves to Additional info</span>
+          </div>
+          <div class="arrow">&rarr;</div>
+          <div class="dcell">
+            <div class="v new">Garage Public Relations</div>
+            <span class="tag book">managed by the Book</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- EMAIL -->
+      <div class="drow">
+        <div class="dico"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></div>
+        <div class="dlab">Email</div>
+        <div class="dvals">
+          <div class="dcell">
+            <div class="v old">kevinking7135@gmail.com</div>
+            <span class="tag moves">moves to Additional info</span>
+          </div>
+          <div class="arrow">&rarr;</div>
+          <div class="dcell">
+            <div class="v new">info@garagepr.com</div>
+            <span class="tag book">managed by the Book</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- PHONE — the honest blank case -->
+      <div class="drow">
+        <div class="dico"><svg viewBox="0 0 24 24"><path d="M4 4h5l2 5-3 2a13 13 0 0 0 5 5l2-3 5 2v5c0 1-1 2-2 2A18 18 0 0 1 2 6c0-1 1-2 2-2z"/></svg></div>
+        <div class="dlab">Phone</div>
+        <div class="dvals">
+          <div class="dcell">
+            <div class="v old">(323) 555-0142</div>
+            <span class="tag moves">moves to Additional info</span>
+          </div>
+          <div class="arrow">&rarr;</div>
+          <div class="dcell">
+            <div class="v none">The Book has no phone for Adam</div>
+            <div class="sub">The office number above is used instead.</div>
+            <span class="tag warn">check this one</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ADDRESS -->
+      <div class="drow">
+        <div class="dico"><svg viewBox="0 0 24 24"><path d="M12 21s7-5.5 7-11a7 7 0 1 0-14 0c0 5.5 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></svg></div>
+        <div class="dlab">Address</div>
+        <div class="dvals">
+          <div class="dcell"><div class="v none">none</div></div>
+          <div class="arrow">&rarr;</div>
+          <div class="dcell">
+            <div class="v new">8533 Sunset Blvd, Ste 310<br>Los Angeles, CA 90069</div>
+            <span class="tag gain">new</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- IMDB -->
+      <div class="drow">
+        <div class="dico"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M8 9v6M12 9v6M16 9v6"/></svg></div>
+        <div class="dlab">IMDB</div>
+        <div class="dvals">
+          <div class="dcell"><div class="v none">none</div></div>
+          <div class="arrow">&rarr;</div>
+          <div class="dcell">
+            <div class="v new">nm4471629</div>
+            <span class="tag gain">new</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- NAME PICKER -->
+      <div class="prow">
+        <div class="ptitle">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></svg>
+          <b>Name</b> — keep yours, or use the Book’s?
+        </div>
+        <div class="picks">
+          <div class="pick sel"><div class="t"><i></i>Adam Bovasta</div><div class="s">what you have now</div></div>
+          <div class="pick"><div class="t"><i></i>Adam Ambrose</div><div class="s">from the Book</div></div>
+        </div>
+      </div>
+
+      <!-- PHOTO PICKER -->
+      <div class="prow">
+        <div class="ptitle">
+          <svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="14" rx="2"/><circle cx="12" cy="13" r="3.4"/><path d="M8 6l1.5-2h5L16 6"/></svg>
+          <b>Photo</b> — keep yours, or use the Book’s headshot?
+        </div>
+        <div class="picks">
+          <div class="pick photo"><div class="t"><i></i><span class="ava-sm user"></span>Your upload</div></div>
+          <div class="pick photo sel"><div class="t"><i></i><span class="ava-sm book"></span>From the Book</div></div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="m-ftr">
+      <div class="sum">
+        <b>3 fields</b> will be kept current by the Book · <b>3 of your values</b> move to Additional information · <b>nothing is deleted</b>. You can unlink at any time.
+      </div>
+      <button class="btn ghost">Cancel</button>
+      <button class="btn primary">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M7 3.25h10.25a2.25 2.25 0 0 1 2.25 2.25v13a2.25 2.25 0 0 1-2.25 2.25H7A2.25 2.25 0 0 1 4.75 18.5v-13A2.25 2.25 0 0 1 7 3.25zm1.3 0v17.5h1.35V3.25z"/></svg>
+        Add to the Book
+      </button>
+    </div>
+
+  </div>
+
+  <p class="note">
+    <b>Design rules baked in.</b> Company / email / phone are confirm-or-cancel — the Book owns them, and a wrong value is a correction, not a local override (that keeps one meaning of “linked” instead of inventing a half-managed state). Name, photo and office are genuine user choices: filing habits and headshots are preference, not data integrity, and the office choice decides which address and phone you inherit. The phone row is the case worth arguing about at the meeting — today’s rule blanks a managed field when the Book is empty, and the modal is where that stops being invisible. Same layout serves <b>relink</b> (“moving from Wilhelmina to CAA — here’s what changes”).
+  </p>
+
+</div>
+</body>
+</html>
