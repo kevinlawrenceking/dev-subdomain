@@ -21,9 +21,13 @@
 <cfset response = { "success": false, "message": "", "data": {}, "_build": buildTag }>
 
 <cftry>
+    <!--- S-4: validate BEFORE any int()/val() coercion of the client id. A non-integer contactid
+          returns the SAME neutral message as the ownership failure (confirmLink's "Contact not
+          found."), so a malformed id is a clean {success:false}, never a thrown exception feeding
+          ErrorService. isValid precedes val() and short-circuits, so val() never coerces a bad id. --->
     <cfif NOT isValid("integer", form.contactid) OR val(form.contactid) LTE 0
           OR NOT isValid("integer", form.masterCoContactId) OR val(form.masterCoContactId) LTE 0>
-        <cfset response.message = "Missing or invalid contactid / masterCoContactId.">
+        <cfset response.message = "Contact not found.">
         <cfoutput>#serializeJSON(response)#</cfoutput>
         <cfabort>
     </cfif>

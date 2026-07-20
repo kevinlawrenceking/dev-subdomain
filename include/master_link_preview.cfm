@@ -21,9 +21,15 @@
 <cfif NOT structKeyExists(session, "userid")>
     <cfoutput><div class="p-3 text-danger">Your session has expired. Reload the page.</div></cfoutput><cfabort>
 </cfif>
-<cfif NOT isValid("integer", url.contactid) OR val(url.contactid) LTE 0
-      OR NOT isValid("integer", url.masterCoContactId) OR val(url.masterCoContactId) LTE 0>
-    <cfoutput><div class="p-3 text-danger">Missing or invalid request.</div></cfoutput><cfabort>
+<!--- S-4: validate BEFORE any int()/val() coercion. A non-integer contactid aborts to the SAME
+      neutral message as the ownership failure (no oracle; no thrown int() exception -> no
+      ErrorService ticket noise). isValid precedes val() (short-circuit OR), so val() never coerces a
+      malformed id; the int() usages downstream (qCur / qM) are fully guarded. --->
+<cfif NOT isValid("integer", url.contactid) OR val(url.contactid) LTE 0>
+    <cfoutput><div class="p-3 text-danger">Contact not found.</div></cfoutput><cfabort>
+</cfif>
+<cfif NOT isValid("integer", url.masterCoContactId) OR val(url.masterCoContactId) LTE 0>
+    <cfoutput><div class="p-3 text-danger">Master record not found.</div></cfoutput><cfabort>
 </cfif>
 
 <!--- Current contact primaries (ownership-gated) --->
