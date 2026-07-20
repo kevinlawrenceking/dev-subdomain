@@ -101,4 +101,41 @@ baseline restoration, rulings of record, remaining gaps (unlink-through-preview 
 No push without a named PUSH GO. No deploy without the operator executing D-17 with the `257df24e` rollback pin
 in hand. No DDL (WO-7 wrote none). No prod. Halt-don't-guess.
 
-*END — DIR-LNK-WO7-P4-P5-RUNBOOK.md*
+---
+
+## ADDENDUM (2026-07-20) — R-1..R-4 (appended; the original text above is unchanged of record)
+
+### R-1a — DEPLOY TARGET ADVANCES TO `106d089b` (supersedes the `72153800` deploy-target bindings above)
+The S-4 fix `106d089b` (neutral abort on non-integer contactid) rides the same push, so the branch HEAD is `106d089b`:
+- **CODE OF RECORD** adds: `106d089b` — fix: neutral abort on non-integer contactid (S-4).
+- **P4b confirm:** after push, `git ls-remote origin dev` == **the pushed HEAD named in PUSH GO** (do not pin a fixed SHA here — any commit touching this runbook file moves the branch HEAD).
+- **P4c:** panel pull to **that same pushed HEAD**. The deployed CODE content is identical to `106d089b`; every commit above it is docs-only (optional verify: `git diff 106d089b HEAD --stat` -> `docs/plans/` only).
+`72153800` remains the pinned Stage-2 code SHA (unchanged); the *code* deploy target is `106d089b`, delivered at whatever branch HEAD the PUSH GO names.
+
+### R-1b — P6 BUNDLE DIFF SET
+diffs by SHA = **`dd89a403`, `72153800`, `106d089b`** (supersedes the two-SHA set in the P6 line above).
+
+### R-1c — P4c LIVENESS PROBE (clarification)
+Probe an **UNLINKED** contact — the band reads "Find in the Book". Either band state passes: a linked contact
+renders the gold/gray "In the Book" / "Linked" band; the assertion is that a FULL contact page renders without error.
+
+### R-2 — ACCEPTANCE MATRIX ADDITIONS (S-4 + concurrency)
+| # | Test | Steps | Expected |
+|---|------|-------|----------|
+| S-4a | Preview, non-integer contactid | GET `/include/master_link_preview.cfm?contactid=abc&masterCoContactId=<Y>` | renders **"Contact not found."**; ZERO writes; **NO ErrorService ticket created** — assert `error_tickets` / `tickets` counts unchanged (the no-ticket assertion is the point of S-4: a malformed id is a neutral abort, never a thrown int() exception) |
+| S-4b | Preview, non-integer master | GET `...?contactid=<X>&masterCoContactId=abc` | **"Master record not found."**; no ticket |
+| S-4c | Confirm, non-integer contactid | POST `/ajax/master/link-confirm.cfm` `contactid=abc` | neutral JSON `{success:false,"message":"Contact not found."}`; no ticket |
+| j(4)' | **Rapid double-click** (concurrency, replaces j(4)) | Double-CLICK confirm (two requests race the window), not a sequential re-submit | a **single** preserved-item set and a **single** audit row per action. The same-master early-return guard does NOT structurally exclude this window (both racers read an unlinked qOwn); the backstops that must hold: audit `idempotency_key` UNIQUE (`INSERT IGNORE`) collapses duplicate audit rows, and skip-if-equivalent-active-item collapses duplicate preserves. Verify no duplicate `PRELINK_VALUE_PRESERVED` row and no duplicate preserved contactitem. |
+
+### R-4a — REGISTER ENTRIES (in-tree of record HERE; file into 15-qry-elimination-plan.md at the WO-11 pass)
+- `include/qry/find_new_Company_115_6.cfm` | callers: `exportContacts.cfm` (1) | **REPOINTED @ WO-7 S-2 (`72153800`)** | now reads `contactdetails.contactCompany` column; no longer calls `SELcontactitems_23892`; retains the export contract (`find_new_Company.new_Company` + recordcount-eq-1 gate). **KEEP.**
+- `services/ContactItemService.cfc::SELcontactitems_23892` | callers: **0 (orphaned by WO-7 S-2)** | **RETIRE @ WO-11** | sole caller removed at `72153800`; 0 live callers as of HEAD; safe delete at the WO-11 bridge-item cleanup.
+
+### R-4b — CHANNEL CORRECTION (P5 SQL)
+The P5 "SQL verification" line above reads "run via the ratified pymysql channel or HeidiSQL." **CORRECTION:**
+the ratified pymysql channel (anchor: **DIR-LNK-WO-5 P1** — "ratified pymysql read-only; SELECT/SHOW/USE;
+prod SHOW-only") is READ-ONLY but is **NOT dev-only** (it retains prod SHOW capability), so it does not meet
+the read-only + dev-only bar for acceptance. **P5 acceptance SQL runs via HeidiSQL (operator-executed), as in
+WO-6 P5.** The read-only pymysql channel remains available for read-only dev spot-checks only.
+
+*END — DIR-LNK-WO7-P4-P5-RUNBOOK.md (with 2026-07-20 R-1..R-4 addendum)*
