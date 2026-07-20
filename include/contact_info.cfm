@@ -655,7 +655,7 @@ x</button>
     SELECT d.master_co_contact_id, d.master_coid, d.company_location_id,
            d.contactCompany, d.contactCompany_src, d.master_last_sync,
            d.contactPhone, d.contactPhone_src,
-           d.contactEmail, d.contactEmail_src,
+           d.contactEmail, d.contactEmail_src, d.contactPhoto_src,
            cc.fullname AS master_person_name, co.coName AS master_company_name,
            cc.imdbid    AS master_imdbid,
            cc.image_url AS master_image_url,
@@ -702,6 +702,12 @@ x</button>
     <cfset masterPhotoUrl = trim(qMasterLink.master_image_url)>
 </cfif>
 
+<!--- DIR-LNK-WO-7 (FLAG-2 / 2b): the photo choice is PROVENANCE-driven, not file-presence-driven.
+      When the user adopted the Book's photo (contactPhoto_src='master'), the master image is
+      authoritative regardless of any local avatar file - the UI-5c "no user file" fallback is not
+      sufficient because the default-silhouette copy in the avatar block flips fileExists() true. --->
+<cfset masterPhotoAdopted = ( masterIsLinked AND qMasterLink.contactPhoto_src EQ "master" AND len(masterPhotoUrl) )>
+
 <!--- UI-5a: office address lines, built once. Blank office or blank address renders nothing. --->
 <cfset masterOfficeLines = []>
 <cfif masterIsLinked AND len(trim(qMasterLink.company_location_id))>
@@ -731,7 +737,14 @@ x</button>
 <cfset default_avatar = application.defaultAvatarUrl>
 <cfset avatar_path = session.userContactsPath & "/" & currentid & "/avatar.jpg"> <!--- Physical path --->
 
-<cfif NOT fileExists(avatar_path)>
+<cfif masterPhotoAdopted>
+    <!--- DIR-LNK-WO-7 (FLAG-2 / 2b): user adopted the Book's photo -> render the master image even
+          when a local avatar file exists. onerror still degrades to the default silhouette. --->
+    <img src="#masterPhotoUrl#"
+         class="tao-avatar tao-avatar--lg"
+         alt="profile-image"
+         onerror="this.onerror=null;this.src='#default_avatar#';" />
+<cfelseif NOT fileExists(avatar_path)>
     <!--- No user photo. UI-5c: prefer the linked master's IMDB image when there is one, else the
           default silhouette. onerror falls back to the default if the host refuses the hotlink,
           so a blocked image degrades to today's behavior rather than a broken-image icon. --->
@@ -985,6 +998,15 @@ $(function () {
         <div id="masterLinkSearchBox" style="display:none;margin-top:6px;">
             <input type="text" id="masterLinkSearch" class="form-control form-control-sm" placeholder="Search the Book" autocomplete="off" />
             <div id="masterLinkLocBox" style="display:none;margin-top:4px;"></div>
+        </div>
+    </div>
+</div>
+
+<!--- DIR-LNK-WO-7 link-preview modal shell; the body is GET-loaded from master_link_preview.cfm --->
+<div class="modal fade" id="masterPreviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" style="overflow:hidden;border-radius:10px;">
+            <div id="masterPreviewContent"></div>
         </div>
     </div>
 </div>
@@ -1472,12 +1494,25 @@ $(function () {
     var wrap = $("#masterLinkWrap");
     if (!wrap.length) return;
     var contactid = wrap.data("contactid");
-    var selected = { masterCoContactId: null, coid: null, coName: null, colocid: null, fullname: null };
 
     $("#masterLinkToggle").on("click", function () {
         $("#masterLinkSearchBox").toggle();
         $("#masterLinkSearch").focus();
     });
+
+    // DIR-LNK-WO-7: selecting a master person opens the PREVIEW modal (GET-load, house pattern).
+    // The office picker, the diff and the confirm all live in the preview; nothing is written until
+    // the user confirms there, and the preview reloads the page on success so the WO-6 panel
+    // re-renders in its SYNCED state. Replaces the old direct search -> loadLocations -> link flow.
+    function openPreview(masterCoContactId) {
+        $("#masterPreviewContent").html('<div class="p-4 text-center text-muted">Loading preview...</div>');
+        $("#masterPreviewContent").load(
+            "/include/master_link_preview.cfm?contactid=" + encodeURIComponent(contactid)
+            + "&masterCoContactId=" + encodeURIComponent(masterCoContactId)
+            + "&colocid=0",
+            function () { $("#masterPreviewModal").modal("show"); }
+        );
+    }
 
     $("#masterLinkSearch").autocomplete({
         minLength: 2,
@@ -1499,103 +1534,25 @@ $(function () {
         },
         select: function (e, ui) {
             var it = ui.item.item;
-            selected = {
-                masterCoContactId: it.master_co_contact_id,
-                coid: it.coid,
-                coName: it.coName,
-                colocid: null,
-                fullname: it.fullname
-            };
             $("#masterLinkSearch").val(it.fullname);
-            loadLocations(it.coid);
+            openPreview(it.master_co_contact_id);
             return false;
         }
     });
 
-    function loadLocations(coid) {
-        var box = $("#masterLinkLocBox");
-        box.hide().empty();
-        if (!coid || coid <= 0) { doLink(); return; }
-        $.ajax({
-            url: "/ajax/master/locations.cfm",
-            dataType: "json",
-            data: { coid: coid },
-            success: function (d) {
-                var locs = (d && d.data) ? d.data : [];
-                if (locs.length === 0) { selected.colocid = null; doLink(); }
-                else if (locs.length === 1) { selected.colocid = locs[0].colocid; doLink(); }
-                else {
-                    var sel = $('<select class="form-control form-control-sm"></select>');
-                    sel.append('<option value="">Choose office...</option>');
-                    $.each(locs, function (i, l) {
-                        var parts = [];
-                        if (l.location) parts.push(l.location);
-                        if (l.city) parts.push(l.city);
-                        if (l.state) parts.push(l.state);
-                        var t = parts.join(", ");
-                        sel.append($("<option></option>").val(l.colocid).text(t || ("office " + l.colocid)));
-                    });
-                    var go = $('<button type="button" class="btn btn-primary btn-sm mt-1">Link</button>');
-                    go.on("click", function () { selected.colocid = sel.val() || null; doLink(); });
-                    box.append(sel).append("<br>").append(go).show();
-                }
-            }
-        });
-    }
-
-    function doLink() {
-        $.ajax({
-            url: "/ajax/master/link.cfm",
-            method: "POST",
-            dataType: "json",
-            data: {
-                contactid: contactid,
-                masterCoContactId: selected.masterCoContactId,
-                coid: selected.coid || 0,
-                colocid: selected.colocid || 0
-            },
-            success: function (d) {
-                if (d && d.success) {
-                    $("#masterLinkPerson").text(selected.fullname || "");
-                    if (selected.coName) {
-                        $("#masterLinkSep").html(" &middot; ");
-                        $("#masterLinkCompany").text(selected.coName);
-                    } else {
-                        $("#masterLinkSep").html("");
-                        $("#masterLinkCompany").text("");
-                    }
-                    var now = new Date();
-                    var pad = function (n) { return (n < 10 ? "0" : "") + n; };
-                    $("#masterLinkSync").text(now.getFullYear() + "-" + pad(now.getMonth() + 1) + "-" + pad(now.getDate())
-                        + " " + pad(now.getHours()) + ":" + pad(now.getMinutes()));
-                    $("#masterLinkForm").hide();
-                    $("#masterLinkSearchBox").hide();
-                    $("#masterLinkLocBox").hide().empty();
-                    $("#masterLinkSearch").val("");
-                    $("#masterLinkBadge").show();
-                } else {
-                    alert((d && d.message) ? d.message : "Link failed.");
-                }
-            },
-            error: function () { alert("Link failed."); }
-        });
-    }
+    // Relink (the "Find in the Book" control is also shown from the linked badge's guarded area):
+    // any master selection routes through the same preview, which detects the relink server-side.
 
     $("#masterUnlinkBtn").on("click", function () {
-        if (!confirm("Unlink this contact from the Book?")) return;
+        if (!confirm("Unlink this contact from the Book? Your pre-link values are restored where possible.")) return;
         $.ajax({
             url: "/ajax/master/unlink.cfm",
             method: "POST",
             dataType: "json",
             data: { contactid: contactid },
             success: function (d) {
-                if (d && d.success) {
-                    $("#masterLinkBadge").hide();
-                    $("#masterLinkForm").show();
-                    $("#masterLinkSearchBox").hide();
-                } else {
-                    alert((d && d.message) ? d.message : "Unlink failed.");
-                }
+                if (d && d.success) { window.location.reload(); }
+                else { alert((d && d.message) ? d.message : "Unlink failed."); }
             },
             error: function () { alert("Unlink failed."); }
         });
