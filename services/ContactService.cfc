@@ -377,6 +377,81 @@
     <cfreturn result>
 </cffunction>
 
+<cffunction name="writeLinkSnapshot" access="public" returntype="struct" output="false"
+            hint="DIR-LNK-WO-7: master snapshot write for link/relink. ONE conditional UPDATE keyed contactid+userid (ownership re-asserted at the write site, no read-then-write race). Sets the three primaries to server-derived master values (blank mirrors the master per spec 7.5) and _src='master'. Caller re-derives every master value; nothing here is client-suppliable. Not gated on link state - relink overwrites an existing pointer by design.">
+    <cfargument name="contactid"         type="numeric" required="true">
+    <cfargument name="userid"            type="numeric" required="true">
+    <cfargument name="phone"             type="string"  required="true"  hint="master office phone; may be blank (Q4 mirror)">
+    <cfargument name="email"             type="string"  required="true"  hint="master office email; may be blank">
+    <cfargument name="company"           type="string"  required="true"  hint="master company name; may be blank">
+    <cfargument name="masterCoContactId" type="numeric" required="true">
+    <cfargument name="masterCoid"        type="string"  required="false" default=""  hint="'' -> NULL">
+    <cfargument name="colocid"           type="string"  required="false" default=""  hint="'' -> NULL">
+    <cfargument name="adoptPhoto"        type="boolean" required="false" default="false" hint="true -> contactPhoto_src='master' (photo value renders from the master image URL per WO-6; no local value copy)">
+
+    <cfset var result = { "success": false, "rows": 0 }>
+    <cfset var upd = "">
+
+    <cfquery result="upd">
+        UPDATE contactdetails_tbl
+        SET    contactPhone       = <cfqueryparam value="#trim(arguments.phone)#"   cfsqltype="CF_SQL_VARCHAR" null="#(NOT len(trim(arguments.phone)))#">,
+               contactPhone_src   = <cfqueryparam value="master" cfsqltype="CF_SQL_VARCHAR">,
+               contactEmail       = <cfqueryparam value="#trim(arguments.email)#"   cfsqltype="CF_SQL_VARCHAR" null="#(NOT len(trim(arguments.email)))#">,
+               contactEmail_src   = <cfqueryparam value="master" cfsqltype="CF_SQL_VARCHAR">,
+               contactCompany     = <cfqueryparam value="#trim(arguments.company)#" cfsqltype="CF_SQL_VARCHAR" null="#(NOT len(trim(arguments.company)))#">,
+               contactCompany_src = <cfqueryparam value="master" cfsqltype="CF_SQL_VARCHAR">,
+               <cfif arguments.adoptPhoto>contactPhoto_src = <cfqueryparam value="master" cfsqltype="CF_SQL_VARCHAR">,</cfif>
+               master_co_contact_id = <cfqueryparam value="#int(arguments.masterCoContactId)#" cfsqltype="CF_SQL_INTEGER">,
+               master_coid          = <cfqueryparam value="#arguments.masterCoid#" cfsqltype="CF_SQL_INTEGER" null="#(NOT len(trim(arguments.masterCoid)))#">,
+               company_location_id  = <cfqueryparam value="#arguments.colocid#"    cfsqltype="CF_SQL_INTEGER" null="#(NOT len(trim(arguments.colocid)))#">,
+               master_last_sync     = now(),
+               master_linked_date   = COALESCE(master_linked_date, now())
+        WHERE  contactid = <cfqueryparam value="#arguments.contactid#" cfsqltype="CF_SQL_INTEGER">
+          AND  userid    = <cfqueryparam value="#arguments.userid#"    cfsqltype="CF_SQL_INTEGER">
+          AND  isdeleted = <cfqueryparam value="0" cfsqltype="CF_SQL_BIT">
+    </cfquery>
+    <cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
+
+    <cfset result.rows    = val(upd.recordCount)>
+    <cfset result.success = (result.rows GTE 1)>
+    <cfreturn result>
+</cffunction>
+
+<cffunction name="writeUnlinkState" access="public" returntype="struct" output="false"
+            hint="DIR-LNK-WO-7: unlink write (spec 11.4). ONE conditional UPDATE keyed contactid+userid. Sets the three primaries to the caller-resolved restore values (blank -> NULL when no prior value) and _src='user'; clears the three master pointers and photo provenance; bumps master_last_sync. The restore-precedence (active item -> audit old_value -> blank) is resolved by the caller (R-B).">
+    <cfargument name="contactid" type="numeric" required="true">
+    <cfargument name="userid"    type="numeric" required="true">
+    <cfargument name="phone"     type="string"  required="true">
+    <cfargument name="email"     type="string"  required="true">
+    <cfargument name="company"   type="string"  required="true">
+
+    <cfset var result = { "success": false, "rows": 0 }>
+    <cfset var upd = "">
+
+    <cfquery result="upd">
+        UPDATE contactdetails_tbl
+        SET    contactPhone         = <cfqueryparam value="#trim(arguments.phone)#"   cfsqltype="CF_SQL_VARCHAR" null="#(NOT len(trim(arguments.phone)))#">,
+               contactPhone_src     = <cfqueryparam value="user" cfsqltype="CF_SQL_VARCHAR">,
+               contactEmail         = <cfqueryparam value="#trim(arguments.email)#"   cfsqltype="CF_SQL_VARCHAR" null="#(NOT len(trim(arguments.email)))#">,
+               contactEmail_src     = <cfqueryparam value="user" cfsqltype="CF_SQL_VARCHAR">,
+               contactCompany       = <cfqueryparam value="#trim(arguments.company)#" cfsqltype="CF_SQL_VARCHAR" null="#(NOT len(trim(arguments.company)))#">,
+               contactCompany_src   = <cfqueryparam value="user" cfsqltype="CF_SQL_VARCHAR">,
+               contactPhoto_src     = <cfqueryparam value="user" cfsqltype="CF_SQL_VARCHAR">,
+               master_co_contact_id = <cfqueryparam value="" cfsqltype="CF_SQL_INTEGER" null="true">,
+               master_coid          = <cfqueryparam value="" cfsqltype="CF_SQL_INTEGER" null="true">,
+               company_location_id  = <cfqueryparam value="" cfsqltype="CF_SQL_INTEGER" null="true">,
+               master_last_sync     = now()
+        WHERE  contactid = <cfqueryparam value="#arguments.contactid#" cfsqltype="CF_SQL_INTEGER">
+          AND  userid    = <cfqueryparam value="#arguments.userid#"    cfsqltype="CF_SQL_INTEGER">
+          AND  isdeleted = <cfqueryparam value="0" cfsqltype="CF_SQL_BIT">
+    </cfquery>
+    <cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
+
+    <cfset result.rows    = val(upd.recordCount)>
+    <cfset result.success = (result.rows GTE 1)>
+    <cfreturn result>
+</cffunction>
+
 <cffunction name="update22" access="public" returntype="void" output="false" hint="Update an existing contact record">
     <cfargument name="contactid" type="numeric" required="true" hint="Contact ID to update">
     <cfargument name="dataStruct" type="struct" required="true" hint="Fields to update">

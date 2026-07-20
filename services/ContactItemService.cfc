@@ -862,6 +862,50 @@ FROM contactitems
 
     <cfreturn result.generatedKey>
 </cffunction>
+<!--- DIR-LNK-WO-7: preserve a displaced user primary value as a non-primary "Additional information"
+      item before the master snapshot replaces the primary column (spec 7.3.5 - never marked primary).
+      category = Phone|Email|Company. Phone/Email store in valuetext; Company stores in valueCompany
+      (mirrors createCompanyItem). Targets the base table (_tbl) per the house write rule. --->
+<cffunction output="false" name="createPreservedItem" access="public" returntype="numeric">
+    <cfargument name="contactid" type="numeric" required="true">
+    <cfargument name="category"  type="string"  required="true">
+    <cfargument name="value"     type="string"  required="true">
+
+    <cfset var cat = trim(arguments.category)>
+    <cfset var r   = "">
+
+    <cfif NOT listFindNoCase("Phone,Email,Company", cat)>
+        <cfthrow message="ContactItemService.createPreservedItem: unsupported category '#cat#'">
+    </cfif>
+
+    <cfif cat EQ "Company">
+        <cfquery result="r">
+            INSERT INTO contactitems_tbl (CONTACTID, VALUETYPE, VALUECATEGORY, ValueCompany, ITEMSTATUS)
+            VALUES (
+                <cfqueryparam value="#arguments.contactid#"  cfsqltype="CF_SQL_INTEGER">,
+                <cfqueryparam value="Company"                cfsqltype="CF_SQL_VARCHAR">,
+                <cfqueryparam value="Company"                cfsqltype="CF_SQL_VARCHAR">,
+                <cfqueryparam value="#trim(arguments.value)#" cfsqltype="CF_SQL_VARCHAR">,
+                <cfqueryparam value="Active"                 cfsqltype="CF_SQL_VARCHAR">
+            )
+        </cfquery>
+    <cfelse>
+        <cfquery result="r">
+            INSERT INTO contactitems_tbl (CONTACTID, VALUETYPE, VALUECATEGORY, VALUETEXT, ITEMSTATUS)
+            VALUES (
+                <cfqueryparam value="#arguments.contactid#"  cfsqltype="CF_SQL_INTEGER">,
+                <cfqueryparam value="#cat#"                  cfsqltype="CF_SQL_VARCHAR">,
+                <cfqueryparam value="#cat#"                  cfsqltype="CF_SQL_VARCHAR">,
+                <cfqueryparam value="#trim(arguments.value)#" cfsqltype="CF_SQL_VARCHAR">,
+                <cfqueryparam value="Active"                 cfsqltype="CF_SQL_VARCHAR">
+            )
+        </cfquery>
+    </cfif>
+    <cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
+
+    <cfreturn val(r.generatedKey)>
+</cffunction>
+
 <cffunction output="false" name="INScontactitems_24049" access="public" returntype="numeric">
     <cfargument name="contactID" type="numeric" required="true">
     <cfargument name="tag" type="string" required="true">
