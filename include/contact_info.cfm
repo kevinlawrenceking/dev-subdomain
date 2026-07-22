@@ -826,7 +826,7 @@ x</button>
       UNLINKED: same rows with the WO-6 inline pencil editor; a blank field renders an "Add X" link.
       The value source is the contactdetails COLUMN in every state (contactCompany / contactEmail /
       contactPhone), so the row content can never disagree with the lists. The lock / pencil is
-      presentation on top of the /ajax/contact/update-primary.cfm enforcement, never the enforcement
+      presentation on top of the /ajax/contact/updateprimary.cfm enforcement, never the enforcement
       itself: the server rejects a primary write on a linked contact regardless of what renders. --->
 <cfoutput>
 <div id="primaryFields" class="book-fields mt-2" data-contactid="#currentid#">
@@ -914,7 +914,7 @@ $(function () {
         save.on("click", function () {
             save.prop("disabled", true);
             $.ajax({
-                url: "/ajax/contact/update-primary.cfm",
+                url: "/ajax/contact/updateprimary.cfm",
                 method: "POST",
                 dataType: "json",
                 data: { contactid: contactid, field: field, value: input.val() },

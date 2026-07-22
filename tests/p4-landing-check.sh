@@ -6,7 +6,7 @@
 #  before any template code executes — holds intact.
 #
 #  What it proves:
-#    A  The NEW template ajax/contact/update-primary.cfm is present on the
+#    A  The NEW template ajax/contact/updateprimary.cfm is present on the
 #       deployed tree, via 3-way status discrimination:
 #         target  vs  known-existing /ajax template  vs  guaranteed-missing name.
 #       (Pattern-matched, not hardcoded — if the auth wall answers even for
@@ -14,7 +14,7 @@
 #    G  /.git web exposure. If exposed (a register finding on its own), it
 #       reads the deployed dev SHA directly and compares to local HEAD.
 #    B  OPTIONAL, with --cookie + --contact-url: greps a rendered contact
-#       page for 'update-primary' markup — proves the MODIFIED templates are
+#       page for 'updateprimary' markup — proves the MODIFIED templates are
 #       serving fresh output (the trusted-cache stale-compile trap).
 #
 #  Usage (Git Bash, from workspace root /c/Users/kevin/TAO/dev-subdomain):
@@ -30,7 +30,7 @@
 # ============================================================================
 
 HOST="https://dev.theactorsoffice.com"
-TARGET_PATH="/ajax/contact/update-primary.cfm"
+TARGET_PATH="/ajax/contact/updateprimary.cfm"
 CONTROL_EXISTING="/ajax/setup-wizard/save-step2.cfm"   # existence evidenced in the P1/P3 record
 CONTROL_MISSING="/ajax/contact/wo6-missing-control-${RANDOM}${RANDOM}.cfm"
 
@@ -68,7 +68,7 @@ C_EXIST=$(probe "${HOST}${CONTROL_EXISTING}")
 C_MISS=$(probe  "${HOST}${CONTROL_MISSING}")
 
 say "host reachability                : ${C_HOME}"
-say "TARGET  update-primary.cfm       : ${C_TGT}"
+say "TARGET  updateprimary.cfm        : ${C_TGT}"
 say "CONTROL existing (save-step2)    : ${C_EXIST}   (expected 401 auth wall)"
 say "CONTROL missing  (random name)   : ${C_MISS}   (expected 404)"
 line
@@ -116,8 +116,8 @@ line
 
 # ---- optional probe B: authenticated UI grep ----------------------------------
 if [ -n "$COOKIE" ] && [ -n "$CONTACT_URL" ]; then
-  UI_HITS=$(curl -s -m 40 -H "Cookie: ${COOKIE}" "$CONTACT_URL" 2>/dev/null | grep -o "update-primary" | wc -l | tr -d ' ')
-  say "PROBE B (authenticated UI grep)  : ${UI_HITS} occurrence(s) of 'update-primary' in rendered page"
+  UI_HITS=$(curl -s -m 40 -H "Cookie: ${COOKIE}" "$CONTACT_URL" 2>/dev/null | grep -o "updateprimary" | wc -l | tr -d ' ')
+  say "PROBE B (authenticated UI grep)  : ${UI_HITS} occurrence(s) of 'updateprimary' in rendered page"
   if [ "${UI_HITS:-0}" -gt 0 ] 2>/dev/null; then
     say "  modified templates fresh       : YES — stale-compile trap cleared."
   else

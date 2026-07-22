@@ -1,5 +1,5 @@
 <!---
-  POST /ajax/contact/update-primary.cfm   (DIR-LNK-WO-6 / TAO-MCD-P1)
+  POST /ajax/contact/updateprimary.cfm   (DIR-LNK-WO-6 / TAO-MCD-P1)
   Edit ONE primary column (phone/email/company) on an UNLINKED contact.
   Auth + CSRF enforced by /ajax/Application.cfc.
 
@@ -12,7 +12,7 @@
   Params (form): contactid (int), field (contactPhone|contactEmail|contactCompany), value (string)
   Response JSON: { success, message, data, _build }
 --->
-<cfset buildTag = "wo6-update-primary-2026-07-16-v1">
+<cfset buildTag = "wo6-updateprimary-2026-07-20-v2">
 <cfcontent type="application/json" reset="true">
 
 <cfparam name="form.contactid" default="0">
