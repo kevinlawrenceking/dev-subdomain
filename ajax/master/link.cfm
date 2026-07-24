@@ -1,49 +1,20 @@
 <!---
-  POST /ajax/master/link.cfm   (DIR-WO-2 / TAO-MCD-P1)
-  Link a TAO contact to a master person. Auth + CSRF enforced by /ajax/Application.cfc.
-  Params (form): contactid (int), masterCoContactId (int), coid (int, optional),
-                 colocid (int, optional)
-  Response JSON: { success, message, data, _build }
+  POST /ajax/master/link.cfm   (DIR-WO-2 / TAO-MCD-P1)  -- RETIRED at DIR-LNK-WO-7 (P6 tidy).
+  This legacy endpoint drove MasterDirectoryService.linkContactToMaster, which bypasses the entire
+  WO-7 link flow: NO preservation of displaced user values, NO email/phone office snapshot, and NO
+  master_audit_tbl rows -- a data-integrity bypass that stayed reachable by a direct POST even after
+  the UI stopped calling it (the live link flow is the preview modal -> POST /ajax/master/link-confirm.cfm).
+  Neutralized here to a guarded rejection (fix-batch #6): the service is NOT invoked; any hit is a stale
+  client or a direct probe and is logged. The method + this file are deleted in WO-11 cleanup.
+  Auth + CSRF remain enforced by /ajax/Application.cfc; this template only rejects.
+  Response JSON: { success:false, message, data, _build }
 --->
-<cfset buildTag = "master-link-2026-07-09-v1">
+<cfset buildTag = "master-link-RETIRED-2026-07-23-v2">
 <cfcontent type="application/json" reset="true">
 
-<cfparam name="form.contactid"         default="0">
-<cfparam name="form.masterCoContactId" default="0">
-<cfparam name="form.coid"              default="0">
-<cfparam name="form.colocid"           default="0">
+<cfset response = { "success": false, "message": "This action is no longer available.", "data": {}, "_build": buildTag }>
 
-<!--- Strip recordname at the endpoint boundary (never let it reach the writer path) --->
-<cfif structKeyExists(form, "recordname")><cfset structDelete(form, "recordname")></cfif>
-
-<cfset response = { "success": false, "message": "", "data": {}, "_build": buildTag }>
-
-<cftry>
-    <cfif NOT isValid("integer", form.contactid) OR val(form.contactid) LTE 0
-          OR NOT isValid("integer", form.masterCoContactId) OR val(form.masterCoContactId) LTE 0>
-        <cfset response.message = "Missing or invalid contactid / masterCoContactId.">
-        <cfoutput>#serializeJSON(response)#</cfoutput>
-        <cfabort>
-    </cfif>
-
-    <cfset svc = request.svc("MasterDirectoryService")>
-    <cfset result = svc.linkContactToMaster(
-        contactid         = int(form.contactid),
-        masterCoContactId = int(form.masterCoContactId),
-        coid              = val(form.coid),
-        colocid           = val(form.colocid),
-        userid            = session.userid)>
-
-    <cfset response.success = result.success>
-    <cfset response.message = structKeyExists(result, "message") ? result.message : "">
-    <cfif structKeyExists(result, "data")><cfset response.data = result.data></cfif>
-
-    <cfcatch type="any">
-        <cfset response.success = false>
-        <cfset response.message = "Link failed.">
-        <cflog file="master_link" type="error"
-               text="link FAIL userid=#(structKeyExists(session,'userid') ? session.userid : 'na')# contactid=#left(form.contactid,20)# master=#left(form.masterCoContactId,20)# err=#cfcatch.message#">
-    </cfcatch>
-</cftry>
+<cflog file="master_link" type="warning"
+       text="link.cfm RETIRED endpoint hit userid=#(structKeyExists(session,'userid') ? session.userid : 'na')# contactid=#left((structKeyExists(form,'contactid') ? form.contactid : ''),20)# master=#left((structKeyExists(form,'masterCoContactId') ? form.masterCoContactId : ''),20)#">
 
 <cfoutput>#serializeJSON(response)#</cfoutput>

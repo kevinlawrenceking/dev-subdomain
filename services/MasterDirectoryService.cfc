@@ -534,7 +534,20 @@
     </cfif>
 
     <cfset prevMaster = int(qOwn.master_co_contact_id)>
-    <cfset idemBase   = "WO7:" & int(arguments.contactid) & ":UNLINK:" & prevMaster>
+    <!--- S-9 FIX: fold a link-epoch into the unlink keys, exactly as confirmLink does for S-7. Without
+          it, repeated unlink cycles to the SAME master regenerate byte-identical CLEAR/RESTORE keys;
+          post Fix-1b (record() returns 0 on an INSERT IGNORE no-op instead of throwing) the 2nd+ unlink's
+          audit rows are SILENTLY skipped -> an UNAUDITED UNLINK. Epoch = pre-mutation MAX(auditID) for
+          this contact, read from committed state: deterministic within the request (a concurrent
+          double-unlink of ONE event still dedups) yet strictly advanced by the intervening link's rows
+          (distinct unlink events never collide). Ratified epoch-over-NULL (amends P2 P2e "NULL /
+          inherently-unique" - the impl had already deviated to deterministic keys, which was the gap). --->
+    <cfquery name="qEpoch">
+        SELECT COALESCE(MAX(auditID), 0) AS unlinkEpoch
+        FROM master_audit_tbl
+        WHERE contactID = <cfqueryparam value="#arguments.contactid#" cfsqltype="CF_SQL_INTEGER">
+    </cfquery>
+    <cfset idemBase   = "WO7:" & int(arguments.contactid) & ":UNLINK:" & prevMaster & ":e" & val(qEpoch.unlinkEpoch)>
 
     <cfset fields = [
         { "cat":"Phone",   "field":"contactPhone",   "cur":trim(qOwn.contactPhone),   "src":qOwn.contactPhone_src },

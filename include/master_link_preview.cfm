@@ -89,9 +89,9 @@
 <cfset dispCompany = ( qCur.contactCompany_src EQ "user" AND len(trim(qCur.contactCompany)) AND compareNoCase(trim(qCur.contactCompany), masterCo)  NEQ 0 )>
 <cfset dispEmail   = ( qCur.contactEmail_src   EQ "user" AND len(trim(qCur.contactEmail))   AND compareNoCase(trim(qCur.contactEmail),   selEmail) NEQ 0 )>
 <cfset dispPhone   = ( qCur.contactPhone_src   EQ "user" AND len(trim(qCur.contactPhone))   AND compareNoCase(trim(qCur.contactPhone),   selPhone) NEQ 0 )>
-<cfset nDisplaced  = (dispCompany ? 1 : 0) + (dispEmail ? 1 : 0) + (dispPhone ? 1 : 0)>
 <cfset needsChoice = (nOffices GT 1) OR len(masterImg)>
-<cfset shortForm   = (nDisplaced EQ 0) AND (nOffices LTE 1) AND (NOT len(masterImg))>
+<!--- #4 (P6 tidy): adaptive short form DROPPED - the full diff renders always (one path; reads well
+      even at zero conflicts as the "here is what you're getting" disclosure). Amends lock Section 3. --->
 <cfset userAvatar  = session.userContactsUrl & "/" & int(url.contactid) & "/avatar.jpg">
 
 <cfoutput>
@@ -148,7 +148,6 @@
      data-coloc="#selColoc#"
      data-noffices="#nOffices#"
      data-hasimg="#(len(masterImg) ? 1 : 0)#"
-     data-shortform="#(shortForm ? 1 : 0)#"
      data-selphone="#encodeForHTMLAttribute(selPhone)#"
      data-selemail="#encodeForHTMLAttribute(selEmail)#"
      data-seladdr="#encodeForHTMLAttribute(selIdx GT 0 ? trim(offices[selIdx].address1) : '')#"
@@ -169,7 +168,7 @@
     <cfif len(masterImg)><img class="mlp-ava" src="#encodeForHTMLAttribute(masterImg)#" alt="" onerror="this.style.display='none'"><cfelse><span class="mlp-ava"></span></cfif>
     <div style="flex:1;">
       <div class="mlp-nm">#encodeForHTML(masterName)#</div>
-      <div class="mlp-co">#encodeForHTML(masterCo)#<cfif len(masterRole)> &middot; #encodeForHTML(masterRole)#</cfif><cfif len(masterImdb)><a href="https://www.imdb.com/name/#encodeForHTMLAttribute(masterImdb)#/" target="_blank" rel="noopener">IMDB</a></cfif></div>
+      <div class="mlp-co">#encodeForHTML(masterCo)#<cfif len(masterRole) AND compareNoCase(masterRole, masterCo) NEQ 0> &middot; #encodeForHTML(masterRole)#</cfif><cfif len(masterImdb)><a href="https://www.imdb.com/name/#encodeForHTMLAttribute(masterImdb)#/" target="_blank" rel="noopener">IMDB</a></cfif></div>
     </div>
     <div style="font-size:.75rem;"><a href="javascript:;" id="mlpNotRight" style="color:var(--link);text-decoration:none;">Not the right person?</a></div>
   </div>
@@ -204,18 +203,17 @@
         </select>
       </cfif>
     </div>
+  <cfelseif nOffices EQ 1>
+    <!--- #3 (P6 tidy): single office - one-line confirmation (spec: collapse, don't omit). --->
+    <cfset o = offices[1]>
+    <div class="mlp-sec">
+      <div class="mlp-lab">Office</div>
+      <div class="mlp-v"><cfif len(trim(o.location))>#encodeForHTML(trim(o.location))# &middot; </cfif>#encodeForHTML(trim(o.address1))#<cfif len(trim(o.city))>, #encodeForHTML(trim(trim(o.city) & ' ' & trim(o.state)))#</cfif><cfif len(trim(o.phone))> &middot; #encodeForHTML(trim(o.phone))#</cfif></div>
+    </div>
   </cfif>
 
-  <cfif shortForm>
-    <!--- SHORT FORM: nothing displaced, no office choice, no photo choice. --->
-    <div class="mlp-sec" style="padding-bottom:10px;">
-      <div class="mlp-lab">You'll get</div>
-      <div class="mlp-v new">#encodeForHTML(masterCo)#</div>
-      <div class="mlp-sub">Company, email, phone and address will be kept current by the Book. Nothing you entered is deleted.</div>
-    </div>
-  <cfelse>
-    <!--- FULL DIFF --->
-    <div class="mlp-diff" id="mlpDiff">
+  <!--- FULL DIFF (always; adaptive short form dropped - #4, amends lock Section 3). --->
+  <div class="mlp-diff" id="mlpDiff">
       <!--- COMPANY --->
       <div class="mlp-row">
         <div class="mlp-dlab">Company</div>
@@ -275,7 +273,6 @@
       </div>
       </cfif>
     </div>
-  </cfif>
 
   <div class="mlp-warnline" id="mlpWarn" style="display:none;"></div>
 
@@ -320,13 +317,13 @@
     var phone = d.phone == null ? '' : String(d.phone);
     renderMasterCell('mlpEmailNew', email, 'email');
     renderMasterCell('mlpPhoneNew', phone, 'phone');
-    var addr = $('#mlpAddrNew'), hasAddr = false;
+    var addr = $('#mlpAddrNew');
     if(addr.length){
       var lines = [];
       if(d.addr) lines.push(esc(d.addr));
       if(d.addr2) lines.push(esc(d.addr2));
       if(d.csz && String(d.csz).replace(/\s/g,'').length) lines.push(esc(d.csz));
-      if(lines.length){ addr.html('<div class="mlp-v new">'+lines.join('<br>')+'</div><span class="mlp-tag gain">new</span>'); hasAddr = true; }
+      if(lines.length){ addr.html('<div class="mlp-v new">'+lines.join('<br>')+'</div><span class="mlp-tag gain">new</span>'); }
       else { addr.html('<div class="mlp-v none">This office has no address on file</div><span class="mlp-tag warn">check this one</span>'); }
     }
     // S-3: recompute the displacement disclosure for the newly chosen office. Email/phone are
@@ -338,7 +335,10 @@
     $('#mlpEmailMoves').toggle(dispEmail);
     $('#mlpPhoneMoves').toggle(dispPhone);
     var moved = (st.companyMoves?1:0) + (dispEmail?1:0) + (dispPhone?1:0);
-    var kept  = (st.hasCompany?1:0) + (email.length?1:0) + (phone.length?1:0) + (hasAddr?1:0);
+    // #1 (P6 tidy): "kept" = the THREE managed primary columns (company/email/phone), always 3, to
+    // match the three lock icons on the panel so a user can verify by sight. A Q4-blank field still
+    // counts (it is managed; WO-8 fills it). Address/IMDB are display enrichments, not managed columns.
+    var kept  = 3;
     updateConfirm(moved, kept);
   }
   function updateConfirm(moved, kept){
@@ -348,7 +348,7 @@
     var warn = $('#mlpWarn');
     if(must && st.coloc <= 0){ warn.text('Choose an office to continue.').show(); } else { warn.hide(); }
     if(moved == null){ moved = (st.companyMoves?1:0); }
-    if(kept == null){ kept = (st.hasCompany?1:0); }
+    if(kept == null){ kept = 3; }
     $('#mlpSum').html('<b>'+kept+' field'+(kept===1?'':'s')+'</b> kept current by the Book &middot; <b>'+moved+' of your value'+(moved===1?'':'s')+'</b> move to Additional information &middot; nothing is deleted. You can unlink at any time.');
   }
   $r.on('click', '.mlp-office', function(){
@@ -375,7 +375,7 @@
       error: function(){ $('#mlpWarn').text('Could not link. Try again.').show(); btn.prop('disabled', false).text(orig); }
     });
   });
-  if(parseInt($r.data('shortform'),10) === 1){ updateConfirm(); }
-  else { applyOffice({ coloc: st.coloc, phone: $r.data('selphone'), email: $r.data('selemail'), addr: $r.data('seladdr'), addr2: $r.data('seladdr2'), csz: $r.data('selcsz') }); }
+  // #4 (P6 tidy): full diff renders always -> always seed the master cells + footer from the selected office.
+  applyOffice({ coloc: st.coloc, phone: $r.data('selphone'), email: $r.data('selemail'), addr: $r.data('seladdr'), addr2: $r.data('seladdr2'), csz: $r.data('selcsz') });
 })();
 </script>
