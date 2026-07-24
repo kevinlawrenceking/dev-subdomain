@@ -259,6 +259,25 @@
     <cfif qOwn.recordCount EQ 0>
         <cfreturn { "success": false, "message": "Contact not found." }>
     </cfif>
+
+    <!--- S-7 FIX: link-epoch discriminator folded into idemBase. Every idempotency key built below
+          (PRESERVE / SNAP / LINK / RELINK, and the same-master office-change SNAP) must be identical
+          for concurrent double-submits of ONE link event (so INSERT IGNORE dedups the retry) yet
+          DIFFER across distinct link events for the same contact+master - otherwise a
+          link -> unlink -> relink-to-the-same-master regenerates byte-identical keys, the audit
+          INSERT IGNORE no-ops, and the write path fails (S-7). The append-only master_audit_tbl is
+          itself the epoch source: MAX(auditID) for this contact is read from committed pre-mutation
+          state, so two concurrent submits observe the same value (deterministic within the request),
+          while any intervening unlink writes RESTORE/CLEAR rows that advance it (distinct across
+          events). Indexed by IX_master_audit_contact. No schema change; existing rows and their keys
+          are untouched; the unlink path keeps its own UNLINK:prevMaster discriminator unchanged. --->
+    <cfquery name="qEpoch">
+        SELECT COALESCE(MAX(auditID), 0) AS linkEpoch
+        FROM master_audit_tbl
+        WHERE contactID = <cfqueryparam value="#arguments.contactid#" cfsqltype="CF_SQL_INTEGER">
+    </cfquery>
+    <cfset idemBase = idemBase & ":e" & val(qEpoch.linkEpoch)>
+
     <!--- FLAG-1 (2a): the no-op discriminator is the PAYLOAD (master + office + photo), not the
           master alone. The same-master branch below decides true no-op vs office/photo re-snapshot;
           it needs the office phone/email, so it is placed AFTER master + office resolution. --->
@@ -271,7 +290,12 @@
         WHERE cc.id = <cfqueryparam value="#arguments.masterCoContactId#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
     <cfif qMaster.recordCount EQ 0>
-        <cfreturn { "success": false, "message": "Master record not found." }>
+        <!--- S-6: neutral message, no enumeration oracle. not-yours and does-not-exist are already
+              caught above at qOwn (filtered by userid) and return "Contact not found."; a valid-owned
+              contact paired with a bad/foreign master previously returned the DISTINCT "Master record
+              not found.", which revealed that the ownership check had passed. All three now return the
+              identical neutral message so the response cannot be used to probe ownership. --->
+        <cfreturn { "success": false, "message": "Contact not found." }>
     </cfif>
     <cfset coName  = trim(qMaster.coName)>
     <cfset newCoid = (val(qMaster.cc_coid) GT 0 AND len(qMaster.co_coid_check) AND val(qMaster.co_coid_check) GT 0) ? int(qMaster.cc_coid) : "">

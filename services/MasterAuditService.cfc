@@ -64,7 +64,12 @@
     </cfquery>
     <cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 
-    <cfreturn val(r.generatedKey)>
+    <!--- S-7: an idempotency_key collision makes INSERT IGNORE a no-op; MySQL returns no generated
+          key for a 0-row insert, so guard the access and return 0 - the documented contract in this
+          function's header ("0 when an idempotency_key collision made the insert a no-op") - instead
+          of throwing an undefined-key error inside the caller's cftransaction (the true mechanism
+          behind the S-7 "Link failed." rollback, and the concurrent double-submit failure). --->
+    <cfreturn structKeyExists(r, "generatedKey") ? val(r.generatedKey) : 0>
 </cffunction>
 
 </cfcomponent>
