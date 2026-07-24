@@ -47,13 +47,13 @@
 | b | Link, WITH existing values (full diff, PRELINK_VALUE_PRESERVED) | **PASS** | item 3 (132447): full diff matched DB; PRELINK_VALUE_PRESERVED ×3. |
 | c | Multi-office (cards / 6+ list, R-A) | **PASS** | items 3 & 7: NY/Silver Spring/LA offices rendered and switched; company_location_id tracked the pick (1350 NY). |
 | d | Blank-master (Q4 mirror) | **PASS** | item 3: email NULL `_src='master'`, MASTER_SNAPSHOT_POPULATED with NULL new_value; item 7 amber row persisted. |
-| e | Photo picker | **Attested (P5 COMPLETE); not line-itemized in the report** | Master 9104 carried an image (why short form was suppressed); photo-adopt provenance (2b) not separately transcribed. Recommend the architect confirm from the operator's screenshot set. |
-| f | Cancel / "Not the right person?" (zero writes) | **Attested; not line-itemized** | item 10 exact baseline restoration (2524 items, 117→post audit delta only) is consistent with zero stray writes. |
-| g | Relink to a DIFFERENT master (MASTER_RELINKED) | **Partial — same-master relink heavily exercised (items 8–9); different-master `MASTER_RELINKED` not separately itemized** | The S-7 focus was same-master relink. Recommend one explicit different-master relink at close-out or note as WO-8 coverage. |
+| e | Photo picker | **PENDING** — §11 spot-confirm | NOT marked PASS. Photo-adopt provenance (contactPhoto_src flip) not transcribed this run; closed by §11 after the tidy deploy. |
+| f | Cancel / "Not the right person?" (zero writes) | **PENDING** — §11 spot-confirm | NOT marked PASS. Baseline restoration (item 10) is consistent with zero stray writes but not a direct cancel-writes-nothing probe; closed by §11. |
+| g | Relink to a DIFFERENT master (MASTER_RELINKED) | **PENDING** — §11 spot-confirm | NOT marked PASS. `MASTER_RELINKED` has **never fired** — all S-7 work was same-master. Must be exercised explicitly; closed by §11. |
 | h | Unlink (Q2 / R-B restore precedence, consume item) | **PASS** | item 3 (restore from consumed items) + item 4 (clear, no phantom restore). |
 | i | BRIDGE OFF (D-19 regression) | **PASS** | item 5: item_rows held 2524 across every link; zero Company items minted. |
 | j | Negatives incl. double-submit | **PASS** | item 6 (foreign id / no-CSRF / injection / malformed) + item 9 double-submit no-op (19→19). |
-| k | WO-6 regression (updatePrimary rejects; contacts_ss shows master values) | **Attested; not line-itemized** | Panel rendered gold "In the Book" with lock (item 8b); explicit edit-rejection probe not transcribed. |
+| k | WO-6 regression (updatePrimary rejects; contacts_ss shows master values) | **PENDING** — §11 spot-confirm | NOT marked PASS. contacts_ss visibility of linked values not directly queried this run; closed by §11. |
 | S-1 | Preview auth/ownership (4 negatives) | **PASS** | item 6, all four. |
 | S-2 | Export company from column | **Covered pre-P5** (find_new_Company_115_6.cfm repoint, commit 72153800) | not re-run this session; the reader defect fix is already committed. |
 | S-3 | Office-switch disclosure recompute | **PASS** | item 7. |
@@ -117,17 +117,22 @@ Each unlink-event gets unique keys (every unlink audited); a concurrent double-u
 
 ---
 
-## 6. Fix batch dispositions (item 10) — for the P6-era tidy commit, NOT committed separately
+## 6. Fix batch — RATIFIED + IMPLEMENTED at tidy commit `c79d89fe`
 
-| # | Item | Site | Disposition |
-|---|------|------|-------------|
-| — | **S-9 unlink epoch** | `MasterDirectoryService.cfc:537` | **READY** (spec in §5). Ratify epoch-vs-NULL. |
-| 1 | Footer "N fields" count unverifiable | `master_link_preview.cfm:341,352` (`kept` = non-blank company+email+phone+address) | **READY, needs "managed field" definition.** `kept` counts *non-blank* values, so a Q4 blank email is not counted though it becomes Book-managed — the count can disagree with the managed rows shown. Direction (operator): count **managed** fields (the three primaries the Book owns: company/email/phone), or restate the sentence. |
-| 2 | Match-band "Manager · Manager" duplicate | `master_link_preview.cfm:172` (`masterCo · masterRole`) | **READY.** Add a dedup guard: suppress `masterRole` when it equals `masterCo` (case-insensitive). Confirm the underlying master's `coName`/`jobtitle_type` data with the operator. |
-| 3 | Single-office shows no office indicator | `master_link_preview.cfm:178` (`<cfif nOffices GT 1>` — 1 office renders nothing) | **READY.** Add an `nOffices EQ 1` branch rendering a one-line office confirmation (location/address), per spec (collapse, don't omit). |
-| 4 | Adaptive short form didn't fire on a no-conflict link | `master_link_preview.cfm:94` (`shortForm = nDisplaced==0 AND nOffices<=1 AND NOT len(masterImg)`), render `:209` | **PATH EXISTS, did NOT trigger — NOT dropped.** It was suppressed because the test master carried a headshot (`len(masterImg)` truthy → a photo choice is offered → full diff). **Architect ratifies:** keep the short form (and perhaps let a photo-only choice still use it), or drop it and make the full diff the default. |
-| 5 | Panel title subline absent when no local `contacttitle` | `contact_info.cfm:803-804` (subline only when `len(contacttitle)`) | **NEEDS RATIFICATION + query widen.** "Consider" falling back to the Book's role (`co_contacts.jobtitle_type`), which is not currently selected in the panel's details query — a small widen + a fallback. Architect to approve the fallback and the source. |
-| 6 | Legacy endpoint retirement | `ajax/master/link.cfm` → `linkContactToMaster` | **READY (guarded rejection, NOT delete).** Replace the service call with a neutral rejection (e.g. `{success:false, message:"This action is no longer available."}` / HTTP 410) so the direct-POST data-integrity bypass (no preservation / no snapshot / no audit) is closed while the file stays for history. Retirement of the method + `ajax/master/link.cfm` file itself is WO-11 cleanup. |
+All dispositions ruled by the operator (2026-07-23) and authored in ONE code-class commit **`c79d89fe`** —
+`code(DIR-LNK-WO-7): unlink epoch (S-9), footer count, office and role display, full-diff render, legacy
+endpoint retirement`. Files: `services/MasterDirectoryService.cfc`, `include/master_link_preview.cfm`,
+`ajax/master/link.cfm`. Awaiting line review; NOT pushed (no push without a named SR-1 PUSH GO).
+
+| # | Item | Ruling | As built |
+|---|------|--------|----------|
+| — | **S-9 unlink epoch** | **EPOCH, not NULL** (amends P2 §P2e — see §10) | `MasterDirectoryService.cfc:537` — epoch (`:e<MAX(auditID)>`) folded into the unlink `idemBase`, same mechanism as confirmLink. Each unlink event audited; concurrent double-unlink of one event still dedups. |
+| 1 | Footer count | **The THREE managed primary columns, always 3** (company/email/phone); a Q4-blank still counts (WO-8 fills it); address/IMDB excluded — matches the three panel lock icons | `master_link_preview.cfm` — `kept = 3` (constant); now-dead `hasAddr` local removed. |
+| 2 | "Manager · Manager" dedup | **Ratified** | `master_link_preview.cfm:171` — role shown only when `len(masterRole) AND compareNoCase(masterRole, masterCo) NEQ 0`. |
+| 3 | Single-office one-line | **Ratified** | new `<cfelseif nOffices EQ 1>` block — one-line office confirmation (location · address · city/state · phone). |
+| 4 | Adaptive short form | **DROP IT — full diff always** (amends lock §3 — see §10) | removed `shortForm`/`nDisplaced` cfsets, the `data-shortform` attr, the short-form branch, and the JS `shortform` fork; full diff renders unconditionally, always seeded from the selected office. |
+| 5 | Panel title subline fallback | **DEFERRED — not built** (enhancement needing a query widen `co_contacts.jobtitle_type`; no widening during a close) | Registered for the **WO-8 UI pass**. No change in `c79d89fe`. Site: `contact_info.cfm:803-804`. |
+| 6 | Legacy endpoint | **Guarded rejection (neutral JSON), not delete** | `ajax/master/link.cfm` — service call removed; returns `{success:false, message:"This action is no longer available."}` and logs the hit; auth/CSRF still central-gated. Full delete = WO-11. |
 
 ---
 
@@ -137,7 +142,7 @@ Each unlink-event gets unique keys (every unlink audited); a concurrent double-u
 - **S-6 sibling neutralized** (rider `ecaec1bf`): both the confirm (`:298`) and legacy-preview (`:126`) master-not-found paths now return the neutral "Contact not found." (no enumeration oracle).
 - **`master_audit_tbl` is now CORRECTNESS-CRITICAL, not merely observability.** The link-epoch derives from `MAX(auditID)` per contact, so pruning / archiving / renumbering that table would resurrect S-7. **Carry into WO-12 retention and any future retention decision.** See [[project_dir_lnk_series]].
 - **Backlog:** grep the codebase for other `INSERT IGNORE` (+ `ON DUPLICATE`) whose CF `generatedKey` is read unguarded — same throw. See [[reference_insert_ignore_generatedkey]].
-- **P5 criteria e/f/g/k** not individually transcribed (see §2) — spot-confirm from the operator record; consider an explicit different-master relink (g) at close-out.
+- **P5 criteria e/f/g/k are PENDING, not PASS** (see §2) — closed by the operator's §11 spot-confirm after the tidy deploy. Note (g): `MASTER_RELINKED` has never fired; it must be exercised explicitly.
 
 ---
 
@@ -153,8 +158,59 @@ Slots for the operator's P5 screenshots (captured during execution; embed or lin
 
 ## 9. Close-out sequence
 
-1. Architect reviews this bundle; ratifies the open items (S-9 epoch-vs-NULL, fix-batch #1 "managed field" definition, #4 short-form keep/drop, #5 title fallback).
-2. **P6-era tidy commit** (code, one batched commit): S-9 unlink-epoch fix + ratified UI fixes (#1–#3, #6, and #4/#5 as ratified) — then its own SR-1 PUSH GO.
-3. Docs PUSH GO for this bundle → **DIR-LNK-WO-7 CLOSED**. Seven of twelve rungs.
+1. **DONE (2026-07-23):** rulings ratified (§6); tidy commit **`c79d89fe`** authored (code-class, 3 files); this bundle amended (§10 amendments, §11 spot-confirm SQL).
+2. Architect **line-reviews** `c79d89fe`.
+3. Named SR-1 **PUSH GO** for `ecaec1bf..c79d89fe` → operator deploys → runs the **§11 spot-confirm** (closes matrix e/f/g/k).
+4. Bundle amended with the spot-confirm results → **docs PUSH GO** → **DIR-LNK-WO-7 CLOSED** (7 of 12).
 
-**HOLDS:** no code committed in this turn (bundle is docs-class); no push/deploy without a named SR-1 instrument; the tidy commit awaits ratification of the open items. Prod untouched; WO-7 wrote no DDL.
+**HOLDS:** `c79d89fe` NOT pushed (awaits line review + a named SR-1 PUSH GO); matrix **e/f/g/k NOT marked PASS** until the operator's §11 spot-confirm lands; no deploy without a named instrument. Prod untouched; WO-7 wrote no DDL.
+
+---
+
+## 10. Amendments of record (P6 rulings, operator 2026-07-23)
+
+- **P2 §P2e — AMENDED.** Unlink idempotency keys carry the **link-epoch** (`:e<MAX(auditID)>`), NOT NULL. The original §P2e specification ("Unlink — restore / clear → NULL, inherently-unique per unlink event") is **superseded**: the implementation had already deviated to deterministic non-epoch'd keys, which — after Fix-1b made collisions silent — dropped the 2nd+ unlink's audit rows (S-9). One epoch mechanism across both link and unlink paths is now the rule; it preserves concurrent-double-unlink dedup, which NULL keys would forfeit.
+- **Lock §3 — AMENDED.** The **adaptive preview density** (short form when nothing is displaced and the office choice is trivial) is **DROPPED**. The full diff renders **always**. Reason of record: seen live, the full diff reads well at zero conflicts (it is the "here is what you're getting" disclosure), one render path beats threshold logic, fewer branches. The §3 "adaptive density required" requirement no longer holds.
+
+---
+
+## 11. Pending spot-confirm run (after the tidy deploy) — paste-ready SQL
+
+Close matrix **(e) photo, (f) cancel, (g) different-master relink, (k) contacts_ss visibility** — none marked PASS until these land. Run on `new_development` (ratified pymysql read-only channel or HeidiSQL). Replace `:fx` with the fixture contactID (user 30); for (g) also a second master `:mB` distinct from the first `:mA`.
+
+```sql
+-- (g) DIFFERENT-MASTER RELINK — the never-yet-fired path. UI: link :fx to master :mA, then open the
+--     preview for master :mB and confirm. Expect exactly one MASTER_RELINKED row, old=:mA new=:mB,
+--     key carrying :e<epoch>; snapshot replaced; NO duplicate preserved items.
+SELECT auditID, action_type, master_co_contact_id, old_value, new_value, idempotency_key
+FROM master_audit_tbl
+WHERE contactID = :fx AND action_type = 'MASTER_RELINKED'
+ORDER BY auditID;                                 -- expect >= 1 row after the relink
+SELECT valueCategory, COUNT(*) AS active_items
+FROM contactitems_tbl
+WHERE contactID = :fx AND itemStatus='Active' AND IsDeleted=0
+GROUP BY valueCategory;                            -- expect no unexpected duplication vs pre-relink
+
+-- (e) PHOTO PICKER — UI: choose "From the Book" (adopt) then, separately, "Your upload" (keep).
+SELECT contactPhoto_src, master_co_contact_id
+FROM contactdetails_tbl WHERE contactid = :fx;    -- 'master' after adopt; 'user' after keep/unlink
+
+-- (f) CANCEL WRITES NOTHING — run this ONCE before opening the preview and AGAIN after Cancel /
+--     "Not the right person?". All three values must be byte-identical across the two runs.
+SELECT
+  (SELECT COUNT(*) FROM contactitems_tbl WHERE contactID = :fx AND IsDeleted = 0)                 AS items,
+  (SELECT COUNT(*) FROM master_audit_tbl WHERE contactID = :fx)                                    AS audit_rows,
+  (SELECT CONCAT_WS('|', contactPhone_src, contactEmail_src, contactCompany_src, contactPhoto_src,
+                    COALESCE(master_co_contact_id,'null'), COALESCE(company_location_id,'null'))
+     FROM contactdetails_tbl WHERE contactid = :fx)                                                AS state;
+
+-- (k) WO-6 REGRESSION — linked master values are visible through contacts_ss, and a panel primary
+--     edit is still rejected (managed-by-the-Book). Compare the phone/email/company columns to the
+--     linked snapshot; they must match (blank where Q4-mirror).
+SELECT * FROM contacts_ss WHERE contactid = :fx;
+SELECT contactPhone, contactPhone_src, contactEmail, contactEmail_src,
+       contactCompany, contactCompany_src, master_co_contact_id, company_location_id
+FROM contactdetails_tbl WHERE contactid = :fx;
+```
+
+After the run, replace the §2 e/f/g/k rows with the observed results (PASS/FAIL + evidence) and attach the transcript; that is the last edit before the closing docs PUSH GO.
