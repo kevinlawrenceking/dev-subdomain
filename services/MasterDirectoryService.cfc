@@ -123,7 +123,14 @@
         WHERE cc.id = <cfqueryparam value="#arguments.masterCoContactId#" cfsqltype="CF_SQL_INTEGER">
     </cfquery>
     <cfif qMaster.recordCount EQ 0>
-        <cfreturn { "success": false, "message": "Master record not found." }>
+        <!--- S-6 sibling: neutral message, no enumeration oracle (mirrors confirmLink). not-yours and
+              does-not-exist are already caught above at qOwn (filtered by userid) with "Contact not
+              found."; a valid-owned contact paired with a bad/foreign master previously returned the
+              DISTINCT "Master record not found.", revealing the ownership check had passed. All three
+              now return the identical neutral message. Message-only change; no behavioral change. This
+              is the legacy DIR-WO-2 link path (uncalled by the WO-7 UI but reachable by direct POST);
+              its data-integrity bypass posture is tracked separately for a retirement ruling. --->
+        <cfreturn { "success": false, "message": "Contact not found." }>
     </cfif>
 
     <cfset var coName    = qMaster.coName>
