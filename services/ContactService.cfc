@@ -403,11 +403,18 @@
         <cfreturn result>
     </cfif>
 
-    <!--- Per-field CASE guards _src='master' at write time (independent of the caller's read). The
-          WHERE OR gates the whole write on >=1 managed field still genuinely differing (TRIM +
-          NULL-safe; collation utf8mb4_unicode_ci makes it case-insensitive - case/whitespace-only
-          diffs never match, matching WO-7 L-3), so an already-current row is a DB-level no-op and
-          master_last_sync is not bumped. --->
+    <!--- DERIVE-OR-SKIP CONTRACT (L-3) - the three-way skip/mirror/update decision lives UPSTREAM in
+          MasterDirectoryService.syncLinkedContact (the fieldDefs derive-or-skip loop, keyed on the
+          per-field row-resolution flags companyResolved / colocResolved). This writer trusts that
+          pre-filtered `changes` set: it receives ONLY fields that RESOLVED and are _src='master' and
+          genuinely CHANGED. Keep the two sides in lock-step - a drift is a data-loss hole (a field
+          blanked here that should have been skipped upstream). This writer adds two guards of its own:
+          - the per-field CASE re-asserts _src='master' at write time, so a provenance flip since the
+            caller's read is never overwritten;
+          - the WHERE OR gates the whole write on >=1 managed field STILL genuinely differing (TRIM +
+            NULL-safe; utf8mb4_unicode_ci makes it case-insensitive - case/whitespace-only diffs never
+            match, matching WO-7 L-3), so an already-current row is a DB-level no-op and
+            master_last_sync is not bumped. --->
     <cfquery result="upd">
         UPDATE contactdetails_tbl
         SET

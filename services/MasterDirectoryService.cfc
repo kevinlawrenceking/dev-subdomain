@@ -790,7 +790,10 @@
           case-only / whitespace-only master edits are non-material and skipped. A resolved field whose
           derived value is blank + a non-blank stored value falls through here as a change -> the
           writer mirrors it to blank (Q9=(a), Case 3). An UNRESOLVED field never enters `changes`
-          (Case 1, skip) - this is the precondition Q9=(a) depends on. --->
+          (Case 1, skip) - this is the precondition Q9=(a) depends on. This loop is the single source
+          of the derive-or-skip contract; the `changes` set it produces is consumed by
+          ContactService.writeMasterSync, which re-guards _src='master' + stale-write at the SQL layer.
+          Keep the two in lock-step (L-3). --->
     <cfset fieldDefs = [
         { "field":"contactPhone",   "src":qOwn.contactPhone_src,   "stored":trim(qOwn.contactPhone),   "derived":derived.offPhone, "resolved":derived.colocResolved },
         { "field":"contactEmail",   "src":qOwn.contactEmail_src,   "stored":trim(qOwn.contactEmail),   "derived":derived.offEmail, "resolved":derived.colocResolved },
@@ -857,6 +860,67 @@
 
     <cfreturn { "success": true, "message": (wroteCount GT 0 ? "Synced." : "Current."),
                 "data": { "noop": (wroteCount EQ 0), "changed": wroteCount, "fields": structKeyList(changes) } }>
+</cffunction>
+
+<!--- ============================================================
+      resyncAllLinked(runId) -> struct    DIR-LNK-WO-8 on-demand admin re-sync + first-run backfill
+      Sweeps every linked, non-deleted contact and calls syncLinkedContact for each under ONE run_id.
+      Scoped to _src='master' by the engine; value-comparison makes it a no-op where correct (and a
+      total no-op against a fully-current dataset - the Q10 backfill). Each contact syncs in its own
+      transaction (per-contact isolation - one contact's failure does not roll back the others).
+      Admin-invoked; the endpoint (ajax/master/resync-all.cfm) enforces the admin gate.
+      ============================================================ --->
+<cffunction name="resyncAllLinked" access="public" returntype="struct" output="false">
+    <cfargument name="runId" type="string" required="false" default="">
+
+    <cfset var qLinked = "">
+    <cfset var runTag  = len(trim(arguments.runId)) ? trim(arguments.runId) : ("WO8SWEEP:" & left(createUUID(), 12))>
+    <cfset var scanned = 0>
+    <cfset var synced  = 0>
+    <cfset var skipped = 0>
+    <cfset var failed  = 0>
+    <cfset var fieldsWritten = 0>
+    <cfset var r = "">
+
+    <cfquery name="qLinked">
+        SELECT contactid, userid
+        FROM contactdetails_tbl
+        WHERE master_co_contact_id IS NOT NULL
+          AND isdeleted = <cfqueryparam value="0" cfsqltype="CF_SQL_BIT">
+        ORDER BY contactid
+    </cfquery>
+    <cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
+
+    <!--- L-6: each contact syncs in isolation - its own transaction inside syncLinkedContact AND its
+          own try/catch here - so one contact's failure never aborts the sweep. A mid-sweep failure
+          leaves a partial, idempotent, re-runnable sweep. Per-contact outcomes are counted
+          (synced / skipped / failed) so a partial run is VISIBLE in the response, never a bare "done". --->
+    <cfloop query="qLinked">
+        <cfset scanned = scanned + 1>
+        <cftry>
+            <cfset r = syncLinkedContact(contactid=int(qLinked.contactid), userid=int(qLinked.userid), runId=runTag)>
+            <cfif structKeyExists(r,"success") AND r.success EQ false>
+                <cfset failed = failed + 1>
+            <cfelseif structKeyExists(r,"data") AND structKeyExists(r.data,"changed") AND val(r.data.changed) GT 0>
+                <cfset synced = synced + 1>
+                <cfset fieldsWritten = fieldsWritten + val(r.data.changed)>
+            <cfelse>
+                <cfset skipped = skipped + 1>
+            </cfif>
+            <cfcatch type="any">
+                <cfset failed = failed + 1>
+                <cflog file="master_sync" type="error"
+                       text="RESYNC-ALL contact FAIL contactid=#int(qLinked.contactid)# run=#runTag# err=#cfcatch.message#">
+            </cfcatch>
+        </cftry>
+    </cfloop>
+
+    <cflog file="master_sync" type="information"
+           text="RESYNC-ALL scanned=#scanned# synced=#synced# skipped=#skipped# failed=#failed# fieldsWritten=#fieldsWritten# run=#runTag#">
+
+    <cfreturn { "success": (failed EQ 0),
+                "message": (failed EQ 0 ? "Re-sync complete." : "Re-sync completed with " & failed & " failure(s); see master_sync log."),
+                "data": { "scanned": scanned, "synced": synced, "skipped": skipped, "failed": failed, "fieldsWritten": fieldsWritten, "runId": runTag } }>
 </cffunction>
 
 </cfcomponent>

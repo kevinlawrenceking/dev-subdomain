@@ -651,6 +651,22 @@ x</button>
       docs/plans/evidence/2026-07-04-wo0b-prod-Q8-Q15-master.txt (captured verbatim 2026-07-04).
         co_contacts  : imdbid varchar(50), image_url varchar(500)
         co_locations : address1/address2/city/state/zip varchar(500), PK colocid --->
+<!--- DIR-LNK-WO-8: lazy on-read master auto-sync. Before qMasterLink reads the three managed
+      columns, bring a linked contact current with the Book (MasterDirectoryService.syncLinkedContact:
+      compare-first, write-only-on-diff; a no-op when nothing drifted, so negligible cost on the
+      unchanged path). Defensive: any sync error is swallowed + logged so the panel always renders. The
+      service self-guards (no-op when unlinked) and writes via the WO-8 guarded writer (writeMasterSync,
+      NOT updatePrimary), so WO-6 enforcement and this render path are untouched. --->
+<cftry>
+    <cfif structKeyExists(request, "svc") AND isDefined("session.userid") AND isDefined("currentid") AND val(currentid) GT 0>
+        <cfset request.svc("MasterDirectoryService").syncLinkedContact(contactid=int(val(currentid)), userid=int(val(session.userid)))>
+    </cfif>
+    <cfcatch type="any">
+        <cflog file="master_sync" type="error"
+               text="on-read sync FAIL contactid=#(isDefined('currentid') ? left(currentid,20) : 'na')# err=#cfcatch.message#">
+    </cfcatch>
+</cftry>
+
 <cfquery name="qMasterLink">
     SELECT d.master_co_contact_id, d.master_coid, d.company_location_id,
            d.contactCompany, d.contactCompany_src, d.master_last_sync,
