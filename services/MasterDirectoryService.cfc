@@ -238,6 +238,7 @@
     <cfset var newColoc = "">
     <cfset var offPhone = "">
     <cfset var offEmail = "">
+    <cfset var derived  = "">
     <cfset var isRelink = false>
     <cfset var prevMaster = 0>
     <cfset var adoptPhoto = (lCase(trim(arguments.photoChoice)) EQ "master")>
@@ -289,40 +290,21 @@
           master alone. The same-master branch below decides true no-op vs office/photo re-snapshot;
           it needs the office phone/email, so it is placed AFTER master + office resolution. --->
 
-    <!--- Resolve master person + company (re-derived; client coid ignored) --->
-    <cfquery name="qMaster">
-        SELECT cc.id, cc.fullname, cc.coid AS cc_coid, co.coid AS co_coid_check, co.coName
-        FROM co_contacts cc
-        LEFT JOIN companies co ON co.coid = cc.coid
-        WHERE cc.id = <cfqueryparam value="#arguments.masterCoContactId#" cfsqltype="CF_SQL_INTEGER">
-    </cfquery>
-    <cfif qMaster.recordCount EQ 0>
-        <!--- S-6: neutral message, no enumeration oracle. not-yours and does-not-exist are already
-              caught above at qOwn (filtered by userid) and return "Contact not found."; a valid-owned
-              contact paired with a bad/foreign master previously returned the DISTINCT "Master record
-              not found.", which revealed that the ownership check had passed. All three now return the
-              identical neutral message so the response cannot be used to probe ownership. --->
+    <!--- DIR-LNK-WO-8: master values re-derived via the shared deriveMasterValues helper (client coid
+          ignored). Behaviour is identical to the prior inline qMaster/qLoc blocks (F-2 company rule +
+          D-21 office rule); the helper additionally returns derive-or-skip row-resolution flags that
+          only syncLinkedContact consumes. S-6 neutral message preserved: an unresolved master person
+          returns "Contact not found." (not-yours / does-not-exist already caught at qOwn above; no
+          enumeration oracle - the response cannot be used to probe ownership). --->
+    <cfset derived = deriveMasterValues(masterCoContactId=int(arguments.masterCoContactId), colocid=val(arguments.colocid))>
+    <cfif NOT derived.found>
         <cfreturn { "success": false, "message": "Contact not found." }>
     </cfif>
-    <cfset coName  = trim(qMaster.coName)>
-    <cfset newCoid = (val(qMaster.cc_coid) GT 0 AND len(qMaster.co_coid_check) AND val(qMaster.co_coid_check) GT 0) ? int(qMaster.cc_coid) : "">
-
-    <!--- Resolve the chosen office + its phone/email (the master p/e source, D-21). colocid accepted
-          only if it belongs to the derived company. No / blank office -> blank master p/e, mirrored
-          per spec 7.5 (Q4). --->
-    <cfif val(arguments.colocid) GT 0 AND len(newCoid) AND val(newCoid) GT 0>
-        <cfquery name="qLoc">
-            SELECT colocid, phone, email
-            FROM co_locations
-            WHERE colocid = <cfqueryparam value="#int(arguments.colocid)#" cfsqltype="CF_SQL_INTEGER">
-              AND coid    = <cfqueryparam value="#int(newCoid)#" cfsqltype="CF_SQL_INTEGER">
-        </cfquery>
-        <cfif qLoc.recordCount EQ 1>
-            <cfset newColoc = int(qLoc.colocid)>
-            <cfset offPhone = trim(qLoc.phone)>
-            <cfset offEmail = trim(qLoc.email)>
-        </cfif>
-    </cfif>
+    <cfset coName   = derived.coName>
+    <cfset newCoid  = derived.newCoid>
+    <cfset newColoc = derived.newColoc>
+    <cfset offPhone = derived.offPhone>
+    <cfset offEmail = derived.offEmail>
 
     <cfset isRelink   = (len(trim(qOwn.master_co_contact_id)) AND val(qOwn.master_co_contact_id) NEQ int(arguments.masterCoContactId))>
     <cfset prevMaster = (len(trim(qOwn.master_co_contact_id)) ? int(qOwn.master_co_contact_id) : 0)>
@@ -644,6 +626,91 @@
            text="UNLINK contactid=#arguments.contactid# userid=#arguments.userid# prevMaster=#prevMaster# restored=#restoredCount# cleared=#clearedCount#">
 
     <cfreturn { "success": true, "message": "Unlinked.", "data": { "restored": restoredCount, "cleared": clearedCount } }>
+</cffunction>
+
+<!--- ============================================================
+      deriveMasterValues(masterCoContactId, colocid) -> struct
+      DIR-LNK-WO-8: authoritative, read-only re-derivation of the three master-managed values from
+      the master person id + the stored office id. SHARED by confirmLink (link/relink) and
+      syncLinkedContact (auto-sync) so the two paths can never diverge. Applies the F-2 company rule
+      (coid solely from cc.coid, and only when the companies row exists) and the D-21 office rule
+      (colocid accepted only when it belongs to the derived company). coName / newCoid / newColoc /
+      offPhone / offEmail are byte-identical to confirmLink's prior inline blocks.
+      DERIVE-OR-SKIP row-resolution signals (P2 §2.3, L-1): the struct exposes, per master-managed
+      group, whether the SOURCE ROW resolved - kept SEPARATE from the field VALUE - so the caller can
+      make the three-way call the writer needs (SKIP vs UPDATE vs mirror-BLANK):
+        - companyResolved : the company source resolved. FALSE only when the person points at a coid
+          whose companies row is missing (dangling / reseed gap) -> caller SKIPS company. A person
+          with no company (cc_coid=0) is RESOLVED with coName='' - a genuine blank the caller mirrors.
+        - colocResolved   : an actual co_locations row matched (office row resolved). FALSE when no
+          office was chosen (colocid=0) OR the referenced office row is missing -> caller SKIPS
+          email/phone (never blanks on a resolution failure). TRUE with offPhone/offEmail='' is a
+          genuine resolved blank the caller mirrors (Q9); TRUE with a value drives an update (Q12).
+      confirmLink ignores these flags. found=false (person row missing) -> caller SKIPS everything.
+      ============================================================ --->
+<cffunction name="deriveMasterValues" access="public" returntype="struct" output="false">
+    <cfargument name="masterCoContactId" type="numeric" required="true">
+    <cfargument name="colocid"           type="numeric" required="false" default="0">
+
+    <cfset var qMaster = "">
+    <cfset var qLoc    = "">
+    <cfset var companyDangling = false>
+    <cfset var out = {
+        "found":           false,
+        "coName":          "",
+        "newCoid":         "",
+        "companyResolved": false,
+        "newColoc":        "",
+        "colocResolved":   false,
+        "offPhone":        "",
+        "offEmail":        ""
+    }>
+
+    <cfquery name="qMaster">
+        SELECT cc.id, cc.fullname, cc.coid AS cc_coid, co.coid AS co_coid_check, co.coName
+        FROM co_contacts cc
+        LEFT JOIN companies co ON co.coid = cc.coid
+        WHERE cc.id = <cfqueryparam value="#int(arguments.masterCoContactId)#" cfsqltype="CF_SQL_INTEGER">
+    </cfquery>
+    <cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
+
+    <!--- Master person does not resolve (e.g. removed on a reseed) -> found=false; caller skips all. --->
+    <cfif qMaster.recordCount EQ 0>
+        <cfreturn out>
+    </cfif>
+
+    <cfset out.found  = true>
+    <cfset out.coName = trim(qMaster.coName)>
+    <!--- F-2: coid solely from the master person, and only when the companies row actually exists. --->
+    <cfset out.newCoid = (val(qMaster.cc_coid) GT 0 AND len(qMaster.co_coid_check) AND val(qMaster.co_coid_check) GT 0) ? int(qMaster.cc_coid) : "">
+
+    <!--- companyResolved: DANGLING = the person points at a company id whose companies row is missing
+          (reseed gap) -> NOT resolved -> caller skips company. Genuine no-company (cc_coid=0) is
+          RESOLVED with coName='' - a genuine blank the caller mirrors (Q9). --->
+    <cfset companyDangling = (val(qMaster.cc_coid) GT 0 AND (NOT len(qMaster.co_coid_check) OR val(qMaster.co_coid_check) LE 0))>
+    <cfset out.companyResolved = (NOT companyDangling)>
+
+    <!--- Resolve the chosen office (D-21). SAME condition confirmLink used: only when a valid derived
+          company exists AND a positive colocid was supplied. colocResolved is set ONLY when an actual
+          office row matches; colocid=0 (no office) and a missing office row both leave it FALSE, so
+          the caller SKIPS email/phone rather than blanking on a resolution failure. --->
+    <cfif val(arguments.colocid) GT 0 AND len(out.newCoid) AND val(out.newCoid) GT 0>
+        <cfquery name="qLoc">
+            SELECT colocid, phone, email
+            FROM co_locations
+            WHERE colocid = <cfqueryparam value="#int(arguments.colocid)#" cfsqltype="CF_SQL_INTEGER">
+              AND coid    = <cfqueryparam value="#int(out.newCoid)#" cfsqltype="CF_SQL_INTEGER">
+        </cfquery>
+        <cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
+        <cfif qLoc.recordCount EQ 1>
+            <cfset out.colocResolved = true>
+            <cfset out.newColoc = int(qLoc.colocid)>
+            <cfset out.offPhone = trim(qLoc.phone)>
+            <cfset out.offEmail = trim(qLoc.email)>
+        </cfif>
+    </cfif>
+
+    <cfreturn out>
 </cffunction>
 
 </cfcomponent>
