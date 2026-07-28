@@ -171,6 +171,11 @@ When the Book *had* a value for a managed field (`_src='master'`) and the value 
 
 **Architect lean: (a)**, *narrowed* by the derive-or-skip rule so it only fires on a genuine resolved-blank (not a reseed-transient lookup gap), with WO-9 as the recourse. But this is the operator's call precisely because it is silent and potentially-destructive. **Note on blast radius:** under static master data, populated→blank only occurs on a reseed that removes a value — rare in v1 — but the rule must be set now because it is encoded in the writer.
 
+### Q9 RULING OF RECORD (operator, 2026-07-27): **(a) MIRROR-AND-AUDIT**
+A managed field whose master source **genuinely resolves to blank** is mirrored to blank and the old value recorded in `master_audit_tbl` (`MASTER_AUTO_UPDATE`, old→NULL); **WO-9 "suggest a correction" is the user's recourse**. Rejected: **(b)** keep+flip-to-`user` (creates the private master-override §10.1 forbids and shows, under a "managed by the Book" badge, a value the Book no longer holds — a quiet UI lie); **(c)** keep+flag-stale (needs a stale column, breaks no-DDL, for a state that essentially never occurs against static master data).
+
+**BINDING PRECONDITION (load-bearing):** Q9=(a) is correct **because derive-or-skip (§2.3) is in place** — derive-or-skip narrows the blank to a *real, deliberate, near-nonexistent* case with an audit trail, so mirror-and-audit never fires on a resolution failure. **No future refactor may drop derive-or-skip without reopening Q9.** The two are a unit: `syncLinkedContact` must not blank a field unless its master source *resolved* and was *genuinely empty*.
+
 ---
 
 ## 9. Hold points / what P2 did NOT do
