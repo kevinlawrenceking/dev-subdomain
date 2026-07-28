@@ -33,6 +33,7 @@
     <cfargument name="previous_source"      type="string"  required="false" default="">
     <cfargument name="new_source"           type="string"  required="false" default="">
     <cfargument name="reason"               type="string"  required="false" default="">
+    <cfargument name="run_id"               type="string"  required="false" default="">
     <cfargument name="idempotency_key"      type="string"  required="false" default="">
 
     <cfif NOT listFindNoCase(governedActions(), trim(arguments.action_type))>
@@ -44,7 +45,7 @@
         INSERT <cfif len(trim(arguments.idempotency_key))>IGNORE </cfif>INTO master_audit_tbl
             (contactID, actor_userid, actor_type, action_type,
              master_co_contact_id, master_coid, company_location_id,
-             field_name, old_value, new_value, previous_source, new_source, reason, idempotency_key)
+             field_name, old_value, new_value, previous_source, new_source, reason, run_id, idempotency_key)
         VALUES (
             <cfqueryparam value="#arguments.contactID#" cfsqltype="CF_SQL_INTEGER">,
             <cfqueryparam value="#arguments.actor_userid#" cfsqltype="CF_SQL_INTEGER" null="#(val(arguments.actor_userid) LE 0)#">,
@@ -59,6 +60,7 @@
             <cfqueryparam value="#lCase(trim(arguments.previous_source))#" cfsqltype="CF_SQL_VARCHAR" null="#(NOT len(trim(arguments.previous_source)))#">,
             <cfqueryparam value="#lCase(trim(arguments.new_source))#" cfsqltype="CF_SQL_VARCHAR" null="#(NOT len(trim(arguments.new_source)))#">,
             <cfqueryparam value="#trim(arguments.reason)#" cfsqltype="CF_SQL_VARCHAR" maxlength="255" null="#(NOT len(trim(arguments.reason)))#">,
+            <cfqueryparam value="#trim(arguments.run_id)#" cfsqltype="CF_SQL_VARCHAR" maxlength="64" null="#(NOT len(trim(arguments.run_id)))#">,
             <cfqueryparam value="#trim(arguments.idempotency_key)#" cfsqltype="CF_SQL_VARCHAR" maxlength="191" null="#(NOT len(trim(arguments.idempotency_key)))#">
         )
     </cfquery>

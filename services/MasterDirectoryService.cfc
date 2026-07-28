@@ -713,4 +713,150 @@
     <cfreturn out>
 </cffunction>
 
+<!--- ============================================================
+      syncLinkedContact(contactid, userid, runId) -> struct    DIR-LNK-WO-8 auto-sync engine (per contact)
+      Re-derives the three master-managed values (deriveMasterValues) and refreshes ONLY the columns
+      whose _src='master' and whose value genuinely changed, via ContactService.writeMasterSync
+      (per-field _src-guarded conditional UPDATE). VALUE-COMPARISON change detection (no timestamp;
+      sidesteps N-1). Audits each written field MASTER_AUTO_UPDATE (epoch-keyed idempotency + run_id).
+      IDEMPOTENT: a repeat sync of a current contact is a zero-write, zero-audit no-op. SERVER-INTERNAL:
+      no client input; contactid+userid identify the row and every value is re-derived. Transactional
+      per contact (spec 17).
+
+      DERIVE-OR-SKIP three-way call (L-1) - per field, using the ROW-resolution flag SEPARATE from the
+      value, so a resolution failure can never be mistaken for a genuine blank:
+        1. RESOLUTION FAILURE (source row absent): fd.resolved = false
+           -> SKIP the field entirely (never written, never blanked). company: companyResolved=false
+              (dangling coid); email/phone: colocResolved=false (no office chosen OR office row gone);
+              or the whole contact when derived.found=false (master person gone).
+        2. RESOLVED TO A VALUE: fd.resolved AND derived non-blank AND differs -> UPDATE.
+        3. RESOLVED GENUINELY BLANK (row exists, field empty): fd.resolved AND derived blank AND the
+           stored value non-blank -> mirror to blank + audit (Q9=(a) mirror-and-blank). Q9=(a) is
+           correct BECAUSE this branch is only reachable when the source ROW resolved.
+      ============================================================ --->
+<cffunction name="syncLinkedContact" access="public" returntype="struct" output="false">
+    <cfargument name="contactid" type="numeric" required="true">
+    <cfargument name="userid"    type="numeric" required="true">
+    <cfargument name="runId"     type="string"  required="false" default="">
+
+    <cfset var cs  = request.svc("ContactService")>
+    <cfset var aud = request.svc("MasterAuditService")>
+    <cfset var qOwn    = "">
+    <cfset var qEpoch  = "">
+    <cfset var derived = "">
+    <cfset var epoch   = 0>
+    <cfset var runTag  = "">
+    <cfset var changes = {}>
+    <cfset var audits  = []>
+    <cfset var fieldDefs = []>
+    <cfset var fd = "">
+    <cfset var w  = "">
+    <cfset var ok = true>
+    <cfset var masterId = 0>
+    <cfset var wroteCount = 0>
+
+    <!--- Ownership + current-state read (view read; generic no-op on miss, no existence leak). --->
+    <cfquery name="qOwn">
+        SELECT contactid, userid, master_co_contact_id, master_coid, company_location_id,
+               contactPhone, contactPhone_src, contactEmail, contactEmail_src,
+               contactCompany, contactCompany_src
+        FROM contactdetails
+        WHERE contactid = <cfqueryparam value="#int(arguments.contactid)#" cfsqltype="CF_SQL_INTEGER">
+          AND userid    = <cfqueryparam value="#int(arguments.userid)#"    cfsqltype="CF_SQL_INTEGER">
+          AND isdeleted = <cfqueryparam value="0" cfsqltype="CF_SQL_BIT">
+    </cfquery>
+    <cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
+
+    <!--- Not found, not owned, or not linked -> nothing to sync. --->
+    <cfif qOwn.recordCount EQ 0 OR NOT len(trim(qOwn.master_co_contact_id))>
+        <cfreturn { "success": true, "message": "Not linked.", "data": { "noop": true, "changed": 0 } }>
+    </cfif>
+    <cfset masterId = int(qOwn.master_co_contact_id)>
+
+    <!--- Authoritative re-derivation from the stored master person + office. --->
+    <cfset derived = deriveMasterValues(masterCoContactId=masterId, colocid=(len(trim(qOwn.company_location_id)) ? int(qOwn.company_location_id) : 0))>
+
+    <!--- Case 1 (whole contact): master person no longer resolves (removed on a reseed) -> skip
+          entirely, never blank. Flag for the WO-10 bad-match / orphan register. --->
+    <cfif NOT derived.found>
+        <cflog file="master_sync" type="warning"
+               text="SYNC skip: master person unresolved contactid=#int(arguments.contactid)# master=#masterId#">
+        <cfreturn { "success": true, "message": "Master unresolved.", "data": { "noop": true, "changed": 0, "unresolved": true } }>
+    </cfif>
+
+    <!--- Per-field plan. A field is a candidate ONLY when it is master-sourced AND its source ROW
+          resolved (derive-or-skip: company -> companyResolved, email/phone -> colocResolved) AND the
+          value genuinely changed. TRIM + case-insensitive compare (matches the SQL guard + WO-7 L-3):
+          case-only / whitespace-only master edits are non-material and skipped. A resolved field whose
+          derived value is blank + a non-blank stored value falls through here as a change -> the
+          writer mirrors it to blank (Q9=(a), Case 3). An UNRESOLVED field never enters `changes`
+          (Case 1, skip) - this is the precondition Q9=(a) depends on. --->
+    <cfset fieldDefs = [
+        { "field":"contactPhone",   "src":qOwn.contactPhone_src,   "stored":trim(qOwn.contactPhone),   "derived":derived.offPhone, "resolved":derived.colocResolved },
+        { "field":"contactEmail",   "src":qOwn.contactEmail_src,   "stored":trim(qOwn.contactEmail),   "derived":derived.offEmail, "resolved":derived.colocResolved },
+        { "field":"contactCompany", "src":qOwn.contactCompany_src, "stored":trim(qOwn.contactCompany), "derived":derived.coName,   "resolved":derived.companyResolved }
+    ]>
+    <cfloop array="#fieldDefs#" index="fd">
+        <cfif fd.src EQ "master" AND fd.resolved AND compareNoCase(trim(fd.stored), trim(fd.derived)) NEQ 0>
+            <cfset changes[fd.field] = fd.derived>
+            <cfset arrayAppend(audits, fd)>
+        </cfif>
+    </cfloop>
+
+    <!--- Nothing drifted -> zero-write, zero-audit no-op (acceptance b). --->
+    <cfif structIsEmpty(changes)>
+        <cfreturn { "success": true, "message": "Current.", "data": { "noop": true, "changed": 0 } }>
+    </cfif>
+
+    <!--- Pre-mutation epoch for the idempotency discriminator (read outside the txn; INSERT IGNORE
+          dedups on the committed unique index - WO-7 V-2). Same mechanism as confirmLink / unlinkMaster
+          (S-7 / S-9): a repeat genuine change reads a strictly higher epoch -> fresh keys -> every real
+          change audits; a concurrent double-sync shares the epoch -> INSERT IGNORE dedups. --->
+    <cfquery name="qEpoch">
+        SELECT COALESCE(MAX(auditID), 0) AS syncEpoch
+        FROM master_audit_tbl
+        WHERE contactID = <cfqueryparam value="#int(arguments.contactid)#" cfsqltype="CF_SQL_INTEGER">
+    </cfquery>
+    <cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
+    <cfset epoch  = val(qEpoch.syncEpoch)>
+    <cfset runTag = len(trim(arguments.runId)) ? trim(arguments.runId) : ("WO8SYNC:" & left(createUUID(), 12))>
+
+    <cftransaction>
+        <cfset w = cs.writeMasterSync(
+                    contactid=int(arguments.contactid), userid=int(arguments.userid),
+                    masterCoContactId=masterId, changes=changes)>
+
+        <cfif NOT w.success>
+            <cftransaction action="rollback" />
+            <cfset ok = false>
+        <cfelseif val(w.rows) GTE 1>
+            <cfset wroteCount = arrayLen(audits)>
+            <cfloop array="#audits#" index="fd">
+                <cfset aud.record(
+                    contactID=int(arguments.contactid), actor_userid=int(arguments.userid), actor_type="system",
+                    action_type="MASTER_AUTO_UPDATE", master_co_contact_id=masterId,
+                    master_coid=(len(derived.newCoid) ? int(derived.newCoid) : 0),
+                    company_location_id=(len(derived.newColoc) ? int(derived.newColoc) : 0),
+                    field_name=fd.field, old_value=fd.stored, new_value=fd.derived,
+                    previous_source="master", new_source="master",
+                    reason="master auto-sync", run_id=runTag,
+                    idempotency_key="WO8:" & int(arguments.contactid) & ":AUTOSYNC:e" & epoch & ":" & fd.field)>
+            </cfloop>
+        <cfelse>
+            <!--- rows=0: a concurrent unlink/relink/sync moved the row between our read and write.
+                  Nothing written by us -> clean no-op, no audit. --->
+        </cfif>
+    </cftransaction>
+
+    <cfif NOT ok>
+        <cfreturn { "success": false, "message": "Sync could not complete; nothing was saved." }>
+    </cfif>
+
+    <cflog file="master_sync" type="information"
+           text="SYNC contactid=#int(arguments.contactid)# userid=#int(arguments.userid)# master=#masterId# changed=#wroteCount# fields=#structKeyList(changes)# run=#runTag#">
+
+    <cfreturn { "success": true, "message": (wroteCount GT 0 ? "Synced." : "Current."),
+                "data": { "noop": (wroteCount EQ 0), "changed": wroteCount, "fields": structKeyList(changes) } }>
+</cffunction>
+
 </cfcomponent>

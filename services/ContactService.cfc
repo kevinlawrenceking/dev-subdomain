@@ -377,6 +377,65 @@
     <cfreturn result>
 </cffunction>
 
+<cffunction name="writeMasterSync" access="public" returntype="struct" output="false"
+            hint="DIR-LNK-WO-8: guarded master-sync write. ONE conditional UPDATE keyed contactid+userid (ownership re-asserted at the write site) + master_co_contact_id re-assert (stale-write guard, spec 17: an unlink/relink since the caller's read yields 0 rows and no write). Writes ONLY the fields in `changes` (the caller's diff set: each already _src='master', source-resolved, value-changed), each self-guarded on _src='master' at write time via CASE so a concurrent provenance flip is never overwritten. Never touches _src, pointers, photo, or contactitems. Bumps master_last_sync only on a real write. Returns { success, rows }.">
+    <cfargument name="contactid"         type="numeric" required="true">
+    <cfargument name="userid"            type="numeric" required="true">
+    <cfargument name="masterCoContactId" type="numeric" required="true" hint="the linked master at the caller's read = the stale-write guard">
+    <cfargument name="changes"           type="struct"  required="true" hint="{ contactPhone|contactEmail|contactCompany : derivedValue }, ONLY the fields to write. Empty = clean no-op.">
+
+    <cfset var result = { "success": false, "rows": 0 }>
+    <cfset var upd = "">
+    <cfset var order = ["contactPhone","contactEmail","contactCompany"]>
+    <cfset var setFields = []>
+    <cfset var k = "">
+    <cfset var i = 0>
+
+    <!--- Fixed-order, exact-case field list; only the three managed columns are writable here. --->
+    <cfloop array="#order#" index="k">
+        <cfif structKeyExists(arguments.changes, k)>
+            <cfset arrayAppend(setFields, k)>
+        </cfif>
+    </cfloop>
+
+    <cfif arrayLen(setFields) EQ 0>
+        <cfset result.success = true>   <!--- nothing to write = clean no-op --->
+        <cfreturn result>
+    </cfif>
+
+    <!--- Per-field CASE guards _src='master' at write time (independent of the caller's read). The
+          WHERE OR gates the whole write on >=1 managed field still genuinely differing (TRIM +
+          NULL-safe; collation utf8mb4_unicode_ci makes it case-insensitive - case/whitespace-only
+          diffs never match, matching WO-7 L-3), so an already-current row is a DB-level no-op and
+          master_last_sync is not bumped. --->
+    <cfquery result="upd">
+        UPDATE contactdetails_tbl
+        SET
+        <cfloop array="#setFields#" index="k">
+            #k# = CASE WHEN #k#_src = <cfqueryparam value="master" cfsqltype="CF_SQL_VARCHAR">
+                       THEN <cfqueryparam value="#trim(arguments.changes[k])#" cfsqltype="CF_SQL_VARCHAR" null="#(NOT len(trim(arguments.changes[k])))#">
+                       ELSE #k# END,
+        </cfloop>
+            master_last_sync = now()
+        WHERE contactid = <cfqueryparam value="#int(arguments.contactid)#" cfsqltype="CF_SQL_INTEGER">
+          AND userid    = <cfqueryparam value="#int(arguments.userid)#"    cfsqltype="CF_SQL_INTEGER">
+          AND isdeleted = <cfqueryparam value="0" cfsqltype="CF_SQL_BIT">
+          AND master_co_contact_id = <cfqueryparam value="#int(arguments.masterCoContactId)#" cfsqltype="CF_SQL_INTEGER">
+          AND (
+        <cfloop from="1" to="#arrayLen(setFields)#" index="i">
+            <cfif i GT 1>OR </cfif>
+            ( #setFields[i]#_src = <cfqueryparam value="master" cfsqltype="CF_SQL_VARCHAR">
+              AND NOT ( TRIM(COALESCE(#setFields[i]#,'')) <=> TRIM(COALESCE(<cfqueryparam value="#trim(arguments.changes[setFields[i]])#" cfsqltype="CF_SQL_VARCHAR" null="#(NOT len(trim(arguments.changes[setFields[i]])))#">,'')) ) )
+        </cfloop>
+          )
+    </cfquery>
+    <cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
+
+    <cfset result.rows    = val(upd.recordCount)>
+    <cfset result.success = true>   <!--- the statement ran; rows tells the caller whether a row matched --->
+    <cfreturn result>
+</cffunction>
+
 <cffunction name="writeLinkSnapshot" access="public" returntype="struct" output="false"
             hint="DIR-LNK-WO-7: master snapshot write for link/relink. ONE conditional UPDATE keyed contactid+userid (ownership re-asserted at the write site, no read-then-write race). Sets the three primaries to server-derived master values (blank mirrors the master per spec 7.5) and _src='master'. Caller re-derives every master value; nothing here is client-suppliable. Not gated on link state - relink overwrites an existing pointer by design.">
     <cfargument name="contactid"         type="numeric" required="true">
