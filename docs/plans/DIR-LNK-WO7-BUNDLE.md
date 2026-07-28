@@ -2,14 +2,16 @@
 
 **Work order:** DIR-LNK-WO-7 (link-with-preview modal + bridge disable + snapshot population).
 **Branch:** dev · **Project:** TAO-MCD-P1 · **Spec MD5:** 078d926d.
-**Status:** P5 EXECUTED + ACCEPTED (operator, 2026-07-23), baseline restored EXACT. Assembled for architect review → docs PUSH GO → **WO-7 close**.
-**Deploy of record:** origin/dev `ecaec1bf` pulled to dev, caches cleared, verified live; P5 run against that build.
+**Status:** P5 EXECUTED + ACCEPTED (operator, 2026-07-23); tidy `c79d89fe` deployed and the **P5 spot-confirm COMPLETE (operator, 2026-07-27)** — matrix e/f/k + S-9 + retired-endpoint PASS, **(g) DEFERRED** (design gap, not fail), **S-8 WITHDRAWN**. Baseline restored EXACT. Assembled for the closing architect review → docs PUSH GO → **WO-7 close**.
+**Deploy of record:** origin/dev `1af50112` (tidy code `c79d89fe` + this bundle) pulled to dev, caches cleared, verified live; the P5 spot-confirm ran against that build. (The earlier P5 preservation run in §1 was against `ecaec1bf`.)
 
-**Commits of record (pushed, origin/dev = `ecaec1bf`):**
+**Commits of record (pushed 2026-07-23, origin/dev = `1af50112`; live-verified via `git ls-remote` 2026-07-27):**
 - `51edc8c3` — code — fix relink key collision (S-7), neutral not-found on foreign contactid (S-6).
 - `ecaec1bf` — code — neutralize legacy link oracle (S-6 sibling).
+- `c79d89fe` — code — unlink epoch (S-9), footer count, office/role display, full-diff render, legacy-endpoint guarded rejection.
+- `1af50112` — docs — P6 bundle amend (tidy implemented, P2 §P2e + lock §3 amendments, spot-confirm SQL).
 
-**Planned P6-era tidy commit (NOT YET MADE — authored after architect ratifies the open items below; batched, not separate):** S-9 unlink-epoch fix + ratified UI fixes + legacy-endpoint guarded rejection.
+**P6-era tidy commit — MADE + PUSHED:** `c79d89fe` (S-9 unlink-epoch fix + ratified UI fixes + legacy-endpoint guarded rejection). Line-reviewed and pushed under the SR-1 item-5 PUSH GO.
 
 ---
 
@@ -47,18 +49,18 @@
 | b | Link, WITH existing values (full diff, PRELINK_VALUE_PRESERVED) | **PASS** | item 3 (132447): full diff matched DB; PRELINK_VALUE_PRESERVED ×3. |
 | c | Multi-office (cards / 6+ list, R-A) | **PASS** | items 3 & 7: NY/Silver Spring/LA offices rendered and switched; company_location_id tracked the pick (1350 NY). |
 | d | Blank-master (Q4 mirror) | **PASS** | item 3: email NULL `_src='master'`, MASTER_SNAPSHOT_POPULATED with NULL new_value; item 7 amber row persisted. |
-| e | Photo picker | **PENDING** — §11 spot-confirm | NOT marked PASS. Photo-adopt provenance (contactPhoto_src flip) not transcribed this run; closed by §11 after the tidy deploy. |
-| f | Cancel / "Not the right person?" (zero writes) | **PENDING** — §11 spot-confirm | NOT marked PASS. Baseline restoration (item 10) is consistent with zero stray writes but not a direct cancel-writes-nothing probe; closed by §11. |
-| g | Relink to a DIFFERENT master (MASTER_RELINKED) | **PENDING** — §11 spot-confirm | NOT marked PASS. `MASTER_RELINKED` has **never fired** — all S-7 work was same-master. Must be exercised explicitly; closed by §11. |
+| e | Photo picker | **PASS** (spot-confirm 2026-07-27, §12) | "From the Book" set `contactPhoto_src='master'` (verified in-column); panel rendered the Book headshot. |
+| f | Cancel / "Not the right person?" (zero writes) | **PASS** (spot-confirm 2026-07-27, §12) | Cancel / "Not the right person?" wrote nothing — no state, audit, or item change. |
+| g | Relink to a DIFFERENT master (MASTER_RELINKED) | **DEFERRED** — design gap, not fail (operator ruling 2026-07-27, §12) | `MASTER_RELINKED` is implemented correctly at the `isRelink` branch (`MasterDirectoryService.cfc:327` decides from the DB pointer; emit `:461-466`) but **unreachable by any current UI gesture** — a linked panel offers only *unlink*, no in-place "Find in the Book" relink. Unlink-then-link is the supported, sufficient path (preserves + restores across both steps). Recorded implemented-but-dormant pending a future in-place-relink UI (not built, not scheduled). Neither PASS nor FAIL. The live "relink logs `LINK_CREATED`" finding (S-8) is **WITHDRAWN** — see §5. |
 | h | Unlink (Q2 / R-B restore precedence, consume item) | **PASS** | item 3 (restore from consumed items) + item 4 (clear, no phantom restore). |
 | i | BRIDGE OFF (D-19 regression) | **PASS** | item 5: item_rows held 2524 across every link; zero Company items minted. |
 | j | Negatives incl. double-submit | **PASS** | item 6 (foreign id / no-CSRF / injection / malformed) + item 9 double-submit no-op (19→19). |
-| k | WO-6 regression (updatePrimary rejects; contacts_ss shows master values) | **PENDING** — §11 spot-confirm | NOT marked PASS. contacts_ss visibility of linked values not directly queried this run; closed by §11. |
+| k | WO-6 regression (updatePrimary rejects; contacts_ss shows master values) | **PASS** (spot-confirm 2026-07-27, §12) | Linked company/email/phone visible through `contacts_ss` immediately after link. |
 | S-1 | Preview auth/ownership (4 negatives) | **PASS** | item 6, all four. |
 | S-2 | Export company from column | **Covered pre-P5** (find_new_Company_115_6.cfm repoint, commit 72153800) | not re-run this session; the reader defect fix is already committed. |
 | S-3 | Office-switch disclosure recompute | **PASS** | item 7. |
 
-Honesty note: e/f/g/k rest on the operator's "P5 COMPLETE / every fixture swept" attestation and are not individually transcribed in items 1–10. They are flagged so the architect can spot-confirm from the screenshot/HeidiSQL record rather than assume.
+Honesty note (resolved 2026-07-27): e/f/k were closed by the operator's spot-confirm (§12) and no longer rest on attestation. (g) is DEFERRED with a UI-reachability rationale (§5/§12), not asserted PASS.
 
 ---
 
@@ -97,6 +99,8 @@ Honesty note: e/f/g/k rest on the operator's "P5 COMPLETE / every fixture swept"
 
 **S-8 (office-change path emits LINK_CREATED) — FALSE.** `LINK_CREATED` is emitted at exactly one site: the main link branch else-clause `MasterDirectoryService.cfc:461-464` (reached only when `isRelink=false`, i.e. `master_co_contact_id` blank at entry = unlinked). The same-master office-change branch emits **only `MASTER_SNAPSHOT_POPULATED` ×3** (`:349-363`) and returns; `MASTER_RELINKED` is `:454-459`. The office-change path never writes `LINK_CREATED`.
 
+**S-8 (P5-live variant: relink-to-different-master logged as `LINK_CREATED`, `MASTER_RELINKED` unreachable) — WITHDRAWN (2026-07-27).** The architect's P5 (g) finding — the e203 `LINK_CREATED` on 132450 (key `WO7:132450:6117:e203:LINK`, no `PRELINK_VALUE_PRESERVED`, no unlink/CLEAR rows, no `MASTER_RELINKED`) — was overturned by code read. `confirmLink` decides link-state **from the database, not the client payload**: the `isRelink` cfset at `MasterDirectoryService.cfc:327` reads `qOwn.master_co_contact_id` (the view read at `:257-265`), with `prevMaster` at `:328`. (The operator's `getCurrentLink:330` label is approximate — no such helper exists; the decision is inline, and `:330` is the same-master no-op comment.) `LINK_CREATED` is emitted **only** when `isRelink=false`, i.e. the stored pointer is blank at entry. 132450 had been left **unlinked** by the Part-5 second unlink at e190, so e203 was a genuine unlinked→new-master link — logged correctly — not a linked→different-master switch. A direct master→master switch cannot occur from the current UI at all (the linked panel has no in-place relink control), which is exactly why `MASTER_RELINKED` has never fired; that is the (g) DEFERRED design gap (§2/§12), not a `confirmLink` defect. The `MASTER_RELINKED` emit (`:461-466`) and its outgoing-overwrite + epoch-keyed semantics are correct and DB-sourced — simply unreachable by a current gesture. **No fix, no commit.** Surfacing this rather than building an ordered branch on a false premise was the correct call (operator, 2026-07-27).
+
 **S-9 (unaudited unlink from missing epoch in unlink keys) — TRUE.** Four `LINK_CREATED` ⟹ four fresh links from the unlinked state ⟹ the contact was unlinked before each ⟹ ≥3 unlinks to master 9104. `unlinkMaster`'s `idemBase` (`MasterDirectoryService.cfc:537`) = `WO7:<cid>:UNLINK:<prevMaster>` with **no epoch**; the CLEAR/RESTORE keys derive from it (`:613` CLEAR, `:607` RESTORE). Repeated unlinks to the same master produce **byte-identical keys** → post-Fix-1b `record()` returns 0 **silently** → only the first unlink's CLEAR set persists; the 2nd+ unlinks changed state (pointers cleared, primaries reset) but wrote **no audit rows**. This exactly reproduces "4 LINK_CREATED, 1 CLEAR set." **The double-submit PASS (item 9, 19→19) rules out a third explanation** — the all-unchanged case is caught by the state no-op guard, so the extra links were genuine fresh links, each preceded by a (2nd+ silently-unaudited) unlink.
 
 **REGISTER — general risk introduced by Fix-1b:** collisions now fail **silently** (return 0) rather than loudly (throw). An unexpected collision is therefore a **missing audit row**, not an error. Invariant to carry forward: *every deterministic-key audit write must carry an event discriminator, or a legitimate repeat-event silently drops its audit rows.* The confirmLink paths satisfy this (epoch via `idemBase`); `unlinkMaster` was the remaining gap (S-9).
@@ -122,7 +126,7 @@ Each unlink-event gets unique keys (every unlink audited); a concurrent double-u
 All dispositions ruled by the operator (2026-07-23) and authored in ONE code-class commit **`c79d89fe`** —
 `code(DIR-LNK-WO-7): unlink epoch (S-9), footer count, office and role display, full-diff render, legacy
 endpoint retirement`. Files: `services/MasterDirectoryService.cfc`, `include/master_link_preview.cfm`,
-`ajax/master/link.cfm`. Awaiting line review; NOT pushed (no push without a named SR-1 PUSH GO).
+`ajax/master/link.cfm`. Line-reviewed and **pushed 2026-07-23** under the SR-1 item-5 PUSH GO (origin/dev `1af50112`).
 
 | # | Item | Ruling | As built |
 |---|------|--------|----------|
@@ -142,7 +146,8 @@ endpoint retirement`. Files: `services/MasterDirectoryService.cfc`, `include/mas
 - **S-6 sibling neutralized** (rider `ecaec1bf`): both the confirm (`:298`) and legacy-preview (`:126`) master-not-found paths now return the neutral "Contact not found." (no enumeration oracle).
 - **`master_audit_tbl` is now CORRECTNESS-CRITICAL, not merely observability.** The link-epoch derives from `MAX(auditID)` per contact, so pruning / archiving / renumbering that table would resurrect S-7. **Carry into WO-12 retention and any future retention decision.** See [[project_dir_lnk_series]].
 - **Backlog:** grep the codebase for other `INSERT IGNORE` (+ `ON DUPLICATE`) whose CF `generatedKey` is read unguarded — same throw. See [[reference_insert_ignore_generatedkey]].
-- **P5 criteria e/f/g/k are PENDING, not PASS** (see §2) — closed by the operator's §11 spot-confirm after the tidy deploy. Note (g): `MASTER_RELINKED` has never fired; it must be exercised explicitly.
+- **P5 criteria e/f/k — CLOSED PASS** by the operator's 2026-07-27 spot-confirm (§12). **(g) DEFERRED** as a design gap — in-place master→master relink is UI-unreachable; unlink-then-link is the supported path; `MASTER_RELINKED` is implemented-but-dormant (§2, §5, §12). Not scheduled.
+- **NEW register item (WO-11 hygiene): contact soft-delete does NOT force an unlink.** Deleting a linked contact can strand a `master_co_contact_id` pointer on the deleted row (Q1a-class orphan). Recommend: auto-unlink before soft-delete, or block delete while linked. Register only; **not fixed in WO-7**. (The final-cleanup delete of 132450 was safe because the operator verified it unlinked first — `master_co_contact_id` NULL, `_src='user'` — before deletion; §12.)
 
 ---
 
@@ -158,12 +163,12 @@ Slots for the operator's P5 screenshots (captured during execution; embed or lin
 
 ## 9. Close-out sequence
 
-1. **DONE (2026-07-23):** rulings ratified (§6); tidy commit **`c79d89fe`** authored (code-class, 3 files); this bundle amended (§10 amendments, §11 spot-confirm SQL).
-2. Architect **line-reviews** `c79d89fe`.
-3. Named SR-1 **PUSH GO** for `ecaec1bf..c79d89fe` → operator deploys → runs the **§11 spot-confirm** (closes matrix e/f/g/k).
-4. Bundle amended with the spot-confirm results → **docs PUSH GO** → **DIR-LNK-WO-7 CLOSED** (7 of 12).
+1. **DONE (2026-07-23):** rulings ratified (§6); tidy commit **`c79d89fe`** authored (code-class, 3 files); bundle amended (§10 amendments, §11 spot-confirm SQL).
+2. **DONE (2026-07-23):** architect line-reviewed `c79d89fe`; SR-1 item-5 **PUSH GO** → `ecaec1bf..1af50112` pushed → origin/dev `1af50112`; operator deployed to dev.
+3. **DONE (2026-07-27):** operator ran the §11 spot-confirm against the live tidy build — **e/f/k + S-9 + retired-endpoint PASS; (g) DEFERRED; S-8 WITHDRAWN** (§12). Fixtures swept, baseline restored EXACT (§12 item 6).
+4. **THIS AMENDMENT (2026-07-27):** bundle updated with the spot-confirm results (§2, §5, §7, §12). **NEXT:** closing architect review → **docs PUSH GO** → **DIR-LNK-WO-7 CLOSED** (7 of 12).
 
-**HOLDS:** `c79d89fe` NOT pushed (awaits line review + a named SR-1 PUSH GO); matrix **e/f/g/k NOT marked PASS** until the operator's §11 spot-confirm lands; no deploy without a named instrument. Prod untouched; WO-7 wrote no DDL.
+**HOLDS:** this docs amendment is committed but **NOT pushed** — it awaits the closing architect review and a named docs PUSH GO. Prod untouched; WO-7 wrote no DDL. The register carries the WO-11 soft-delete-unlink hygiene item (§7).
 
 ---
 
@@ -174,9 +179,9 @@ Slots for the operator's P5 screenshots (captured during execution; embed or lin
 
 ---
 
-## 11. Pending spot-confirm run (after the tidy deploy) — paste-ready SQL
+## 11. Spot-confirm run — EXECUTED 2026-07-27 (results in §12); paste-ready SQL retained
 
-Close matrix **(e) photo, (f) cancel, (g) different-master relink, (k) contacts_ss visibility** — none marked PASS until these land. Run on `new_development` (ratified pymysql read-only channel or HeidiSQL). Replace `:fx` with the fixture contactID (user 30); for (g) also a second master `:mB` distinct from the first `:mA`.
+Ran on `new_development`. Outcome: **(e) PASS, (f) PASS, (k) PASS**; **(g) could not be exercised** — the different-master relink is unreachable from the linked panel (no in-place "Find in the Book"), so it is **DEFERRED** (§12), not run. The (g) SQL below is retained for the future in-place-relink UI. Replace `:fx` with the fixture contactID (user 30); for (g) also a second master `:mB` distinct from the first `:mA`.
 
 ```sql
 -- (g) DIFFERENT-MASTER RELINK — the never-yet-fired path. UI: link :fx to master :mA, then open the
@@ -213,4 +218,37 @@ SELECT contactPhone, contactPhone_src, contactEmail, contactEmail_src,
 FROM contactdetails_tbl WHERE contactid = :fx;
 ```
 
-After the run, replace the §2 e/f/g/k rows with the observed results (PASS/FAIL + evidence) and attach the transcript; that is the last edit before the closing docs PUSH GO.
+DONE (2026-07-27): the §2 e/f/g/k rows now carry the observed results (§12); this amendment is the last edit before the closing docs PUSH GO.
+
+---
+
+## 12. P5 spot-confirm + final cleanup — EXECUTED 2026-07-27 (operator: Kevin)
+
+Ran against the live tidy build (origin/dev `1af50112`, tidy code `c79d89fe`) on a real link of fixture **132450 → Steve A. Kennedy / Daniel L. Paulson Productions (master 10158)**.
+
+**Item 2 — TIDY FIXES (`c79d89fe`) CONFIRMED LIVE — all PASS:**
+- #1 footer "3 fields / 3 of your values" rendered.
+- #2 no title duplication ("Manager · Manager" dedup holds).
+- #3 single-office one-line block rendered.
+- #4 full diff, no short form.
+
+**Item 3 — P5 CRITERIA:**
+- **(e) photo choice — PASS.** "From the Book" set `contactPhoto_src='master'` (verified in-column); panel rendered the Book headshot.
+- **(f) cancel-writes-nothing — PASS.**
+- **(k) contacts_ss visibility — PASS.** Linked company/email/phone visible through the read view immediately.
+- **(S-9) unlink epoch — EMPIRICAL PASS.** 132450 double-unlink produced **two** `PRELINK_VALUE_RESTORED` sets at **distinct epochs e180 and e190**; both restored the user's preserved values — the round trip fired twice cleanly. Confirms the S-9 fix: unlink keys are now epoch-discriminated, so the 2nd unlink no longer silently drops its audit rows.
+- **(retired endpoint) — PASS.** POST to `ajax/master/link.cfm` returned the guarded rejection; the service was not invoked.
+
+**Item 4 — (g) DIFFERENT-MASTER RELINK — DEFERRED (design gap, not fail; operator ruling 2026-07-27).** A linked contact's panel offers only *unlink* and no "Find in the Book" search, so a direct master→master relink is unreachable from the UI. The `MASTER_RELINKED` emit path is implemented correctly at the `isRelink` branch (`MasterDirectoryService.cfc:327` decides from the DB pointer; emit `:461-466`) but cannot be exercised by any current gesture. **Ruling:** unlink-then-link is the supported and sufficient path today (it preserves and restores correctly across both steps); `MASTER_RELINKED` is recorded implemented-but-dormant pending a future in-place-relink UI that is NOT built and NOT scheduled. Neither PASS nor FAIL.
+
+**S-8 — WITHDRAWN.** The e203 `LINK_CREATED` on 132450 was an unlinked→new-master link (132450 had been left unlinked by the second unlink at e190), not a linked→different-master switch. `confirmLink` reads current link-state from the database and the `isRelink` logic is sound. No fix, no commit. See §5.
+
+**Item 5 — NEW REGISTER ITEM (WO-11 hygiene):** the contact soft-delete path does not force an unlink; deleting a linked contact can strand a `master_co_contact_id` pointer (Q1a-class orphan). Auto-unlink-before-delete or block-while-linked recommended. Register; not fixed in WO-7. (Also in §7.)
+
+**Item 6 — FINAL CLEANUP BASELINE (operator, post-P5), verbatim:** all fixtures removed (132447, 132448, 132449, 132450 deleted; the last was verified unlinked before deletion, `master_co_contact_id` NULL, `_src='user'` — no orphan). Re-capture EXACT to the pre-P5 baseline:
+
+```
+ss_rows 983 | active_contacts 983 | src_company_master 7 | item_rows 2524
+```
+
+`master_audit_tbl` grew (append-only) and is **not** expected to restore.
