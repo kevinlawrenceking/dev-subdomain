@@ -95,7 +95,7 @@ Recon proved no gap: `MASTER_AUTO_UPDATE` is governed, `run_id`/`idempotency_key
 
 ### 3.2 (ii) On-demand admin re-sync — the sweep
 - An **admin-only** action that sweeps **all** linked contacts (`master_co_contact_id IS NOT NULL AND isdeleted=0`), calling `syncLinkedContact` for each, scoped `_src='master'`, under **one `run_id`**.
-- **Endpoint contract:** a new admin-guarded POST endpoint (e.g. `ajax/master/resync-all.cfm`) returning the standard `{success, message, data:{scanned, changed, contactsWritten, runId}}`; CSRF-protected and admin-authorized exactly as other admin POSTs (exact gate confirmed at P3). Because the engine is a service method, the same sweep is later invokable from a `/sched/*.cfm` page if (iii) is ever adopted — no re-authoring.
+- **Endpoint contract:** a new admin-guarded POST endpoint (e.g. `ajax/master/resyncall.cfm`) returning the standard `{success, message, data:{scanned, changed, contactsWritten, runId}}`; CSRF-protected and admin-authorized exactly as other admin POSTs (exact gate confirmed at P3). Because the engine is a service method, the same sweep is later invokable from a `/sched/*.cfm` page if (iii) is ever adopted — no re-authoring.
 - **This is the operator's "apply the reseed to linked contacts" button** — the natural companion to the manual prod→dev master reseed that P1a identified as the only way master values change today.
 
 ### 3.3 Read-surface coverage (per recon P1g)

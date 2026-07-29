@@ -1,5 +1,5 @@
 <!---
-  POST /ajax/master/resync-all.cfm   (DIR-LNK-WO-8)
+  POST /ajax/master/resyncall.cfm   (DIR-LNK-WO-8)
   ADMIN-ONLY on-demand master re-sync + first-run backfill. Auth + CSRF are enforced by
   /ajax/Application.cfc (401 without a session, 403 without a valid CSRF token on POST); this
   endpoint adds the admin gate. Sweeps every linked contact and refreshes the three master-managed
@@ -13,7 +13,7 @@
   permanently 403. (Register: the ~7 existing endpoints gating on session.isAdmin share that latent
   defect; out of WO-8 scope.)
 --->
-<cfset buildTag = "wo8-resync-all-2026-07-27-v2">
+<cfset buildTag = "wo8-resyncall-2026-07-28-v1">
 <cfcontent type="application/json" reset="true">
 
 <cfset response = { "success": false, "message": "", "data": {}, "_build": buildTag }>
@@ -49,7 +49,7 @@
         <cfset response.success = false>
         <cfset response.message = "Re-sync failed.">
         <cflog file="master_sync" type="error"
-               text="resync-all FAIL user=#(structKeyExists(session,'userid') ? session.userid : 'na')# err=#cfcatch.message#">
+               text="resyncall FAIL user=#(structKeyExists(session,'userid') ? session.userid : 'na')# err=#cfcatch.message#">
     </cfcatch>
 </cftry>
 

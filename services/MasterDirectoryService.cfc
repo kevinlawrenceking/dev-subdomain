@@ -868,7 +868,7 @@
       Scoped to _src='master' by the engine; value-comparison makes it a no-op where correct (and a
       total no-op against a fully-current dataset - the Q10 backfill). Each contact syncs in its own
       transaction (per-contact isolation - one contact's failure does not roll back the others).
-      Admin-invoked; the endpoint (ajax/master/resync-all.cfm) enforces the admin gate.
+      Admin-invoked; the endpoint (ajax/master/resyncall.cfm) enforces the admin gate.
       ============================================================ --->
 <cffunction name="resyncAllLinked" access="public" returntype="struct" output="false">
     <cfargument name="runId" type="string" required="false" default="">
