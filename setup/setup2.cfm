@@ -17,7 +17,12 @@
     <cflocation url="/setup/?error=invalid" addtoken="false">
 </cfif>
 
-<!--- Server-side re-query: pull ALL identity data from DB, not form POST --->
+<!--- Server-side re-query: pull ALL identity data from DB, not form POST.
+      NOTE: thrivecart_tbl.customerid is the ThriveCart customer id from the IPN payload.
+      It is informational only and is NULL on most real purchases (ipn-handler.cfm writes
+      it from the webhook's customer_id, which the current product does not send). The
+      identity key for a purchase is thrivecart_tbl.id -- that is the value
+      taousers_tbl.customerid stores (see sched/cancel.cfm join on u.customerid = t.id). --->
 <cfquery name="qSetup" datasource="#application.dsn#">
     SELECT id, customerid, customerfirst, customerlast, customeremail
     FROM thrivecart_tbl
@@ -35,13 +40,12 @@
     <cflog file="TAO_setup" type="error" text="setup2: invalid thrivecart id (#qSetup.id#) for uuid #session.setupUUID#" />
     <cflocation url="/setup/?error=invalid" addtoken="false">
 </cfif>
-<cfif NOT isNumeric(qSetup.customerid) OR val(qSetup.customerid) LTE 0>
-    <cflog file="TAO_setup" type="error" text="setup2: invalid customerid (#qSetup.customerid#) for uuid #session.setupUUID#" />
-    <cflocation url="/setup/?error=invalid" addtoken="false">
-</cfif>
+<!--- TAO-SETUP-KEY-01: no customerid gate here. A NULL/blank thrivecart_tbl.customerid
+      is normal for a real purchase and must not block setup -- qSetup.id (validated
+      above) is the key this flow writes and every other consumer reads. --->
 
 <!--- Name/email: accept user edits from form, fall back to DB values.
-      id and customerid always come from DB (security-critical). --->
+      The thrivecart id always comes from the DB (security-critical). --->
 <cfset setupFirst = len(trim(form.customerfirst)) ? trim(form.customerfirst) : qSetup.customerfirst>
 <cfset setupLast = len(trim(form.customerlast)) ? trim(form.customerlast) : qSetup.customerlast>
 <cfset setupEmail = len(trim(form.customeremail)) ? trim(form.customeremail) : qSetup.customeremail>
@@ -64,10 +68,26 @@
         <cflocation url="/setup/setup-complete.cfm" addtoken="false">
     </cfif>
 
-    <!--- Soft-delete old users with same customerid --->
+    <!--- TAO-SETUP-LINK-GUARD (POST side): the setup link is single-use. index.cfm makes
+          the same check on GET, but a stale form can still be POSTed, so refuse here too.
+          An active account already attached to this purchase is never overwritten. --->
+    <cfquery name="qActiveUser" datasource="#application.dsn#">
+        SELECT userid FROM taousers_tbl
+        WHERE customerid = <cfqueryparam value="#val(qSetup.id)#" cfsqltype="cf_sql_bigint" />
+        AND isdeleted = 0
+        LIMIT 1
+    </cfquery>
+    <cfif qActiveUser.recordCount GT 0>
+        <cftransaction action="rollback" />
+        <cflog file="TAO_setup" type="warning" text="setup2: link already used -- active userid #qActiveUser.userid# for thrivecart id #qSetup.id#" />
+        <cflocation url="/setup/?uuid=#session.setupUUID#" addtoken="false">
+    </cfif>
+
+    <!--- Soft-delete any prior (already-deleted) users for this purchase. Keyed on
+          thrivecart_tbl.id -- the guard above means no active account can be hit. --->
     <cfquery result="result" name="Del" datasource="#application.dsn#">
         UPDATE taousers_tbl SET isdeleted = 1
-        WHERE customerid = <cfqueryparam value="#qSetup.customerid#" cfsqltype="cf_sql_bigint" />
+        WHERE customerid = <cfqueryparam value="#val(qSetup.id)#" cfsqltype="cf_sql_bigint" />
     </cfquery>
 
     <!--- Clear email on soft-deleted users to free the unique index slot.
@@ -96,7 +116,7 @@
     <cfquery name="insert" result="result" datasource="#application.dsn#">
         INSERT INTO taousers_tbl (customerid, userfirstName, userLastName, userEmail, avatarname, passwordHash, passwordSalt, userstatus)
         VALUES (
-            <cfqueryparam value="#qSetup.customerid#" cfsqltype="cf_sql_bigint" />,
+            <cfqueryparam value="#val(qSetup.id)#" cfsqltype="cf_sql_bigint" />,
             <cfqueryparam value="#setupFirst#" cfsqltype="cf_sql_varchar" />,
             <cfqueryparam value="#setupLast#" cfsqltype="cf_sql_varchar" />,
             <cfqueryparam value="#setupEmail#" cfsqltype="cf_sql_varchar" />,

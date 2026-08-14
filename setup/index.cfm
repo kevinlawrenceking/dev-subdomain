@@ -33,10 +33,16 @@ WHERE th.uuid = <cfqueryparam value="#uuid#" cfsqltype="cf_sql_varchar" />
 <!--- TAO-SETUP-LINK-GUARD: a setup link is single-use. If a (non-deleted) user
       already exists for this purchase, or the purchase is no longer awaiting
       setup (status moved past 'Emailed'), the link has already been used. Show a
-      friendly "link expired" page instead of the setup form. --->
+      friendly "link expired" page instead of the setup form.
+
+      TAO-SETUP-KEY-01: keyed on the thrivecart row id, which is what
+      taousers_tbl.customerid stores (see sched/cancel.cfm join u.customerid = t.id,
+      and app/admin-users/ajax/send-email.cfm). It is NOT thrivecart_tbl.customerid --
+      that column is the ThriveCart customer id, NULL on most real purchases, so the
+      old key matched nothing and the guard never fired. --->
 <cfquery name="qExistingUser" datasource="#application.dsn#">
     SELECT userid FROM taousers_tbl
-    WHERE customerid = <cfqueryparam value="#val(u.CustomerID)#" cfsqltype="cf_sql_bigint" />
+    WHERE customerid = <cfqueryparam value="#val(u.id)#" cfsqltype="cf_sql_bigint" />
     AND isdeleted = 0
     LIMIT 1
 </cfquery>
