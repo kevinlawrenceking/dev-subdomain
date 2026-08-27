@@ -651,6 +651,18 @@ x</button>
       docs/plans/evidence/2026-07-04-wo0b-prod-Q8-Q15-master.txt (captured verbatim 2026-07-04).
         co_contacts  : imdbid varchar(50), image_url varchar(500)
         co_locations : address1/address2/city/state/zip varchar(500), PK colocid --->
+<!--- DIR-LNK PROD-GATE (2026-08-13): the Book (master directory) UI is dev-only until the feature
+      is accepted and BOTH of its prod dependencies are promoted. Neither is present today:
+        - /include/master_link_preview.cfm is not deployed to prod (GET returns 404). The band
+          rendered anyway because contact_info.cfm IS deployed, so clicking a match loaded a 404
+          into the modal - the error users reported. No error_tickets row exists because a 404
+          never reaches the CF error handler.
+        - master_audit_tbl does not exist in actorsbusinessoffice (dev-only), so link-confirm
+          could not write its audit row even once the modal loaded.
+      Host test is the house pattern (cf include/import-auditions.cfm:296); prod hostname is "app".
+      Remove this gate as part of the WO-8 prod promotion, not before. --->
+<cfset masterBookEnabled = ( ListFirst(cgi.server_name, ".") NEQ "app" )>
+
 <!--- DIR-LNK-WO-8: lazy on-read master auto-sync. Before qMasterLink reads the three managed
       columns, bring a linked contact current with the Book (MasterDirectoryService.syncLinkedContact:
       compare-first, write-only-on-diff; a no-op when nothing drifted, so negligible cost on the
@@ -658,7 +670,7 @@ x</button>
       service self-guards (no-op when unlinked) and writes via the WO-8 guarded writer (writeMasterSync,
       NOT updatePrimary), so WO-6 enforcement and this render path are untouched. --->
 <cftry>
-    <cfif structKeyExists(request, "svc") AND isDefined("session.userid") AND isDefined("currentid") AND val(currentid) GT 0>
+    <cfif masterBookEnabled AND structKeyExists(request, "svc") AND isDefined("session.userid") AND isDefined("currentid") AND val(currentid) GT 0>
         <cfset request.svc("MasterDirectoryService").syncLinkedContact(contactid=int(val(currentid)), userid=int(val(session.userid)))>
     </cfif>
     <cfcatch type="any">
@@ -971,6 +983,7 @@ $(function () {
       UNLINKED-> outline "Find in the Book" chip wired to the existing #masterLinkToggle control.
       The Book mark is inlined at each point of use (house pattern); colours inherit from chip ink,
       and only the lit gold mark on this contact panel carries the glow (per UI-6 asset rules). --->
+<cfif masterBookEnabled>
 <cfoutput>
 <div id="masterLinkWrap" data-contactid="#currentid#">
 
@@ -1027,6 +1040,7 @@ $(function () {
     </div>
 </div>
 </cfoutput>
+</cfif><!--- masterBookEnabled --->
 
 </div>
         </div>
