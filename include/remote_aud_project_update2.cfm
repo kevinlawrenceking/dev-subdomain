@@ -5,9 +5,9 @@
     <cfif #Custom# is not ""> 
         <cfinclude template="/include/qry/insert_277_1.cfm" />
     <cfelse>
-        <cfset new_tone_id = old_toneid />
+        <cfset new_toneid = old_toneid />
     </cfif>
-</cfif>  
+</cfif>
 
 <cfif #new_networkid# is "CustomNetwork">
     <!--- Check if the network ID is custom and not empty --->
