@@ -31,3 +31,5 @@ nul
 *.log
 ~$*.xlsx
 *.map
+setup.zip
+include/*_PROD.cfm
