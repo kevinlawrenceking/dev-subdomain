@@ -39,8 +39,23 @@ Key Features:
 
 <!--- Export handling --->
 <cfif isdefined('isexport') and isexport EQ "Y">
-    <cfset session.projectlist = projectlist />
-    <cflocation url="/include/export_auditions.cfm" />
+    <!--- An empty filtered result set makes projectlist an empty string, because
+          /include/qry/auditions.cfm builds it as valuelist(results.audprojectid).
+          Handing that to the export chain reaches the empty-input cfthrow in
+          GenreAuditionService.SELaudgenres_audition_xref and hard-crashes the page.
+          Stay on the auditions UI and tell the user instead. --->
+    <cfif NOT isDefined("projectlist") OR listLen(trim(projectlist)) EQ 0>
+        <script>
+            $(document).ready(function () {
+                if (typeof taoToast === 'function') {
+                    taoToast('No auditions match your filters - nothing to export.', 'warning');
+                }
+            });
+        </script>
+    <cfelse>
+        <cfset session.projectlist = projectlist />
+        <cflocation url="/include/export_auditions.cfm" />
+    </cfif>
 </cfif>
 
 <!--- Core includes and security check --->
