@@ -661,7 +661,9 @@ x</button>
           could not write its audit row even once the modal loaded.
       Host test is the house pattern (cf include/import-auditions.cfm:296); prod hostname is "app".
       Remove this gate as part of the WO-8 prod promotion, not before. --->
+<cfinclude template="/include/book_feature.cfm"><!--- sets request.bookFeatureEnabled (2026-10-29: false) --->
 <cfset masterBookEnabled = ( ListFirst(cgi.server_name, ".") NEQ "app" )>
+<cfif NOT request.bookFeatureEnabled><cfset masterBookEnabled = false></cfif>
 
 <!--- DIR-LNK-WO-8: lazy on-read master auto-sync. Before qMasterLink reads the three managed
       columns, bring a linked contact current with the Book (MasterDirectoryService.syncLinkedContact:
@@ -796,7 +798,7 @@ x</button>
 
         <!--- Copy the default avatar to the user's contact directory --->
         <cffile action="copy"
-                source="#application.defaultAvatarUrl#"
+                source="#application.defaultAvatarPath#"
                 destination="#avatar_path#" >
 
     <cfcatch type="any">
@@ -855,7 +857,13 @@ x</button>
       The value source is the contactdetails COLUMN in every state (contactCompany / contactEmail /
       contactPhone), so the row content can never disagree with the lists. The lock / pencil is
       presentation on top of the /ajax/contact/updateprimary.cfm enforcement, never the enforcement
-      itself: the server rejects a primary write on a linked contact regardless of what renders. --->
+      itself: the server rejects a primary write on a linked contact regardless of what renders.
+      TICKET 2757 (2026-10-17): the inline editor (pencil / "Add X" -> /ajax/contact/updateprimary.cfm)
+      ships with the Book, so it follows masterBookEnabled. With the Book off the rows are read-only
+      values and a blank field renders no row at all (the pre-WO-6 panel showed only values on file);
+      ordinary contact editing (the item grid in contact_pane.cfm and the name/details modals) is
+      unaffected. --->
+<cfset primaryEditEnabled = masterBookEnabled>
 <cfoutput>
 <div id="primaryFields" class="book-fields mt-2" data-contactid="#currentid#">
     <cfset primaryDefs = [
@@ -864,7 +872,8 @@ x</button>
         { "field"="contactPhone",   "icon"="mdi-phone-outline",          "value"=trim(qMasterLink.contactPhone),   "emptyLabel"="No phone on file",   "addLabel"="Add phone",   "editTitle"="Edit primary phone" }
     ]>
     <cfloop array="#primaryDefs#" index="pf">
-        <div class="book-field<cfif NOT masterIsLinked> primary-row</cfif>" data-field="#pf.field#">
+        <cfif NOT primaryEditEnabled AND NOT masterIsLinked AND NOT len(pf.value)><cfcontinue></cfif>
+        <div class="book-field<cfif NOT masterIsLinked AND primaryEditEnabled> primary-row</cfif>" data-field="#pf.field#">
             <i class="mdi #pf.icon# book-field__icon" aria-hidden="true"></i>
             <div class="book-field__body">
                 <cfif masterIsLinked>
@@ -878,7 +887,7 @@ x</button>
             </div>
             <cfif masterIsLinked>
                 <i class="mdi mdi-lock-outline book-field__lock" title="<cfif masterIsSynced>Managed by the Book<cfelse>Awaiting first sync</cfif>" aria-hidden="true"></i>
-            <cfelse>
+            <cfelseif primaryEditEnabled>
                 <cfif len(pf.value)>
                     <button type="button" class="btn btn-link btn-sm p-0 primary-edit" data-field="#pf.field#" title="#pf.editTitle#" aria-label="#pf.editTitle#"><i class="mdi mdi-square-edit-outline font-18"></i></button>
                 <cfelse>
@@ -899,6 +908,7 @@ x</button>
 <!--- DIR-LNK-WO-6 primary inline editor. CSRF is auto-injected by core.cfm on non-GET, per the
       master-link controller below. Rejects are server-authored: whatever the endpoint returns is
       what the user sees; this script never decides whether an edit is allowed. --->
+<cfif primaryEditEnabled>
 <script>
 $(function () {
     var wrap = $("#primaryFields");
@@ -970,6 +980,7 @@ $(function () {
     });
 });
 </script>
+</cfif><!--- primaryEditEnabled --->
 
 <!--- DIR-LNK-WO-6/UI-6 consolidated band. Replaces the old managed-by line / blue badge / last-sync
       / Unlink stack (removed from the fields block above and folded into this ONE band). Both the
@@ -1518,7 +1529,9 @@ document.addEventListener("DOMContentLoaded", function () {
 </script>
 
 <!--- DIR-WO-2 (TAO-MCD-P1): master-link search / link / unlink. jQuery UI autocomplete
-      per include/autocomplete.cfm. CSRF auto-injected by core.cfm on non-GET. No reloads. --->
+      per include/autocomplete.cfm. CSRF auto-injected by core.cfm on non-GET. No reloads.
+      TICKET 2757: emitted only with the Book on, so no master endpoint URL ships in a Book-off page. --->
+<cfif masterBookEnabled>
 <script>
 $(function () {
     var wrap = $("#masterLinkWrap");
@@ -1589,6 +1602,7 @@ $(function () {
     });
 });
 </script>
+</cfif><!--- masterBookEnabled --->
 
 <script>
  $('.modal').on('show.bs.modal', function () {

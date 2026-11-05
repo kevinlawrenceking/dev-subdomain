@@ -5,6 +5,55 @@
 <cfparam name="error" default="" />
 <cfparam name="IMAGESURL" default="/media-abo/images" />
 
+<!--- TAO-SETUP-TOKEN-MIN (2026-10-17): setup tokens are 35-char UUIDs. Reject blank or
+      short values before the lookup so a blank/legacy uuid can never match a purchase. --->
+<cfif len(trim(uuid)) LT 32>
+    <!--- setup2.cfm redirects here WITHOUT the uuid on a lost session (error=expired) or a
+          failed form check (error=invalid). Say what happened instead of "Link Expired". --->
+    <cfif listFindNoCase("expired,invalid", trim(error))>
+    <!DOCTYPE html>
+    <html lang="en">
+        <head>
+            <meta charset="utf-8" />
+            <title>Setup Timed Out | The Actor's Office</title>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <link rel="shortcut icon" href="/media/shared/images/favicon.ico">
+            <link href="/app/assets/css/app.min.css?ver=13.3.1.20.102243915958" rel="stylesheet" type="text/css" id="app-style"/>
+        </head>
+        <body style="background-color: white; font-family: 'Source Sans Pro', sans-serif;">
+            <div class="account-pages mt-5 mb-5">
+                <div class="container">
+                    <div class="row justify-content-center">
+                        <div class="col-md-8 col-lg-6 col-xl-5">
+                            <div class="card">
+                                <div class="card-body p-4">
+                                    <div class="text-center w-85 m-auto">
+                                        <div class="auth-logo">
+                                            <span class="logo no-hover-effect-lg">
+                                                <img src="<cfoutput>#imagesurl#/taowhite.png</cfoutput>" alt="" height="60">
+                                            </span>
+                                        </div>
+                                        <h5 class="mt-3">Setup Timed Out</h5>
+                                    </div>
+                                    <div class="alert alert-warning mt-3" role="alert" style="font-size:14px;">
+                                        Your setup page timed out before it was submitted. If you have not finished
+                                        setup yet, your link still works: please click "GET STARTED" in your welcome
+                                        email again. If you already finished setup, just log in. Need help? Contact
+                                        <a href="mailto:support@theactorsoffice.com">support@theactorsoffice.com</a>.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </body>
+    </html>
+    <cfabort>
+    </cfif>
+<cflocation url="/app/dashboard_new/" addtoken="false" />
+</cfif>
+
 
 <cfquery result="result" name="U" maxrows="1" datasource="#application.dsn#">
 SELECT th.id

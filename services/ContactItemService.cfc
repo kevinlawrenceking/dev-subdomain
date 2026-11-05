@@ -53,15 +53,41 @@ FROM contactitems
     </cfquery>
 <cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>
-<cffunction name="deleteAudContact" access="public" returntype="void" output="false">
+<cffunction name="deleteAudContact" access="public" returntype="numeric" output="false"
+            hint="Ticket 2751: remove ONE contact from ONE audition project. Ownership is enforced at the write site (the project must belong to userid); the contact itself, its other audition links, and the global contact record are never touched. Returns rows deleted (0 = not linked or not owned).">
     <cfargument name="contactid" type="numeric" required="true">
-     <cfargument name="audprojectid" type="numeric" required="true">
-    <cfquery>
-           DELETE from audcontacts_auditions_xref
-            WHERE contactid = <cfqueryparam value="#arguments.contactid#" cfsqltype="CF_SQL_INTEGER">
-            AND audprojectid = <cfqueryparam value="#arguments.audprojectid#" cfsqltype="CF_SQL_INTEGER">
-    </cfquery>
+    <cfargument name="audprojectid" type="numeric" required="true">
+    <cfargument name="userid" type="numeric" required="true">
+
+    <cfset var delResult = "">
+
+    <cftransaction>
+        <cfquery result="delResult">
+            DELETE x
+            FROM audcontacts_auditions_xref x
+            INNER JOIN audprojects p ON p.audprojectid = x.audprojectid
+            WHERE x.contactid    = <cfqueryparam value="#arguments.contactid#" cfsqltype="CF_SQL_INTEGER">
+              AND x.audprojectid = <cfqueryparam value="#arguments.audprojectid#" cfsqltype="CF_SQL_INTEGER">
+              AND p.userid       = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
+        </cfquery>
 <cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
+
+        <!--- Same cascade as the legacy GET path (include/qry/delete2_368_8.cfm): soft-delete the
+              contact's attendance on this project's appointments only. Scoped by project + owner. --->
+        <cfquery>
+            UPDATE eventcontactsxref_tbl x
+            INNER JOIN events e ON x.eventid = e.eventid
+            INNER JOIN audroles r ON r.audRoleID = e.audroleid
+            INNER JOIN audprojects p ON r.audprojectid = p.audprojectid
+            SET x.isdeleted = 1
+            WHERE x.contactid     = <cfqueryparam value="#arguments.contactid#" cfsqltype="CF_SQL_INTEGER">
+              AND p.audprojectid  = <cfqueryparam value="#arguments.audprojectid#" cfsqltype="CF_SQL_INTEGER">
+              AND p.userid        = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
+        </cfquery>
+<cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
+    </cftransaction>
+
+    <cfreturn val(delResult.recordCount)>
 </cffunction>
 
 <cffunction name="deleteTeam" access="public" returntype="void" output="false">

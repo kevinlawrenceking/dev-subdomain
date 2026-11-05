@@ -2,7 +2,15 @@
 <CFINCLUDE template="remote_load.cfm" />
 <cfset currentURL=cgi.server_name />
 <cfset host=ListFirst(currentURL, "." ) />
-<Cfparam name="target_userid" default="0" />
+<!--- SECURITY (E032): this page is no longer included anywhere; ICS files are built by
+      IcsService.generateUserIcs. It stays reachable by URL, so it only ever writes the
+      logged-in user's own calendar. A client-supplied target_userid (or the old default of 0,
+      which looped every user and wrote the session user's events into each file) is ignored. --->
+<cfif NOT structKeyExists(session, "userid") OR NOT isNumeric(session.userid) OR val(session.userid) LTE 0>
+    <cfheader statuscode="401">
+    <cfabort>
+</cfif>
+<cfset target_userid = val(session.userid) />
 
 <!--- Check if session.userSharePath exists, if not create a fallback path --->
 <cfif not structKeyExists(session, "userSharePath")>
@@ -30,9 +38,7 @@
     ,u.userRole
     ,u.tzid
     FROM taousers u
-<Cfif #target_userid# is not "0">
 WHERE u.userid = <cfqueryparam value="#target_userid#" cfsqltype="cf_sql_integer">
-</cfif>
 </cfquery>
 
 <cfloop query="U">
@@ -114,7 +120,7 @@ WHERE u.userid = <cfqueryparam value="#target_userid#" cfsqltype="cf_sql_integer
 
     <cfquery result="result"  name="tzdetails">
         SELECT tzid,gmt,tzname,utchouroffset FROM timezones
-        where tzid = '#tzid#'
+        where tzid = <cfqueryparam value="#tzid#" cfsqltype="cf_sql_varchar">
     </cfquery>
 
     <cfif #isdefined('tzdetails.utchouroffset')#>

@@ -136,7 +136,7 @@
 
                     <!--- Copy default avatar to user's contact directory --->
                     <cftry>
-                        <cffile action="copy" source="#defaultAvatarUrl#" destination="#avatarPath#">
+                        <cffile action="copy" source="#application.defaultAvatarPath#" destination="#avatarPath#">
                         <cfcatch type="any">
                             <!--- Log or handle error --->
                             <cfset application.errorLog = "Failed to copy default avatar for contact ID " & myteam.contactid & ": " & cfcatch.message>

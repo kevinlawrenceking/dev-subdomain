@@ -36,13 +36,25 @@
     <cfargument name="userid" type="numeric" required="true">
     <cfargument name="new_isvisible" type="string" required="true">
     <!--- new_isvisible should be a comma-separated string of pnid values --->
+    <!--- SECURITY: the list comes straight from a form post. Keep only positive integers and
+          bind them; it was previously interpolated into the SQL (injection). --->
+    <cfset var pnidList = "">
+    <cfset var item = "">
+    <cfloop list="#arguments.new_isvisible#" index="item">
+        <cfif reFind("^\s*[0-9]+\s*$", item) AND val(item) GT 0>
+            <cfset pnidList = listAppend(pnidList, val(item))>
+        </cfif>
+    </cfloop>
+    <cfif NOT len(pnidList)>
+        <cfreturn>
+    </cfif>
 
 <!--- Update the pgpanels_user table based on user ID and provided pnid list --->
     <cfquery>
         UPDATE pgpanels_user
         SET isvisible = 1
         WHERE userid = <cfqueryparam value="#arguments.userid#" cfsqltype="CF_SQL_INTEGER">
-        AND pnid IN (#arguments.new_isvisible#)
+        AND pnid IN (<cfqueryparam value="#pnidList#" cfsqltype="CF_SQL_INTEGER" list="true">)
     </cfquery>
 <cfif structKeyExists(request,"perfSvcQueryCount")><cfset request.perfSvcQueryCount++></cfif>
 </cffunction>

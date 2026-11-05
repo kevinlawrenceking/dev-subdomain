@@ -70,12 +70,34 @@ document.addEventListener("DOMContentLoaded", function () {
                         element.innerText = newText; // Update UI immediately
                         icon.style.visibility = "visible"; // Show the icon again
 
+                        // Ticket 2547: send the CSRF token (include/Application.cfc 403s POSTs
+                        // without it) and revert the optimistic UI update if the save fails, so
+                        // the name shown always matches what was persisted.
+                        let csrfMeta = document.querySelector('meta[name="csrf-token"]');
+                        let previousText = lastValidText;
                         fetch("/include/update_media_name.cfm", {
                             method: "POST",
-                            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                            body: `mediaid=${mediaId}&medianame=${encodeURIComponent(newText)}`
+                            credentials: "same-origin",
+                            headers: {
+                                "Content-Type": "application/x-www-form-urlencoded",
+                                "X-CSRF-Token": csrfMeta ? csrfMeta.getAttribute("content") : ""
+                            },
+                            body: `mediaid=${encodeURIComponent(mediaId)}&medianame=${encodeURIComponent(newText)}`
                         })
-                        .catch(error => console.error("Update failed:", error)); // Log errors but don't revert UI
+                        .then(r => r.text().then(txt => ({ ok: r.ok, txt: txt.trim() })))
+                        .then(res => {
+                            if (res.ok && res.txt === "success") {
+                                lastValidText = newText;
+                            } else {
+                                element.innerText = previousText;
+                                alert("The new name could not be saved. Please reload and try again.");
+                            }
+                        })
+                        .catch(error => {
+                            console.error("Update failed:", error);
+                            element.innerText = previousText;
+                            alert("Network error. The new name was not saved.");
+                        });
                     } else {
                         element.innerText = lastValidText; // Restore last valid name if empty
                         icon.style.visibility = "visible"; // Show the icon again

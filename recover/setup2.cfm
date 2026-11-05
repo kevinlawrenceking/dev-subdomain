@@ -10,7 +10,7 @@
 </cfif>
 
 <!--- Get token from session (set by index.cfm during token validation) --->
-<cfif NOT structKeyExists(session, "recoverToken") OR NOT len(session.recoverToken)>
+<cfif NOT structKeyExists(session, "recoverToken") OR len(trim(session.recoverToken)) LT 32>
     <cflocation url="/loginform.cfm" addtoken="false" />
 </cfif>
 

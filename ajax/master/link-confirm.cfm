@@ -9,6 +9,7 @@
 --->
 <cfset buildTag = "wo7-link-confirm-2026-07-18-v1">
 <cfcontent type="application/json" reset="true">
+<cfinclude template="/include/book_feature_guard.cfm"><!--- Book switch: FEATURE_DISABLED when off --->
 
 <cfparam name="form.contactid"         default="0">
 <cfparam name="form.masterCoContactId" default="0">
@@ -52,6 +53,14 @@
         <cfset response.message = "Link failed.">
         <cflog file="master_link" type="error"
                text="link-confirm FAIL userid=#(structKeyExists(session,'userid') ? session.userid : 'na')# contactid=#left(form.contactid,20)# master=#left(form.masterCoContactId,20)# err=#cfcatch.message#">
+        <!--- Persist the handled exception as an error_tickets row (cf_context='handled') so it is
+              visible without server log access. Never allowed to change this response. --->
+        <cftry>
+            <cfif structKeyExists(application, "services") AND structKeyExists(application.services, "errorService")>
+                <cfset application.services.errorService.captureHandled(cfcatch, "master-link-confirm")>
+            </cfif>
+            <cfcatch type="any"></cfcatch>
+        </cftry>
     </cfcatch>
 </cftry>
 

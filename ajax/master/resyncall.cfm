@@ -15,6 +15,7 @@
 --->
 <cfset buildTag = "wo8-resyncall-2026-07-28-v1">
 <cfcontent type="application/json" reset="true">
+<cfinclude template="/include/book_feature_guard.cfm"><!--- Book switch: FEATURE_DISABLED when off --->
 
 <cfset response = { "success": false, "message": "", "data": {}, "_build": buildTag }>
 
@@ -50,6 +51,14 @@
         <cfset response.message = "Re-sync failed.">
         <cflog file="master_sync" type="error"
                text="resyncall FAIL user=#(structKeyExists(session,'userid') ? session.userid : 'na')# err=#cfcatch.message#">
+        <!--- Persist the handled exception as an error_tickets row (cf_context='handled') so it is
+              visible without server log access. Never allowed to change this response. --->
+        <cftry>
+            <cfif structKeyExists(application, "services") AND structKeyExists(application.services, "errorService")>
+                <cfset application.services.errorService.captureHandled(cfcatch, "master-resyncall")>
+            </cfif>
+            <cfcatch type="any"></cfcatch>
+        </cftry>
     </cfcatch>
 </cftry>
 

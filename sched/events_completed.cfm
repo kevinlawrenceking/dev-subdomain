@@ -65,11 +65,24 @@
     <cfparam name="dryrun" default="0" />
     <cfset dryRun = (val(dryrun) EQ 1) />
 
+    <!--- WRITE GATE (2026-10-17). JOB C writes (event completion, enrollments, bell
+          notifications, reminders) and JOB D + ICS regen run ONLY when the request carries
+          ?enableWrites=1. Without it JOB C is count-only: it reports what it WOULD write
+          (eligibleEvents, wouldEnroll, wouldBellNotifications, wouldRemindersMax) and writes
+          nothing. JOB D + ICS have not run on prod since at least 2026-04 (JOB C threw first),
+          so they stay behind the same gate. JOB A and JOB B keep their current nightly
+          behavior. Turning writes on is a deliberate change to the scheduled-task URL, made
+          only after the counts have been reviewed. --->
+    <cfparam name="enableWrites" default="0" />
+    <cfset enableWrites = (val(enableWrites) EQ 1) AND NOT dryRun />
+
     <!--- PERF: run timer + counters for the end-of-run audit cflog.
           dry* counters are populated only on a dry run (would-have figures). --->
     <cfset runStartTick = getTickCount() />
     <cfset runStats = { eventsProcessed = 0, eventsFailed = 0, enrollments = 0,
-                        notifsWouldFlip = 0, usersWouldCancel = 0, followupCandidates = 0 } />
+                        notifsWouldFlip = 0, usersWouldCancel = 0, followupCandidates = 0,
+                        eligibleEvents = 0, wouldEnroll = 0, wouldBellNotifications = 0,
+                        wouldRemindersMax = 0, wouldSkipAlreadyEnrolled = 0 } />
     <cflog file="events_completed" text="START events_completed run (#todayDate#)#dryRun ? ' [DRY RUN]' : ''#" />
 
     <!---
@@ -210,11 +223,38 @@
                 <cfset maxEvents = batchSize />
             </cfif>
             <cfset maxEvents = max(1, int(val(maxEvents))) />
+            <!---
+                STALE CUTOFF (2026-10-17). The nightly run only completes events
+                whose eventstop falls within the last ?staleDays days (default
+                14). Older past-due events are a historical backlog (1,336 on
+                prod at 2026-10-17, back to 2021) that piled up while JOB C
+                timed out every night since 2026-04-11. Draining it would enroll
+                contacts in follow-up systems and seed reminders for meetings
+                that happened months or years ago, so it is an operator decision:
+                see docs/runbooks/2026-10-17-events-backlog-recovery.md.
+                ?includeStale=1 lifts the cutoff for an approved, supervised run.
+            --->
+            <cfparam name="staleDays" default="14" />
+            <cfparam name="includeStale" default="0" />
+            <cfset staleDays = max(1, int(val(staleDays))) />
+            <cfset includeStale = (val(includeStale) EQ 1) />
+            <!---
+                TIME BUDGET. JOB C stops starting new events once the run has
+                used ?timeBudgetSec (default 420 of the 600s requestTimeout).
+                Unstarted events stay Active and the next run picks them up, so
+                a slow night ends cleanly instead of timing out mid-batch.
+            --->
+            <cfparam name="timeBudgetSec" default="420" />
+            <cfset timeBudgetSec = min(540, max(30, int(val(timeBudgetSec)))) />
+            <cfset runStats.budgetStopped = false />
             <cfquery datasource="#dsn#" result="result" name="events">
                 SELECT e.eventid, e.eventtitle, e.eventstop, u.recordname, u.userid
                 FROM events e
                 INNER JOIN taousers u ON e.userid = u.userid
                 WHERE e.eventstatus = 'Active' AND e.eventstop < CURDATE()
+                <cfif NOT includeStale>
+                AND e.eventstop >= DATE_SUB(CURDATE(), INTERVAL <cfqueryparam cfsqltype="cf_sql_integer" value="#staleDays#" /> DAY)
+                </cfif>
                 ORDER BY e.eventstop
                 LIMIT <cfqueryparam cfsqltype="cf_sql_integer" value="#maxEvents#" />
             </cfquery>
@@ -253,40 +293,47 @@
               new_systemid = 2  (Industry Follow-Up / 'I'-type tags, excludes
                                  Rehearsal and CD Workshop)
             Filtered later by eventid via a query-of-queries.
+
+            PERF (2026-10-17): this query timed out (600s) every night from
+            2026-04-11. The old FROM order let the optimizer start at a full
+            scan of eventtypes_user, walk every event of every user, and join
+            contactitems on tag text alone -- across ALL users' contacts
+            ("Casting Director" alone has 14,129 active tag rows on prod; the
+            optimizer estimated 4.5) -- applying the batch's eventid list
+            last. STRAIGHT_JOIN fixes the order: the batch's events first
+            (PRIMARY range), then their xref rows, then each contact's own tag
+            items, then the event owner's tag definitions. Same tables, same
+            predicates, same result set; only the join order changes.
         --->
 
         <cfquery datasource="#dsn#" name="allFollowups">
-            SELECT DISTINCT x.eventid, i.contactid, d.recordname, 1 AS new_systemid
-            FROM contactitems i
-            INNER JOIN tags_user tu ON tu.tagname = i.valuetext
-            INNER JOIN eventcontactsxref x ON x.contactid = i.contactid
-            INNER JOIN events e ON e.eventid = x.eventid
-            INNER JOIN eventtypes_user eu ON eu.eventtypename = e.eventtypename
+            SELECT DISTINCT STRAIGHT_JOIN x.eventid, i.contactid, d.recordname, 1 AS new_systemid
+            FROM events e
+            INNER JOIN eventcontactsxref x ON x.eventid = e.eventid
+            INNER JOIN contactitems i ON i.contactid = x.contactid
+            INNER JOIN tags_user tu ON tu.userid = e.userid AND tu.tagname = i.valuetext
+            INNER JOIN eventtypes_user eu ON eu.userid = e.userid AND eu.eventtypename = e.eventtypename
             INNER JOIN contactdetails d ON d.contactid = i.contactid
             INNER JOIN taousers u ON u.userid = e.userid
-            WHERE i.itemstatus = 'Active'
+            WHERE e.eventid IN (<cfqueryparam cfsqltype="cf_sql_integer" value="#eventIdList#" list="true" />)
+            AND i.itemstatus = 'Active'
+            AND i.valuecategory = 'tag'
             AND tu.tagtype = 'C'
-            AND i.valuecategory = 'tag'
             AND eu.eventtypename NOT IN ('Rehearsal')
-            AND x.eventid IN (<cfqueryparam cfsqltype="cf_sql_integer" value="#eventIdList#" list="true" />)
-            AND tu.userid = e.userid
-            AND eu.userid = e.userid
             UNION
-            SELECT DISTINCT x.eventid, i.contactid, d.recordname, 2 AS new_systemid
-            FROM contactitems i
-            INNER JOIN tags_user tu ON tu.tagname = i.valuetext
-            INNER JOIN eventcontactsxref x ON x.contactid = i.contactid
-            INNER JOIN events e ON e.eventid = x.eventid
-            INNER JOIN eventtypes_user eu ON eu.eventtypename = e.eventtypename
+            SELECT DISTINCT STRAIGHT_JOIN x.eventid, i.contactid, d.recordname, 2 AS new_systemid
+            FROM events e
+            INNER JOIN eventcontactsxref x ON x.eventid = e.eventid
+            INNER JOIN contactitems i ON i.contactid = x.contactid
+            INNER JOIN tags_user tu ON tu.userid = e.userid AND tu.tagname = i.valuetext
+            INNER JOIN eventtypes_user eu ON eu.userid = e.userid AND eu.eventtypename = e.eventtypename
             INNER JOIN contactdetails d ON d.contactid = i.contactid
             INNER JOIN taousers u ON u.userid = e.userid
-            WHERE i.itemstatus = 'Active'
-            AND tu.tagtype = 'I'
+            WHERE e.eventid IN (<cfqueryparam cfsqltype="cf_sql_integer" value="#eventIdList#" list="true" />)
+            AND i.itemstatus = 'Active'
             AND i.valuecategory = 'tag'
+            AND tu.tagtype = 'I'
             AND eu.eventtypename NOT IN ('Rehearsal','CD Workshop')
-            AND x.eventid IN (<cfqueryparam cfsqltype="cf_sql_integer" value="#eventIdList#" list="true" />)
-            AND tu.userid = e.userid
-            AND eu.userid = e.userid
         </cfquery>
         <!--- Follow-up enrollment candidates across this batch (reported on a
               dry run; this is the row population the JOB C loop iterates). --->
@@ -362,6 +409,40 @@
             this list is rejected and logged.
         --->
         <cfset allowedUniqueColumns = "isEmailed,isInvited,isMailed,isFollowedUp,isScheduled,isConnected,isMet,isThankYouSent" />
+
+        <!--- COUNT PASS (no writes). Mirrors the JOB C loop's enrollment rules against the
+              preloaded maps: a contact already in the target system, or in Target (3/4) when
+              the target is Follow-Up (1/2), is skipped; each would-be enrollment adds one bell
+              notification and, when the user has a first action for that system, at most one
+              reminder (an upper bound: the loop's isUnique check needs per-contact queries).
+              Runs whenever this request will not write JOB C. --->
+        <cfset runStats.eligibleEvents = events.recordCount />
+        <cfif NOT enableWrites>
+            <cfset countEventUser = structNew() />
+            <cfloop query="events">
+                <cfset countEventUser[events.eventid] = events.userid />
+            </cfloop>
+            <cfset countSets = duplicate(enrollmentSets) />
+            <cfloop query="allFollowups">
+                <cfif structKeyExists(countEventUser, allFollowups.eventid)>
+                    <cfset cUser = countEventUser[allFollowups.eventid] />
+                    <cfset cKey = cUser & "|" & allFollowups.contactid />
+                    <cfset cEnrolled = structKeyExists(countSets, cKey) ? countSets[cKey] : "" />
+                    <cfif listFind(cEnrolled, allFollowups.new_systemid)
+                          OR ((allFollowups.new_systemid EQ 1 OR allFollowups.new_systemid EQ 2)
+                              AND (listFind(cEnrolled, 3) OR listFind(cEnrolled, 4)))>
+                        <cfset runStats.wouldSkipAlreadyEnrolled = runStats.wouldSkipAlreadyEnrolled + 1 />
+                    <cfelse>
+                        <cfset countSets[cKey] = listAppend(cEnrolled, allFollowups.new_systemid) />
+                        <cfset runStats.wouldEnroll = runStats.wouldEnroll + 1 />
+                        <cfset runStats.wouldBellNotifications = runStats.wouldBellNotifications + 1 />
+                        <cfif structKeyExists(actionScheduleMap, allFollowups.new_systemid & "|" & cUser)>
+                            <cfset runStats.wouldRemindersMax = runStats.wouldRemindersMax + 1 />
+                        </cfif>
+                    </cfif>
+                </cfif>
+            </cfloop>
+        </cfif>
     </cfif>
 
                     <!---
@@ -380,8 +461,15 @@
                     <!--- DRY RUN: skip the entire write loop. eventsProcessed
                           stays 0; the summary reports eventsFound /
                           followupCandidates as the "would process" figures. --->
-                    <cfif NOT dryRun>
+                    <cfif enableWrites>
                     <cfloop query="events">
+                    <!--- TIME BUDGET: stop before starting an event we may not
+                         finish. Remaining events stay Active for the next run. --->
+                    <cfif (getTickCount() - runStartTick) / 1000 GTE timeBudgetSec>
+                        <cfset runStats.budgetStopped = true />
+                        <cflog file="events_completed" text="BUDGET STOP after #runStats.eventsProcessed# events (timeBudgetSec=#timeBudgetSec#); remaining events stay Active for the next run." />
+                        <cfbreak />
+                    </cfif>
                     <cftransaction>
                     <!--- PERF/reliability: isolate each event. Before this, a
                          single failing event aborted the whole run, leaving
@@ -459,6 +547,30 @@
                                                 <cfset alreadyEnrolled = true />
                                             <cfelseif (new_systemid EQ 1 OR new_systemid EQ 2) AND (listFind(enrolledSystems, 3) OR listFind(enrolledSystems, 4))>
                                                 <cfset alreadyEnrolled = true />
+                                            </cfif>
+                                            <!---
+                                                IDEMPOTENCY (2026-10-17): the map above is a
+                                                snapshot taken before the loop and is not
+                                                rewound on rollback. Re-check the table so a
+                                                re-run, or a row written after the snapshot,
+                                                never attempts a second Active enrollment.
+                                                (uq_active_enrollment would reject it anyway,
+                                                but that throw rolls back the whole event and
+                                                retries it every night.)
+                                            --->
+                                            <cfif NOT alreadyEnrolled>
+                                                <cfquery datasource="#dsn#" name="enrolledNow">
+                                                    SELECT su.systemid
+                                                    FROM fusystemusers su
+                                                    WHERE su.userid = <cfqueryparam cfsqltype="cf_sql_integer" value="#new_userid#" />
+                                                    AND su.contactid = <cfqueryparam cfsqltype="cf_sql_integer" value="#new_contactid#" />
+                                                    AND su.sustatus = 'Active'
+                                                    AND su.systemid IN (<cfqueryparam cfsqltype="cf_sql_integer" value="#new_systemid#,3,4" list="true" />)
+                                                    LIMIT 1
+                                                </cfquery>
+                                                <cfif enrolledNow.recordCount GT 0>
+                                                    <cfset alreadyEnrolled = true />
+                                                </cfif>
                                             </cfif>
 
 <cfif NOT alreadyEnrolled>
@@ -664,6 +776,7 @@
                                             UPDATE events
                                             SET eventstatus = 'Completed'
                                             WHERE eventid = <cfqueryparam value="#new_eventid#" cfsqltype="cf_sql_integer" />
+                                            AND eventstatus = 'Active'
                                         </cfquery>
 
                                         <!--- TAO-CAL-01: remember userid for post-batch ICS regen. --->
@@ -682,11 +795,11 @@
                                     </cftry>
                                     </cftransaction>
                                     </cfloop>
-                                    </cfif><!--- end NOT dryRun (JOB C loop) --->
+                                    </cfif><!--- end enableWrites (JOB C loop) --->
 
 <!--- DRY RUN: JOB D (backfill) and the ICS regen are writes/side effects too,
       so skip both. They resume normally on a real run. --->
-<cfif NOT dryRun>
+<cfif enableWrites>
 
 <!---
     JOB D -- contactdetails backfill (WO-4.4: own transaction).
@@ -748,7 +861,7 @@ WHERE cd.contactMeetingloc IS NULL;
     </cfcatch>
 </cftry>
 
-</cfif><!--- end NOT dryRun (JOB D + ICS) --->
+</cfif><!--- end enableWrites (JOB D + ICS) --->
 
     </cflock><!--- release anti-overlap lock --->
 
@@ -777,7 +890,7 @@ WHERE cd.contactMeetingloc IS NULL;
 <cfset runElapsedSec = int((getTickCount() - runStartTick) / 1000) />
 <cfset batchCapped = (events.recordCount GTE maxEvents) />
 <cflog file="events_completed"
-       text="END events_completed run#dryRun ? ' [DRY RUN -- no writes]' : ''# -- elapsedSec=#runElapsedSec# eventsFound=#events.recordCount# eventsProcessed=#runStats.eventsProcessed# eventsFailed=#runStats.eventsFailed# wouldFlipNotifs=#runStats.notifsWouldFlip# wouldCancelUsers=#runStats.usersWouldCancel# followupCandidates=#runStats.followupCandidates# maxEvents=#maxEvents# batchCapped=#batchCapped# (backlog likely remains; next run continues)" />
+       text="END events_completed run#dryRun ? ' [DRY RUN -- no writes]' : ''# -- elapsedSec=#runElapsedSec# eventsFound=#events.recordCount# eventsProcessed=#runStats.eventsProcessed# eventsFailed=#runStats.eventsFailed# wouldFlipNotifs=#runStats.notifsWouldFlip# wouldCancelUsers=#runStats.usersWouldCancel# followupCandidates=#runStats.followupCandidates# maxEvents=#maxEvents# batchCapped=#batchCapped# budgetStopped=#runStats.budgetStopped# staleDays=#staleDays# includeStale=#includeStale# enableWrites=#enableWrites# eligibleEvents=#runStats.eligibleEvents# wouldEnroll=#runStats.wouldEnroll# wouldBellNotifications=#runStats.wouldBellNotifications# wouldRemindersMax=#runStats.wouldRemindersMax# wouldSkipAlreadyEnrolled=#runStats.wouldSkipAlreadyEnrolled#" />
 
 <cfif dbug eq "Y">
     <cfoutput>
@@ -792,5 +905,5 @@ WHERE cd.contactMeetingloc IS NULL;
     <!--- Compact machine-readable summary for the scheduler / manual checks.
           No giant HTML dump. --->
     <cfcontent type="application/json; charset=utf-8" reset="true" />
-    <cfoutput>{"success":true,"status":"#dryRun ? 'dryrun' : 'completed'#","dryRun":#dryRun ? 'true' : 'false'#,"elapsedSec":#runElapsedSec#,"eventsFound":#events.recordCount#,"eventsProcessed":#runStats.eventsProcessed#,"eventsFailed":#runStats.eventsFailed#,"wouldFlipNotifs":#runStats.notifsWouldFlip#,"wouldCancelUsers":#runStats.usersWouldCancel#,"followupCandidates":#runStats.followupCandidates#,"maxEvents":#maxEvents#,"batchCapped":#batchCapped ? 'true' : 'false'#}</cfoutput>
+    <cfoutput>{"success":true,"status":"#dryRun ? 'dryrun' : (enableWrites ? 'completed' : 'jobc_count_only')#","dryRun":#dryRun ? 'true' : 'false'#,"enableWrites":#enableWrites ? 'true' : 'false'#,"eligibleEvents":#runStats.eligibleEvents#,"wouldEnroll":#runStats.wouldEnroll#,"wouldBellNotifications":#runStats.wouldBellNotifications#,"wouldRemindersMax":#runStats.wouldRemindersMax#,"wouldSkipAlreadyEnrolled":#runStats.wouldSkipAlreadyEnrolled#,"elapsedSec":#runElapsedSec#,"eventsFound":#events.recordCount#,"eventsProcessed":#runStats.eventsProcessed#,"eventsFailed":#runStats.eventsFailed#,"wouldFlipNotifs":#runStats.notifsWouldFlip#,"wouldCancelUsers":#runStats.usersWouldCancel#,"followupCandidates":#runStats.followupCandidates#,"maxEvents":#maxEvents#,"batchCapped":#batchCapped ? 'true' : 'false'#,"budgetStopped":#runStats.budgetStopped ? 'true' : 'false'#,"staleDays":#staleDays#,"includeStale":#includeStale ? 'true' : 'false'#}</cfoutput>
 </cfif>

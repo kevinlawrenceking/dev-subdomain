@@ -259,15 +259,72 @@
             <cfset addDebug("Data rows parsed: " & arrayLen(variables.dataRows))>
 
         <cfelseif variables.job.file_type eq "xls" or variables.job.file_type eq "xlsx">
-            <!--- Parse Excel using cfspreadsheet; fall back to CSV if POI rejects the file --->
+            <!--- Parse Excel with cfspreadsheet. The CSV fallback below is ONLY for a text file saved
+                  with an Excel extension: reading a real workbook's bytes (zip = .xlsx, OLE2 = .xls) as
+                  CSV text produced junk columns and rows and reported success. A real workbook that
+                  cfspreadsheet cannot read now FAILS the job with a message telling the user to save
+                  as CSV (TAO.Import.ExcelUnreadable, handled by the parse catch below).
+                  2026-10-13 prod (error_tickets 565-569, CF 2021,0,21): POI threw
+                  java.lang.NoSuchMethodError at ZipArchiveInputStream.getNextEntry() - the
+                  commons-compress on the server classpath is older than the POI that cfspreadsheet
+                  ships. That is a java.lang.Error, and it escaped every cfcatch type="any" in this
+                  file (the ticket stack lines match these line numbers). So: (1) for .xlsx, probe
+                  the linkage by reflection before calling cfspreadsheet and fail cleanly when it is
+                  incompatible; (2) also catch java.lang.LinkageError by class around the read. --->
             <cfset variables.excelParsed = false>
-            <cftry>
-                <cfspreadsheet action="read" src="#variables.filePath#" query="spreadsheetData" headerrow="1">
-                <cfset variables.excelParsed = true>
-                <cfcatch type="any">
-                    <cfset addDebug("Excel parse failed (" & cfcatch.message & "), trying CSV fallback...")>
-                </cfcatch>
-            </cftry>
+            <cfset variables.excelFailure = "">
+            <cfset variables.fileSignature = importFileSignature(variables.filePath)>
+            <cfset addDebug("File signature: " & variables.fileSignature)>
+            <cfset variables.zipReader = { "status": "n/a", "detail": "" }>
+            <cfif variables.fileSignature eq "zip">
+                <cfset variables.zipReader = excelZipReaderStatus()>
+                <cfset addDebug("Excel zip reader: " & variables.zipReader.status & " " & variables.zipReader.detail)>
+            </cfif>
+            <cfif variables.zipReader.status eq "incompatible">
+                <cfset variables.excelFailure = "POI/commons-compress incompatible: " & variables.zipReader.detail>
+            <cfelse>
+                <cftry>
+                    <cfspreadsheet action="read" src="#variables.filePath#" query="spreadsheetData" headerrow="1">
+                    <cfset variables.excelParsed = true>
+                    <cfcatch type="java.lang.LinkageError">
+                        <cfset variables.excelFailure = "LinkageError: " & cfcatch.message>
+                    </cfcatch>
+                    <cfcatch type="any">
+                        <cfset variables.excelFailure = cfcatch.message>
+                    </cfcatch>
+                </cftry>
+            </cfif>
+
+            <!--- 2026-10-29: a real .xlsx that cfspreadsheet could not read (incompatible jars or a read
+                  error) goes through the POI-free reader before giving up. --->
+            <cfset variables.nativeParsed = false>
+            <cfif NOT variables.excelParsed AND variables.fileSignature eq "zip">
+                <cftry>
+                    <cfset variables.nativeSheet = readXlsxNative(variables.filePath)>
+                    <cfset variables.headers = processHeaders(variables.nativeSheet.headers)>
+                    <cfset variables.dataRows = variables.nativeSheet.rows>
+                    <cfset variables.nativeParsed = true>
+                    <cfset addDebug("Native xlsx reader: " & arrayLen(variables.headers) & " headers, " & arrayLen(variables.dataRows) & " rows (cfspreadsheet: " & variables.excelFailure & ")")>
+                    <cflog file="importv3" type="information"
+                           text="[parse] XLSX_NATIVE userid=#variables.userid# job_id=#variables.jobId# rows=#arrayLen(variables.dataRows)# cause=#left(variables.excelFailure, 300)#">
+                    <cfcatch type="any">
+                        <cfset variables.headers = []>
+                        <cfset variables.dataRows = []>
+                        <cfset variables.excelFailure = variables.excelFailure & "; native reader: " & cfcatch.message>
+                    </cfcatch>
+                </cftry>
+            </cfif>
+
+            <cfif NOT variables.excelParsed AND NOT variables.nativeParsed AND variables.fileSignature neq "text">
+                <cflog file="importv3" type="error"
+                       text="[parse] EXCEL_UNREADABLE userid=#variables.userid# job_id=#variables.jobId# signature=#variables.fileSignature# err=#left(variables.excelFailure, 500)#">
+                <cfthrow type="TAO.Import.ExcelUnreadable"
+                         message="We couldn't read this Excel file right now. Please save it as CSV (.csv) and upload it again."
+                         detail="signature=#variables.fileSignature#; #variables.excelFailure#">
+            </cfif>
+            <cfif NOT variables.excelParsed AND NOT variables.nativeParsed>
+                <cfset addDebug("Excel read failed on a text file (" & variables.excelFailure & "), trying CSV fallback...")>
+            </cfif>
 
             <cfif variables.excelParsed>
                 <!--- Get headers from column names --->
@@ -286,7 +343,7 @@
                     </cfloop>
                     <cfset arrayAppend(variables.dataRows, variables.rowData)>
                 </cfloop>
-            <cfelse>
+            <cfelseif NOT variables.nativeParsed>
                 <!--- Fallback: try reading as CSV (file may be CSV saved with .xls/.xlsx extension) --->
                 <cfset addDebug("Attempting CSV fallback for " & variables.job.file_type & " file...")>
                 <cfset variables.fileContent = fileRead(variables.filePath, "utf-8")>
@@ -408,6 +465,23 @@
 
         </cfif>
 
+        <cfcatch type="TAO.Import.ExcelUnreadable">
+            <!--- A real workbook cfspreadsheet could not read. The job fails (never reported as parsed);
+                  the user gets the save-as-CSV instruction verbatim; the root cause goes to
+                  error_tickets as a handled ticket (no email per occurrence) so admins still see it. --->
+            <cfset addDebug("EXCEL UNREADABLE: " & cfcatch.detail)>
+            <cfset variables.v3Service.setJobStatus(variables.jobId, variables.userid, "failed", "Excel unreadable: " & left(cfcatch.detail, 400))>
+            <cfset variables.v3Service.logEvent(job_id = variables.jobId, userid = variables.userid, event_type = "parse_failed", detail = { error: "excel_unreadable", cause: left(cfcatch.detail, 400) })>
+            <cftry>
+                <cfif structKeyExists(application, "services") AND structKeyExists(application.services, "errorService")>
+                    <cfset application.services.errorService.captureHandled(cfcatch, "importv3-parse-excel")>
+                </cfif>
+                <cfcatch type="any"></cfcatch>
+            </cftry>
+            <cfset variables.response.code = "PARSE_FAILED">
+            <cfset variables.response.message = cfcatch.message>
+            <cfcontent type="application/json" reset="true"><cfoutput>#serializeJSON(variables.response)#</cfoutput><cfabort>
+        </cfcatch>
         <cfcatch type="any">
             <cfset addDebug("FILE PARSE ERROR: " & cfcatch.message & " | " & cfcatch.detail)>
             <cfset variables.v3Service.setJobStatus(variables.jobId, variables.userid, "failed", "Parse error: " & cfcatch.message)>
@@ -1123,4 +1197,327 @@
     </cfif>
 
     <cfreturn row>
+</cffunction>
+
+<!--- Identify a file by its leading bytes: "zip" (50 4B 03 04 - .xlsx), "ole" (D0 CF 11 E0 - legacy
+      .xls), "empty", or "text" (anything else, e.g. a CSV saved with an Excel extension). Reads at
+      most 8 bytes. An unreadable file reports "unknown", which is treated like a workbook (no CSV
+      fallback). --->
+<cffunction name="importFileSignature" access="public" returntype="string" output="false">
+    <cfargument name="path" type="string" required="true">
+    <cfset var fh = "">
+    <cfset var head = "">
+    <cfset var hex = "">
+    <cftry>
+        <cfset fh = fileOpen(arguments.path, "readBinary")>
+        <cftry>
+            <cfif fileIsEOF(fh)>
+                <cfreturn "empty">
+            </cfif>
+            <cfset head = fileRead(fh, 8)>
+            <cffinally>
+                <cfset fileClose(fh)>
+            </cffinally>
+        </cftry>
+        <cfcatch type="any">
+            <cfreturn "unknown">
+        </cfcatch>
+    </cftry>
+    <cfset hex = uCase(binaryEncode(head, "hex"))>
+    <cfif left(hex, 8) eq "504B0304">
+        <cfreturn "zip">
+    </cfif>
+    <cfif left(hex, 8) eq "D0CF11E0">
+        <cfreturn "ole">
+    </cfif>
+    <cfreturn "text">
+</cffunction>
+
+<!--- Check, without reading any workbook, whether the commons-compress class that POI's zip reader
+      links against has the getNextEntry() signature POI was compiled for (returning ZipArchiveEntry).
+      The class is resolved through POI's own classloader so the answer matches what cfspreadsheet
+      would hit. Returns status "compatible" | "incompatible" | "unknown" (reflection unavailable -
+      the caller then tries cfspreadsheet as before) and a detail naming the jar locations. --->
+<cffunction name="excelZipReaderStatus" access="public" returntype="struct" output="false">
+    <cfset var result = { "status": "unknown", "detail": "" }>
+    <cfset var poiCls = "">
+    <cfset var zisCls = "">
+    <cfset var m = "">
+    <cfset var where = "">
+    <cftry>
+        <cfset poiCls = createObject("java", "java.lang.Class").forName("org.apache.poi.openxml4j.util.ZipArchiveThresholdInputStream")>
+        <cfset zisCls = poiCls.getClassLoader().loadClass("org.apache.commons.compress.archivers.zip.ZipArchiveInputStream")>
+        <cftry>
+            <cfset where = "poi=" & poiCls.getProtectionDomain().getCodeSource().getLocation().toString()
+                         & " compress=" & zisCls.getProtectionDomain().getCodeSource().getLocation().toString()>
+            <cfcatch type="any"><cfset where = "jar locations unavailable"></cfcatch>
+        </cftry>
+        <cfset result.status = "incompatible">
+        <cfloop array="#zisCls.getMethods()#" index="m">
+            <cfif m.getName() eq "getNextEntry" AND arrayLen(m.getParameterTypes()) eq 0
+                  AND m.getReturnType().getName() eq "org.apache.commons.compress.archivers.zip.ZipArchiveEntry">
+                <cfset result.status = "compatible">
+                <cfbreak>
+            </cfif>
+        </cfloop>
+        <cfset result.detail = where>
+        <cfcatch type="any">
+            <cfset result = { "status": "unknown", "detail": left(cfcatch.message, 200) }>
+        </cfcatch>
+    </cftry>
+    <cfreturn result>
+</cffunction>
+
+<!--- 2026-10-29: POI-free .xlsx reader. Used only when cfspreadsheet cannot read a real workbook
+      (zip signature): the probe reports POI/commons-compress incompatible, or the read throws.
+      Uses the JDK's java.util.zip (never commons-compress) plus xmlParse, reads the FIRST sheet,
+      first non-empty row = headers. Shared strings, inline strings, booleans and date-styled
+      numbers (built-in date formats and custom d/m/y formats -> yyyy-mm-dd) are handled.
+      Formulas yield their cached value. Any problem throws; the caller then fails the job with
+      the save-as-CSV message, as before. Returns { headers: [], rows: [[]] }. --->
+<cffunction name="xlsxLocalName" access="private" returntype="string" output="false">
+    <cfargument name="node" required="true">
+    <cfreturn listLast(arguments.node.xmlName, ":")>
+</cffunction>
+
+<cffunction name="xlsxChildren" access="private" returntype="array" output="false">
+    <cfargument name="node" required="true">
+    <cfargument name="name" type="string" required="true">
+    <cfset var out = []>
+    <cfset var c = "">
+    <cfloop array="#arguments.node.xmlChildren#" index="c">
+        <cfif xlsxLocalName(c) eq arguments.name>
+            <cfset arrayAppend(out, c)>
+        </cfif>
+    </cfloop>
+    <cfreturn out>
+</cffunction>
+
+<!--- Concatenated text of every <t> under node, skipping phonetic runs (<rPh>). --->
+<cffunction name="xlsxText" access="private" returntype="string" output="false">
+    <cfargument name="node" required="true">
+    <cfset var out = "">
+    <cfset var c = "">
+    <cfset var nm = "">
+    <cfloop array="#arguments.node.xmlChildren#" index="c">
+        <cfset nm = xlsxLocalName(c)>
+        <cfif nm eq "t">
+            <cfset out &= c.xmlText>
+        <cfelseif nm neq "rPh">
+            <cfset out &= xlsxText(c)>
+        </cfif>
+    </cfloop>
+    <cfreturn out>
+</cffunction>
+
+<cffunction name="xlsxEntryXml" access="private" returntype="any" output="false">
+    <cfargument name="zip" required="true">
+    <cfargument name="name" type="string" required="true">
+    <cfargument name="required" type="boolean" default="true">
+    <cfset var entry = arguments.zip.getEntry(arguments.name)>
+    <cfset var ins = "">
+    <cfset var txt = "">
+    <cfif isNull(entry)>
+        <cfif arguments.required>
+            <cfthrow type="TAO.Import.XlsxNative" message="Workbook part missing: #arguments.name#">
+        </cfif>
+        <cfreturn "">
+    </cfif>
+    <!--- Zip-bomb guard: 60 MB uncompressed per part (getSize is -1 when unknown) --->
+    <cfif entry.getSize() GT 62914560>
+        <cfthrow type="TAO.Import.XlsxNative" message="Workbook part too large: #arguments.name#">
+    </cfif>
+    <cfset ins = arguments.zip.getInputStream(entry)>
+    <cftry>
+        <cfset txt = createObject("java", "java.lang.String").init(ins.readAllBytes(), "UTF-8")>
+        <cffinally>
+            <cfset ins.close()>
+        </cffinally>
+    </cftry>
+    <cfif len(txt) AND asc(left(txt, 1)) eq 65279>
+        <cfset txt = mid(txt, 2, len(txt))>
+    </cfif>
+    <!--- No DTDs in OOXML parts; refusing them closes the XXE door regardless of parser settings --->
+    <cfif findNoCase("<!DOCTYPE", txt)>
+        <cfthrow type="TAO.Import.XlsxNative" message="Workbook part has a DOCTYPE: #arguments.name#">
+    </cfif>
+    <cfreturn xmlParse(txt)>
+</cffunction>
+
+<!--- "B12" -> 2 --->
+<cffunction name="xlsxColumnIndex" access="private" returntype="numeric" output="false">
+    <cfargument name="ref" type="string" required="true">
+    <cfset var letters = uCase(reReplace(arguments.ref, "[^A-Za-z]", "", "all"))>
+    <cfset var n = 0>
+    <cfset var i = 0>
+    <cfloop from="1" to="#len(letters)#" index="i">
+        <cfset n = n * 26 + (asc(mid(letters, i, 1)) - 64)>
+    </cfloop>
+    <cfreturn n>
+</cffunction>
+
+<cffunction name="xlsxAttr" access="private" returntype="string" output="false">
+    <cfargument name="node" required="true">
+    <cfargument name="name" type="string" required="true">
+    <cfargument name="default" type="string" default="">
+    <cfif structKeyExists(arguments.node.xmlAttributes, arguments.name)>
+        <cfreturn arguments.node.xmlAttributes[arguments.name]>
+    </cfif>
+    <cfreturn arguments.default>
+</cffunction>
+
+<cffunction name="readXlsxNative" access="public" returntype="struct" output="false">
+    <cfargument name="path" type="string" required="true">
+    <cfset var zip = createObject("java", "java.util.zip.ZipFile").init(arguments.path)>
+    <cfset var result = { "headers": [], "rows": [] }>
+    <cfset var shared = []>
+    <cfset var dateStyles = {}>
+    <cfset var dateFmtIds = {}>
+    <cfset var sheetPath = "xl/worksheets/sheet1.xml">
+    <cfset var doc = "">
+    <cfset var x = "">
+    <cfset var n = "">
+    <cfset var rid = "">
+    <cfset var target = "">
+    <cfset var idx = 0>
+    <cfset var sheetData = "">
+    <cfset var rowNode = "">
+    <cfset var cell = "">
+    <cfset var cells = "">
+    <cfset var vals = "">
+    <cfset var col = 0>
+    <cfset var nextCol = 0>
+    <cfset var maxCol = 0>
+    <cfset var t = "">
+    <cfset var v = "">
+    <cfset var s = "">
+    <cfset var ref = "">
+    <cfset var hasValue = false>
+    <cfset var headerCount = 0>
+    <cfset var outRow = "">
+    <cfset var i = 0>
+    <cfset var k = "">
+    <cfset var code = "">
+    <cftry>
+        <!--- Shared strings (optional part) --->
+        <cfset doc = xlsxEntryXml(zip, "xl/sharedStrings.xml", false)>
+        <cfif isXmlDoc(doc)>
+            <cfloop array="#xlsxChildren(doc.xmlRoot, 'si')#" index="x">
+                <cfset arrayAppend(shared, xlsxText(x))>
+            </cfloop>
+        </cfif>
+
+        <!--- Date-styled cell formats: built-in 14-22 and 45-47, plus custom codes with d/m/y
+              outside quoted literals, [bracketed] sections and escaped characters --->
+        <cfloop list="14,15,16,17,18,19,20,21,22,45,46,47" index="k">
+            <cfset dateFmtIds[k] = true>
+        </cfloop>
+        <cfset doc = xlsxEntryXml(zip, "xl/styles.xml", false)>
+        <cfif isXmlDoc(doc)>
+            <cfloop array="#xlsxChildren(doc.xmlRoot, 'numFmts')#" index="x">
+                <cfloop array="#xlsxChildren(x, 'numFmt')#" index="n">
+                    <cfset code = reReplace(xlsxAttr(n, "formatCode"), '"[^"]*"|\[[^\]]*\]|\\.', "", "all")>
+                    <cfif reFindNoCase("[dmy]", code)>
+                        <cfset dateFmtIds[xlsxAttr(n, "numFmtId")] = true>
+                    </cfif>
+                </cfloop>
+            </cfloop>
+            <cfloop array="#xlsxChildren(doc.xmlRoot, 'cellXfs')#" index="x">
+                <cfset idx = 0>
+                <cfloop array="#xlsxChildren(x, 'xf')#" index="n">
+                    <cfif structKeyExists(dateFmtIds, xlsxAttr(n, "numFmtId", "0"))>
+                        <cfset dateStyles[idx] = true>
+                    </cfif>
+                    <cfset idx = idx + 1>
+                </cfloop>
+            </cfloop>
+        </cfif>
+
+        <!--- First sheet: workbook.xml first <sheet> r:id -> workbook rels Target --->
+        <cftry>
+            <cfset doc = xlsxEntryXml(zip, "xl/workbook.xml")>
+            <cfset x = xlsxChildren(xlsxChildren(doc.xmlRoot, "sheets")[1], "sheet")[1]>
+            <cfloop collection="#x.xmlAttributes#" item="k">
+                <cfif listLast(k, ":") eq "id"><cfset rid = x.xmlAttributes[k]></cfif>
+            </cfloop>
+            <cfset doc = xlsxEntryXml(zip, "xl/_rels/workbook.xml.rels")>
+            <cfloop array="#xlsxChildren(doc.xmlRoot, 'Relationship')#" index="n">
+                <cfif xlsxAttr(n, "Id") eq rid>
+                    <cfset target = xlsxAttr(n, "Target")>
+                </cfif>
+            </cfloop>
+            <cfif len(target)>
+                <cfset sheetPath = (left(target, 1) eq "/") ? mid(target, 2, len(target)) : "xl/" & target>
+            </cfif>
+            <cfcatch type="any">
+                <cfset sheetPath = "xl/worksheets/sheet1.xml">
+            </cfcatch>
+        </cftry>
+
+        <cfset doc = xlsxEntryXml(zip, sheetPath)>
+        <cfset sheetData = xlsxChildren(doc.xmlRoot, "sheetData")>
+        <cfif NOT arrayLen(sheetData)>
+            <cfthrow type="TAO.Import.XlsxNative" message="Sheet has no data">
+        </cfif>
+
+        <cfloop array="#xlsxChildren(sheetData[1], 'row')#" index="rowNode">
+            <cfset vals = {}>
+            <cfset maxCol = 0>
+            <cfset nextCol = 1>
+            <cfset hasValue = false>
+            <cfloop array="#xlsxChildren(rowNode, 'c')#" index="cell">
+                <cfset ref = xlsxAttr(cell, "r")>
+                <cfset col = len(ref) ? xlsxColumnIndex(ref) : nextCol>
+                <cfif col LT 1><cfset col = nextCol></cfif>
+                <cfset nextCol = col + 1>
+                <cfset t = xlsxAttr(cell, "t", "n")>
+                <cfset s = val(xlsxAttr(cell, "s", "0"))>
+                <cfset v = "">
+                <cfif t eq "inlineStr">
+                    <cfset cells = xlsxChildren(cell, "is")>
+                    <cfif arrayLen(cells)><cfset v = xlsxText(cells[1])></cfif>
+                <cfelse>
+                    <cfset cells = xlsxChildren(cell, "v")>
+                    <cfif arrayLen(cells)>
+                        <cfset v = cells[1].xmlText>
+                        <cfif t eq "s">
+                            <cfif isNumeric(v) AND val(v) + 1 LTE arrayLen(shared)>
+                                <cfset v = shared[val(v) + 1]>
+                            <cfelse>
+                                <cfset v = "">
+                            </cfif>
+                        <cfelseif t eq "b">
+                            <cfset v = (v eq "1") ? "TRUE" : "FALSE">
+                        <cfelseif t eq "n" AND structKeyExists(dateStyles, s) AND isNumeric(v) AND val(v) GT 0 AND val(v) LT 2958466>
+                            <cfset v = dateFormat(dateAdd("d", int(val(v)), createDate(1899, 12, 30)), "yyyy-mm-dd")>
+                        </cfif>
+                    </cfif>
+                </cfif>
+                <cfif len(trim(v))><cfset hasValue = true></cfif>
+                <cfset vals[col] = v>
+                <cfif col GT maxCol><cfset maxCol = col></cfif>
+            </cfloop>
+            <cfif hasValue>
+                <cfif headerCount EQ 0>
+                    <cfset headerCount = maxCol>
+                    <cfloop from="1" to="#maxCol#" index="i">
+                        <cfset arrayAppend(result.headers, structKeyExists(vals, i) ? trim(vals[i]) : "")>
+                    </cfloop>
+                <cfelse>
+                    <cfset outRow = []>
+                    <cfloop from="1" to="#headerCount#" index="i">
+                        <cfset arrayAppend(outRow, structKeyExists(vals, i) ? vals[i] : "")>
+                    </cfloop>
+                    <cfset arrayAppend(result.rows, outRow)>
+                </cfif>
+            </cfif>
+        </cfloop>
+        <cffinally>
+            <cfset zip.close()>
+        </cffinally>
+    </cftry>
+    <cfif NOT arrayLen(result.headers)>
+        <cfthrow type="TAO.Import.XlsxNative" message="Workbook has no header row">
+    </cfif>
+    <cfreturn result>
 </cffunction>

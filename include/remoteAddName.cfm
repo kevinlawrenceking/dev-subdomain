@@ -15,6 +15,12 @@
       data-parsley-trigger="keyup" 
       data-parsley-validate>
 
+    <!--- TAO-CONTACT-SUBMIT-TOKEN (2026-10-17): one token per rendering of this form (the modal
+          reloads it on every open). A double click or browser retry resends the same token and
+          remoteAddNameAdd.cfm returns that submission's contact instead of inserting again. --->
+    <input type="hidden" name="submissionToken"
+           value="<cfoutput>#lCase(hash(generateSecretKey("AES", 128) & createUUID(), "SHA-256"))#</cfoutput>" />
+
     <div class="row" />
 
     <div class="form-group col-md-6">

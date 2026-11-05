@@ -70,6 +70,18 @@
          ================================================================ --->
     <cfif variables.templateName eq "welcome">
 
+        <!--- TAO-SETUP-WELCOME-GUARD (2026-10-17): this template always targets an
+              existing taousers row, and links that row to the purchase via customerid.
+              Since TAO-SETUP-KEY-01 (862e7a28), /setup/ treats a purchase with a linked
+              user as already used and shows "Link Expired", so every welcome link sent
+              from here is dead on arrival and stamps thrivecart status 'Emailed'.
+              Refuse before any write; existing users get a password_reset link instead. --->
+        <cfset addDebug("welcome refused: target user already exists (setup link would show Link Expired)")>
+        <cfset variables.response.message = "This person already has an account, so a setup link would show 'Link Expired'. Send the Password reset email instead.">
+        <cfset variables.response.data = { "suggestedTemplate": "password_reset" }>
+        <cfset variables.response.debug = variables.debugLog>
+        <cfcontent type="application/json; charset=utf-8" reset="true"><cfoutput>#serializeJSON(variables.response)#</cfoutput><cfabort>
+
         <!--- Get or create setup UUID via thrivecart table (linked by customerid) --->
         <cfset variables.customerId = variables.userData.customerid>
         <cfset addDebug("welcome: customerid=#variables.customerId#")>

@@ -73,6 +73,29 @@
     </cfscript>
   </cffunction>
 
+  <cffunction name="captureHandled" access="public" returntype="string" output="false"
+              hint="Persist an exception that a handler caught and answered itself (no onError, so it previously left only a cflog line). Writes error_tickets with cf_context='handled'. No support ticket, no user email, no admin email. Returns the ticket id, or '' on failure. Never throws.">
+    <cfargument name="exception" required="true" />
+    <cfargument name="context" type="string" required="false" default="" hint="Short handler label, e.g. updateprimary" />
+
+    <cfscript>
+      try {
+        var diagnostics = buildDiagnostics(arguments.exception, arguments.context, "handled");
+        diagnostics.ticketId = generateTicketId();
+        // Nobody is emailed about a handled ticket, so keep only the userid for triage.
+        diagnostics.userName  = "";
+        diagnostics.userEmail = "";
+        return (persistTicket(diagnostics) GT 0) ? diagnostics.ticketId : "";
+      } catch (any e) {
+        try {
+          cflog(file = "TAO_error_fallback", type = "warning",
+                text = "captureHandled failed (" & arguments.context & "): " & e.message);
+        } catch (any e2) {}
+        return "";
+      }
+    </cfscript>
+  </cffunction>
+
   <!--- ==================== PRIVATE METHODS ==================== --->
 
   <cffunction name="generateTicketId" access="private" returntype="string" output="false">
@@ -264,6 +287,38 @@
       diag.causeChainCount  = causeData.chainCount;
       diag.causeTruncated   = causeData.truncated;
 
+      // No cause chain (an unwrapped exception, e.g. a cfcatch passed straight in): the outer
+      // exception IS the root cause. Without this every root_cause_* column persisted NULL and
+      // the stored ticket lost the detail line that names e.g. the failing cfquery attribute.
+      if (causeData.chainCount EQ 0) {
+        diag.rootCauseType    = diag.errorType;
+        diag.rootCauseMessage = diag.errorMessage;
+        diag.rootCauseDetail  = diag.errorDetail;
+        try {
+          if (structKeyExists(arguments.exception, "tagContext")
+              AND isArray(arguments.exception.tagContext)
+              AND arrayLen(arguments.exception.tagContext) GTE 1
+              AND isStruct(arguments.exception.tagContext[1])) {
+            var rf = arguments.exception.tagContext[1];
+            if (structKeyExists(rf, "template")) diag.rootCauseFile = Left(toString(rf.template), 500);
+            if (structKeyExists(rf, "line") AND isNumeric(rf.line)) diag.rootCauseLine = val(rf.line);
+          }
+        } catch (any eRf) {}
+        // onError hands us coldfusion.runtime.EventHandlerException ("Event handler exception.").
+        // Prod stored no cause chain for any ticket Apr-Oct 2026, but the Java stack text always
+        // carries the real cause as its LAST "Caused by:" line (e.g. QueryTag$InvalidTagAttribute
+        // Exception, RequestTimedOutException). Prefer that over the wrapper.
+        try {
+          var cbLines = reMatch("Caused by: [^\r\n]+", diag.stackTrace);
+          if (arrayLen(cbLines)) {
+            var cb = trim(mid(cbLines[arrayLen(cbLines)], 12, 4000));
+            var cbSep = find(": ", cb);
+            diag.rootCauseType    = Left(cbSep ? left(cb, cbSep - 1) : cb, 255);
+            diag.rootCauseMessage = cbSep ? mid(cb, cbSep + 2, len(cb)) : "";
+          }
+        } catch (any eCb) {}
+      }
+
       // Synthesize a display message when raw is empty (e.g., java.lang.NullPointerException
       // whose getMessage() returns null). Prefer root cause; else first tag-context frame.
       if (NOT len(diag.errorMessage)) {
@@ -354,6 +409,24 @@
     <cfargument name="diagnostics" type="struct" required="true" />
 
     <cfset var insRes = "" />
+    <cfset var d = arguments.diagnostics />
+    <!--- Clamp every VARCHAR to its column width (2026-04-04 / 04-05 / 04-17 DDL). Under strict
+          sql_mode one over-long value (e.g. a long Referer vs http_referer VARCHAR(2000)) fails the
+          whole INSERT, and the ticket survives only as a TAO_error_fallback cflog line. --->
+    <cfset d.errorType     = Left(d.errorType, 255) />
+    <cfset d.rootCauseType = Left(d.rootCauseType, 255) />
+    <cfset d.rootCauseFile = Left(d.rootCauseFile, 500) />
+    <cfset d.scriptName    = Left(d.scriptName, 500) />
+    <cfset d.httpMethod    = Left(d.httpMethod, 10) />
+    <cfset d.httpReferer   = Left(d.httpReferer, 2000) />
+    <cfset d.remoteIp      = Left(d.remoteIp, 45) />
+    <cfset d.userName      = Left(d.userName, 255) />
+    <cfset d.userEmail     = Left(d.userEmail, 255) />
+    <cfset d.cfContext     = Left(d.cfContext, 20) />
+    <cfset d.eventName     = Left(d.eventName, 100) />
+    <cfset d.environment   = Left(d.environment, 10) />
+    <cfset d.cfEngine      = Left(d.cfEngine, 100) />
+    <cfset d.serverName    = Left(d.serverName, 255) />
     <cftry>
       <cfquery datasource="#variables.dsn#" result="insRes">
         INSERT INTO error_tickets (

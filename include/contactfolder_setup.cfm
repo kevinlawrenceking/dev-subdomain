@@ -83,8 +83,8 @@
         </CFIF>
 
         <!--- Check if user avatar exists, if not, copy default avatar --->
-        <cfif NOT fileExists(session.userAvatarPath)>
-            <cffile action="copy" source="#application.defaultAvatarUrl#" destination="#session.userMediaPath#\" />
+        <cfif NOT fileExists(session.userAvatarPath) AND fileExists(application.defaultAvatarPath)>
+            <cffile action="copy" source="#application.defaultAvatarPath#" destination="#session.userAvatarPath#" />
             <h3>default avatar moved to: #session.userMediaPath#</h3>
         </cfif>
     </cfoutput>

@@ -11,7 +11,11 @@
 <cfset tokenError = "" />
 
 <!--- Only accept token-based recovery (no userid bypass) --->
-<cfif structKeyExists(url, "recover") AND len(trim(url.recover))>
+<!--- TAO-RECOVER-TOKEN-MIN (2026-10-17): taousers_tbl.recover DEFAULTS to the literal
+      'setup' (991 prod rows), so ?recover=setup matches real accounts. Only the NULL
+      recover_requested_at check stopped it. Real tokens are 35-char UUIDs; reject anything
+      shorter before the lookup. --->
+<cfif structKeyExists(url, "recover") AND len(trim(url.recover)) GTE 32>
 
     <cfquery name="u" datasource="#dsn#">
         SELECT userid, userfirstname, userlastname, recover_requested_at

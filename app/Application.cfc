@@ -266,6 +266,28 @@
     } />
   </cffunction>
 
+  <cffunction name="ensureUserMediaPaths" access="private" returntype="void" output="false"
+              hint="Rebuild the per-user session media paths when a session has a userid but no paths. Shared with include/Application.cfc, whose onRequestStart does not run this file's post-login block (TAO-E002 / TAO-E023).">
+    <cfif NOT structKeyExists(session, "userid") OR NOT isNumeric(session.userid)
+          OR structKeyExists(session, "userMediaPath") AND structKeyExists(session, "userMediaUrl")>
+      <cfreturn />
+    </cfif>
+    <cfscript>
+      session.userMediaPath    = application.baseMediaPath & "\\users\\" & session.userID;
+      session.userMediaUrl     = application.baseMediaUrl  & "/users/" & session.userID;
+      session.userContactsPath = session.userMediaPath & "\\contacts";
+      session.userContactsUrl  = session.userMediaUrl  & "/contacts";
+      session.userImportsPath  = session.userMediaPath & "\\imports";
+      session.userImportsUrl   = session.userMediaUrl  & "/imports";
+      session.userExportsPath  = session.userMediaPath & "\\exports";
+      session.userExportsUrl   = session.userMediaUrl  & "/exports";
+      session.userSharePath    = session.userMediaPath & "\\share";
+      session.userShareUrl     = session.userMediaUrl  & "/share";
+      session.userAvatarPath   = session.userMediaPath & "\\avatar.jpg";
+      session.userAvatarUrl    = session.userMediaUrl  & "/avatar.jpg";
+    </cfscript>
+  </cffunction>
+
   <cffunction name="onRequestStart" returntype="boolean" output="false">
     <cfargument name="targetPage" type="string" required="true" />
 

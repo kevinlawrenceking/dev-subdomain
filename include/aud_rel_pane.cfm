@@ -180,29 +180,50 @@
 <script>
 function confirmRemove(contactId, audProjectId) {
     window.taoConfirmDelete("Are you sure you want to remove this contact from your project?", function() {
+        // Ticket 2751: /include/delete_audcontact.cfm runs under include/Application.cfc, which
+        // rejects POSTs without a valid CSRF token with a 403 HTML page. The old call sent no
+        // token, response.json() threw on the HTML, and the error only reached the console, so
+        // the removal never persisted. Same fix as removeTeamMember() in myteam_pane.cfm.
+        var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+        var csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+
         fetch('/include/delete_audcontact.cfm', {
             method: 'POST',
+            credentials: 'same-origin',
             headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRF-Token': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
             },
             body: 'contactid=' + encodeURIComponent(contactId) +
                   '&audprojectid=' + encodeURIComponent(audProjectId)
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                let cardEl = document.getElementById('card-' + contactId);
+        .then(function(r) {
+            // Read as text first so a non-JSON error body (e.g. 403 HTML) doesn't throw.
+            return r.text().then(function(txt) {
+                var body = null;
+                try { body = JSON.parse(txt); } catch (e) { /* non-JSON */ }
+                return { ok: r.ok, status: r.status, body: body };
+            });
+        })
+        .then(function(res) {
+            if (res.ok && res.body && res.body.success) {
+                var cardEl = document.getElementById('card-' + contactId);
                 if (cardEl) {
                     cardEl.classList.add('removing'); // Start animation
-                    setTimeout(() => {
-                        cardEl.remove(); // Fully remove after animation
-                    }, 300); // Wait for CSS transition to finish
+                    setTimeout(function() { cardEl.remove(); }, 300); // Wait for CSS transition
                 }
             } else {
-                alert("Error: " + data.message);
+                var msg = (res.body && res.body.message)
+                    || (res.status === 403 ? 'Your session expired. Please reload and try again.' : 'Unable to remove this contact.');
+                alert(msg);
             }
         })
-        .catch(error => console.error('Error:', error));
+        .catch(function(error) {
+            console.error('Error:', error);
+            alert('Network error. Please try again.');
+        });
     });
 }
 </script>

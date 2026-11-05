@@ -1,5 +1,12 @@
 <!--- This ColdFusion page handles the insertion of contact information and redirects based on the source parameter. --->
 
+<!--- TAO-E023: require a live server session BEFORE inserting, and pin userid to it (see
+      remoteAddNameAdd.cfm - bare userid otherwise falls back to the client cookie.userid). --->
+<cfif NOT structKeyExists(session, "userid") OR NOT isNumeric(session.userid)>
+    <cflocation url="/loginform.cfm" addtoken="false" />
+</cfif>
+<cfset userid = session.userid />
+
 <cfparam name="deleteitem" default="0" /> 
 <cfparam name="valuetext" default="" /> 
 <cfparam name="src" default="" /> 

@@ -8,6 +8,10 @@
       application.dsn = application.dsn;
     </cfscript>
 
+    <!--- TAO-E002 / TAO-E023: /include/* requests never ran the parent's post-login block, so
+          session.userMedia* existed only if an /app/ page had set it earlier in this session. --->
+    <cfset ensureUserMediaPaths() />
+
     <!--- PERF: Request-scoped service cache (matches app/Application.cfc) --->
     <cfset request.services = {} />
     <cfset request.svc = function(required string name) {

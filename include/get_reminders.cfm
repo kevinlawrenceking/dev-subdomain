@@ -3,14 +3,18 @@
 
 <cfparam name="url.currentid" default="0">
 <cfparam name="url.showInactive" default="0">
-<cfparam name="url.userid" default="0">
 <cfset contactID = val(url.currentid)>
 <cfset showInactive = val(url.showInactive)>
-<cfif val(url.userid) GT 0>
-  <cfset userid = val(url.userid)>
-<cfelse>
-  <cfset userid = session.userid>
+
+<!--- SECURITY: reminders are always scoped to the logged-in user. A client-supplied
+      url.userid used to select another user's suids (cross-user read), so it is ignored.
+      /include/* has no login gate, so an anonymous request gets 401 and an empty list. --->
+<cfif NOT structKeyExists(session, "userid") OR NOT isNumeric(session.userid) OR val(session.userid) LTE 0>
+  <cfheader statuscode="401">
+  <cfoutput>#serializeJSON([])#</cfoutput>
+  <cfabort>
 </cfif>
+<cfset userid = val(session.userid)>
 
 <cfset host = ListFirst(cgi.server_name, ".")/>
 
@@ -72,7 +76,7 @@
     f.contactID = <cfqueryparam value="#contactID#" cfsqltype="cf_sql_integer">
     AND f.suID IN (<cfqueryparam value="#valueList(getSu.suid)#" cfsqltype="cf_sql_integer" list="true">)
   <cfelse>
-    f.userID = <cfqueryparam value="#session.userID#" cfsqltype="cf_sql_integer">
+    f.userID = <cfqueryparam value="#userid#" cfsqltype="cf_sql_integer">
   </cfif>
     AND n.notStartDate IS NOT NULL
     AND n.isdeleted = 0
