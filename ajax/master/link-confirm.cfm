@@ -9,7 +9,7 @@
 --->
 <cfset buildTag = "wo7-link-confirm-2026-07-18-v1">
 <cfcontent type="application/json" reset="true">
-<cfinclude template="/include/book_feature_guard.cfm"><!--- Book switch: FEATURE_DISABLED when off --->
+<cfinclude template="../../include/book_feature_guard.cfm"><!--- Book switch: FEATURE_DISABLED when off --->
 
 <cfparam name="form.contactid"         default="0">
 <cfparam name="form.masterCoContactId" default="0">

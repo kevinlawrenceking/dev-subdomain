@@ -661,7 +661,7 @@ x</button>
           could not write its audit row even once the modal loaded.
       Host test is the house pattern (cf include/import-auditions.cfm:296); prod hostname is "app".
       Remove this gate as part of the WO-8 prod promotion, not before. --->
-<cfinclude template="/include/book_feature.cfm"><!--- sets request.bookFeatureEnabled (2026-10-29: false) --->
+<cfinclude template="book_feature.cfm"><!--- sets request.bookFeatureEnabled (2026-10-29: false) --->
 <cfset masterBookEnabled = ( ListFirst(cgi.server_name, ".") NEQ "app" )>
 <cfif NOT request.bookFeatureEnabled><cfset masterBookEnabled = false></cfif>
 

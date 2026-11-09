@@ -23,7 +23,8 @@ class BookSwitch(unittest.TestCase):
 
     def test_guard_aborts_with_json_envelope(self):
         text = strip_cf_comments(src("include/book_feature_guard.cfm"))
-        self.assertIn('<cfinclude template="/include/book_feature.cfm">', text)
+        # Relative include: "/include/..." can resolve to another site's folder via a server mapping.
+        self.assertIn('<cfinclude template="book_feature.cfm">', text)
         self.assertIn("FEATURE_DISABLED", text)
         self.assertLess(text.index("NOT request.bookFeatureEnabled"), text.index("<cfabort>"))
 
@@ -32,7 +33,7 @@ class BookSwitch(unittest.TestCase):
         for rel in ENDPOINTS:
             with self.subTest(endpoint=rel):
                 text = strip_cf_comments(src(rel))
-                guard = text.find('<cfinclude template="/include/book_feature_guard.cfm">')
+                guard = text.find('<cfinclude template="../../include/book_feature_guard.cfm">')
                 self.assertNotEqual(guard, -1)
                 for work in ("request.svc(", "<cfquery", "createObject("):
                     pos = text.find(work)
@@ -52,7 +53,7 @@ class BookSwitch(unittest.TestCase):
                 continue
             with self.subTest(file=rel):
                 text = strip_cf_comments(src(rel))
-                inc = text.index('<cfinclude template="/include/book_feature.cfm">')
+                inc = text.index('<cfinclude template="book_feature.cfm">')
                 override = text.index("<cfif NOT request.bookFeatureEnabled><cfset masterBookEnabled = false></cfif>")
                 first_use = text.index("<cfif masterBookEnabled")
                 self.assertLess(inc, override)

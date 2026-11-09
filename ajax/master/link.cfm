@@ -11,7 +11,7 @@
 --->
 <cfset buildTag = "master-link-RETIRED-2026-07-23-v2">
 <cfcontent type="application/json" reset="true">
-<cfinclude template="/include/book_feature_guard.cfm"><!--- Book switch: FEATURE_DISABLED when off --->
+<cfinclude template="../../include/book_feature_guard.cfm"><!--- Book switch: FEATURE_DISABLED when off --->
 
 <cfset response = { "success": false, "message": "This action is no longer available.", "data": {}, "_build": buildTag }>
 

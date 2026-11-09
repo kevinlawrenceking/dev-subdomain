@@ -14,7 +14,7 @@
 --->
 <cfset buildTag = "wo6-updateprimary-2026-07-20-v2">
 <cfcontent type="application/json" reset="true">
-<cfinclude template="/include/book_feature_guard.cfm"><!--- Book switch: FEATURE_DISABLED when off --->
+<cfinclude template="../../include/book_feature_guard.cfm"><!--- Book switch: FEATURE_DISABLED when off --->
 
 <cfparam name="form.contactid" default="0">
 <cfparam name="form.field"     default="">

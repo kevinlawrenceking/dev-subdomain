@@ -10,7 +10,11 @@
 
     <!--- TAO-E002 / TAO-E023: /include/* requests never ran the parent's post-login block, so
           session.userMedia* existed only if an /app/ page had set it earlier in this session. --->
-    <cfset ensureUserMediaPaths() />
+    <!--- Guarded: on the shared CF instance "/app/Application" can resolve to another site's copy
+          (server-level mapping), which may not define this method yet. --->
+    <cfif structKeyExists(variables, "ensureUserMediaPaths")>
+      <cfset ensureUserMediaPaths() />
+    </cfif>
 
     <!--- PERF: Request-scoped service cache (matches app/Application.cfc) --->
     <cfset request.services = {} />

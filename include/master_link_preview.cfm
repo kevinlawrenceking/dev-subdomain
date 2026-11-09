@@ -8,7 +8,7 @@
 --->
 <cfsetting enablecfoutputonly="true">
 <!--- Book switch (include/book_feature.cfm): when off, render a neutral notice and run nothing else. --->
-<cfinclude template="/include/book_feature.cfm">
+<cfinclude template="book_feature.cfm">
 <cfif NOT request.bookFeatureEnabled>
     <cfheader statuscode="403" statustext="Feature Disabled">
     <cfoutput><div class="p-3 text-muted">This feature is temporarily unavailable.</div></cfoutput>

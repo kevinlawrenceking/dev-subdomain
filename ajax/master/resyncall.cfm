@@ -15,7 +15,7 @@
 --->
 <cfset buildTag = "wo8-resyncall-2026-07-28-v1">
 <cfcontent type="application/json" reset="true">
-<cfinclude template="/include/book_feature_guard.cfm"><!--- Book switch: FEATURE_DISABLED when off --->
+<cfinclude template="../../include/book_feature_guard.cfm"><!--- Book switch: FEATURE_DISABLED when off --->
 
 <cfset response = { "success": false, "message": "", "data": {}, "_build": buildTag }>
 
