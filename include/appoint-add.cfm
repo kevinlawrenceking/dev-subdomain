@@ -1,11 +1,17 @@
 <!--- This ColdFusion page handles the creation of an appointment with various input fields and validation. --->
 
-<cfparam name="rcontactid" default="0" />
-
 <!--- Parse date/time from URL params (calendar click-to-create) --->
 <cfparam name="url.date" default="" />
 <cfparam name="url.time" default="" />
 <cfparam name="url.returnurl" default="calendar-appoint" />
+<cfparam name="url.rcontactid" default="0" />
+
+<!--- Read returnurl/rcontactid from the URL scope explicitly: unscoped lookups threw
+      "Variable RETURNURL is undefined" at the hidden field below (ERR-39622F34).
+      returnurl is an /app/ page slug (calendar-appoint, contact); anything else falls
+      back to the calendar so it cannot inject markup or a path. --->
+<cfset returnurl = reFindNoCase("^[a-z0-9-]+$", trim(url.returnurl)) ? trim(url.returnurl) : "calendar-appoint" />
+<cfset rcontactid = val(url.rcontactid) />
 
 <cfset defaultDate = "" />
 <cfset defaultTime = "" />
